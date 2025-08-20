@@ -8,8 +8,6 @@ const LeaveTypeSchema = new mongoose.Schema({
     unique: true
   },
   description: { type: String },
-  maxDaysPerMonth: { type: Number, default: 0 },
-  maxDaysPerYear: { type:Number, default: 0},
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
