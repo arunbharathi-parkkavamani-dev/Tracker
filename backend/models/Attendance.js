@@ -9,11 +9,12 @@ const AttendanceSchema = new mongoose.Schema({
   },
   date: { type: Date, required: true },
   status: {
-    type: Boolean,
-    default: 'True'
+    type: String,
+    enum: ['Present', 'Absent', 'Leave', 'Half Day', 'Work From Home'],
+    default: 'Present'
   },
-  LeaveType : { 
-    mongoose.Schema.Types.ObjectId, 
+  leaveType: { // optional, only used when status === 'Leave'
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'LeaveType'
   },
   checkIn: { type: Date },
