@@ -10,9 +10,10 @@ const LeavePolicySchema = new mongoose.Schema({
   leaves: [
     {
       leaveType: { type: mongoose.Schema.Types.ObjectId, ref: 'LeaveType' },
-      maxDays: { type: Number, default: 0 } // override default maxDays if needed
+      maxDaysPerMonth: { type: Number, default: 0 }, // override default maxDays if needed
+      maxDaysPerYear: { type: Number, default:0},
+      carryForward: { type: Boolean, default: false}
     },
-      carry forward: { type: Boolean, default: false}
   ],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
