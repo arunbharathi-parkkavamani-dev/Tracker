@@ -1,6 +1,6 @@
 // routes/populateRouter.js
 import express from "express";
-import { authMiddleware } from "../middleware/authMiddleware.js";
+import { authMiddleware } from "./middlewares/authMiddleware.js"
 import { handlePopulate } from "../helpers/populateHelper.js";
 
 const router = express.Router();
