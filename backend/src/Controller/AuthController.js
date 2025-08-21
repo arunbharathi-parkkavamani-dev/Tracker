@@ -2,14 +2,16 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import  Employee  from '../models/Employee.js';
+import dotenv from "dotenv";
+dotenv.config({ path: './src/config/.env' })
 
 // helper to generate tokens
 const generateAccessToken = (payload) => {
-  return jwt.sign(payload, process.env.SECRET_KEY, { expiresIn: '60m' }); // 1 hour
+  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '60m' }); // 1 hour
 };
 
 const generateRefreshToken = (payload) => {
-  return jwt.sign(payload, process.env.REFRESH_SECRET_KEY, { expiresIn: '1d' }); // 1 day
+  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' }); // 1 day
 };
 
 // ------------------- LOGIN -------------------
@@ -114,7 +116,7 @@ export const authMiddleware = (req, res, next) => {
     return next(err);
   }
 
-  jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
       const error = new Error('Invalid or expired token');
       error.status = 403;

@@ -6,6 +6,7 @@ import populate from "./routes/populateRoutes.js";
 import auth from "./routes/authRoutes.js"
 import { apiHitLogger } from "./middlewares/apiHitLogger.js";
 import {errorHandler} from "./middlewares/errorHandler.js";
+import cookieParser from "cookie-parser";
 
 connectDB();
 
@@ -17,6 +18,7 @@ app.use(cors({
     credentials:true,
 }))
 app.use(express.json());
+app.use(cookieParser());
 
 app.use(apiHitLogger)
 app.use("/api/auth/", auth);

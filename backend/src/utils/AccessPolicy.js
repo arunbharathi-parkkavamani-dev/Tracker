@@ -1,6 +1,7 @@
 // config/accessPolicies.js
 
 const accessPolicies = {
+  Support:"*",
   SuperAdmin: "*",
   HR: "*",
 

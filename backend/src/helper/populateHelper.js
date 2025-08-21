@@ -26,30 +26,54 @@ export async function handlePopulate(req, res, next) {
       }
 
       case "read": {
-        let query = id ? M.findById(id) : M.find({});
-        const maxLimit = Math.min(parseInt(limit) || 50, 100); // cap at 100
+      // If reading single doc
+      if (id) {
+        const targetDoc = await M.findById(id).lean();
+        if (!targetDoc) return res.status(404).json({ error: "Not found" });
 
-        query = query.limit(maxLimit).lean();
+        // Check if self is required
+        if (role === "Employee" && String(req.user._id) !== String(targetDoc._id)) {
+          return res.status(403).json({ error: "Not authorized to view other employees" });
+        }
 
-        // Field-level filtering
+        // Field projection
         if (fields) {
           const fieldList = fields.split(",");
           const allowed = fieldList.filter((f) =>
-            canRead(role, model, f, req.user, null)
+            canRead(role, model, f, req.user, targetDoc)
           );
-          query.select(allowed.join(" "));
+
+          const projection = {};
+          allowed.forEach((f) => (projection[f] = 1));
+
+          let query = M.findById(id, projection).lean();
+
+          if (key && model === "Employee")
+            query.populate({
+              path: key,
+              select:
+                "basicInfo.firstName basicInfo.phone professionalInfo.empId professionalInfo.role",
+            });
+          if (key) query.populate(key);
+
+          result = await query.exec();
+        } else {
+          result = targetDoc;
         }
-
-        if (key) query.populate(key);
-
+      } else {
+        // Multiple docs (list)
+        let query = M.find({});
+        const maxLimit = Math.min(parseInt(limit) || 50, 100);
+        query = query.limit(maxLimit).lean();
         result = await query.exec();
-
-        // Apply custom function if available
-        if (customFun && typeof M[customFun] === "function") {
-          result = await M[customFun](result, req);
-        }
-        break;
       }
+
+      if (customFun && typeof M[customFun] === "function") {
+        result = await M[customFun](result, req);
+      }
+      break;
+    }
+
 
       case "update": {
         const updateData = {};
