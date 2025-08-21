@@ -44,10 +44,10 @@ const EmployeeSchema = new mongoose.Schema({
     empId: { type: String, trim: true },
     designation: { type: mongoose.Schema.Types.ObjectId, ref: 'Designation' },
     department: { type: mongoose.Schema.Types.ObjectId, ref: 'Department' },
-    role: { type: String, trim: true },
+    role: { type: String, trim: true, enum:["Support", "Hr", "SuperAdmin", "Manager", "Employee"] },
     reportingManager: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee' },
     teamLead: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee' },
-    level: { type: String, enum: ['Junior', 'Mid', 'Senior', 'Lead', 'Manager', 'Director'] },
+    level: { type: String, enum: ['L1', 'L2', 'L3', 'L4'] },
     doj: { type: Date },
     probationPeriod: { type: String }, // e.g., "6 months"
     confirmDate: { type: Date },
