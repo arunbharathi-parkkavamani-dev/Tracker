@@ -1,7 +1,7 @@
 // controllers/authController.js
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
-import { Employee } from '../models/collection.js';
+import  Employee  from '../models/Employee.js';
 
 // helper to generate tokens
 const generateAccessToken = (payload) => {

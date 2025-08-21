@@ -1,15 +1,15 @@
 // models/LeavePolicy.js
-const mongoose = require('mongoose');
+import { Schema, model } from 'mongoose';
 
-const LeavePolicySchema = new mongoose.Schema({
+const LeavePolicySchema = new Schema({
   designation: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Designation',
     required: true
   },
   leaves: [
     {
-      leaveType: { type: mongoose.Schema.Types.ObjectId, ref: 'LeaveType' },
+      leaveType: { type: Schema.Types.ObjectId, ref: 'LeaveType' },
       maxDaysPerMonth: { type: Number, default: 0 }, // override default maxDays if needed
       maxDaysPerYear: { type: Number, default:0},
       carryForward: { type: Boolean, default: false}
@@ -24,4 +24,4 @@ LeavePolicySchema.pre('save', function(next) {
   next();
 });
 
-module.exports = mongoose.model('LeavePolicy', LeavePolicySchema);
+export default model('LeavePolicy', LeavePolicySchema);

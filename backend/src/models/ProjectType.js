@@ -1,9 +1,9 @@
 // models/ProjectType.js
-const mongoose = require('mongoose');
+import { Schema, model } from 'mongoose';
 
-const ProjectTypeSchema = new mongoose.Schema({
+const ProjectTypeSchema = new Schema({
   name: { type: String, trim: true, unique: true }, // e.g., "Web Application"
   description: { type: String }
 }, { timestamps: true });
 
-module.exports = mongoose.model('ProjectType', ProjectTypeSchema);
+export default model('ProjectType', ProjectTypeSchema);

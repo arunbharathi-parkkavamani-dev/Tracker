@@ -1,7 +1,7 @@
 // models/LeaveType.js
-const mongoose = require('mongoose');
+import { Schema, model } from 'mongoose';
 
-const LeaveTypeSchema = new mongoose.Schema({
+const LeaveTypeSchema = new Schema({
   name: {
     type: String,
     trim: true,
@@ -10,11 +10,6 @@ const LeaveTypeSchema = new mongoose.Schema({
   description: { type: String },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
-});
+}, {timestamps:true});
 
-LeaveTypeSchema.pre('save', function(next) {
-  this.updatedAt = Date.now();
-  next();
-});
-
-module.exports = mongoose.model('LeaveType', LeaveTypeSchema);
+export default model('LeaveType', LeaveTypeSchema);

@@ -8,9 +8,9 @@ const IconSchema = new mongoose.Schema({
 
 const SideBarSchema = new mongoose.Schema({
   title: { type: String, trim: true },        // e.g., "Dashboard"
-  icon: IconSchema,                           // embedded subdocument
+  icon: IconSchema,                           // embedded sub document
   route: { type: String, trim: true },        // e.g., "/dashboard"
   roles: [{ type: String }]                   // roles who can see this
 }, { timestamps: true });
 
-module.exports = mongoose.model('SideBar', SideBarSchema);
+export default mongoose.model("Sidebar", SideBarSchema);

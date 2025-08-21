@@ -1,7 +1,7 @@
 // models/Designation.js
-const mongoose = require('mongoose');
+import { Schema, model } from 'mongoose';
 
-const DesignationSchema = new mongoose.Schema({
+const DesignationSchema = new Schema({
   title: {
     type: String,
     trim: true,
@@ -17,4 +17,4 @@ DesignationSchema.pre('save', function(next) {
   next();
 });
 
-module.exports = mongoose.model('Designation', DesignationSchema);
+export default model('Designation', DesignationSchema);

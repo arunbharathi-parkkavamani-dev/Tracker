@@ -1,5 +1,5 @@
 // middlewares/errorHandler.js
-import { ErrorLog } from '../models/collection.js';
+import ErrorLog from '../models/ErrorLog.js';
 
 export const errorHandler = async (err, req, res, next) => {
   try {

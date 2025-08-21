@@ -3,6 +3,7 @@ import connectDB from "./Config/ConnectDB.js";
 import cors from "cors";
 import dotenv from "dotenv";
 import populate from "./routes/populateRoutes.js";
+import auth from "./routes/authRoutes.js"
 import { apiHitLogger } from "./middlewares/apiHitLogger.js";
 import {errorHandler} from "./middlewares/errorHandler.js";
 
@@ -18,7 +19,7 @@ app.use(cors({
 app.use(express.json());
 
 app.use(apiHitLogger)
-
+app.use("/api/auth/", auth);
 app.use("/api/populate", populate);
 app.use(errorHandler)
 

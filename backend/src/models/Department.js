@@ -1,7 +1,7 @@
 // models/Department.js
-const mongoose = require('mongoose');
+import { Schema, model } from 'mongoose';
 
-const DepartmentSchema = new mongoose.Schema({
+const DepartmentSchema = new Schema({
   name: {
     type: String,
     trim: true,
@@ -22,4 +22,4 @@ DepartmentSchema.pre('save', function(next) {
   next();
 });
 
-module.exports = mongoose.model('Department', DepartmentSchema);
+export default model('Department', DepartmentSchema);

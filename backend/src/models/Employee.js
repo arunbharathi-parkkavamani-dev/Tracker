@@ -1,7 +1,7 @@
 // models/Employee.js
-const mongoose = require('mongoose');
+import { Schema, model } from 'mongoose';
 
-const EmployeeSchema = new mongoose.Schema({
+const EmployeeSchema = new Schema({
   basicInfo: {
     firstName: { type: String, trim: true },
     lastName: { type: String, trim: true },
@@ -42,11 +42,11 @@ const EmployeeSchema = new mongoose.Schema({
 
   professionalInfo: {
     empId: { type: String, trim: true },
-    designation: { type: mongoose.Schema.Types.ObjectId, ref: 'Designation' },
-    department: { type: mongoose.Schema.Types.ObjectId, ref: 'Department' },
+    designation: { type: Schema.Types.ObjectId, ref: 'Designation' },
+    department: { type: Schema.Types.ObjectId, ref: 'Department' },
     role: { type: String, trim: true, enum:["Support", "Hr", "SuperAdmin", "Manager", "Employee"] },
-    reportingManager: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee' },
-    teamLead: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee' },
+    reportingManager: { type: Schema.Types.ObjectId, ref: 'Employee' },
+    teamLead: { type: Schema.Types.ObjectId, ref: 'Employee' },
     level: { type: String, enum: ['L1', 'L2', 'L3', 'L4'] },
     doj: { type: Date },
     probationPeriod: { type: String }, // e.g., "6 months"
@@ -129,4 +129,4 @@ EmployeeSchema.pre('save', function(next) {
   next();
 });
 
-module.exports = mongoose.model('Employee', EmployeeSchema);
+export default model('Employee', EmployeeSchema);

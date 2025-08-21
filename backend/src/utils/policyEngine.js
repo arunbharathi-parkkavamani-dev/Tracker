@@ -1,5 +1,5 @@
 // utils/policyEngine.js
-import accessPolicies from "../config/accessPolicies.js";
+import accessPolicies from "./AccessPolicy.js";
 
 function getPolicy(role, model) {
   const rolePolicy = accessPolicies[role];

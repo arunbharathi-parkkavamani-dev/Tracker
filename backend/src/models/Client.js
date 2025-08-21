@@ -1,7 +1,7 @@
 // models/Client.js
-const mongoose = require('mongoose');
+import { Schema, model } from 'mongoose';
 
-const ClientSchema = new mongoose.Schema({
+const ClientSchema = new Schema({
   name: { type: String, trim: true, unique: true },
   email: { type: String, trim: true, lowercase: true },
   phone: { type: String },
@@ -13,7 +13,7 @@ const ClientSchema = new mongoose.Schema({
     country: String
   },
   contactPerson: { type: String },
-  projectTypes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ProjectType' }] // ✅ updated
+  projectTypes: [{ type: Schema.Types.ObjectId, ref: 'ProjectType' }] // ✅ updated
 }, { timestamps: true });
 
-module.exports = mongoose.model('Client', ClientSchema);
+export default model('Client', ClientSchema);

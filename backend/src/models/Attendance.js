@@ -1,9 +1,9 @@
 // models/Attendance.js
-const mongoose = require('mongoose');
+import { Schema, model } from 'mongoose';
 
-const AttendanceSchema = new mongoose.Schema({
+const AttendanceSchema = new Schema({
   employee: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Employee',
     required: true
   },
@@ -14,7 +14,7 @@ const AttendanceSchema = new mongoose.Schema({
     default: 'Present'
   },
   leaveType: { // optional, only used when status === 'Leave'
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'LeaveType'
   },
   checkIn: { type: Date },
@@ -28,4 +28,4 @@ AttendanceSchema.pre('save', function(next) {
   next();
 });
 
-module.exports = mongoose.model('Attendance', AttendanceSchema);
+export default model('Attendance', AttendanceSchema);
