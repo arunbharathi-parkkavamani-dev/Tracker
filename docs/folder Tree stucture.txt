@@ -1,0 +1,65 @@
+backend/
+├── src/
+│   ├── config/             # All configuration files
+│   │   ├── db.js           # Database connection
+│   │   ├── env.js          # Environment variables loader
+│   │   └── logger.js       # Logger config (winston, etc.)
+│   │
+│   ├── routes/             # All route definitions
+│   │   ├── index.js        # Main router aggregator
+│   │   ├── auth.routes.js
+│   │   ├── user.routes.js
+│   │   └── employee.routes.js
+│   │
+│   ├── controllers/        # Route handlers (business logic per route)
+│   │   ├── auth.controller.js
+│   │   ├── user.controller.js
+│   │   └── employee.controller.js
+│   │
+│   ├── services/           # Business logic (decouple from controllers)
+│   │   ├── auth.service.js
+│   │   ├── user.service.js
+│   │   └── employee.service.js
+│   │
+│   ├── models/             # Database models (Mongoose)
+│   │   ├── user.model.js
+│   │   ├── employee.model.js
+│   │   └── index.js
+│   │
+│   ├── middlewares/        # Express middlewares
+│   │   ├── auth.middleware.js
+│   │   ├── error.middleware.js
+│   │   └── validate.middleware.js
+│   │
+│   ├── helpers/            # Utility functions (reusable helpers)
+│   │   ├── response.js     # Standardized API response helper
+│   │   ├── populateHelper.js
+│   │   └── crypto.js
+│   │
+│   ├── utils/              # Extra utilities (email, file upload, etc.)
+│   │   ├── email.js
+│   │   ├── fileUpload.js
+│   │   └── socket.js
+│   │
+│   ├── validations/        # Joi/Yup/Zod schemas
+│   │   ├── auth.validation.js
+│   │   └── user.validation.js
+│   │
+│   ├── constants/          # Constants/enums/status codes
+│   │   ├── roles.js
+│   │   ├── messages.js
+│   │   └── httpStatus.js
+│   │
+│   ├── seeds/              # Database seeders
+│   │   └── seedUsers.js
+│   │
+│   ├── app.js              # Express app setup
+│   └── server.js           # Server bootstrap (start listening)
+│
+├── tests/                  # Unit & integration tests
+│   ├── auth.test.js
+│   └── user.test.js
+│
+├── .env                    # Environment variables
+├── package.json
+└── README.md
