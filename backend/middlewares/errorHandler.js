@@ -1,0 +1,24 @@
+// middlewares/errorHandler.js
+import { ErrorLog } from '../models/collection.js';
+
+export const errorHandler = async (err, req, res, next) => {
+  try {
+    // save to DB
+    await ErrorLog.create({
+      message: err.message,
+      stack: err.stack,
+      method: req.method,
+      route: req.originalUrl,
+      user: req.user ? req.user.id : null, // if auth attached user
+      ip: req.ip,
+    });
+  } catch (logError) {
+    console.error('Failed to save error log:', logError);
+  }
+
+  // return standard response
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || 'Internal Server Error',
+  });
+};
