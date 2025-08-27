@@ -51,6 +51,8 @@ const EmployeeSchema = new Schema({
     doj: { type: Date },
     probationPeriod: { type: String }, // e.g., "6 months"
     confirmDate: { type: Date },
+  },
+  authInfo:{
     workEmail: { 
       type: String, 
       lowercase: true, 

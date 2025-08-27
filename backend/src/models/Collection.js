@@ -1,5 +1,5 @@
 // models/collection.js
-import Employee from './Employee.js';
+import employees from './Employee.js';
 import Department from './Department.js';
 import Designation from './Designation.js';
 import LeaveTypes from './LeaveTypes.js';
@@ -11,9 +11,11 @@ import Client from './Client.js';
 import DailyActivity from './DailyActivity.js';
 import ApiHitLog from './ApiHitLog.js';
 import ProjectType from './ProjectType.js';
+import AccessPolicies from './AccessPolicies.js';
 
 const models = {
-  Employee,
+  AccessPolicies,
+  employees,
   Department,
   Designation,
   LeaveTypes,

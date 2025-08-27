@@ -1,0 +1,450 @@
+[
+    {
+    "role": "superAdmin",
+    "modelName": "Employee",
+    "permissions": {
+      "read": true,
+      "create": true,
+      "update": true,
+      "delete": true
+    },
+    "forbiddenAccess": {
+      "read": ["Employee.auth"],
+      "create": [],
+      "update": ["Employee.auth"],
+      "delete": ["Employee.auth"]
+    },
+    "allowAccess": {
+      "read": ["*"],
+      "create": ["*"],
+      "update": ["*"],
+      "delete": ["*"]
+    },
+    "registry": [],
+    "conditions": {
+        "read":[
+            { 
+                "isPopulate": true, 
+                "isRef": "Employee", 
+                "fields": [
+                "basicInfo.firstName", 
+                "basicInfo.phone", 
+                "professionalInfo.designation", 
+                "authInfo.workEmail"
+                ], 
+                "effect": "allow" 
+            }
+        ],
+        "create":[
+             { "isSelf": true, "isSalary": true, "effect": "deny" }
+        ],
+        "update":[
+            { "isSelf":true, "isSalary":true, "effect":"deny"}
+        ]
+    }
+  },
+  {
+    "role": "superAdmin",
+    "modelName": "Attendance",
+    "permissions": {
+      "read": true,
+      "create": true,
+      "update": true,
+      "delete": false
+    },
+    "forbiddenAccess": {
+      "read": [],
+      "create": [],
+      "update": [],
+      "delete": []
+    },
+    "allowAccess": {
+      "read": ["*"],
+      "create": ["*"],
+      "update": ["*"],
+      "delete": ["*"]
+    },
+    "registry": [],
+    "conditions": {
+        "create":[
+            {"isSelf":true},
+            {"!isSelf":true, "isLeave":true, "isManager":true}
+        ],
+        "update":[
+            {"isSelf":true},
+            {"!isSelf":true, "isLeave":true, "isManager":true}
+        ]
+    }
+  },
+  {
+    "role": "superAdmin",
+    "modelName": "DailyActivity",
+    "permissions":{
+        "read":true,
+        "create":true,
+        "update":false,
+        "delete":false
+    },
+    "forbiddenAccess":{
+        "create":[],
+        "delete":[],
+        "read":[],
+        "update":[]
+    },
+    "allowAccess":{
+        "create":["*"],
+        "delete":["*"],
+        "read":["*"],
+        "update":["*"]
+    },
+    "registry":[],
+    "conditions":{
+        "update":[
+            {"isSelf":true, "effect":"allow"}
+        ],
+        "delete":[
+            {"isSelf":true, "effect":"allow"}
+        ]
+    }
+  },
+  {
+    "role": "HR",
+    "modelName": "Employee",
+    "permissions": {
+      "read": true,
+      "create": true,
+      "update": true,
+      "delete": true
+    },
+    "forbiddenAccess": {
+      "read": ["Employee.auth"],
+      "create": [],
+      "update": ["Employee.auth"],
+      "delete": ["Employee.auth"]
+    },
+    "allowAccess": {
+      "read": ["*"],
+      "create": ["*"],
+      "update": ["*"],
+      "delete": ["*"]
+    },
+    "registry": [],
+    "conditions": {
+        "read":[
+            { "isSelf":true, "isAuthInfo":true, "effect":"allow"},
+            { 
+                "isPopulate": true, 
+                "isRef": "Employee", 
+                "fields": [
+                "basicInfo.firstName", 
+                "basicInfo.phone", 
+                "professionalInfo.designation", 
+                "authInfo.workEmail"
+                ], 
+                "effect": "allow" 
+            }
+        ],
+        "create":[
+             { "isSelf": true, "isSalary": true, "effect": "deny" },
+             { "isSelf":true, "isAuthInfo":true, "effect":"allow"}    
+        ],
+        "update":[
+            { "isSelf":true, "isSalary":true, "effect":"deny"},
+            { "isSelf":true, "isAuthInfo":true, "effect":"allow"},
+            { "isSelf": true, "isDesignation": true, "effect":"deny"}
+        ]
+    }
+  },
+  {
+    "role": "HR",
+    "modelName": "Attendance",
+    "permissions": {
+      "read": true,
+      "create": true,
+      "update": true,
+      "delete": false
+    },
+    "forbiddenAccess": {
+      "read": [],
+      "create": [],
+      "update": [],
+      "delete": []
+    },
+    "allowAccess": {
+      "read": ["*"],
+      "create": ["*"],
+      "update": ["*"],
+      "delete": ["*"]
+    },
+    "registry": [],
+    "conditions": {
+        "create":[
+            {"isSelf":true},
+            {"!isSelf":true, "isLeave":true, "isManager":true}
+        ],
+        "update":[
+            {"isSelf":true},
+            {"!isSelf":true, "isLeave":true, "isManager":true}
+        ]
+    }
+  },
+  {
+    "role": "HR",
+    "modelName": "DailyActivity",
+    "permissions":{
+        "read":true,
+        "create":true,
+        "update":false,
+        "delete":false
+    },
+    "forbiddenAccess":{
+        "create":[],
+        "delete":[],
+        "read":[],
+        "update":[]
+    },
+    "allowAccess":{
+        "create":["*"],
+        "delete":["*"],
+        "read":["*"],
+        "update":["*"]
+    },
+    "registry":[],
+    "conditions":{
+        "update":[
+            {"isSelf":true, "effect":"allow"}
+        ],
+        "delete":[
+            {"isSelf":true, "effect":"allow"}
+        ]
+    }
+  },
+  {
+    "role": "Manager",
+    "modelName": "Employee",
+    "permissions": {
+      "read": true,
+      "create": true,
+      "update": true,
+      "delete": true
+    },
+    "forbiddenAccess": {
+      "read": ["Employee.auth", "Employee.SalaryInfo"],
+      "create": [],
+      "update": ["Employee.auth", "Employee.SalaryInfo"],
+      "delete": ["Employee.auth"]
+    },
+    "allowAccess": {
+      "read": ["*"],
+      "create": ["*"],
+      "update": ["*"],
+      "delete": ["*"]
+    },
+    "registry": [],
+    "conditions": {
+        "read":[
+            { "isSelf":true, "isAuthInfo":true, "effect":"allow"},
+            { "isSelf":true, "isSalaryInfo": true, "effect":"allow"},
+            { 
+                "isPopulate": true, 
+                "isRef": "Employee", 
+                "fields": [
+                "basicInfo.firstName", 
+                "basicInfo.phone", 
+                "professionalInfo.designation", 
+                "authInfo.workEmail"
+                ], 
+                "effect": "allow" 
+            } 
+        ],
+        "create":[
+             { "isSelf":true, "isAuthInfo":true, "effect":"allow"}    
+        ],
+        "update":[
+            { "isSelf":true, "isAuthInfo":true, "effect":"allow"},
+            { "isSelf": true, "isDesignation": true, "effect":"deny"}
+        ]
+    }
+  },
+  {
+    "role": "Manager",
+    "modelName": "Attendance",
+    "permissions": {
+      "read": true,
+      "create": true,
+      "update": true,
+      "delete": false
+    },
+    "forbiddenAccess": {
+      "read": [],
+      "create": [],
+      "update": [],
+      "delete": []
+    },
+    "allowAccess": {
+      "read": ["*"],
+      "create": ["*"],
+      "update": ["*"],
+      "delete": ["*"]
+    },
+    "registry": [],
+    "conditions": {
+        "create":[
+            {"isSelf":true},
+            {"!isSelf":true, "isLeave":true, "isManager":true}
+        ],
+        "update":[
+            {"isSelf":true},
+            {"!isSelf":true, "isLeave":true, "isManager":true}
+        ]
+    }
+  },
+  {
+    "role": "Manager",
+    "modelName": "DailyActivity",
+    "permissions":{
+        "read":true,
+        "create":true,
+        "update":false,
+        "delete":false
+    },
+    "forbiddenAccess":{
+        "create":[],
+        "delete":[],
+        "read":[],
+        "update":[]
+    },
+    "allowAccess":{
+        "create":["*"],
+        "delete":["*"],
+        "read":["*"],
+        "update":["*"]
+    },
+    "registry":[],
+    "conditions":{
+        "update":[
+            {"isSelf":true, "effect":"allow"}
+        ],
+        "delete":[
+            {"isSelf":true, "effect":"allow"}
+        ]
+    }
+  },
+  {
+    "role": "Employee",
+    "modelName": "Employee",
+    "permissions": {
+      "read": false,
+      "create": false,
+      "update": false,
+      "delete": false
+    },
+    "forbiddenAccess": {
+      "read": [],
+      "create": [],
+      "update": [],
+      "delete": []
+    },
+    "allowAccess": {
+      "read": [],
+      "create": [],
+      "update": [],
+      "delete": []
+    },
+    "registry": [],
+    "conditions": {
+        "read":[
+            { "isSelf":true,"effect":true},
+            { 
+                "isPopulate": true, 
+                "isRef": "Employee", 
+                "fields": [
+                "basicInfo.firstName", 
+                "basicInfo.phone", 
+                "professionalInfo.designation", 
+                "authInfo.workEmail"
+                ], 
+                "effect": "allow" 
+            }
+        ],
+        "create":[
+             { "isSelf": true, "isBasicInfo": true, "effect": "allow" },
+             { "isSelf":true, "isAuthInfo": true, "effect":"allow"},
+             { "isSelf": true, "isDocuments": true, "effect":"allow"}
+
+        ],
+        "update":[
+            { "isSelf": true, "isBasicInfo": true, "effect": "allow" },
+            { "isSelf":true, "isAuthInfo": true, "effect":"allow"},
+            { "isSelf": true, "isDocuments": true, "effect":"allow"}
+        ],
+        "delete":[
+            { "isSelf": true, "isDocuments": true, "effect":"allow"}
+        ]
+    }
+  },
+  {
+    "role": "Employee",
+    "modelName": "Attendance",
+    "permissions": {
+      "read": true,
+      "create": true,
+      "update": true,
+      "delete": false
+    },
+    "forbiddenAccess": {
+      "read": [],
+      "create": [],
+      "update": [],
+      "delete": []
+    },
+    "allowAccess": {
+      "read": ["*"],
+      "create": ["*"],
+      "update": ["*"],
+      "delete": ["*"]
+    },
+    "registry": [],
+    "conditions": {
+        "create":[
+            {"isSelf":true},
+            {"!isSelf":true, "isLeave":true, "isManager":true}
+        ],
+        "update":[
+            {"isSelf":true},
+            {"!isSelf":true, "isLeave":true, "isManager":true}
+        ]
+    }
+  },
+  {
+    "role": "Employee",
+    "modelName": "DailyActivity",
+    "permissions":{
+        "read":true,
+        "create":true,
+        "update":false,
+        "delete":false
+    },
+    "forbiddenAccess":{
+        "create":[],
+        "delete":[],
+        "read":[],
+        "update":[]
+    },
+    "allowAccess":{
+        "create":[],
+        "delete":[],
+        "read":[],
+        "update":[]
+    },
+    "registry":[],
+    "conditions":{
+        "update":[
+            {"isSelf":true, "effect":"allow"}
+        ],
+        "delete":[
+            {"isSelf":true, "effect":"allow"}
+        ]
+    }
+}
+]

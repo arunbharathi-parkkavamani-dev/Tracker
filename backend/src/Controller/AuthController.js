@@ -19,16 +19,17 @@ export const login = async (req, res, next) => {
   try {
     const { workEmail, password } = req.body;
 
-    const employee = await Employee.findOne({ 'professionalInfo.workEmail': workEmail });
+    const employee = await Employee.findOne({ 'authInfo.workEmail': workEmail });
     if (!employee) {
       const err = new Error('Invalid email or password');
       err.status = 401;
       return next(err);
     }
 
-    const validPassword = await bcrypt.compare(password, employee.professionalInfo.password);
+    const validPassword = await bcrypt.compare(password, employee.authInfo.password);
     if (!validPassword) {
       const err = new Error('Invalid email or password');
+      console.log(password,bcrypt(employee.authInfo.password))
       err.status = 401;
       return next(err);
     }

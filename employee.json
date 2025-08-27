@@ -10,7 +10,9 @@
             "department":"",
             "role":"Support",
             "reportingManager":"",
-            "teamLead":"",
+            "teamLead":""
+        },
+        "authInfo":{
             "workEmail":"ganesh@logimaxindia.com",
             "password":"$2b$10$UYReggV.7UeZArTqL0vYFOF1WnbMUOpC4F/YLL0.rt6SgfeM0nwXu"
         }
@@ -28,7 +30,9 @@
             "department":"",
             "role":"Manager",
             "reportingManager":"",
-            "teamLead":"",
+            "teamLead":""
+        },
+        "authInfo":{
             "workEmail":"arunbharathi@logimaxindia.com",
             "password":"$2b$10$UYReggV.7UeZArTqL0vYFOF1WnbMUOpC4F/YLL0.rt6SgfeM0nwXu"
         }
