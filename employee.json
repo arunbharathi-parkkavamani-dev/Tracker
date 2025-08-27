@@ -8,7 +8,7 @@
             "empId":"LMX001",
             "designation":"",
             "department":"",
-            "role":"Support",
+            "role":"68ae768198bf091dcd503e0e",
             "reportingManager":"",
             "teamLead":""
         },
@@ -28,13 +28,49 @@
             "empId":"LMX002",
             "designation":"",
             "department":"",
-            "role":"Manager",
+            "role":"68ae768198bf091dcd503e0f",
             "reportingManager":"",
             "teamLead":""
         },
         "authInfo":{
             "workEmail":"arunbharathi@logimaxindia.com",
             "password":"$2b$10$UYReggV.7UeZArTqL0vYFOF1WnbMUOpC4F/YLL0.rt6SgfeM0nwXu"
+        }
+    },
+    {
+        "basicInfo": {
+            "firstName": "Vinothini",
+            "phone": 1234567890
+        },
+        "professionalInfo": {
+            "empId": "LMX003",
+            "designation": "",
+            "department": "",
+            "role": "68ae768198bf091dcd503e0d",
+            "reportingManager": "",
+            "teamLead": ""
+        },
+        "authInfo": {
+            "workEmail": "vinothini@logimaxindia.com",
+            "password": "$2b$10$UYReggV.7UeZArTqL0vYFOF1WnbMUOpC4F/YLL0.rt6SgfeM0nwXu"
+        }
+    },
+    {
+        "basicInfo": {
+            "firstName": "Loganathan",
+            "phone": 1234567891
+        },
+        "professionalInfo": {
+            "empId": "LMX000",
+            "designation": "",
+            "department": "",
+            "role": "68ae768198bf091dcd503e0c",
+            "reportingManager": "",
+            "teamLead": ""
+        },
+        "authInfo": {
+            "workEmail": "loganathan@logimaxindia.com",
+            "password": "$2b$10$UYReggV.7UeZArTqL0vYFOF1WnbMUOpC4F/YLL0.rt6SgfeM0nwXu"
         }
     }
 ]

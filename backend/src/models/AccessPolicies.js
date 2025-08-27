@@ -2,7 +2,7 @@
 import mongoose from "mongoose";
 
 const AccessPolicySchema = new mongoose.Schema({
-  role: { type: String, required: true, lowercase: true },
+  role: { type: mongoose.Schema.Types.ObjectId, ref: "Role", required: true },
 
   modelName: { type: String, required: true }, // e.g. "Employee", "Attendance"
 

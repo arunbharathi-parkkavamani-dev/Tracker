@@ -1,32 +1,34 @@
 // models/collection.js
 import employees from './Employee.js';
-import Department from './Department.js';
-import Designation from './Designation.js';
-import LeaveTypes from './LeaveTypes.js';
-import LeavePolicy from './LeavePolicy.js';
-import Attendance from './Attendance.js';
-import SideBar from './SideBar.js';
-import TaskType from './TaskType.js'
-import Client from './Client.js';
-import DailyActivity from './DailyActivity.js';
-import ApiHitLog from './ApiHitLog.js';
-import ProjectType from './ProjectType.js';
-import AccessPolicies from './AccessPolicies.js';
+import department from './Department.js';
+import designation from './Designation.js';
+import leavetypes from './LeaveTypes.js';
+import leavepolicy from './LeavePolicy.js';
+import attendance from './Attendance.js';
+import sidebar from './SideBar.js';
+import tasktype from './TaskType.js'
+import client from './Client.js';
+import dailyactivity from './DailyActivity.js';
+import apihitlog from './ApiHitLog.js';
+import projecttype from './ProjectType.js';
+import accesspolicies from './AccessPolicies.js';
+import role from './Role.js';
 
 const models = {
-  AccessPolicies,
+  accesspolicies,
   employees,
-  Department,
-  Designation,
-  LeaveTypes,
-  LeavePolicy,
-  Attendance,
-  SideBar,
-  TaskType,
-  Client,
-  DailyActivity,
-  ApiHitLog,
-  ProjectType
+  department,
+  designation,
+  leavetypes,
+  leavepolicy,
+  attendance,
+  sidebar,
+  tasktype,
+  client,
+  dailyactivity,
+  apihitlog,
+  projecttype,
+  role
 };
 
 export default models;

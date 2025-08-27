@@ -1,6 +1,6 @@
 [
     {
-    "role": "superAdmin",
+    "role": "68ae768198bf091dcd503e0c",
     "modelName": "Employee",
     "permissions": {
       "read": true,
@@ -9,10 +9,10 @@
       "delete": true
     },
     "forbiddenAccess": {
-      "read": ["Employee.auth"],
+      "read": ["Employee.authInfo"],
       "create": [],
-      "update": ["Employee.auth"],
-      "delete": ["Employee.auth"]
+      "update": ["Employee.authInfo"],
+      "delete": ["Employee.authInfo"]
     },
     "allowAccess": {
       "read": ["*"],
@@ -44,7 +44,7 @@
     }
   },
   {
-    "role": "superAdmin",
+    "role": "68ae768198bf091dcd503e0c",
     "modelName": "Attendance",
     "permissions": {
       "read": true,
@@ -77,7 +77,7 @@
     }
   },
   {
-    "role": "superAdmin",
+    "role": "68ae768198bf091dcd503e0c",
     "modelName": "DailyActivity",
     "permissions":{
         "read":true,
@@ -108,7 +108,7 @@
     }
   },
   {
-    "role": "HR",
+    "role": "68ae768198bf091dcd503e0d",
     "modelName": "Employee",
     "permissions": {
       "read": true,
@@ -156,7 +156,7 @@
     }
   },
   {
-    "role": "HR",
+    "role": "68ae768198bf091dcd503e0d",
     "modelName": "Attendance",
     "permissions": {
       "read": true,
@@ -189,7 +189,7 @@
     }
   },
   {
-    "role": "HR",
+    "role": "68ae768198bf091dcd503e0d",
     "modelName": "DailyActivity",
     "permissions":{
         "read":true,
@@ -220,7 +220,7 @@
     }
   },
   {
-    "role": "Manager",
+    "role": "68ae768198bf091dcd503e0e",
     "modelName": "Employee",
     "permissions": {
       "read": true,
@@ -267,7 +267,7 @@
     }
   },
   {
-    "role": "Manager",
+    "role": "68ae768198bf091dcd503e0e",
     "modelName": "Attendance",
     "permissions": {
       "read": true,
@@ -300,7 +300,7 @@
     }
   },
   {
-    "role": "Manager",
+    "role": "68ae768198bf091dcd503e0e",
     "modelName": "DailyActivity",
     "permissions":{
         "read":true,
@@ -331,7 +331,7 @@
     }
   },
   {
-    "role": "Employee",
+    "role": "68ae768198bf091dcd503e0f",
     "modelName": "Employee",
     "permissions": {
       "read": false,
@@ -384,7 +384,7 @@
     }
   },
   {
-    "role": "Employee",
+    "role": "68ae768198bf091dcd503e0f",
     "modelName": "Attendance",
     "permissions": {
       "read": true,
@@ -417,7 +417,7 @@
     }
   },
   {
-    "role": "Employee",
+    "role": "68ae768198bf091dcd503e0f",
     "modelName": "DailyActivity",
     "permissions":{
         "read":true,

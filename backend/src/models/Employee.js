@@ -44,7 +44,7 @@ const EmployeeSchema = new Schema({
     empId: { type: String, trim: true },
     designation: { type: Schema.Types.ObjectId, ref: 'Designation' },
     department: { type: Schema.Types.ObjectId, ref: 'Department' },
-    role: { type: String, trim: true, enum:["Support", "Hr", "SuperAdmin", "Manager", "Employee"] },
+    role: { type: Schema.Types.ObjectId, ref: 'Role' },
     reportingManager: { type: Schema.Types.ObjectId, ref: 'Employee' },
     teamLead: { type: Schema.Types.ObjectId, ref: 'Employee' },
     level: { type: String, enum: ['L1', 'L2', 'L3', 'L4'] },
