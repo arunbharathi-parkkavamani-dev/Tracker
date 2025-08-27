@@ -4,7 +4,7 @@ import department from './Department.js';
 import designation from './Designation.js';
 import leavetypes from './LeaveTypes.js';
 import leavepolicy from './LeavePolicy.js';
-import attendance from './Attendance.js';
+import attendances from './Attendance.js';
 import sidebar from './SideBar.js';
 import tasktype from './TaskType.js'
 import client from './Client.js';
@@ -21,7 +21,7 @@ const models = {
   designation,
   leavetypes,
   leavepolicy,
-  attendance,
+  attendances,
   sidebar,
   tasktype,
   client,

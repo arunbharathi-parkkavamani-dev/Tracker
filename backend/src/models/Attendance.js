@@ -21,11 +21,8 @@ const AttendanceSchema = new Schema({
   checkOut: { type: Date },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
-});
+},{ timestamps: true});
 
-AttendanceSchema.pre('save', function(next) {
-  this.updatedAt = Date.now();
-  next();
-});
-
+// ✅ Ensure only one record per employee per date
+AttendanceSchema.index({ employee: 1, date: 1 }, { unique: true });
 export default model('Attendance', AttendanceSchema);

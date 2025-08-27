@@ -1,0 +1,44 @@
+[
+  {
+    "employee": "68ae776a98bf091dcd503e14",
+    "date": "2025-08-26T00:00:00.000Z",
+    "status": "Present",
+    "checkIn": "2025-08-26T09:15:00.000Z",
+    "checkOut": "2025-08-26T18:05:00.000Z",
+    "createdAt": "2025-08-26T09:15:00.000Z",
+    "updatedAt": "2025-08-26T18:05:00.000Z"
+  },
+  {
+    "employee": "68ae776a98bf091dcd503e14",
+    "date": "2025-08-25T00:00:00.000Z",
+    "status": "Leave",
+    "leaveType": "68ae888898bf091dcd503e77",
+    "createdAt": "2025-08-25T08:00:00.000Z",
+    "updatedAt": "2025-08-25T08:00:00.000Z"
+  },
+  {
+    "employee": "68ae776a98bf091dcd503e15",
+    "date": "2025-08-26T00:00:00.000Z",
+    "status": "Half Day",
+    "checkIn": "2025-08-26T13:00:00.000Z",
+    "checkOut": "2025-08-26T17:30:00.000Z",
+    "createdAt": "2025-08-26T13:00:00.000Z",
+    "updatedAt": "2025-08-26T17:30:00.000Z"
+  },
+  {
+    "employee": "68ae776a98bf091dcd503e16",
+    "date": "2025-08-26T00:00:00.000Z",
+    "status": "Work From Home",
+    "checkIn": "2025-08-26T10:00:00.000Z",
+    "checkOut": "2025-08-26T19:00:00.000Z",
+    "createdAt": "2025-08-26T10:00:00.000Z",
+    "updatedAt": "2025-08-26T19:00:00.000Z"
+  },
+  {
+    "employee": "68ae776a98bf091dcd503e17",
+    "date": "2025-08-26T00:00:00.000Z",
+    "status": "Absent",
+    "createdAt": "2025-08-26T08:30:00.000Z",
+    "updatedAt": "2025-08-26T08:30:00.000Z"
+  }
+]
