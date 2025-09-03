@@ -1,10 +1,7 @@
-import { useRoutes } from 'react-router-dom'
-import routes from '~react-pages'
-import './App.css'
+import BaseLayout from './layouts/baseLayouts'
 
 function App() {
-  const element = useRoutes(routes)
-  return element
+  return <BaseLayout />;
 }
 
 export default App

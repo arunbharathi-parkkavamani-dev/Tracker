@@ -26,7 +26,7 @@ export const login = async (req, res, next) => {
       return next(err);
     }
 
-    const validPassword = await bcrypt.compare(password, employee.authInfo.password);
+    const validPassword = bcrypt.compare(password, employee.authInfo.password);
     if (!validPassword) {
       const err = new Error('Invalid email or password');
       console.log(password,bcrypt(employee.authInfo.password))
@@ -45,7 +45,7 @@ export const login = async (req, res, next) => {
 
     // send cookies
     res.cookie('auth_token', accessToken, {
-      httpOnly: true,
+      httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 60 * 60 * 1000, // 1 hour

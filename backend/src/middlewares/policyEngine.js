@@ -1,184 +1,211 @@
-// middleware/policyEngine.js
-import models from '../models/Collection.js';
-import  {setCache,getPolicy} from '../utils/cache.js';
+// src/middlewares/policyEngine.js
+import models from "../models/Collection.js";
+import { setCache, getPolicy } from "../utils/cache.js";
+
 setCache();
 
-export async function buildQuery({ role, userId, action, modelName, docId, fields, body }) {
+export async function buildQuery({ role, userId, action, modelName, docId, fields, body, filter }) {
+  if (!role || !modelName) throw new Error("Role and modelName are required");
+
   role = role.toLowerCase();
-  console.log(models)
-  console.log(role, modelName)
   const policies = getPolicy(role);
-  console.log(policies[modelName])
-  if (!policies || !policies[modelName]) throw new Error('Policy not found');
+  if (!policies || !policies[modelName]) {
+    throw new Error(`Policy not found for role "${role}" on model "${modelName}"`);
+  }
 
   const policy = policies[modelName];
   const M = models[modelName];
+  if (!M) throw new Error(`Model "${modelName}" not found`);
 
   let query;
 
   switch (action.toLowerCase()) {
-    case 'read':
-      query = docId ? M.findById(docId) : M.find({});
+    // ---------------- READ ----------------
+    case "read": {
+  let mongoFilter = {};
+  if (filter) {
+    const filters = filter.split(";");
+    filters.forEach((f) => {
+      const [key, value] = f.split(",");
+      if (key && value !== undefined) {
+        // ✅ enforce policy: key must be in allowed fields
+        if (
+          policy.allowAccess?.read === "*" ||
+          (Array.isArray(policy.allowAccess?.read) &&
+            policy.allowAccess.read.includes(key))
+        ) {
+          mongoFilter[key] = value;
+        } else {
+          throw new Error(`Filtering by "${key}" is not allowed`);
+        }
+      }
+    });
+  }
 
-    const fieldArray = fields ? fields.split(',') : [];
-    console.log(fieldArray.length)
+  query = docId ? M.findById(docId) : M.find(mongoFilter);
 
-    // Always apply a projection
-    let projection = {};
-    // console.log(projection)
-    console.log(policy.allowAccess?.read)
-    const readAccess = policy.allowAccess?.read;
+  const fieldArray = fields ? fields.split(",") : [];
+  let projection = {};
 
-    console.log(readAccess)
+  const readAccess = policy.allowAccess?.read;
 
-    if (Array.isArray(readAccess) && readAccess.includes('*')) {
-      console.log('Allowing all fields for read access');
-      const forbidden = policy.forbiddenAccess?.read || [];
-      console.log(forbidden)
-      forbidden.forEach(f => {
-        projection[f] = 0; // exclude
+  if (Array.isArray(readAccess) && readAccess.includes("*")) {
+    const forbidden = policy.forbiddenAccess?.read || [];
+    forbidden.forEach((f) => (projection[f] = 0));
+  } else if (Array.isArray(readAccess)) {
+    if (fieldArray.length > 0) {
+      fieldArray.forEach((f) => {
+        if (readAccess.includes(f) && !policy.forbiddenAccess?.read?.includes(f)) {
+          projection[f] = 1;
+        }
       });
     } else {
-      // client requested fields, filter against allow/forbidden
-      fieldArray.forEach(f => {
-        if (policy.allowAccess?.read === '*' || policy.allowAccess?.read?.includes(f)) {
-          if (!policy.forbiddenAccess?.read?.includes(f)) {
-            projection[f] = 1;
-          }
+      readAccess.forEach((f) => {
+        if (!policy.forbiddenAccess?.read?.includes(f)) {
+          projection[f] = 1;
         }
       });
     }
+  }
 
-    query = query.select(projection);
+  query = query.select(projection);
 
-    // isSelf condition check (unchanged)
-    const isSelf = docId && String(userId) === String(docId);
-
-    // populate logic (unchanged)
-    fieldArray.forEach(f => {
-      policy.conditions?.read?.forEach(cond => {
-        if (cond.isPopulate && f.startsWith(cond.isRef.split('.')[0])) {
-          query = query.populate({
-            path: cond.isRef,
-            select: cond.fields?.join(' ')
-          });
-        }
-      });
+  // ✅ Safe populate
+  fieldArray.forEach((f) => {
+    policy.conditions?.read?.forEach((cond) => {
+      if (cond.isPopulate && f.startsWith(cond.isRef.split(".")[0])) {
+        query = query.populate({
+          path: cond.isRef,
+          select: cond.fields?.join(" "),
+          match: { $expr: { $ne: ["$_id", ""] } }, // ignore "" ObjectId values
+        });
+      }
     });
-    break;
+  });
 
-    case 'create':
-      console.log('Creating document');
-      console.log(policies[modelName].conditions.create);
-      if (modelName.toLowerCase() === 'attendances') {
+  break;
+}
+
+    // ---------------- CREATE ----------------
+    case "create": {
+      if (modelName.toLowerCase() === "attendances") {
         const today = new Date();
-        today.setHours(0,0,0,0);
-        console.log(String(userId));
-        console.log(String(body.employee));
-        const isSelf = userId ? String(body.employee) == String(userId) : false;
-        console.log(isSelf);
+        today.setHours(0, 0, 0, 0);
 
-        const allowed = policy.conditions.create.some(cond => {
+        const isSelf = userId ? String(body.employee) === String(userId) : false;
+
+        const allowed = policy.conditions.create.some((cond) => {
           if (cond.isSelf && isSelf) return true;
-          if (cond['!isSelf'] && !isSelf) {
-              // for example: must be manager and isLeave
-              const isManager = role?.toLowerCase() === 'manager';
-              return isManager && body.status === 'Leave';
+          if (cond["!isSelf"] && !isSelf) {
+            const isManager = role === "manager";
+            return isManager && body.status === "Leave";
           }
           return false;
         });
-        console.log(allowed);
+        if (!allowed) throw new Error("Not allowed to create this record");
 
-        if (!allowed) throw new Error('Not allowed to create this record');
-        const Holiday = await models['holidays'].findOne({date: today});
+        const Holiday = await models["holidays"].findOne({ date: today });
         const isHoliday = !!Holiday;
         const isSunday = today.getDay() === 0;
+
         const lastSaturdayDate = new Date(today);
         lastSaturdayDate.setDate(today.getDate() - 7);
-        const lastSaturday = await models['attendances'].findOne({
+        const lastSaturday = await models["attendances"].findOne({
           employee: userId,
-          date: lastSaturdayDate
+          date: lastSaturdayDate,
         });
-        const isAlternative = lastSaturday.status === "week off" || lastSaturday.status === "Week off Present";
-        const isDeveloper = role?.toLowerCase() === 'developer';
+        const isAlternative =
+          lastSaturday?.status === "week off" || lastSaturday?.status === "Week off Present";
+        const isDeveloper = role === "developer";
 
-        if(isHoliday || isSunday || (!isAlternative && isDeveloper)){
-          body.status ="pending"
-        } else{
-          if(body.workType.toLowerCase()==="fixed"){
+        if (isHoliday || isSunday || (!isAlternative && isDeveloper)) {
+          body.status = "Pending";
+        } else {
+          if (body.workType?.toLowerCase() === "fixed") {
             const checkIn = new Date(body.checkIn);
             const hour = checkIn.getHours();
             const min = checkIn.getMinutes();
-            const cutOff = 10*60+20;
+            const cutOff = 10 * 60 + 20;
             const checkInMinutes = hour * 60 + min;
 
-            if (checkInMinutes > cutOff) {
-              body.status = "Late Entry";
-            } else{
-              body.status = "Present";
-            }
-          } else if(body.workType.toLowerCase()==="flexible"){
-            body.status = "Present"
+            body.status = checkInMinutes > cutOff ? "Late Entry" : "Check-In";
+          } else if (body.workType?.toLowerCase() === "flexible") {
+            body.status = "Check-In";
           }
         }
 
-        const doc = new M({
+        query = new M({
           ...body,
           employee: body.employee || userId,
-          date: today
+          date: today,
         });
-        query = doc;
-      }
-      else{
-        // default create for other models
+      } else {
         query = new M(body);
       }
       break;
+    }
 
-    case 'update':
-      if (modelName.toLowerCase() === 'attendances') {
+    // ---------------- UPDATE ----------------
+    case "update": {
+      if (modelName.toLowerCase() === "attendances") {
         const today = new Date();
-        today.setHours(0,0,0,0);
+        today.setHours(0, 0, 0, 0);
 
-        const isSelf = userId ? String(body.employee) == String(userId) : false;
-
-        const allowed = policy.conditions.create.some(cond => {
+        const isSelf = userId ? String(body.employee) === String(userId) : false;
+        const allowed = policy.conditions.create.some((cond) => {
           if (cond.isSelf && isSelf) return true;
-          if (cond['!isSelf'] && !isSelf) {
-              // for example: must be manager and isLeave
-              const isManager = role?.toLowerCase() === 'manager';
-              return isManager && body.status === 'Leave';
+          if (cond["!isSelf"] && !isSelf) {
+            const isManager = role === "manager";
+            return isManager && body.status === "Leave";
           }
           return false;
         });
-        console.log(allowed);
+        if (!allowed) throw new Error("Not allowed to update this record");
 
-        if (!allowed) throw new Error('Not allowed to create this record');
-
-        let doc = await M.findOne({
-          employee: body.employee || userId,
-          date: { $gte: today, $lt: new Date(today.getTime() + 24*60*60*1000) }
+        const checkInDoc = await models["attendances"].findOne({
+          employee: userId,
+          date: today,
         });
+        if (!checkInDoc) throw new Error("Check-in record not found for today");
 
-        if (!doc) throw new Error('Attendance not found for today');
+        const checkIn = new Date(checkInDoc.checkIn);
+        const checkOut = body.checkOut ? new Date(body.checkOut) : null;
+        if (!checkOut) throw new Error("Check-out time required");
 
-        // Apply updates only to allowed fields
-        Object.assign(doc, body);
-        query = doc;
+        const isMale = body.gender === "male";
+        const hours = checkOut.getHours();
+        const minutes = checkOut.getMinutes();
 
+        const femaleCutOff = 18 * 60 + 30; // 6:30 PM
+        const maleCutOff = 19 * 60 + 30;   // 7:30 PM
+
+        const workedMinutes = (checkOut - checkIn) / (1000 * 60);
+        const femaleWorkingTime = workedMinutes >= 7.5 * 60;
+        const maleWorkingTime = workedMinutes >= 8.5 * 60;
+
+        if (!isMale && (!femaleWorkingTime || (hours * 60 + minutes) < femaleCutOff)) {
+          body.status = "Early check-out";
+        } else if (isMale && (!maleWorkingTime || (hours * 60 + minutes) < maleCutOff)) {
+          body.status = "Early check-out";
+        } else {
+          body.status = "Check-Out";
+        }
+
+        Object.assign(checkInDoc, body);
+        query = checkInDoc;
       } else {
-        // default update for other models
         query = await M.findById(docId);
-        if (!query) throw new Error('Document not found');
+        if (!query) throw new Error("Document not found");
         Object.assign(query, body);
       }
       break;
+    }
 
+    // ---------------- DELETE ----------------
+    case "delete":
+      throw new Error("Delete operation is not allowed");
 
-    case 'delete':
-      query = M.findById(docId);
-      break;
-
+    // ---------------- UNSUPPORTED ----------------
     default:
       throw new Error(`Unsupported action: ${action}`);
   }
