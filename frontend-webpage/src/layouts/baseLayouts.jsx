@@ -1,10 +1,37 @@
 import Sidebar from "./Sidebar";
-import { useRoutes } from "react-router-dom";
-import routes from '~react-pages'
+import { useRoutes, useLocation, Navigate } from "react-router-dom";
+import Login from "../pages/login.jsx";
+import routes from "~react-pages";
+import { useAuth } from "../context/authProvider.jsx";
 
 const BaseLayout = () => {
+  const location = useLocation();
+  const element = useRoutes(routes);
+  const { user, loading } = useAuth();
 
-    const element = useRoutes(routes);
+  // While checking auth state
+  if (loading) {
+    return <p className="p-4">Loading...</p>;
+  }
+
+  // If not logged in → only allow login & register
+  if (!user && location.pathname !== "/login" && location.pathname !== "/register") {
+    return <Navigate to="/login" replace />;
+  }
+
+  // If already logged in → prevent going back to login/register
+  if (user && (location.pathname === "/login" || location.pathname === "/register")) {
+    console.log(user);
+    console.log(location.pathname);
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  // Show login/register normally
+  if (location.pathname === "/login" || location.pathname === "/register") {
+    return <Login />;
+  }
+
+  // Default layout for logged-in users
   return (
     <div className="flex">
       <Sidebar />

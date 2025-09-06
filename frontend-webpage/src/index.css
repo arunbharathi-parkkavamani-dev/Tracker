@@ -20,3 +20,25 @@
   
 }
 
+
+/* Month navigation (header) */
+.react-calendar__navigation button {
+  color: black !important;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* Days of the week (Mon, Tue, etc.) */
+.react-calendar__month-view__weekdays {
+  color: black !important;
+  font-size: 12px;
+}
+
+/* Calendar days */
+.react-calendar__tile {
+  color: rgb(0, 0, 0) !important;
+  font-size: 14px;
+}
+
+
+
