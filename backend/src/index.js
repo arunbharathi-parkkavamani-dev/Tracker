@@ -7,6 +7,7 @@ import auth from "./routes/authRoutes.js"
 import { apiHitLogger } from "./middlewares/apiHitLogger.js";
 import {errorHandler} from "./middlewares/errorHandler.js";
 import cookieParser from "cookie-parser";
+import "./cron/AttendanceCron.js"
 
 connectDB();
 
