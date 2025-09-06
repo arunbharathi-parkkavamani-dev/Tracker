@@ -8,6 +8,7 @@ export async function buildQuery({ role, userId, action, modelName, docId, field
   if (!role || !modelName) throw new Error("Role and modelName are required");
 
   role = role.toLowerCase();
+  // console.log("Building query for", { role, action, modelName, docId, fields, filter });
   const policies = getPolicy(role);
   if (!policies || !policies[modelName]) {
     throw new Error(`Policy not found for role "${role}" on model "${modelName}"`);
@@ -88,11 +89,12 @@ export async function buildQuery({ role, userId, action, modelName, docId, field
 
     // ---------------- CREATE ----------------
     case "create": {
+      // console.log("Create body:", body);
       if (modelName.toLowerCase() === "attendances") {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
+        const today = body.date ? new Date(body.date) : new Date();
+        // console.log("Today's date:", today);
         const isSelf = userId ? String(body.employee) === String(userId) : false;
+        // console.log("isSelf:", isSelf);
 
         const allowed = policy.conditions.create.some((cond) => {
           if (cond.isSelf && isSelf) return true;
@@ -104,8 +106,8 @@ export async function buildQuery({ role, userId, action, modelName, docId, field
         });
         if (!allowed) throw new Error("Not allowed to create this record");
 
-        const Holiday = await models["holidays"].findOne({ date: today });
-        const isHoliday = !!Holiday;
+        // const Holiday = await models["holidays"].findOne({ date: today });
+        // const isHoliday = !!Holiday;
         const isSunday = today.getDay() === 0;
 
         const lastSaturdayDate = new Date(today);
@@ -118,7 +120,7 @@ export async function buildQuery({ role, userId, action, modelName, docId, field
           lastSaturday?.status === "week off" || lastSaturday?.status === "Week off Present";
         const isDeveloper = role === "developer";
 
-        if (isHoliday || isSunday || (!isAlternative && isDeveloper)) {
+        if (isSunday || (!isAlternative && isDeveloper)) {
           body.status = "Pending";
         } else {
           if (body.workType?.toLowerCase() === "fixed") {
@@ -138,6 +140,7 @@ export async function buildQuery({ role, userId, action, modelName, docId, field
           ...body,
           employee: body.employee || userId,
           date: today,
+          checkIn: body.checkIn || new Date(),
         });
       } else {
         query = new M(body);
@@ -147,10 +150,10 @@ export async function buildQuery({ role, userId, action, modelName, docId, field
 
     // ---------------- UPDATE ----------------
     case "update": {
+      // console.log("Update body:", body);
       if (modelName.toLowerCase() === "attendances") {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
+        const today = body.date ? new Date(body.date) : new Date();
+        console.log("Today's date:", today);
         const isSelf = userId ? String(body.employee) === String(userId) : false;
         const allowed = policy.conditions.create.some((cond) => {
           if (cond.isSelf && isSelf) return true;
