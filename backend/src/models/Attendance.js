@@ -10,7 +10,7 @@ const AttendanceSchema = new Schema({
   date: { type: Date, required: true },
   status: {
     type: String,
-    enum: ['Present', 'Absent', 'Leave', 'Half Day', 'Work From Home'],
+    enum: ['Present', 'Absent', 'Leave', 'Half Day', 'Work From Home','Early check-out','Check-Out', 'Unchecked', 'LOP', 'Holiday', 'Week Off'],
     default: 'Present'
   },
   leaveType: { // optional, only used when status === 'Leave'
