@@ -8,7 +8,7 @@
             "empId":"LMX001",
             "designation":"",
             "department":"",
-            "role":"68ae768198bf091dcd503e0e",
+            "role":"",
             "reportingManager":"",
             "teamLead":""
         },
@@ -28,7 +28,7 @@
             "empId":"LMX002",
             "designation":"",
             "department":"",
-            "role":"68ae768198bf091dcd503e0f",
+            "role":"",
             "reportingManager":"",
             "teamLead":""
         },
@@ -46,7 +46,7 @@
             "empId": "LMX003",
             "designation": "",
             "department": "",
-            "role": "68ae768198bf091dcd503e0d",
+            "role": "",
             "reportingManager": "",
             "teamLead": ""
         },
@@ -64,7 +64,7 @@
             "empId": "LMX000",
             "designation": "",
             "department": "",
-            "role": "68ae768198bf091dcd503e0c",
+            "role": "",
             "reportingManager": "",
             "teamLead": ""
         },
