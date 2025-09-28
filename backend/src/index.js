@@ -5,22 +5,24 @@ import dotenv from "dotenv";
 import cors from "cors";
 import AuthRouter from "./routes/authRoutes.js";
 import notificationRoutes from "./routes/pendingRoutes.js";
-import populateRoutes from "./routes/populateRoutes.js";
+import populateHelper from "./routes/populateRoutes.js";
 import { apiHitLogger } from "./middlewares/apiHitLogger.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
-import { setCache } from "./utils/cache.js";
+import connectDB from "./Config/ConnectDB.js";
+import cookieParser from "cookie-parser";
 
-setCache();
+
 
 dotenv.config();
+connectDB();
 
 const app = express();
 const server = http.createServer(app);
+app.use(cookieParser());
 
 app.use(
   cors({
     origin: true,
-    credentials: true,
   })
 );
 app.use(express.json());
@@ -29,15 +31,15 @@ app.use(apiHitLogger); // Middleware to log API hits
 
 // Define routes
 app.use("/api/auth", AuthRouter);
+app.use("/api/populate", populateHelper);
 app.use("/api/notifications", notificationRoutes);
-app.use("/api/populate", populateRoutes);
 
 // Error handling middleware
 app.use(errorHandler);
 
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: true,
     credentials: true,
   },
 });

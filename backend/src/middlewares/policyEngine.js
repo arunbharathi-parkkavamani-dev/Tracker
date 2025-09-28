@@ -4,7 +4,6 @@ import { setCache, getPolicy } from "../utils/cache.js";
 import { createAndSendNotification } from "../utils/notificationService.js";
 import {generateAttendanceNotification} from "./notificationMessagePrasher.js"
 
-console.log("Loading policy engine...");
 // Initialize cache at startup
 setCache();
 
@@ -38,6 +37,7 @@ export async function buildQuery({
   switch (action.toLowerCase()) {
     // ---------------- READ ----------------
     case "read": {
+      console.log("Read action with filter:", filter);
       let mongoFilter = {};
       if (filter) {
         const filters = filter.split(";");

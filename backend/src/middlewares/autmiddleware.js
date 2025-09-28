@@ -4,11 +4,14 @@ import Employee from "../models/Employee.js";
 
 export async function authMiddleware(req, res, next) {
   try {
+    console.log("Authenticating request...", req.cookies, req.originalUrl);
     // 1. Check cookie (auth_token)
     let token = req.cookies?.auth_token;
+    console.log("Token from cookie:", token);
 
     // 2. Check Authorization header
     if (!token && req.headers.authorization) {
+      console.log("reading token from Authorization header");
       const [scheme, credentials] = req.headers.authorization.split(" ");
       if (scheme === "Bearer") token = credentials;
     }
