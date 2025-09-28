@@ -31,7 +31,6 @@ export const login = async (req, res, next) => {
     const validPassword = bcrypt.compare(password, employee.authInfo.password);
     if (!validPassword) {
       const err = new Error("Invalid email or password");
-      console.log(password, bcrypt(employee.authInfo.password));
       err.status = 401;
       return next(err);
     }

@@ -146,7 +146,7 @@ const AttendancePage = () => {
   };
 
   return (
-    <div className="p-4 grid grid-cols-4 gap-6 h-screen">
+    <div className="p-4 grid grid-cols-4 gap-6 h-screen dark:text-white">
       {/* Left Panel (3 cols) */}
       <div className="col-span-3 flex flex-col items-center justify-center">
         {/* Check-In / Check-Out buttons centered */}
@@ -162,7 +162,7 @@ const AttendancePage = () => {
             <div>
               <button
                 disabled
-                className="w-40 bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg cursor-not-allowed"
+                className="w-40 bg-gray-400 text-black font-semibold py-2 px-4 rounded-lg cursor-not-allowed dark:text-white"
               >
                 Checked In
               </button>

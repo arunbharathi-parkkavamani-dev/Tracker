@@ -33,7 +33,7 @@ const BaseLayout = () => {
 
   // Default layout for logged-in users
   return (
-    <div className="flex">
+    <div className="flex dark:bg-black dark:text-white">
       <Sidebar />
       <main className="flex-1 p-4">{element}</main>
     </div>
