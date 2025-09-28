@@ -1,31 +1,58 @@
 import express from "express";
-import connectDB from "./Config/ConnectDB.js";
-import cors from "cors";
+import http from "http";
+import { Server } from "socket.io";
 import dotenv from "dotenv";
-import populate from "./routes/populateRoutes.js";
-import auth from "./routes/authRoutes.js"
+import cors from "cors";
+import AuthRouter from "./routes/authRoutes.js";
+import notificationRoutes from "./routes/pendingRoutes.js";
+import populateRoutes from "./routes/populateRoutes.js";
 import { apiHitLogger } from "./middlewares/apiHitLogger.js";
-import {errorHandler} from "./middlewares/errorHandler.js";
-import cookieParser from "cookie-parser";
-import "./cron/AttendanceCron.js"
+import { errorHandler } from "./middlewares/errorHandler.js";
+import { setCache } from "./utils/cache.js";
 
-connectDB();
+setCache();
+
+dotenv.config();
 
 const app = express();
-dotenv.config();
+const server = http.createServer(app);
 
 app.use(
   cors({
-    origin:true,
+    origin: true,
     credentials: true,
   })
 );
 app.use(express.json());
-app.use(cookieParser());
 
-app.use(apiHitLogger)
-app.use("/api/auth/", auth);
-app.use("/api/populate", populate);
-app.use(errorHandler)
+app.use(apiHitLogger); // Middleware to log API hits
 
-export default app;
+// Define routes
+app.use("/api/auth", AuthRouter);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/populate", populateRoutes);
+
+// Error handling middleware
+app.use(errorHandler);
+
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    credentials: true,
+  },
+});
+
+io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
+
+  socket.on("join", (userId) => {
+    console.log(`User ${userId} joined room`);
+    socket.join(userId);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
+  });
+});
+
+export { app, server, io };

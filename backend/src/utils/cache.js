@@ -3,7 +3,7 @@
 import AccessPolicies from "../models/AccessPolicies.js";
 const cache = new Map()
 
-export async function setCache(next) {
+export async function setCache() {
     try{
         const data = await AccessPolicies.find({}).lean()
         cache.clear();
@@ -18,11 +18,11 @@ export async function setCache(next) {
         console.log("policies were initialized for roles:", Array.from(cache.keys()));
     }
     catch (error) {
-        next(error)
+        console.log(error)
     }
 }
 
-export function getPolicy (role,modelName, next){
+export function getPolicy (role,modelName){
     try{
         const roleCache = cache.get(role.toLocaleLowerCase());
         if(!roleCache) return console.log("Role permission not able to find");
@@ -30,7 +30,7 @@ export function getPolicy (role,modelName, next){
         return roleCache[modelName] || console.log("model Name is not findable");
     }
     catch (error) {
-        next(error)
+        console.log(error);
     }
 }
 

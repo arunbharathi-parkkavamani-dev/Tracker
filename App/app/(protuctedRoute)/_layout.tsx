@@ -19,6 +19,7 @@ export default function ProtectedLayout() {
       router.replace("/(auth)/Login");
     }
   }, [loading, user]);
+  // console.log("User in ProtectedLayout:", user);
 
   if (loading || !user) return null;
 
@@ -29,7 +30,9 @@ export default function ProtectedLayout() {
         <Drawer
           screenOptions={{
             drawerActiveTintColor: colorScheme === "dark" ? "#fff" : "#000",
-            header: (props) => <TopNavbar navigation={props.navigation} />
+            header: (props) => (
+              <TopNavbar navigation={props.navigation} userId={user.id} />
+            ),
           }}
           drawerContent={() => <Sidebar />}
         >
