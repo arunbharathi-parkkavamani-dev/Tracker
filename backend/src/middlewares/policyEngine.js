@@ -122,7 +122,9 @@ export async function buildQuery({ role, userId, action, modelName, docId, field
         const isDeveloper = role === "developer";
 
         if (isSunday || (!isAlternative && isDeveloper)) {
-          body.status = "Pending";
+          const request = body.status; // save whatever status came from client
+          body.status = "Pending"; // override status
+          body.request = request; // keep original in request
         } else {
           if (body.workType?.toLowerCase() === "fixed") {
             const checkIn = new Date(body.checkIn);

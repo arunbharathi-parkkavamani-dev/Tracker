@@ -12,13 +12,15 @@ export default function TopNavbar({ navigation, title = "Logimax" }) {
 
       {/* Title */}
       <Text className="text-white text-lg font-bold">{title}</Text>
+
+      {/* Notification Icon */}
       <TouchableOpacity
         onPress={() => console.log("Notification icon pressed")}
       >
-        <Ionicons name="notifications" size={28} color="white" />`
+        <Ionicons name="notifications" size={28} color="white" />
       </TouchableOpacity>
 
-      {/* Optional: right action icon */}
+      {/* Spacer for alignment */}
       <View style={{ width: 28 }} />
     </View>
   );

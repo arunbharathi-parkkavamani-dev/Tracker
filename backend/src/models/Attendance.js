@@ -34,7 +34,11 @@ const AttendanceSchema = new Schema(
     },
     checkIn: { type: Date },
     checkOut: { type: Date },
-    location: { type: String, default:"Office" },
+    location: {
+      latitude: { type: Number, required: true },
+      longitude: { type: Number, required: true },
+    },
+    request:{type:String},
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
   },

@@ -10,6 +10,7 @@ import {
 import * as Location from "expo-location";
 import MapView, { Marker } from "react-native-maps";
 import { useAuth } from "@/context/AuthContext";
+import axiosInstance from "@/Api/axiosInstance";
 
 interface AttendanceRecord {
   _id: string;
@@ -20,11 +21,14 @@ interface AttendanceRecord {
 
 const AttendancePage: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
-  const [todayRecord, setTodayRecord] = useState<AttendanceRecord | null>(null);
+  const [todayRecord, setTodayRecord] = useState<AttendanceRecord[] | null>(
+   null
+  );
   const [loading, setLoading] = useState(false);
-  const [mockDB, setMockDB] = useState<AttendanceRecord | null>(null); // mock storage
+  const [error, setError] = useState(null);
+  const today = new Date().toISOString().split("T")[0];
 
-  // Get current location
+  // 🔹 Get current location
   const getLocation = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
@@ -35,50 +39,93 @@ const AttendancePage: React.FC = () => {
     return location.coords;
   };
 
-  // Load today's attendance
-  const fetchTodayAttendance = () => {
-    setTodayRecord(mockDB); // use mock DB for demo
+  // 🔹 Load today's attendance
+  const fetchTodayAttendance = async () => {
+    try {
+      setLoading(true);
+      const response = await axiosInstance.get(
+        `/populate/read/attendances?employee=${user._id}&date=${today}`,
+        { withCredentials: true }
+      );
+      // console.log(response.data.data)
+
+      if (response?.data?.data) {
+        // console.log("record")
+        setTodayRecord(response.data.data);
+        // console.log(response.data.data)
+      } else {
+        setTodayRecord(null);
+      }
+    } catch (err) {
+      console.error("Failed to fetch today's attendance:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Check-in
+  // 🔹 Check-in
   const handleCheckIn = async () => {
-    if (!user) return;
-    setLoading(true);
+    try {
+      setLoading(true);
+      const coords = await getLocation();
+      if (!coords) return setLoading(false);
+      await axiosInstance.post(
+        `/populate/create/attendances`,
+        {
+          employee: user.id,
+          date: today,
+          checkIn: new Date().toISOString(),
+          status: "Present",
+          location: {
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+          },
+        },
+        { withCredentials: true }
+      );
 
-    const coords = await getLocation();
-    if (!coords) return setLoading(false);
-
-    const record: AttendanceRecord = {
-      _id: Date.now().toString(),
-      checkIn: new Date().toISOString(),
-      location: { latitude: coords.latitude, longitude: coords.longitude },
-    };
-    setMockDB(record);
-    setTodayRecord(record);
-    Alert.alert("Success", "Checked in!");
-    setLoading(false);
+      Alert.alert("Success", "Checked in successfully");
+      await fetchTodayAttendance();
+    } catch (err) {
+      console.error("Check-in failed:", err);
+      Alert.alert("Error", "Unable to check in");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Check-out
+  // 🔹 Check-out
   const handleCheckOut = async () => {
     if (!todayRecord) return;
-    setLoading(true);
 
-    const coords = await getLocation();
-    if (!coords) return setLoading(false);
+    try {
+      setLoading(true);
+      const coords = await getLocation();
+      if (!coords) return setLoading(false);
 
-    const updatedRecord: AttendanceRecord = {
-      ...todayRecord,
-      checkOut: new Date().toISOString(),
-      location: { latitude: coords.latitude, longitude: coords.longitude },
-    };
-    setMockDB(updatedRecord);
-    setTodayRecord(updatedRecord);
-    Alert.alert("Success", "Checked out!");
-    setLoading(false);
+      await axiosInstance.put(
+        `/populate/update/attendances/${todayRecord[0]._id}`,
+        {
+          checkOut: new Date().toISOString(),
+          location: {
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+          },
+        },
+        { withCredentials: true }
+      );
+
+      Alert.alert("Success", "Checked out successfully");
+      await fetchTodayAttendance();
+    } catch (err) {
+      console.error("Check-out failed:", err);
+      Alert.alert("Error", "Unable to check out");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Initial load
+  // 🔹 Load attendance on mount
   useEffect(() => {
     if (!authLoading && user) fetchTodayAttendance();
   }, [user, authLoading]);
@@ -98,9 +145,12 @@ const AttendancePage: React.FC = () => {
       </View>
     );
   }
+  console.log(todayRecord);
+  console.log(todayRecord?.[0]?.checkIn)
+  const record = todayRecord?.[0];
 
-  const hasCheckedIn = !!todayRecord?.checkIn;
-  const hasCheckedOut = !!todayRecord?.checkOut;
+  const hasCheckedIn = !!record?.checkIn;
+  const hasCheckedOut = !!record?.checkOut;
 
   return (
     <ScrollView
@@ -115,6 +165,7 @@ const AttendancePage: React.FC = () => {
         Welcome, {user.name}
       </Text>
 
+      {/* Check-in button */}
       {!hasCheckedIn ? (
         <TouchableOpacity
           onPress={handleCheckIn}
@@ -143,13 +194,14 @@ const AttendancePage: React.FC = () => {
         >
           <Text>
             Checked In:{" "}
-            {todayRecord.checkIn
-              ? new Date(todayRecord.checkIn).toLocaleTimeString()
+            {record.checkIn
+              ? new Date(record.checkIn).toLocaleTimeString()
               : "N/A"}
           </Text>
         </View>
       )}
 
+      {/* Check-out button */}
       {hasCheckedIn && !hasCheckedOut && (
         <TouchableOpacity
           onPress={handleCheckOut}
@@ -166,6 +218,7 @@ const AttendancePage: React.FC = () => {
         </TouchableOpacity>
       )}
 
+      {/* Show check-out record */}
       {hasCheckedOut && (
         <View
           style={{
@@ -180,30 +233,31 @@ const AttendancePage: React.FC = () => {
         >
           <Text>
             Checked Out:{" "}
-            {todayRecord.checkOut
-              ? new Date(todayRecord.checkOut).toLocaleTimeString()
+            {record.checkOut
+              ? new Date(record.checkOut).toLocaleTimeString()
               : "N/A"}
           </Text>
         </View>
       )}
 
-      {todayRecord?.location && (
+      {/* Show location map */}
+      {record?.location && (
         <MapView
           style={{ width: 300, height: 300, marginTop: 20 }}
           initialRegion={{
-            latitude: todayRecord.location.latitude,
-            longitude: todayRecord.location.longitude,
+            latitude: record.location.latitude,
+            longitude: record.location.longitude,
             latitudeDelta: 0.01,
             longitudeDelta: 0.01,
           }}
         >
           <Marker
             coordinate={{
-              latitude: todayRecord.location.latitude,
-              longitude: todayRecord.location.longitude,
+              latitude: record.location.latitude,
+              longitude: record.location.longitude,
             }}
             title="Your Location"
-            description={`Lat: ${todayRecord.location.latitude}, Lon: ${todayRecord.location.longitude}`}
+            description={`Lat: ${record.location.latitude}, Lon: ${record.location.longitude}`}
           />
         </MapView>
       )}
