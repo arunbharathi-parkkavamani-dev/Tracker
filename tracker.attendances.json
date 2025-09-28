@@ -1,0 +1,27 @@
+[{
+  "_id": {
+    "$oid": "68d904aa45bbaf34b8ee3c94"
+  },
+  "employee": {
+    "$oid": "68d8b9daf397d1d97620ba9a"
+  },
+  "date": {
+    "$date": "2025-09-28T00:00:00.000Z"
+  },
+  "status": "Pending",
+  "checkIn": {
+    "$date": "2025-09-28T09:49:29.057Z"
+  },
+  "location": {
+    "latitude": 10.9331453,
+    "longitude": 76.9824876
+  },
+  "request": "Present",
+  "createdAt": {
+    "$date": "2025-09-28T09:49:30.332Z"
+  },
+  "updatedAt": {
+    "$date": "2025-09-28T09:49:30.332Z"
+  },
+  "__v": 0
+}]

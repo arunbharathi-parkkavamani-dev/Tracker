@@ -41,6 +41,7 @@ export const login = async (req, res, next) => {
       name: employee.basicInfo.firstName,
       profileImage: employee.basicInfo.profileImage,
       role: employee.professionalInfo.role,
+      managerId: employee.professionalInfo.reportingManager,
     };
 
     const accessToken = generateAccessToken(payload);

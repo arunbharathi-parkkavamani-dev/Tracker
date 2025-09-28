@@ -71,6 +71,7 @@ const AttendancePage = () => {
           date: selectedDate,
           checkInTime: new Date().toISOString(),
           status: "Present",
+          managerId: user.managerId,
         },
         { withCredentials: true }
       );
@@ -95,7 +96,6 @@ const AttendancePage = () => {
           employee: user.id,
           date: selectedDate,
           checkOut: new Date().toISOString(),
-
         },
         { withCredentials: true }
       );
@@ -120,15 +120,24 @@ const AttendancePage = () => {
       const dayRecord = monthData.find(
         (rec) => new Date(rec.date).toDateString() === date.toDateString()
       );
-      console.log("Day record for", date, ":", dayRecord, "Status:", dayRecord?.status);
+      console.log(
+        "Day record for",
+        date,
+        ":",
+        dayRecord,
+        "Status:",
+        dayRecord?.status
+      );
 
       if (dayRecord) {
         if (dayRecord.status === "Present") return "bg-green-400 text-white";
         if (dayRecord.status === "Absent") return "bg-red-400 text-white";
         if (dayRecord.status === "Leave") return "bg-yellow-400 text-black";
         if (dayRecord.status === "Half Day") return "bg-orange-400 text-white";
-        if (dayRecord.status === "Work From Home") return "bg-blue-400 text-white";
-        if (dayRecord.status === "Early check-out") return "bg-purple-400 text-orange-900";
+        if (dayRecord.status === "Work From Home")
+          return "bg-blue-400 text-white";
+        if (dayRecord.status === "Early check-out")
+          return "bg-purple-400 text-orange-900";
         if (dayRecord.status === "Check-Out") return "bg-teal-400 text-white";
         // Add more status colors as needed
       }
@@ -136,85 +145,81 @@ const AttendancePage = () => {
     return ""; // ← default calendar styling
   };
 
-
   return (
-  <div className="p-4 grid grid-cols-4 gap-6 h-screen">
-    {/* Left Panel (3 cols) */}
-    <div className="col-span-3 flex flex-col items-center justify-center">
-      {/* Check-In / Check-Out buttons centered */}
-      <div className="flex flex-col items-center gap-4">
-        {!hasCheckedIn ? (
-          <button
-            onClick={handleCheckIn}
-            className="w-40 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg"
-          >
-            Check In
-          </button>
-        ) : (
-          <div>
-          <button
-            disabled
-            className="w-40 bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg cursor-not-allowed"
-          >
-            Checked In
-          </button>
-          <p className="text-lg text-black">
-            <strong>Check-In:</strong>{" "}
-            {todayRecord?.checkIn
-              ? new Date(todayRecord.checkIn).toLocaleTimeString()
-              : "—"}
-          </p>
-          </div>
-        )}
+    <div className="p-4 grid grid-cols-4 gap-6 h-screen">
+      {/* Left Panel (3 cols) */}
+      <div className="col-span-3 flex flex-col items-center justify-center">
+        {/* Check-In / Check-Out buttons centered */}
+        <div className="flex flex-col items-center gap-4">
+          {!hasCheckedIn ? (
+            <button
+              onClick={handleCheckIn}
+              className="w-40 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg"
+            >
+              Check In
+            </button>
+          ) : (
+            <div>
+              <button
+                disabled
+                className="w-40 bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg cursor-not-allowed"
+              >
+                Checked In
+              </button>
+              <p className="text-lg text-black">
+                <strong>Check-In:</strong>{" "}
+                {todayRecord?.checkIn
+                  ? new Date(todayRecord.checkIn).toLocaleTimeString()
+                  : "—"}
+              </p>
+            </div>
+          )}
 
-        {hasCheckedIn && !hasCheckedOut ? (
-          <button
-            onClick={handleCheckOut}
-            className="w-40 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg"
-          >
-            Check Out
-          </button>
-        ) : (
-          <div>
-          <button
-            disabled
-            className="w-40 bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg cursor-not-allowed"
-          >
-            {hasCheckedOut ? "Checked Out" : "Check Out"}
-          </button>
-          <p className="text-lg text-black mt-2">
-          <strong>Check-Out:</strong>{" "}
-          {todayRecord?.checkOut
-            ? new Date(todayRecord.checkOut).toLocaleTimeString()
-            : "—"}
-        </p>
-          </div>
-        )}
+          {hasCheckedIn && !hasCheckedOut ? (
+            <button
+              onClick={handleCheckOut}
+              className="w-40 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg"
+            >
+              Check Out
+            </button>
+          ) : (
+            <div>
+              <button
+                disabled
+                className="w-40 bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg cursor-not-allowed"
+              >
+                {hasCheckedOut ? "Checked Out" : "Check Out"}
+              </button>
+              <p className="text-lg text-black mt-2">
+                <strong>Check-Out:</strong>{" "}
+                {todayRecord?.checkOut
+                  ? new Date(todayRecord.checkOut).toLocaleTimeString()
+                  : "—"}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Times below buttons */}
+        <div className="mt-6 text-center"></div>
       </div>
 
-      {/* Times below buttons */}
-      <div className="mt-6 text-center">
-        
-        
+      {/* Right Panel Calendar */}
+      <div className="col-span-1 relative pl-6 flex flex-col">
+        {/* Vertical line aligned with calendar */}
+        <div className="absolute left-0 top-0 bottom-0 border-l-2 border-gray-300"></div>
+
+        <h2 className="text-lg text-black mb-2">Attendance Calendar</h2>
+        <Calendar
+          onChange={(value) =>
+            setSelectedDate(new Date(value).toISOString().split("T")[0])
+          }
+          value={new Date(selectedDate)}
+          tileClassName={tileClassName}
+        />
       </div>
     </div>
-
-    {/* Right Panel Calendar */}
-    <div className="col-span-1 relative pl-6 flex flex-col">
-      {/* Vertical line aligned with calendar */}
-      <div className="absolute left-0 top-0 bottom-0 border-l-2 border-gray-300"></div>
-
-      <h2 className="text-lg text-black mb-2">Attendance Calendar</h2>
-      <Calendar
-        onChange={(value) =>
-          setSelectedDate(new Date(value).toISOString().split("T")[0])
-        }
-        value={new Date(selectedDate)}
-        tileClassName={tileClassName}
-      />
-    </div>
-  </div>
-);
+  );
 };
 
 export default AttendancePage;

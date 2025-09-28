@@ -30,8 +30,9 @@ export function getPolicy (role,modelName, next){
         return roleCache[modelName] || console.log("model Name is not findable");
     }
     catch (error) {
-        next(error)
+        console.log(error);
     }
+
 }
 
 export default cache;

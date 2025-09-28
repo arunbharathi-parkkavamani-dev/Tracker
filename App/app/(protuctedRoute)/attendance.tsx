@@ -22,11 +22,12 @@ interface AttendanceRecord {
 const AttendancePage: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
   const [todayRecord, setTodayRecord] = useState<AttendanceRecord[] | null>(
-   null
+    null
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const today = new Date().toISOString().split("T")[0];
+  console.log("User:", user);
 
   // 🔹 Get current location
   const getLocation = async () => {
@@ -74,8 +75,10 @@ const AttendancePage: React.FC = () => {
         {
           employee: user.id,
           date: today,
+          name: user.name,
           checkIn: new Date().toISOString(),
           status: "Present",
+          managerId: user.managerId,
           location: {
             latitude: coords.latitude,
             longitude: coords.longitude,
@@ -146,7 +149,7 @@ const AttendancePage: React.FC = () => {
     );
   }
   console.log(todayRecord);
-  console.log(todayRecord?.[0]?.checkIn)
+  console.log(todayRecord?.[0]?.checkIn);
   const record = todayRecord?.[0];
 
   const hasCheckedIn = !!record?.checkIn;
