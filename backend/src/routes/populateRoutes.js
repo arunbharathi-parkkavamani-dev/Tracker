@@ -4,6 +4,7 @@ import { authMiddleware } from "../middlewares/autmiddleware.js";
 import { populateHelper } from "../helper/populateHelper.js";
 
 const router = express.Router();
+console.log("populateRoutes initialized");
 
 // without id
 router.all("/:action/:model", authMiddleware, populateHelper);
