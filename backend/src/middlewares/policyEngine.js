@@ -89,7 +89,8 @@ export async function buildQuery({ role, userId, action, modelName, docId, field
 
     // ---------------- CREATE ----------------
     case "create": {
-      // console.log("Create body:", body);
+      console.log("Create body:", body);
+      console.log("Policy for role", role, policy);
       if (modelName.toLowerCase() === "attendances") {
         const today = body.date ? new Date(body.date) : new Date();
         // console.log("Today's date:", today);
