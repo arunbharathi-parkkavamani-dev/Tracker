@@ -31,11 +31,11 @@ const Sidebar = () => {
             return (
               <li
                 key={item._id}
-                onClick={() => navigate(item.path)}
+                onClick={() => navigate(item.route)}
                 className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-gray-100 transition"
               >
                 <Icon className="text-xl text-gray-600" />
-                <span className="text-gray-800 font-medium">{item.label}</span>
+                <span className="text-gray-800 font-medium">{item.title}</span>
               </li>
             );
           })}

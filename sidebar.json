@@ -1,0 +1,82 @@
+[
+  {
+    "title": "Dashboard",
+    "icon": {
+      "iconName": "MdDashboard",
+      "iconPackage": "react-icons/md"
+    },
+    "route": "/dashboard",
+    "roles": ["Super Admin", "HR", "Manager", "Employee"],
+    "permissions": ["view_dashboard"]
+  },
+  {
+    "title": "Attendance",
+    "icon": {
+      "iconName": "MdAccessTime",
+      "iconPackage": "react-icons/md"
+    },
+    "route": "/attendance",
+    "roles": ["Super Admin", "HR", "Employee"],
+    "permissions": ["view_attendance", "manage_attendance"]
+  },
+  {
+    "title": "Daily Tracker",
+    "icon": {
+      "iconName": "MdOutlineTrackChanges",
+      "iconPackage": "react-icons/md"
+    },
+    "route": "/daily-tracker",
+    "roles": ["Super Admin", "HR", "Manager", "Employee"],
+    "permissions": ["view_tracker", "update_tracker"]
+  },
+  {
+    "title": "Travel Expenses",
+    "icon": {
+      "iconName": "MdFlightTakeoff",
+      "iconPackage": "react-icons/md"
+    },
+    "route": "/travel-expenses",
+    "roles": ["Super Admin", "HR", "Manager", "Employee"],
+    "permissions": ["submit_expense", "approve_expense"]
+  },
+  {
+    "title": "Tasks",
+    "icon": {
+      "iconName": "MdTask",
+      "iconPackage": "react-icons/md"
+    },
+    "route": "/tasks",
+    "roles": ["Super Admin", "Manager", "Employee"],
+    "permissions": ["view_tasks", "assign_tasks", "update_tasks"]
+  },
+  {
+    "title": "Me",
+    "icon": {
+      "iconName": "MdPerson",
+      "iconPackage": "react-icons/md"
+    },
+    "route": "/me",
+    "roles": ["Super Admin", "HR", "Manager", "Employee"],
+    "permissions": ["view_profile", "update_profile"]
+  },
+  {
+    "title": "Salary Expense",
+    "icon": {
+      "iconName": "MdAttachMoney",
+      "iconPackage": "react-icons/md"
+    },
+    "route": "/salary-expense",
+    "roles": ["Super Admin", "HR", "Manager"],
+    "permissions": ["view_salary", "manage_salary"]
+  },
+  {
+    "title": "Logout",
+    "icon": {
+      "iconName": "MdLogout",
+      "iconPackage": "react-icons/md"
+    },
+    "route": "/logout",
+    "roles": ["Super Admin", "HR", "Manager", "Employee"],
+    "permissions": ["logout"]
+  }
+]

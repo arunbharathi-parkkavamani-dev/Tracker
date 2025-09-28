@@ -1,26 +1,128 @@
 [
   {
-    "role":"68ae768198bf091dcd503e0f",
-    "modelName":"sidebars",
-    "permissions":{
+    "role": "68d8b8caf397d1d97620ba96",
+    "modelName": "attendances",
+    "permissions": {
+      "read": true,
+      "create": true,
+      "update": true,
+      "delete": false
+    },
+    "forbiddenAccess": {
+      "create": [],
+      "read": [],
+      "update": [],
+      "delete": ["*"]
+    },
+    "allowAccess": {
+      "read": ["*"],
+      "create": ["*"],
+      "update": ["*"],
+      "delete": ["*"]
+    },
+    "registry": [],
+    "conditions": {
+      "update": {
+        "isSelf": "true",
+        "isLeave": true,
+        "allowAccess": false
+      }
+    }
+  },
+  {
+    "role": "68d8b8caf397d1d97620ba93",
+    "modelName": "sidebars",
+    "permissions": {
       "read": true,
       "create": true,
       "update": true,
       "delete": true
     },
-    "forbiddenAccess":{
+    "forbiddenAccess": {
       "read": [],
       "create": [],
       "update": [],
       "delete": []
     },
-    "allowAccess":{
+    "allowAccess": {
       "read": ["*"],
       "create": [],
       "update": [],
       "delete": []
     },
-    "registry":[],
-    "conditions":{}
+    "registry": [],
+    "conditions": {}
+  },
+  {
+    "role": "68d8b8caf397d1d97620ba94",
+    "modelName": "sidebars",
+    "permissions": {
+      "read": true,
+      "create": true,
+      "update": true,
+      "delete": true
+    },
+    "forbiddenAccess": {
+      "read": [],
+      "create": [],
+      "update": [],
+      "delete": []
+    },
+    "allowAccess": {
+      "read": ["*"],
+      "create": [],
+      "update": [],
+      "delete": []
+    },
+    "registry": [],
+    "conditions": {}
+  },
+  {
+    "role": "68d8b8caf397d1d97620ba95",
+    "modelName": "sidebars",
+    "permissions": {
+      "read": true,
+      "create": true,
+      "update": true,
+      "delete": true
+    },
+    "forbiddenAccess": {
+      "read": [],
+      "create": [],
+      "update": [],
+      "delete": []
+    },
+    "allowAccess": {
+      "read": ["*"],
+      "create": [],
+      "update": [],
+      "delete": []
+    },
+    "registry": [],
+    "conditions": {}
+  },
+  {
+    "role": "68d8b8caf397d1d97620ba96",
+    "modelName": "sidebars",
+    "permissions": {
+      "read": true,
+      "create": true,
+      "update": true,
+      "delete": true
+    },
+    "forbiddenAccess": {
+      "read": [],
+      "create": [],
+      "update": [],
+      "delete": []
+    },
+    "allowAccess": {
+      "read": ["*"],
+      "create": [],
+      "update": [],
+      "delete": []
+    },
+    "registry": [],
+    "conditions": {}
   }
 ]
