@@ -1,5 +1,5 @@
 import express from "express";
-import { getPendingRequests } from "../controllers/attendanceController.js";
+import { getPendingRequests } from "../Controller/attandanceController.js";
 
 const router = express.Router();
 

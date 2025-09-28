@@ -1,24 +1,22 @@
 import express from "express";
-import http from "http"; // for creating server
-import connectDB from "./Config/ConnectDB.js";
-import cors from "cors";
+import http from "http";
+import { Server } from "socket.io";
 import dotenv from "dotenv";
-import populate from "./routes/populateRoutes.js";
-import auth from "./routes/authRoutes.js";
+import cors from "cors";
+import AuthRouter from "./routes/authRoutes.js";
+import notificationRoutes from "./routes/pendingRoutes.js";
+import populateRoutes from "./routes/populateRoutes.js";
 import { apiHitLogger } from "./middlewares/apiHitLogger.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
-import cookieParser from "cookie-parser";
-import "./cron/AttendanceCron.js";
-import { getPendingRequests } from "./Controller/attandanceController.js";
-import { Server } from "./socket.io";
+import { setCache } from "./utils/cache.js";
+
+setCache();
 
 dotenv.config();
-connectDB();
 
 const app = express();
-const server = http.createServer(app); // wrap Express app in HTTP server
+const server = http.createServer(app);
 
-// ---------------- MIDDLEWARE ----------------
 app.use(
   cors({
     origin: true,
@@ -26,19 +24,20 @@ app.use(
   })
 );
 app.use(express.json());
-app.use(cookieParser());
-app.use(apiHitLogger);
 
-// ---------------- ROUTES ----------------
-app.use("/api/auth", auth);
-app.use("/api/populate", populate);
-app.use("/api/attendance", getPendingRequests); // consider making this a router
+app.use(apiHitLogger); // Middleware to log API hits
+
+// Define routes
+app.use("/api/auth", AuthRouter);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/populate", populateRoutes);
+
+// Error handling middleware
 app.use(errorHandler);
 
-// ---------------- SOCKET.IO ----------------
 const io = new Server(server, {
   cors: {
-    origin: true, // or specific frontend URL
+    origin: "*",
     credentials: true,
   },
 });
@@ -46,7 +45,6 @@ const io = new Server(server, {
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
-  // Join a room for user-specific notifications
   socket.on("join", (userId) => {
     console.log(`User ${userId} joined room`);
     socket.join(userId);
@@ -57,11 +55,4 @@ io.on("connection", (socket) => {
   });
 });
 
-// Export io so controllers can emit notifications
-export { io };
-
-// ---------------- START SERVER ----------------
-export default app;
-// Now the server is created using http and socket.io is integrated
-// You can run the server using: node backend/src/index.js
-// Make sure to handle socket connections in your controllers as needed
+export { app, server, io };
