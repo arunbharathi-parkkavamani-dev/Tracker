@@ -1,7 +1,21 @@
-AB Bullion
-Adams Jewellers
-Adroid
-Aishwariyam Thangamaligai
+[
+    {
+        "name":"AB Bullion",
+        "projectType":[
+            "Retail",
+            "Wholesale"
+        ]
+    },
+    {
+        "name":"Adams Jewellers"
+    },
+    {
+        "name":"Aishwariyam Thangamaligai"
+    },
+    {
+        "name":"Aj Gold"
+    }
+
 Aj Gold
 Ajoras Bullion
 Akshara bullion
