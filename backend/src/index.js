@@ -11,8 +11,6 @@ import { errorHandler } from "./middlewares/errorHandler.js";
 import connectDB from "./Config/ConnectDB.js";
 import cookieParser from "cookie-parser";
 
-
-
 dotenv.config();
 connectDB();
 
@@ -23,6 +21,7 @@ app.use(cookieParser());
 app.use(
   cors({
     origin: true,
+    credentials: true,
   })
 );
 app.use(express.json());

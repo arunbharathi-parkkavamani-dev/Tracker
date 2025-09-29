@@ -7,12 +7,9 @@ import dayjs from "dayjs";
 // Run job every day at 08:52 AM
 cron.schedule("52 08 * * *", async () => {
   try {
-    console.log("Running daily attendance cron...");
 
     const today = dayjs().startOf("day").toDate();
     const employees = await Employee.find();
-    console.log(`Total employees to process: ${employees.length}`);
-    console.log(employees.map(e => e.id));
 
     for (const emp of employees) {
       // 1. Check if today's record already exists
@@ -20,7 +17,6 @@ cron.schedule("52 08 * * *", async () => {
         employee: emp._id,
         date: today,
       });
-      console.log(`Employee: ${emp.id}, Existing Record:`, existingRecord);
 
       if (existingRecord) {
         // Record already exists → update if needed (like unchecked check-in later in day)

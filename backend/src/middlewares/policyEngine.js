@@ -20,7 +20,6 @@ export async function buildQuery({
   if (!role || !modelName) throw new Error("Role and modelName are required");
 
   role = role.toLowerCase();
-  // console.log("Building query for", { role, action, modelName, docId, fields, filter });
   const policies = getPolicy(role);
   if (!policies || !policies[modelName]) {
     throw new Error(
@@ -37,7 +36,6 @@ export async function buildQuery({
   switch (action.toLowerCase()) {
     // ---------------- READ ----------------
     case "read": {
-      console.log("Read action with filter:", filter);
       let mongoFilter = {};
       if (filter) {
         const filters = filter.split(";");
@@ -107,15 +105,11 @@ export async function buildQuery({
 
     // ---------------- CREATE ----------------
     case "create": {
-      console.log("Create body:", body);
-      // console.log("Policy for role", role, policy);
       if (modelName.toLowerCase() === "attendances") {
         const today = body.date ? new Date(body.date) : new Date();
-        // console.log("Today's date:", today);
         const isSelf = userId
           ? String(body.employee) === String(userId)
           : false;
-        // console.log("isSelf:", isSelf);
 
         const allowed = policy.conditions.create.some((cond) => {
           if (cond.isSelf && isSelf) return true;
@@ -150,7 +144,6 @@ export async function buildQuery({
             body.name,
             request
           );
-          console.log("Generated message:", message);
           await createAndSendNotification({
             senderId: userId,
             receiverId: body.managerId,
@@ -187,10 +180,8 @@ export async function buildQuery({
 
     // ---------------- UPDATE ----------------
     case "update": {
-      // console.log("Update body:", body);
       if (modelName.toLowerCase() === "attendances") {
         const today = body.date ? new Date(body.date) : new Date();
-        console.log("Today's date:", today);
         const isSelf = userId
           ? String(body.employee) === String(userId)
           : false;
