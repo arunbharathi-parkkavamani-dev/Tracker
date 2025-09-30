@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { server } from "./src/index.js"; // import the HTTP server, not just app
+import { server, io } from "./src/index.js"; // import the HTTP server, not just app
 
 dotenv.config();
 
