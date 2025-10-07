@@ -35,7 +35,7 @@ const BaseLayout = () => {
   return (
     <div className="flex dark:bg-black dark:text-white">
       <Sidebar />
-      <main className="flex-1 p-4">{element}</main>
+      <main className="flex-1 p-4 max-h-screen overflow-auto">{element}</main>
     </div>
   );
 };
