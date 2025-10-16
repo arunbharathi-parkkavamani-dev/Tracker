@@ -7,7 +7,7 @@ import leavepolicy from "./LeavePolicy.js";
 import attendances from "./Attendance.js";
 import sidebar from "./SideBar.js";
 import tasktype from "./TaskType.js";
-import client from "./Client.js";
+import clients from "./Client.js";
 import dailyactivity from "./DailyActivity.js";
 import apihitlog from "./ApiHitLog.js";
 import projecttype from "./ProjectType.js";
@@ -25,7 +25,7 @@ const models = {
   attendances,
   sidebar,
   tasktype,
-  client,
+  clients,
   dailyactivity,
   apihitlog,
   projecttype,
