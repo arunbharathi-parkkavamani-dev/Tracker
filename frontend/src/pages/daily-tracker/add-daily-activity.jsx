@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import {  useState } from "react";
 import TextField from "@mui/material/TextField";
 import Autocomplete from "@mui/material/Autocomplete";
 import {useAuth} from "../../context/authProvider";
@@ -16,14 +16,18 @@ const AddDailyEntry = () => {
   // Array of activities: each = { taskType: "", description: "" }
   const [activities, setActivities] = useState([]);
 
-  useEffect(() => {
-    // Fetch clients
-    const fetchClients = async () => {
-      const res = await axiosInstance.get("/populate/read/clients");
-      setClients(res.data);
-    };
-    fetchClients();
-  }, []);
+  
+  const fetchClients = async () => {
+    const res = await axiosInstance.get("/populate/read/clients");
+    setClients(res.data.data);
+    console.log(res)
+  };
+
+  const fetchProject = async () =>{
+    const res = await axiosInstance.get("/populate/read/projecttype");
+    setProjects(res.data.data);
+    console.log(res)
+  }
   
   // Add new activity row
   const handleAddActivity = () => {
@@ -90,6 +94,7 @@ const AddDailyEntry = () => {
             options={clients}
             getOptionLabel={(option) => option.name || ""}
             value={selectedClient}
+            onOpen={fetchClients}
             onChange={(event, newValue) => setSelectedClient(newValue)}
             renderInput={(params) => (
               <TextField {...params} label="Select Client" variant="outlined" />
@@ -102,6 +107,7 @@ const AddDailyEntry = () => {
             className="w-1/3"
             options={projects}
             getOptionLabel={(option) => option.name || ""}
+            onOpen={fetchProject}
             value={selectedProject}
             onChange={(event, newValue) => setSelectedProject(newValue)}
             renderInput={(params) => (
