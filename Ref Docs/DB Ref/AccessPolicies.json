@@ -1,0 +1,26 @@
+[
+    {
+    "role": "68d8b98af397d1d97620ba97", 
+    "modelName": "tasktype",
+    "permissions": {
+      "read": true,
+      "create": false,
+      "update": false,
+      "delete": false
+    },
+    "forbiddenAccess": {
+      "create": [],
+      "delete": [],
+      "read": [],
+      "update": []
+    },
+    "allowAccess": {
+      "create": [],
+      "delete": [],
+      "read": [],
+      "update": []
+    },
+    "registry": [],
+    "conditions": {}
+  }
+]
