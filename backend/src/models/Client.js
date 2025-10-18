@@ -13,7 +13,7 @@ const ClientSchema = new Schema({
     country: String
   },
   contactPerson: { type: String },
-  projectTypes: [{ type: Schema.Types.ObjectId, ref: 'ProjectType' }] // ✅ updated
+  projectTypes: [{ type: Schema.Types.ObjectId, ref: 'projecttypes' }] // ✅ updated
 }, { timestamps: true });
 
 export default model('Clients', ClientSchema);

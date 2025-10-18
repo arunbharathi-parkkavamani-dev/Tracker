@@ -1,8 +1,10 @@
 // src/middlewares/policyEngine.js
+import path from "path";
 import models from "../models/Collection.js";
 import { setCache, getPolicy } from "../utils/cache.js";
 import { createAndSendNotification } from "../utils/notificationService.js";
 import {generateAttendanceNotification} from "./notificationMessagePrasher.js"
+import { exit } from "process";
 
 // Initialize cache at startup
 setCache();
@@ -58,7 +60,34 @@ export async function buildQuery({
 
       query = docId ? M.findById(docId) : M.find(mongoFilter);
 
+      // ---------- APPLY POPULATE ----------
       const fieldArray = fields ? fields.split(",") : [];
+      
+      fieldArray.forEach((f) => {
+        policy.conditions?.read?.forEach((cond) => {
+           if (cond.isPopulate && f.toLowerCase() === cond.isRef.toLowerCase()) {
+             // Build populate options
+             let populateOptions = {
+               path: f, // e.g., "projectTypes"
+               match: { $expr: { $ne: ["$_id", ""] } }, // ignore empty IDs
+              };
+              // console.log(cond.fields)
+              
+              // Select fields if specified
+              if (cond.fields && cond.fields != '*') {
+                console.log("Entered")
+                if (Array.isArray(cond.fields)) {
+                  populateOptions.select = cond.fields.join(" ");
+                }
+              }
+              
+              // console.log(populateOptions)
+            // Apply populate
+            query = query.populate(populateOptions);
+          }
+        });
+      });
+
       let projection = {};
 
       const readAccess = policy.allowAccess?.read;
@@ -173,7 +202,14 @@ export async function buildQuery({
           checkIn: body.checkIn || new Date(),
         });
       } else {
-        query = new M(body);
+        if (Array.isArray(body)) {
+          query = await M.insertMany(body);
+          console.log(query);
+          return
+        } else {
+          query = new M(body);
+          
+        }
       }
       break;
     }

@@ -6,4 +6,4 @@ const ProjectTypeSchema = new Schema({
   description: { type: String }
 }, { timestamps: true });
 
-export default model('ProjectType', ProjectTypeSchema);
+export default model('projecttypes', ProjectTypeSchema);

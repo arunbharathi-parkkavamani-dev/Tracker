@@ -5,7 +5,7 @@ const DailyActivitySchema = new Schema(
   {
     client: { type: Schema.Types.ObjectId, ref: "Client" }, // optional link
     projectType: { type: Schema.Types.ObjectId, ref: "ProjectType" }, // optional link
-    employee: { type: Schema.Types.ObjectId, ref: "Employee" },
+    user: { type: Schema.Types.ObjectId, ref: "Employee" },
     date: { type: Date, default: Date.now },
     taskType: { type: Schema.Types.ObjectId, ref: "TaskType" }, // optional link
     activity: { type: String, trim: true }, // description of activity
