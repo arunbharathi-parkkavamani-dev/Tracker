@@ -1,10 +1,10 @@
 [
     {
     "role": "68d8b98af397d1d97620ba97", 
-    "modelName": "tasktype",
+    "modelName": "dailyactivities",
     "permissions": {
       "read": true,
-      "create": false,
+      "create": true,
       "update": false,
       "delete": false
     },
@@ -21,6 +21,15 @@
       "update": []
     },
     "registry": [],
-    "conditions": {}
+    "conditions": {
+      "read":[
+        {
+          "isPopulate":"true",
+          "isRef":"projecttype",
+          "fields":["*"],
+          "effect":"allow"
+        }
+      ]
+    }
   }
 ]
