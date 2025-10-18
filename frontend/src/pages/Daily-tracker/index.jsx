@@ -12,7 +12,7 @@ const DailyTracker = () => {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(
-          "/populate/read/dailyactivity",
+          "/populate/read/dailyactivities",
           { withCredentials: true }
         );
         setData(response.data);
