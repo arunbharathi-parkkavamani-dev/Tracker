@@ -1,31 +1,34 @@
-// middleware/authMiddleware.js
 import jwt from "jsonwebtoken";
 import Employee from "../models/Employee.js";
 
 export async function authMiddleware(req, res, next) {
   try {
-    // 1. Check cookie (auth_token)
+    // 1. Retrieve token from cookie or Authorization header
     let token = req.cookies?.auth_token;
-
-    // 2. Check Authorization header
-    if (!token && req.headers.authorization) {
-      const [scheme, credentials] = req.headers.authorization.split(" ");
-      if (scheme === "Bearer") token = credentials;
+    if (!token && req.headers.authorization?.startsWith("Bearer ")) {
+      token = req.headers.authorization.split(" ")[1];
     }
 
     if (!token) return res.status(401).json({ error: "Unauthorized" });
 
-    // 3. Verify
+    // 2. Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // 4. Lookup user
+    // 3. Lookup user
     const user = await Employee.findById(decoded.id).lean();
     if (!user) return res.status(401).json({ error: "User not found" });
 
-    // 5. Attach user with role from token (safer than DB override)
-    req.user = { ...user, role: decoded.role };
+    // 4. Attach minimal safe user info
+    req.user = {
+      id: user._id,
+      role: decoded.role,
+      name: user.basicInfo?.firstName,
+      email: user.authInfo?.workEmail,
+    };
+
     next();
   } catch (err) {
+    console.error("AuthMiddleware error:", err.message);
     return res.status(401).json({ error: "Unauthorized" });
   }
 }
