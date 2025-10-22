@@ -5,9 +5,12 @@ import { buildQuery } from "../middlewares/policyEngine.js";
 export async function populateHelper(req, res, next) {
   try {
     const { action, model, id } = req.params;
-    const { fields, filter } = req.query;
+    let { fields, filter, ...rest } = req.query;
     const user = req.user;
     const body = req.body;
+    if (!filter && Object.keys(rest).length > 0) {
+      filter = rest;
+    }
 
     const queryOrDoc = await buildQuery({
       role: user.role,

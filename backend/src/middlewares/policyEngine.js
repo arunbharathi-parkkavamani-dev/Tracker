@@ -39,91 +39,73 @@ export async function buildQuery({
     // ---------------- READ ----------------
     case "read": {
       let mongoFilter = {};
+
       if (filter) {
-        const filters = filter.split(";");
-        filters.forEach((f) => {
-          const [key, value] = f.split(",");
-          if (key && value !== undefined) {
-            // ✅ enforce policy: key must be in allowed fields
-            if (
-              policy.allowAccess?.read === "*" ||
-              (Array.isArray(policy.allowAccess?.read) &&
-                policy.allowAccess.read.includes(key))
-            ) {
-              mongoFilter[key] = value;
+        console.log("Incoming filter:", filter);
+
+        // Build mongoFilter with policy enforcement
+        Object.entries(filter).forEach(([key, value]) => {
+          // Only allow keys that are in policy
+            // Optional: handle "month" as a date range
+            if (key === "month") {
+              const [year, month] = value.split("-").map(Number);
+              const start = new Date(year, month - 1, 1);
+              const end = new Date(year, month, 0, 23, 59, 59, 999);
+              mongoFilter["date"] = { $gte: start, $lte: end };
             } else {
-              throw new Error(`Filtering by "${key}" is not allowed`);
+              mongoFilter[key] = value;
             }
-          }
         });
       }
 
+      // Choose query: by docId or filter
       query = docId ? M.findById(docId) : M.find(mongoFilter);
 
       // ---------- APPLY POPULATE ----------
       const fieldArray = fields ? fields.split(",") : [];
-      
+
       fieldArray.forEach((f) => {
         policy.conditions?.read?.forEach((cond) => {
-           if (cond.isPopulate && f.toLowerCase() === cond.isRef.toLowerCase()) {
-             // Build populate options
-             let populateOptions = {
-               path: f, // e.g., "projectTypes"
-               match: { $expr: { $ne: ["$_id", ""] } }, // ignore empty IDs
-              };
-              // console.log(cond.fields)
-              
-              // Select fields if specified
-              if (cond.fields && cond.fields != '*') {
-                console.log("Entered")
-                if (Array.isArray(cond.fields)) {
-                  populateOptions.select = cond.fields.join(" ");
-                }
+          if (cond.isPopulate && f.toLowerCase() === cond.isRef.toLowerCase()) {
+            let populateOptions = { path: f, match: { $expr: { $ne: ["$_id", ""] } } };
+
+            if (cond.fields && cond.fields !== "*") {
+              if (Array.isArray(cond.fields)) {
+                populateOptions.select = cond.fields.join(" ");
               }
-              
-              // console.log(populateOptions)
-            // Apply populate
+            }
+
             query = query.populate(populateOptions);
           }
         });
       });
 
+      // ---------- APPLY PROJECTION ----------
       let projection = {};
-
       const readAccess = policy.allowAccess?.read;
 
       if (Array.isArray(readAccess) && readAccess.includes("*")) {
         const forbidden = policy.forbiddenAccess?.read || [];
         forbidden.forEach((f) => (projection[f] = 0));
       } else if (Array.isArray(readAccess)) {
-        if (fieldArray.length > 0) {
-          fieldArray.forEach((f) => {
-            if (
-              readAccess.includes(f) &&
-              !policy.forbiddenAccess?.read?.includes(f)
-            ) {
-              projection[f] = 1;
-            }
-          });
-        } else {
-          readAccess.forEach((f) => {
-            if (!policy.forbiddenAccess?.read?.includes(f)) {
-              projection[f] = 1;
-            }
-          });
-        }
+        const allowedFields = fieldArray.length > 0 ? fieldArray : readAccess;
+        allowedFields.forEach((f) => {
+          if (!policy.forbiddenAccess?.read?.includes(f) && readAccess.includes(f)) {
+            projection[f] = 1;
+          }
+        });
       }
 
       query = query.select(projection);
 
-      // ✅ Safe populate
+      // ---------- SAFE POPULATE ----------
       fieldArray.forEach((f) => {
         policy.conditions?.read?.forEach((cond) => {
           if (cond.isPopulate && f.startsWith(cond.isRef.split(".")[0])) {
             query = query.populate({
               path: cond.isRef,
               select: cond.fields?.join(" "),
-              match: { $expr: { $ne: ["$_id", ""] } }, // ignore "" ObjectId values
+              match: { $expr: { $ne: ["$_id", ""] } },
             });
           }
         });
@@ -131,6 +113,7 @@ export async function buildQuery({
 
       break;
     }
+
 
     // ---------------- CREATE ----------------
     case "create": {

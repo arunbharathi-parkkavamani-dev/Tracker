@@ -36,8 +36,8 @@ const DailyTracker = () => {
       <div className="flex flex-column align-right">
         <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600" onClick={()=>{navigate("/daily-tracker/add-daily-activity");}}>
           Add Daily Activity
-        </button>
-      </div>
+            </button>
+          </div>
       <pre>{JSON.stringify(data, null, 2)}</pre>
       <button onClick={handleRefresh}>Refresh</button>
     </div>
