@@ -120,6 +120,7 @@ const EmployeeSchema = new Schema({
     appraisalLetter: { type: String }, // URL
     otherDocuments: [{ type: String }] // URLs
   },
+  status:{ type:String},
 
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
