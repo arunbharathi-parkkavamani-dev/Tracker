@@ -30,7 +30,7 @@ export default async function attendanceService({ model, role, userId, body, doc
       await createAndSendNotification({
         senderId: userId,
         receiverId: body.managerId,
-        employeeName: body.name,
+        employeeName: body.employeeName,
         message,
         model: { model: "Attendance", modelId: null },
       });

@@ -8,7 +8,7 @@ dotenv.config({ path: path.resolve(process.cwd(), "src/Config/.env") });
 
 // Generate tokens
 const generateAccessToken = (payload) =>
-  jwt.sign({ id: payload.id, role: payload.role, managerId: payload.managerId }, process.env.JWT_SECRET, { expiresIn: "60m" });
+  jwt.sign({ id: payload.id, role: payload.role, managerId: payload.managerId, name:payload.name }, process.env.JWT_SECRET, { expiresIn: "60m" });
 
 const generateRefreshToken = (payload) =>
   jwt.sign({ id: payload.id }, process.env.JWT_SECRET, { expiresIn: "1d" });
@@ -25,6 +25,7 @@ export const login = async (req, res, next) => {
 
     const payload = {
       id: employee._id,
+      name : employee.basicInfo.firstName,
       role: employee.professionalInfo.role,
       managerId: employee.professionalInfo.reportingManager,
     };

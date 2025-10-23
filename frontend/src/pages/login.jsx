@@ -31,6 +31,7 @@ const Login = () => {
 
         // Decode token and update user context
         const decoded = jwtDecode(token);
+        console.log(decoded)
         setUser(decoded);
 
         navigate("/dashboard");

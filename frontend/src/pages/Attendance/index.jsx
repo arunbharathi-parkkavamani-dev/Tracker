@@ -28,7 +28,7 @@ const AttendancePage = () => {
       );
       const records = response.data.data || [];
       const record = records[0] || null;
-
+      
       setTodayRecord(record);
       setHasCheckedIn(!!record?.checkIn);
       setHasCheckedOut(!!record?.checkOut);
@@ -38,6 +38,7 @@ const AttendancePage = () => {
       setError("Failed to load today's attendance");
     }
   };
+  console.log(hasCheckedIn)
 
   // Fetch attendance for month (calendar)
   const fetchMonthData = async (date) => {
@@ -79,7 +80,7 @@ const AttendancePage = () => {
       employee: user.id,
       employeeName: user.name,
       date: selectedDate,
-      checkInTime: new Date().toISOString(),
+      checkIn: new Date().toISOString(),
       status: "Present",
       managerId: user.managerId,
       location: {
@@ -87,6 +88,7 @@ const AttendancePage = () => {
         longitude: 76.9839277,
       },
     };
+    console.log(user)
 
     try {
       await axiosInstance.post(`/populate/create/attendances`, payload);
@@ -108,7 +110,7 @@ const AttendancePage = () => {
         {
           employee: user.id,
           date: selectedDate,
-          checkOutTime: new Date().toISOString(),
+          checkOut: new Date().toISOString(),
         }
       );
       await fetchTodayAttendance();
