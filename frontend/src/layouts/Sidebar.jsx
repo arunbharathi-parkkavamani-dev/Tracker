@@ -22,7 +22,7 @@ const Sidebar = () => {
   }, []);
 
   return (
-    <div className="w-64 h-screen bg-white shadow-lg p-4 dark:bg-black dark:text-white">
+    <div className="w-52 h-screen bg-white shadow-lg p-4 dark:bg-black dark:text-white">
       {navItems.length > 0 ? (
         <ul className="space-y-2 dark:text-white">
           {navItems.map((item) => {

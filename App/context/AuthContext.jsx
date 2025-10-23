@@ -49,7 +49,6 @@ export const AuthProvider = ({ children }) => {
       await AsyncStorage.setItem("auth_token", token);
       const decoded = parseJwt(token);
       setUser(decoded);
-      console.log("User logged in:", decoded);
       
     } catch (err) {
       console.error("Failed to save token:", err);

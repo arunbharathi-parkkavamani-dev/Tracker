@@ -4,12 +4,11 @@ import { saveAs } from "file-saver";
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 
-// ColumnVisibility component (button + dropdown)
+// ColumnVisibility component (unchanged)
 function ColumnVisibility({ columns, selectedCols, toggleColumn }) {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef();
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -69,42 +68,71 @@ export default function ExcelColumnExtractor() {
   const [searchTerm, setSearchTerm] = useState("");
   const rowsPerPage = 20;
 
-  // Upload multiple excel files
+  // Handles Excel or JSON uploads
   const handleUpload = (e) => {
     const files = e.target.files;
 
     Array.from(files).forEach((file) => {
       const reader = new FileReader();
+      const fileType = file.name.split(".").pop().toLowerCase();
+
       reader.onload = (evt) => {
-        const wb = XLSX.read(evt.target.result, { type: "binary" });
-        const ws = wb.Sheets[wb.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
-        if (rows.length < 2) return;
+        if (fileType === "xlsx" || fileType === "xls") {
+          // Handle Excel
+          const wb = XLSX.read(evt.target.result, { type: "binary" });
+          const ws = wb.Sheets[wb.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+          if (rows.length < 2) return;
 
-        const headers = rows[1]; // second row as header
-        setColumns(headers);
-        setSelectedCols((prev) => {
-          // Preserve existing selectedCols if merging multiple files
-          const combined = Array.from(new Set([...prev, ...headers]));
-          return headers.filter((c) => combined.includes(c));
-        });
-
-        const dataRows = rows.slice(2);
-        const json = dataRows.map((row) => {
-          let obj = {};
-          headers.forEach((h, i) => {
-            obj[h] = row[i] ?? "";
+          const headers = rows[1]; // second row as header
+          const dataRows = rows.slice(2);
+          const json = dataRows.map((row) => {
+            const obj = {};
+            headers.forEach((h, i) => {
+              obj[h] = row[i] ?? "";
+            });
+            return obj;
           });
-          return obj;
-        });
 
-        setData((prev) => [...prev, ...json]);
+          mergeData(json, headers);
+        } else if (fileType === "json") {
+          // Handle JSON
+          try {
+            const json = JSON.parse(evt.target.result);
+            if (!Array.isArray(json) || json.length === 0) return;
+
+            const headers = Object.keys(json[0]);
+            mergeData(json, headers);
+          } catch (error) {
+            alert(`Invalid JSON file: ${file.name}, ${error}`);
+          }
+        } else {
+          alert("Unsupported file type. Please upload Excel or JSON.");
+        }
       };
-      reader.readAsBinaryString(file);
+
+      if (fileType === "xlsx" || fileType === "xls")
+        reader.readAsBinaryString(file);
+      else reader.readAsText(file);
     });
   };
 
-  // Toggle column visibility while keeping original order
+  // Merge multiple uploads (Excel/JSON)
+  const mergeData = (newData, newHeaders) => {
+    setColumns((prevCols) => {
+      const mergedCols = Array.from(new Set([...prevCols, ...newHeaders]));
+      return mergedCols;
+    });
+
+    setSelectedCols((prevSel) => {
+      const merged = Array.from(new Set([...prevSel, ...newHeaders]));
+      return merged;
+    });
+
+    setData((prevData) => [...prevData, ...newData]);
+  };
+
+  // Toggle column visibility
   const toggleColumn = (col) => {
     if (selectedCols.includes(col)) {
       setSelectedCols(selectedCols.filter((c) => c !== col));
@@ -116,24 +144,26 @@ export default function ExcelColumnExtractor() {
     }
   };
 
-  // Export selected columns
+  // Export filtered data
   const exportExcel = () => {
     const filtered = data.map((row) => {
-      let obj = {};
+      const obj = {};
       selectedCols.forEach((c) => (obj[c] = row[c]));
       return obj;
     });
+
     const ws = XLSX.utils.json_to_sheet(filtered);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Filtered");
     const wbout = XLSX.write(wb, { type: "array", bookType: "xlsx" });
+
     saveAs(
       new Blob([wbout], { type: "application/octet-stream" }),
       "filtered.xlsx"
     );
   };
 
-  // Filtered data
+  // Filtered + paginated data
   const filteredData = useMemo(() => {
     if (!searchCol || !searchTerm) return data;
     return data.filter((row) =>
@@ -148,37 +178,38 @@ export default function ExcelColumnExtractor() {
     page * rowsPerPage
   );
 
-  // Suggestions for autocomplete
+  // Autocomplete suggestions
   const valueSuggestions = useMemo(() => {
     if (!searchCol) return [];
     const values = new Set(data.map((row) => String(row[searchCol] || "")));
     return Array.from(values);
   }, [data, searchCol]);
 
-  // Reset page if filteredData changes
   useEffect(() => setPage(1), [searchTerm, searchCol, selectedCols]);
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Excel Column Extractor</h1>
+      <h1 className="text-2xl font-bold mb-4">Excel / JSON Column Extractor</h1>
 
       {/* File Upload */}
       <input
         type="file"
         multiple
-        accept=".xlsx, .xls"
+        accept=".xlsx, .xls, .json"
         onChange={handleUpload}
         className="mb-4"
       />
 
-      {/* Column Visibility Button */}
-      <ColumnVisibility
-        columns={columns}
-        selectedCols={selectedCols}
-        toggleColumn={toggleColumn}
-      />
+      {/* Column Visibility */}
+      {columns.length > 0 && (
+        <ColumnVisibility
+          columns={columns}
+          selectedCols={selectedCols}
+          toggleColumn={toggleColumn}
+        />
+      )}
 
-      {/* Search UI */}
+      {/* Search */}
       {columns.length > 0 && (
         <div className="mb-6 flex space-x-4">
           <div className="w-48">
@@ -214,7 +245,7 @@ export default function ExcelColumnExtractor() {
         </div>
       )}
 
-      {/* Preview Table */}
+      {/* Table */}
       {filteredData.length > 0 && (
         <div className="overflow-x-auto border rounded-lg shadow">
           <table className="min-w-full border-collapse">

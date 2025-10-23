@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
 import axiosInstance from "../../api/axiosInstance";
 import { useAuth } from "../../context/authProvider.jsx";
@@ -6,32 +7,38 @@ import "react-calendar/dist/Calendar.css";
 
 const AttendancePage = () => {
   const { user, loading: authLoading } = useAuth();
-  const [attendance, setAttendance] = useState([]);
+  // eslint-disable-next-line no-unused-vars
+  const [attendance, setAttendance] = useState([]); // daily attendance array
+  const [todayRecord, setTodayRecord] = useState(null); // today's attendance
+  const [monthData, setMonthData] = useState([]); // for calendar
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0]
   );
-  const [monthData, setMonthData] = useState([]); // for calendar
+  const [hasCheckedIn, setHasCheckedIn] = useState(false);
+  const [hasCheckedOut, setHasCheckedOut] = useState(false);
 
-  // Fetch attendance by employee + date
-  const fetchAttendance = async () => {
+  // Fetch attendance for a specific date
+  const fetchTodayAttendance = async () => {
     if (!user) return;
-
     try {
       const response = await axiosInstance.get(
-        `/populate/read/attendances?employee=${user._id}&date=${selectedDate}`,
-        { withCredentials: true }
+        `/populate/read/attendances?employee=${user.id}&date=${selectedDate}`
       );
-      setAttendance(response.data.data || []);
-      console.log("Fetched attendance:", response.data.data);
+      const records = response.data.data || [];
+      const record = records[0] || null;
+      
+      setTodayRecord(record);
+      setHasCheckedIn(!!record?.checkIn);
+      setHasCheckedOut(!!record?.checkOut);
+      setAttendance(records);
     } catch (err) {
-      console.error("Failed to fetch attendance:", err);
-      setError("Failed to load attendance data");
-    } finally {
-      setLoading(false);
+      console.error("Failed to fetch today's attendance:", err);
+      setError("Failed to load today's attendance");
     }
   };
+  console.log(hasCheckedIn)
 
   // Fetch attendance for month (calendar)
   const fetchMonthData = async (date) => {
@@ -39,8 +46,7 @@ const AttendancePage = () => {
     try {
       const month = date.toISOString().slice(0, 7); // YYYY-MM
       const response = await axiosInstance.get(
-        `/populate/read/attendances?employee=${user._id}&month=${month}`,
-        { withCredentials: true }
+        `/populate/read/attendances?employee=${user.id}&month=${month}`
       );
       setMonthData(response.data.data || []);
     } catch (err) {
@@ -48,6 +54,7 @@ const AttendancePage = () => {
     }
   };
 
+  // Fetch data when user or selectedDate changes
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
@@ -55,28 +62,38 @@ const AttendancePage = () => {
       setLoading(false);
       return;
     }
-    setLoading(true);
-    fetchAttendance();
-    fetchMonthData(new Date(selectedDate));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    const fetchData = async () => {
+      setLoading(true);
+      await fetchTodayAttendance();
+      await fetchMonthData(new Date(selectedDate));
+      setLoading(false);
+    };
+
+    fetchData();
   }, [user, authLoading, selectedDate]);
 
   // Handle Check-In
   const handleCheckIn = async () => {
+    if (!user) return;
+    const payload = {
+      employee: user.id,
+      employeeName: user.name,
+      date: selectedDate,
+      checkIn: new Date().toISOString(),
+      status: "Present",
+      managerId: user.managerId,
+      location: {
+        latitude: 10.9338987,
+        longitude: 76.9839277,
+      },
+    };
+    console.log(user)
+
     try {
-      await axiosInstance.post(
-        `/populate/create/attendances`,
-        {
-          employee: user.id,
-          date: selectedDate,
-          checkInTime: new Date().toISOString(),
-          status: "Present",
-          managerId: user.managerId,
-        },
-        { withCredentials: true }
-      );
+      await axiosInstance.post(`/populate/create/attendances`, payload);
       alert("Checked in successfully");
-      await fetchAttendance();
+      await fetchTodayAttendance();
       await fetchMonthData(new Date(selectedDate));
     } catch (err) {
       console.error("Check-in failed:", err);
@@ -86,20 +103,17 @@ const AttendancePage = () => {
 
   // Handle Check-Out
   const handleCheckOut = async () => {
+    if (!todayRecord) return;
     try {
-      const todayRecord = attendance[0];
-      if (!todayRecord) return;
-
       await axiosInstance.put(
         `/populate/update/attendances/${todayRecord._id}`,
         {
           employee: user.id,
           date: selectedDate,
           checkOut: new Date().toISOString(),
-        },
-        { withCredentials: true }
+        }
       );
-      await fetchAttendance();
+      await fetchTodayAttendance();
       await fetchMonthData(new Date(selectedDate));
     } catch (err) {
       console.error("Check-out failed:", err);
@@ -107,49 +121,44 @@ const AttendancePage = () => {
     }
   };
 
-  if (loading || authLoading) return <p>Loading attendance...</p>;
-  if (error) return <p className="text-red-500">{error}</p>;
-
-  const todayRecord = attendance[0];
-  const hasCheckedIn = todayRecord?.checkIn;
-  const hasCheckedOut = todayRecord?.checkOut;
-
   // Calendar tile coloring
   const tileClassName = ({ date, view }) => {
     if (view === "month") {
       const dayRecord = monthData.find(
         (rec) => new Date(rec.date).toDateString() === date.toDateString()
       );
-      console.log(
-        "Day record for",
-        date,
-        ":",
-        dayRecord,
-        "Status:",
-        dayRecord?.status
-      );
 
       if (dayRecord) {
-        if (dayRecord.status === "Present") return "bg-green-400 text-white";
-        if (dayRecord.status === "Absent") return "bg-red-400 text-white";
-        if (dayRecord.status === "Leave") return "bg-yellow-400 text-black";
-        if (dayRecord.status === "Half Day") return "bg-orange-400 text-white";
-        if (dayRecord.status === "Work From Home")
-          return "bg-blue-400 text-white";
-        if (dayRecord.status === "Early check-out")
-          return "bg-purple-400 text-orange-900";
-        if (dayRecord.status === "Check-Out") return "bg-teal-400 text-white";
-        // Add more status colors as needed
+        switch (dayRecord.status) {
+          case "Present":
+            return "bg-green-400 text-white";
+          case "Absent":
+            return "bg-red-400 text-white";
+          case "Leave":
+            return "bg-yellow-400 text-black";
+          case "Half Day":
+            return "bg-orange-400 text-white";
+          case "Work From Home":
+            return "bg-blue-400 text-white";
+          case "Early check-out":
+            return "bg-purple-400 text-orange-900";
+          case "Check-Out":
+            return "bg-teal-400 text-white";
+          default:
+            return "";
+        }
       }
     }
-    return ""; // ← default calendar styling
+    return "";
   };
+
+  if (loading || authLoading) return <p>Loading attendance...</p>;
+  if (error) return <p className="text-red-500">{error}</p>;
 
   return (
     <div className="p-4 grid grid-cols-4 gap-6 h-screen dark:text-white">
-      {/* Left Panel (3 cols) */}
+      {/* Left Panel */}
       <div className="col-span-3 flex flex-col items-center justify-center">
-        {/* Check-In / Check-Out buttons centered */}
         <div className="flex flex-col items-center gap-4">
           {!hasCheckedIn ? (
             <button
@@ -159,14 +168,14 @@ const AttendancePage = () => {
               Check In
             </button>
           ) : (
-            <div>
+            <div className="flex flex-col items-center">
               <button
                 disabled
                 className="w-40 bg-gray-400 text-black font-semibold py-2 px-4 rounded-lg cursor-not-allowed dark:text-white"
               >
                 Checked In
               </button>
-              <p className="text-lg text-black">
+              <p className="text-lg text-black mt-2">
                 <strong>Check-In:</strong>{" "}
                 {todayRecord?.checkIn
                   ? new Date(todayRecord.checkIn).toLocaleTimeString()
@@ -183,7 +192,7 @@ const AttendancePage = () => {
               Check Out
             </button>
           ) : (
-            <div>
+            <div className="flex flex-col items-center">
               <button
                 disabled
                 className="w-40 bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg cursor-not-allowed"
@@ -199,16 +208,11 @@ const AttendancePage = () => {
             </div>
           )}
         </div>
-
-        {/* Times below buttons */}
-        <div className="mt-6 text-center"></div>
       </div>
 
       {/* Right Panel Calendar */}
       <div className="col-span-1 relative pl-6 flex flex-col">
-        {/* Vertical line aligned with calendar */}
         <div className="absolute left-0 top-0 bottom-0 border-l-2 border-gray-300"></div>
-
         <h2 className="text-lg text-black mb-2">Attendance Calendar</h2>
         <Calendar
           onChange={(value) =>

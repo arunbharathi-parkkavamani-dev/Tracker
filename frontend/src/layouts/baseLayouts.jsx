@@ -21,8 +21,6 @@ const BaseLayout = () => {
 
   // If already logged in → prevent going back to login/register
   if (user && (location.pathname === "/login" || location.pathname === "/register")) {
-    console.log(user);
-    console.log(location.pathname);
     return <Navigate to="/dashboard" replace />;
   }
 

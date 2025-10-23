@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // components/ui/TopNavbar.tsx
 import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, FlatList } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Modal from "react-native-modal";
+// eslint-disable-next-line import/no-named-as-default
 import io, { Socket } from "socket.io-client";
 
 // Replace with your backend URL
@@ -35,7 +37,6 @@ export default function TopNavbar({
 
   useEffect(() => {
     if (!userId) return;
-    console.log("UserID in TopNavbar:", userId ?? "undefined");
     const newSocket = io(SOCKET_URL);
     console.log("Socket connected:", newSocket.connected);
 

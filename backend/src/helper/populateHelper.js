@@ -1,51 +1,36 @@
-// src/helper/populateHelper.js
-import mongoose from "mongoose";
 import { buildQuery } from "../middlewares/policyEngine.js";
 
 export async function populateHelper(req, res, next) {
   try {
     const { action, model, id } = req.params;
-    const { fields, filter } = req.query;
     const user = req.user;
-    const body = req.body;
 
-    const queryOrDoc = await buildQuery({
+    // Extract and normalize query parameters
+    let { fields, filter, ...extra } = req.query;
+    if (!filter && Object.keys(extra).length > 0) filter = extra;
+
+    // Main buildQuery call
+    const data = await buildQuery({
       role: user.role,
       userId: user._id,
       action,
       modelName: model,
       docId: id,
       fields,
-      body,
-      filter, // ✅ pass filters
+      body: req.body,
+      filter,
     });
 
-    let data;
+    // Response handling
+    const statusCode = action === "create" ? 201 : 200;
 
-    if (queryOrDoc instanceof mongoose.Model) {
-      data = await queryOrDoc.save();
-    } else if (queryOrDoc?.exec && typeof queryOrDoc.exec === "function") {
-      data = await queryOrDoc.exec();
-    } else {
-      data = queryOrDoc;
-    }
-
-    const statusCode = action.toLowerCase() === "create" ? 201 : 200;
-
-    if (Array.isArray(data)) {
-      res.status(statusCode).json({
-        success: true,
-        count: data.length,
-        data,
-      });
-    } else {
-      res.status(statusCode).json({
-        success: true,
-        data,
-      });
-    }
+    return res.status(statusCode).json({
+      success: true,
+      count: Array.isArray(data) ? data.length : undefined,
+      data,
+    });
   } catch (error) {
-    console.error("populateHelper error:", error);
+    console.error("populateHelper error:", error.message);
     next(error);
   }
 }

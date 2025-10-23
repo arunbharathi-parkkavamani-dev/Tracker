@@ -6,11 +6,11 @@ import leavetypes from "./LeaveTypes.js";
 import leavepolicy from "./LeavePolicy.js";
 import attendances from "./Attendance.js";
 import sidebar from "./SideBar.js";
-import tasktype from "./TaskType.js";
-import client from "./Client.js";
-import dailyactivity from "./DailyActivity.js";
+import tasktypes from "./TaskType.js";
+import clients from "./Client.js";
+import dailyactivities from "./DailyActivity.js";
 import apihitlog from "./ApiHitLog.js";
-import projecttype from "./ProjectType.js";
+import projecttypes from "./ProjectType.js";
 import accesspolicies from "./AccessPolicies.js";
 import role from "./Role.js";
 import notification from "./notification.js";
@@ -24,11 +24,11 @@ const models = {
   leavepolicy,
   attendances,
   sidebar,
-  tasktype,
-  client,
-  dailyactivity,
+  tasktypes,
+  clients,
+  dailyactivities,
   apihitlog,
-  projecttype,
+  projecttypes,
   role,
   notification,
 };

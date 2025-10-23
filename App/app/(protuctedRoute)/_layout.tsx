@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 // app/(protectedRoute)/_layout.tsx
 import { Drawer } from "expo-router/drawer";
 import { useColorScheme } from "@/hooks/use-color-scheme";
@@ -19,7 +20,6 @@ export default function ProtectedLayout() {
       router.replace("/(auth)/Login");
     }
   }, [loading, user]);
-  // console.log("User in ProtectedLayout:", user);
 
   if (loading || !user) return null;
 
