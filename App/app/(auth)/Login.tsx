@@ -18,14 +18,12 @@ const Login = () => {
         password,
       });
       const token = response.data.accessToken;
-      console.log("Login successful, token:", token);
 
       if (token) {
         await AsyncStorage.setItem("auth_token", token);
         setToken(token); // Set token in context
         const data = response.data.user;
         setUser({ data }); // Set user context
-        console.log("Token saved successfully");
         router.replace("/(protuctedRoute)/dashboard");
       } else {
         console.error("No token returned from server");

@@ -80,18 +80,16 @@ const AddDailyEntry = () => {
       alert("Please select client, project and add at least one activity.");
       return;
     }
-    console.log(user)
 
     const payload = activities.map((act) => ({
       client: selectedClient._id,
-      project: selectedProjectType._id,
+      projectType: selectedProjectType._id,
       taskType: act.taskType,
-      description: act.description,
+      activity: act.description,
       user: user?.id,
       date: new Date(),
     }));
 
-    console.log(payload)
 
     try {
       await axiosInstance.post("/populate/create/dailyactivities", payload);
@@ -106,7 +104,7 @@ const AddDailyEntry = () => {
   };
 
   return (
-    <div className="flex flex-col gap-3 p-5 dark:text-white">
+    <div className="flex flex-col gap-3 p-5 dark:text-white" >
       <h2 className="text-2xl font-bold">Add Daily Activity</h2>
       <hr />
       <br />

@@ -5,7 +5,6 @@ const cache = new Map()
 
 export async function setCache() {
     try{
-        console.log("Initializing policies cache...");
         const data = await AccessPolicies.find({}).lean()
         cache.clear();
         data.forEach((policies)=>{
@@ -16,7 +15,6 @@ export async function setCache() {
             const roleCache = cache.get(role);
             roleCache[policies.modelName] = policies;
         });
-        console.log("policies were initialized for roles:", Array.from(cache.keys()));
     }
     catch (error) {
         console.log(error)
@@ -25,7 +23,6 @@ export async function setCache() {
 
 export function getPolicy (role,modelName){
     try{
-        console.log("Fetching policy from cache for role:", role, "and model:", modelName);
         const roleCache = cache.get(role.toLocaleLowerCase());
         if(!roleCache) return console.log("Role permission not able to find");
         if(!modelName) return roleCache;

@@ -1,12 +1,12 @@
-import mongoose from "mongoose";
-import { getServiceCache } from "../utils/serviceCache.js";
+import models from "../models/Collection.js";
+import { getService } from "../utils/servicesCache.js";
 
 /**
  * Build Create Query (Service First + Generic Fallback)
  * @param {Object} params
  * @returns {Promise<any>}
  */
-export async function buildCreateQuery({
+export default async function buildCreateQuery({
   role,
   userId,
   modelName,
@@ -14,7 +14,7 @@ export async function buildCreateQuery({
 }) {
   try {
     // 🧩 Step 1: Check service cache first
-    const serviceCache = getServiceCache();
+    const serviceCache = getService();
     const modelService = serviceCache?.services?.[modelName];
 
     if (modelService) {
@@ -25,7 +25,7 @@ export async function buildCreateQuery({
     }
 
     // 🧩 Step 2: Fallback to generic Mongoose create
-    const Model = mongoose.models[modelName] || mongoose.model(modelName);
+    const Model = models[modelName] || console.log(`Unsupported Model ${modelName}`)
 
     // Role policy enforcement
     const accessPolicy = serviceCache?.policies?.[modelName]?.create;

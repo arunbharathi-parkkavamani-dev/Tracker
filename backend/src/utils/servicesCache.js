@@ -16,12 +16,11 @@ function loadServices() {
 
   const files = fs.readdirSync(SERVICES_DIR).filter((f) => f.endsWith(".js"));
   for (const file of files) {
-    const modelName = path.basename(file, ".js").toLowerCase();
+    const modelName = path.basename(file, ".js");
     cache[modelName] = path.join(SERVICES_DIR, file);
   }
   lastUpdated = Date.now();
   servicesCache = cache;
-  console.log("[ServicesCache] Loaded services:", Object.keys(cache));
 }
 
 /**
@@ -34,7 +33,7 @@ export function getService(modelName) {
   if (!lastUpdated || Date.now() - lastUpdated > CACHE_REFRESH_INTERVAL) {
     loadServices();
   }
-  return servicesCache[modelName.toLowerCase()] || null;
+  return servicesCache[modelName] || null;
 }
 
 /**

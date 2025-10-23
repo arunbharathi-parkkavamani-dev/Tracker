@@ -1,6 +1,8 @@
 import models from "../models/Collection.js";
-import { getPolicy } from "../utils/cache.js";
+import { setCache, getPolicy } from "../utils/cache.js";
 import { getService } from "../utils/servicesCache.js";
+
+setCache();
 
 export async function buildQuery({ role, userId, action, modelName, docId, fields, body, filter }) {
   if (!role || !modelName) throw new Error("Role and modelName are required");
@@ -18,12 +20,12 @@ export async function buildQuery({ role, userId, action, modelName, docId, field
   try {
     crudHandler = (await import(crudFile)).default;
   } catch (err) {
-    throw new Error(`Unsupported action "${action}"`);
+    console.log(err);
   }
 
   // Execute CRUD logic
   const result = await crudHandler({
-    model,
+    modelName,
     role,
     userId,
     docId,
@@ -38,5 +40,6 @@ export async function buildQuery({ role, userId, action, modelName, docId, field
 }
 
 function capitalize(str) {
-  return str.charAt(0).toUpperCase() + str.slice(1);
+  const capital = str.charAt(0).toUpperCase() + str.slice(1);
+  return capital
 }

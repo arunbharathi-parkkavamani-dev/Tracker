@@ -22,7 +22,7 @@ export async function populateHelper(req, res, next) {
     });
 
     // Response handling
-    const statusCode = action.toLowerCase() === "create" ? 201 : 200;
+    const statusCode = action === "create" ? 201 : 200;
 
     return res.status(statusCode).json({
       success: true,

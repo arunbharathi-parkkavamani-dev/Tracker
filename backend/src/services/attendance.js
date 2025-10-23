@@ -35,7 +35,7 @@ export default async function attendanceService({ model, role, userId, body, doc
         model: { model: "Attendance", modelId: null },
       });
     } else {
-      if (body.workType?.toLowerCase() === "fixed") {
+      if (body.workType === "fixed") {
         const checkIn = new Date(body.checkIn);
         const checkInMinutes = checkIn.getHours() * 60 + checkIn.getMinutes();
         const cutOff = 10 * 60 + 20;

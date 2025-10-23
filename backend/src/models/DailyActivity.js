@@ -3,8 +3,8 @@ import { Schema, model } from "mongoose";
 
 const DailyActivitySchema = new Schema(
   {
-    client: { type: Schema.Types.ObjectId, ref: "Client" }, // optional link
-    projectType: { type: Schema.Types.ObjectId, ref: "ProjectType" }, // optional link
+    client: { type: Schema.Types.ObjectId, ref: "Clients" }, // optional link
+    projectType: { type: Schema.Types.ObjectId, ref: "projecttypes" }, // optional link
     user: { type: Schema.Types.ObjectId, ref: "Employee" },
     date: { type: Date, default: Date.now },
     taskType: { type: Schema.Types.ObjectId, ref: "TaskType" }, // optional link

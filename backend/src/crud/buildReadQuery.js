@@ -1,12 +1,13 @@
 import mongoose from "mongoose";
-import { getServiceCache } from "../utils/serviceCache.js";
+import models from "../models/Collection.js";
+import { getService } from "../utils/servicesCache.js";
 
 /**
  * Build Read Query (Service First + Generic Fallback)
  * @param {Object} params
  * @returns {Promise<any>}
  */
-export async function buildReadQuery({
+export default async function buildReadQuery({
   role,
   userId,
   modelName,
@@ -16,7 +17,7 @@ export async function buildReadQuery({
 }) {
   try {
     // 🧩 Step 1: Check service cache first
-    const serviceCache = getServiceCache();
+    const serviceCache = getService();
     const modelService = serviceCache?.services?.[modelName];
 
     if (modelService) {
@@ -29,7 +30,7 @@ export async function buildReadQuery({
     }
 
     // 🧩 Step 2: Fallback to generic Mongoose read
-    const Model = mongoose.models[modelName] || mongoose.model(modelName);
+    const Model =models[modelName] || console.log("No supported Model")
 
     // Role policy enforcement
     const accessPolicy = serviceCache?.policies?.[modelName]?.read;
@@ -42,7 +43,7 @@ export async function buildReadQuery({
 
     // Populate fields if requested
     if (fields) {
-      const fieldList = fields.split("#").filter(Boolean);
+      const fieldList = fields.split(",").filter(Boolean);
       fieldList.forEach((f) => query.populate(f));
     }
 

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -25,9 +26,7 @@ const AttendancePage: React.FC = () => {
     null
   );
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const today = new Date().toISOString().split("T")[0];
-  console.log("User:", user);
 
   // 🔹 Get current location
   const getLocation = async () => {
@@ -48,12 +47,9 @@ const AttendancePage: React.FC = () => {
         `/populate/read/attendances?employee=${user._id}&date=${today}`,
         { withCredentials: true }
       );
-      // console.log(response.data.data)
 
       if (response?.data?.data) {
-        // console.log("record")
         setTodayRecord(response.data.data);
-        // console.log(response.data.data)
       } else {
         setTodayRecord(null);
       }
@@ -148,10 +144,7 @@ const AttendancePage: React.FC = () => {
       </View>
     );
   }
-  console.log(todayRecord);
-  console.log(todayRecord?.[0]?.checkIn);
   const record = todayRecord?.[0];
-
   const hasCheckedIn = !!record?.checkIn;
   const hasCheckedOut = !!record?.checkOut;
 
