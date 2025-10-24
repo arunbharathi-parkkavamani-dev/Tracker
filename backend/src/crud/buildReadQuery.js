@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
 import models from "../models/Collection.js";
-import { getService } from "../utils/servicesCache.js";
+import { getAllServices } from "../utils/servicesCache.js";
+import { pathToFileURL } from "url";
 
 /**
  * Build Read Query (Service First + Generic Fallback)
@@ -17,15 +17,17 @@ export default async function buildReadQuery({
 }) {
   try {
     // 🧩 Step 1: Check service cache first
-    const serviceCache = getService();
-    const modelService = serviceCache?.services?.[modelName];
+    const serviceCache = getAllServices();
+    const modelService = serviceCache?.[modelName];
 
     if (modelService) {
+      const fileUrl = pathToFileURL(modelService).href;
       // Dynamic import of service function
-      const serviceModule = await import(modelService);
-      if (serviceModule?.read) {
+      const serviceModule = await import(fileUrl);
+      const serviceFn = serviceModule.default || serviceModule.read;
+      if (serviceFn) {
         // Call the service's read method
-        return await serviceModule.read({ role, userId, docId, filter, fields });
+        return await serviceFn({ role, userId, docId, filter, fields });
       }
     }
 

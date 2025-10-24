@@ -1,5 +1,6 @@
 import models from "../models/Collection.js";
-import { getService } from "../utils/servicesCache.js";
+import { getAllServices } from "../utils/servicesCache.js";
+import { pathToFileURL } from "url";
 
 /**
  * Build Create Query (Service First + Generic Fallback)
@@ -14,13 +15,14 @@ export default async function buildCreateQuery({
 }) {
   try {
     // 🧩 Step 1: Check service cache first
-    const serviceCache = getService();
-    const modelService = serviceCache?.services?.[modelName];
-
+    const serviceCache = getAllServices();
+    const modelService = serviceCache?.[modelName];
     if (modelService) {
-      const serviceModule = await import(modelService);
-      if (serviceModule?.create) {
-        return await serviceModule.create({ role, userId, body });
+      const fileUrl = pathToFileURL(modelService).href;
+      const serviceModule = await import(fileUrl);
+      const serviceFn = serviceModule.default || serviceModule.create;
+      if (serviceFn) {
+        return await serviceFn({ role, userId, body });
       }
     }
 
