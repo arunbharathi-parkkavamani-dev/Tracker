@@ -6,11 +6,12 @@ import { generateAttendanceNotification } from "../middlewares/notificationMessa
  * Attendance Service
  * Handles both create & update business logic
  */
-export default async function attendanceService({ model, role, userId, body, docId }) {
+export default async function attendanceService({ role, userId, body, docId }) {
   const today = body.date ? new Date(body.date) : new Date();
-
+  
   // -------- CREATE --------
   if (!docId) {
+    console.log("running without ID")
     const isSelf = String(body.employee) === String(userId);
     let allowed = false;
 
@@ -41,14 +42,14 @@ export default async function attendanceService({ model, role, userId, body, doc
         const cutOff = 10 * 60 + 20;
         body.status = checkInMinutes > cutOff ? "Late Entry" : "Check-In";
       } else {
-        body.status = "Check-In";
+        body.status = "Present";
       }
     }
 
     const attendance = new Attendance({
       ...body,
       employee: body.employee || userId,
-      employeeName: body.name,
+      employeeName: body.employeeName,
       date: today,
       checkIn: body.checkIn || new Date(),
     });

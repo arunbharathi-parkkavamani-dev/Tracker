@@ -9,10 +9,11 @@ export async function populateHelper(req, res, next) {
     let { fields, filter, ...extra } = req.query;
     if (!filter && Object.keys(extra).length > 0) filter = extra;
 
+
     // Main buildQuery call
     const data = await buildQuery({
       role: user.role,
-      userId: user._id,
+      userId: user.id,
       action,
       modelName: model,
       docId: id,

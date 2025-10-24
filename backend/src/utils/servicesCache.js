@@ -2,17 +2,21 @@
 import fs from "fs";
 import path from "path";
 
+
 let servicesCache = {};
 let lastUpdated = null;
-const SERVICES_DIR = path.resolve("./backend/src/services");
+const SERVICES_DIR = path.resolve("./src/services");
 const CACHE_REFRESH_INTERVAL = 20 * 60 * 1000; // 20 minutes
 
 /**
  * Load all service files dynamically into cache
  */
 function loadServices() {
+  console.log("Running Service Cache")
   const cache = {};
-  if (!fs.existsSync(SERVICES_DIR)) return cache;
+  if (!fs.existsSync(SERVICES_DIR)){
+    return cache;
+  } 
 
   const files = fs.readdirSync(SERVICES_DIR).filter((f) => f.endsWith(".js"));
   for (const file of files) {

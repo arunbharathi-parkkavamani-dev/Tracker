@@ -15,6 +15,7 @@ const BaseLayout = () => {
   }
 
   // If not logged in → only allow login & register
+  console.log(user)
   if (!user && location.pathname !== "/login" && location.pathname !== "/register") {
     return <Navigate to="/login" replace />;
   }

@@ -109,8 +109,13 @@ const AttendancePage = () => {
         `/populate/update/attendances/${todayRecord._id}`,
         {
           employee: user.id,
+          employeeName: user.name,
           date: selectedDate,
           checkOut: new Date().toISOString(),
+          location: {
+            latitude: 10.9338987,
+            longitude: 76.9839277,
+          },
         }
       );
       await fetchTodayAttendance();

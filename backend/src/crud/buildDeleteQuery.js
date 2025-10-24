@@ -1,5 +1,6 @@
 import models from "../models/Collection.js";
-import { getService } from "../utils/servicesCache.js";
+import { getAllServices } from "../utils/servicesCache.js";
+import { pathToFileURL} from "url";
 
 /**
  * Build Delete Query (Service First + Generic Fallback)
@@ -15,13 +16,15 @@ export default async function buildDeleteQuery({
 }) {
   try {
     // 🧩 Step 1: Check service cache first
-    const serviceCache = getService();
-    const modelService = serviceCache?.services?.[modelName];
+    const serviceCache = getAllServices();
+    const modelService = serviceCache?.[modelName];
 
     if (modelService) {
+      const fileUrl = pathToFileURL(modelService)
       const serviceModule = await import(modelService);
-      if (serviceModule?.delete) {
-        return await serviceModule.delete({ role, userId, docId, filter });
+      const serviceFn = serviceModule.default || serviceModule.delete;
+      if (serviceFn) {
+        return await serviceFn({ role, userId, docId, filter });
       }
     }
 
