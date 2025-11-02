@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "../../api/axiosInstance";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/authProvider.jsx";
 import FloatingCard from "../../components/FloatingCard.jsx";
+import AddDailyEntry from "./add-daily-activity.jsx";
+import Task from "./Task.jsx";
 
 const DailyTracker = () => {
   const [data, setData] = useState([]);
@@ -10,15 +11,14 @@ const DailyTracker = () => {
   const [refresh, setRefresh] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
   const [bgColors, setBgColors] = useState({});
-  const [selectedTask, setSelectedTask] = useState(null); // For modal
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   const { user, loading } = useAuth();
-  const navigate = useNavigate();
 
   // Fetch daily activities
   useEffect(() => {
     if (!user?.id) return;
-
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(
@@ -26,7 +26,6 @@ const DailyTracker = () => {
           { withCredentials: true }
         );
         setData(response.data?.data || []);
-        console.log(response)
       } catch (err) {
         setError(err.message);
       }
@@ -36,55 +35,61 @@ const DailyTracker = () => {
 
   const handleRefresh = () => setRefresh((prev) => !prev);
 
-  // Random pastel colors
+  // Random pastel color
   const getRandomColor = () => {
-    const colors = [
-      "#c3d7d9",
-      "#8a999b",
-      "#a6b7ba",
-    ];
+    const colors = ["#c3d7d9", "#8a999b", "#a6b7ba"];
     return colors[Math.floor(Math.random() * colors.length)];
   };
 
-  // Handle client selection
+  // Select client and assign random colors for project groups
   const handleClientSelect = (client) => {
     setSelectedClient(client);
-
-    // Generate colors for project types
     const clientData = data.filter((d) => d.client?._id === client._id);
     const grouped = clientData.reduce((acc, item) => {
-      const key = item.projectType?.name || "Un categorized";
+      const key = item.projectType?.name || "Uncategorized";
       if (!acc[key]) acc[key] = [];
       acc[key].push(item);
       return acc;
     }, {});
-
     const newColors = {};
     Object.keys(grouped).forEach((key) => {
       newColors[key] = getRandomColor();
     });
-
     setBgColors(newColors);
   };
 
-  // Open task in modal and update URL
+  // Handle viewing a task
   const handleTaskClick = (task) => {
     setSelectedTask(task);
     window.history.pushState(null, "", `/daily-tracker/task/${task._id}`);
   };
 
-  // Close modal and reset URL
   const handleCloseTask = () => {
     setSelectedTask(null);
     window.history.pushState(null, "", `/daily-tracker`);
   };
 
-  // Open modal from URL if page is loaded with task ID
+  // Handle Add modal open/close
+  const handleOpenAdd = () => {
+    setShowAddModal(true);
+    window.history.pushState(null, "", `/daily-tracker/add-daily-activity`);
+  };
+
+  const handleCloseAdd = () => {
+    setShowAddModal(false);
+    window.history.pushState(null, "", `/daily-tracker`);
+  };
+
+  // Detect route on load or refresh
   useEffect(() => {
-    const taskId = window.location.pathname.split("/task/")[1];
-    if (taskId) {
+    const path = window.location.pathname;
+
+    if (path.includes("/task/")) {
+      const taskId = path.split("/task/")[1];
       const task = data.find((t) => t._id === taskId);
       if (task) setSelectedTask(task);
+    } else if (path.endsWith("/add-daily-activity")) {
+      setShowAddModal(true);
     }
   }, [data]);
 
@@ -140,7 +145,7 @@ const DailyTracker = () => {
           </h1>
           <div className="flex gap-3">
             <button
-              onClick={() => navigate("/daily-tracker/add-daily-activity")}
+              onClick={handleOpenAdd}
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all"
             >
               + Add
@@ -155,9 +160,13 @@ const DailyTracker = () => {
         </div>
 
         {!selectedClient ? (
-          <p className="text-gray-600 mt-6">Select a client to view activities.</p>
+          <p className="text-gray-600 mt-6">
+            Select a client to view activities.
+          </p>
         ) : Object.keys(groupedByProject).length === 0 ? (
-          <p className="text-gray-500 mt-6">No activities found for this client.</p>
+          <p className="text-gray-500 mt-6">
+            No activities found for this client.
+          </p>
         ) : (
           <div className="flex gap-6 h-[calc(100vh-6rem)] relative">
             {Object.keys(groupedByProject).map((projectType) => (
@@ -169,23 +178,26 @@ const DailyTracker = () => {
                   height: "100%",
                 }}
               >
-                {/* Project Type Header */}
                 <div className="top-0 text-center">
                   <h2 className="text-lg font-semibold text-gray-800">
                     {projectType}
                   </h2>
                 </div>
-                
 
-                {/* Task cards */}
-                <div className="absolute inset-3  overflow-y-auto p-4 z-20 space-y-3">
+                <div className="absolute inset-3 overflow-y-auto p-4 z-20 space-y-3">
                   {groupedByProject[projectType].map((activity) => (
                     <div
                       key={activity._id}
                       onClick={() => handleTaskClick(activity)}
                       className="bg-white border border-gray-200 rounded-xl p-3 hover:shadow-md transition cursor-pointer relative z-30"
                     >
-                      <img className="float-right rounded-full" src={`${user?.basicInfo?.profileImage || "../../assets/profile_image.jpg"}`} />
+                      <img
+                        className="float-right rounded-full w-8 h-8 object-cover"
+                        src={
+                          user?.basicInfo?.profileImage ||
+                          "../../assets/profile_image.jpg"
+                        }
+                      />
                       <p className="font-medium text-gray-800">
                         {activity.taskType?.name}
                       </p>
@@ -204,8 +216,17 @@ const DailyTracker = () => {
         )}
       </div>
 
-      {/* Floating task modal */}
-      <FloatingCard task={selectedTask} onClose={handleCloseTask} />
+      {/* Floating modals */}
+      {selectedTask && (
+        <FloatingCard onClose={handleCloseTask}>
+          <Task task={selectedTask} onClose={handleCloseTask} />
+        </FloatingCard>
+      )}
+      {showAddModal && (
+        <FloatingCard onClose={handleCloseAdd}>
+          <AddDailyEntry onClose={handleCloseAdd} />
+        </FloatingCard>
+      )}
     </div>
   );
 };

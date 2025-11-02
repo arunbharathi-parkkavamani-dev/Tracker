@@ -1,22 +1,24 @@
-import { useState } from "react";
+/* eslint-disable react-hooks/exhaustive-deps */
+import React, { useEffect, useState } from "react";
 import TextField from "@mui/material/TextField";
 import Autocomplete from "@mui/material/Autocomplete";
 import { useAuth } from "../../context/authProvider";
 import axiosInstance from "../../api/axiosInstance";
 
-const AddDailyEntry = () => {
+const AddDailyEntry = ({ onClose }) => {
   const { user } = useAuth();
 
   const [clients, setClients] = useState([]);
   const [selectedClient, setSelectedClient] = useState(null);
-
   const [projectTypes, setProjectTypes] = useState([]);
   const [selectedProjectType, setSelectedProjectType] = useState(null);
-
   const [taskTypes, setTaskTypes] = useState([]);
-  const [activities, setActivities] = useState([]);
+  const [activities, setActivities] = useState([
+    { id: Date.now(), taskType: "", description: "" },
+  ]);
+  const [loading, setLoading] = useState(false);
 
-  // Fetch clients
+  // --- Fetch Data ---
   const fetchClients = async () => {
     try {
       const res = await axiosInstance.get("/populate/read/clients");
@@ -26,8 +28,7 @@ const AddDailyEntry = () => {
     }
   };
 
-  // Fetch project types for selected client
-  const fetchProject = async () => {
+  const fetchProjectTypes = async () => {
     if (!selectedClient?._id) return;
     try {
       const res = await axiosInstance.get(
@@ -39,8 +40,7 @@ const AddDailyEntry = () => {
     }
   };
 
-  // Fetch task types
-  const fetchTaskType = async () => {
+  const fetchTaskTypes = async () => {
     try {
       const res = await axiosInstance.get("/populate/read/tasktypes");
       setTaskTypes(res.data.data || []);
@@ -49,35 +49,38 @@ const AddDailyEntry = () => {
     }
   };
 
-  // Add new activity row
+  // Refetch project types whenever client changes
+  useEffect(() => {
+    if (selectedClient) fetchProjectTypes();
+  }, [selectedClient]);
+
+  // --- Add / Update / Remove Activities ---
   const handleAddActivity = () => {
-    if (activities.length < 30) {
-      setActivities([...activities, { taskType: "", description: "" }]);
-    } else {
-      alert("Maximum 30 activities allowed");
-    }
+    if (activities.length >= 30) return alert("Maximum 30 activities allowed");
+    setActivities([
+      ...activities,
+      { id: Date.now(), taskType: "", description: "" },
+    ]);
   };
 
-  // Update activity field
-  const handleChangeActivity = (index, field, value) => {
-    const updated = [...activities];
-    updated[index][field] = value;
-    setActivities(updated);
+  const handleChangeActivity = (id, field, value) => {
+    setActivities((prev) =>
+      prev.map((act) =>
+        act.id === id ? { ...act, [field]: value } : act
+      )
+    );
   };
 
-  // Remove activity row
-  const handleRemoveActivity = (index) => {
-    const updated = [...activities];
-    updated.splice(index, 1);
-    setActivities(updated);
+  const handleRemoveActivity = (id) => {
+    setActivities((prev) => prev.filter((act) => act.id !== id));
   };
 
-  // Submit daily entry
+  // --- Submit ---
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!selectedClient || !selectedProjectType || activities.length === 0) {
-      alert("Please select client, project and add at least one activity.");
+      alert("Please fill client, project and add at least one activity");
       return;
     }
 
@@ -90,126 +93,141 @@ const AddDailyEntry = () => {
       date: new Date(),
     }));
 
-
+    setLoading(true);
     try {
       await axiosInstance.post("/populate/create/dailyactivities", payload);
       alert("Daily entry saved successfully!");
-      setActivities([]);
-      setSelectedClient(null);
-      setSelectedProjectType(null);
+      onClose();
     } catch (error) {
       console.error("Error saving entry:", error);
       alert("Failed to save entry.");
+    } finally {
+      setLoading(false);
     }
   };
 
+  // --- Component ---
   return (
-    <div className="flex flex-col gap-3 p-5 dark:text-white" >
-      <h2 className="text-2xl font-bold">Add Daily Activity</h2>
-      <hr />
-      <br />
-      <form className="flex flex-col gap-3" onSubmit={handleSubmit}>
-        {/* Client + Project Selection */}
-        <div className="flex flex-row gap-3 items-center mb-4">
+    <div className="relative bg-white rounded-2xl p-6 w-full max-w-4xl shadow-xl">
+      {/* Close Button */}
+      <button
+        className="absolute top-4 right-4 text-gray-500 hover:text-gray-800"
+        onClick={onClose}
+      >
+        ✕
+      </button>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <h2 className="text-2xl font-bold mb-6">Add Daily Activity</h2>
+
+        {/* Client + Project Type */}
+        <div className="grid grid-cols-1 md:grid-row-2 gap-4">
           <Autocomplete
-            className="w-1/2"
             options={clients}
+            onOpen={fetchClients}
             getOptionLabel={(option) => option.name || ""}
             value={selectedClient}
-            onOpen={fetchClients}
-            onChange={(event, newValue) => setSelectedClient(newValue)}
+            onChange={(e, newValue) => setSelectedClient(newValue)}
             renderInput={(params) => (
-              <TextField {...params} label="Select Client" variant="outlined" />
+              <TextField
+                {...params}
+                label="Select Client"
+                variant="outlined"
+                required
+              />
             )}
-            isOptionEqualToValue={(option, value) => option._id === value._id}
           />
-
           <Autocomplete
-            className="w-1/2"
+            onOpen={fetchProjectTypes}
             options={projectTypes}
             getOptionLabel={(option) => option.name || ""}
-            value={selectedProjectType || null}
-            onOpen={fetchProject}
-            onChange={(event, newValue) => setSelectedProjectType(newValue)}
+            value={selectedProjectType}
+            onChange={(e, newValue) => setSelectedProjectType(newValue)}
             renderInput={(params) => (
-              <TextField {...params} label="Select Project Type" variant="outlined" />
+              <TextField
+                {...params}
+                label="Select Project Type"
+                variant="outlined"
+                required
+              />
             )}
-            isOptionEqualToValue={(option, value) => option._id === value._id}
           />
-
-          <button
-            type="button"
-            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-            onClick={handleAddActivity}
-          >
-            Add Activity
-          </button>
         </div>
 
-        <hr />
-
         {/* Activities Section */}
-        <div>
-          {activities.map((activity, index) => (
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">Activities</h3>
+          {activities.map((act) => (
             <div
-              key={index}
-              className="flex flex-row gap-2 items-start p-2 rounded"
+              key={act.id}
+              className=" rounded-lg bg-gray-50 relative "
             >
+              {/* Remove Button (red dustbin) */}
+              {activities.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => handleRemoveActivity(act.id)}
+                  className="absolute top-[15px] right-[-25px] text-red-500 hover:text-red-700 text-lg"
+                  title="Remove this task"
+                >
+                  ❌
+                </button>
+              )}
+
               <Autocomplete
-                className="w-1/3"
+                className="pb-2"
+                fullWidth
+                onOpen={fetchTaskTypes}
                 options={taskTypes}
                 getOptionLabel={(option) => option.name || ""}
-                onOpen={fetchTaskType}
-                value={
-                  taskTypes.find((t) => t._id === activity.taskType) || null
-                }
-                onChange={(event, newValue) =>
-                  handleChangeActivity(
-                    index,
-                    "taskType",
-                    newValue ? newValue._id : ""
-                  )
+                onChange={(e, value) =>
+                  handleChangeActivity(act.id, "taskType", value?._id || "")
                 }
                 renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Select Task Type"
-                    variant="outlined"
-                  />
+                  <TextField {...params} label="Task Type" fullWidth />
                 )}
-                isOptionEqualToValue={(option, value) => option._id === value._id}
               />
 
               <TextField
-                className="w-1/2"
-                label="Task Description"
+                label="Description"
                 variant="outlined"
+                fullWidth
                 multiline
-                minRows={1}
-                value={activity.description}
+                minRows={2}
+                value={act.description}
                 onChange={(e) =>
-                  handleChangeActivity(index, "description", e.target.value)
+                  handleChangeActivity(act.id, "description", e.target.value)
                 }
+                className="mt-3"
               />
-
-              <button
-                type="button"
-                className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
-                onClick={() => handleRemoveActivity(index)}
-              >
-                ✕
-              </button>
             </div>
           ))}
+
+          <button
+            type="button"
+            onClick={handleAddActivity}
+            className="text-blue-600 hover:underline mt-2"
+          >
+            + Add Another Task
+          </button>
+        </div>
+
+        {/* User and Date */}
+        <div className="pt-3 text-sm text-gray-600">
+          <p>User: {user?.basicInfo?.firstName}</p>
+          <p>{new Date().toLocaleString()}</p>
         </div>
 
         {/* Submit Button */}
-        <div className="flex flex-col items-center">
+        <div className="pt-4">
           <button
             type="submit"
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            disabled={loading}
+            className={`w-full py-3 rounded-lg text-white font-medium ${
+              loading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
+            }`}
           >
-            Save
+            {loading ? "Saving..." : "Save Activity"}
           </button>
         </div>
       </form>
