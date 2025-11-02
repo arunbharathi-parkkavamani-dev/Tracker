@@ -23,19 +23,29 @@ export default async function buildUpdateQuery({
     if (modelService) {
       const fileUrl = pathToFileURL(modelService).href;
       const serviceModule = await import(fileUrl);
-      const serviceFn = serviceModule.default || serviceModule.update;
+      const serviceFactory = serviceModule.default;
+      const serviceInstance = serviceFactory();
+      const serviceFn = serviceInstance.update;
       console.log(serviceFn)
-      if (serviceFn) {
+      if (typeof serviceFn === "function") {
         return await serviceFn({ role, userId, body, docId, filter });
       }
     }
+    return await genericFallback({ role, userId, modelName, docId, filter, body });
+  } catch (error) {
+    console.error(`buildUpdateQuery(${modelName}) error:`, error.message);
+    throw error;
+  }
+}
 
+export async function genericFallback({ role, userId, modelName, docId, filter, body }) {
+  try {
     // 🧩 Step 2: Fallback to generic Mongoose update
-    const Model = models[modelName] || console.log(`Unsupported Model ${modelName}`)
+    const Model = models[modelName] || console.log(`Unsupported Model ${modelName}`);
 
     // Role policy enforcement
     const accessPolicy = serviceCache?.policies?.[modelName]?.update;
-    if (accessPolicy && !accessPolicy.includes(role)) {
+    if (accessPolicy && !accessPolicy.includes(role, userId)) {
       throw new Error(`Role "${role}" not authorized to update ${modelName}`);
     }
 
@@ -58,3 +68,4 @@ export default async function buildUpdateQuery({
     throw error;
   }
 }
+

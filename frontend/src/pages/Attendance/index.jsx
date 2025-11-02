@@ -10,7 +10,7 @@ const AttendancePage = () => {
   // eslint-disable-next-line no-unused-vars
   const [attendance, setAttendance] = useState([]); // daily attendance array
   const [todayRecord, setTodayRecord] = useState(null); // today's attendance
-  const [monthData, setMonthData] = useState([]); // for calendar
+  const [dayData, setDayData] = useState([]); // for calendar
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedDate, setSelectedDate] = useState(
@@ -41,16 +41,16 @@ const AttendancePage = () => {
   console.log(hasCheckedIn)
 
   // Fetch attendance for month (calendar)
-  const fetchMonthData = async (date) => {
+  const fetchDayData = async (date) => {
     if (!user) return;
     try {
-      const month = date.toISOString().slice(0, 7); // YYYY-MM
+      const day = date.toISOString().slice(0, 10); // YYYY-MM-DD
       const response = await axiosInstance.get(
-        `/populate/read/attendances?employee=${user.id}&month=${month}`
+        `/populate/read/attendances?employee=${user.id}&date=${day}`
       );
-      setMonthData(response.data.data || []);
+      setDayData(response.data.data || []);
     } catch (err) {
-      console.error("Failed to fetch month data:", err);
+      console.error("Failed to fetch day data:", err);
     }
   };
 
@@ -66,7 +66,7 @@ const AttendancePage = () => {
     const fetchData = async () => {
       setLoading(true);
       await fetchTodayAttendance();
-      await fetchMonthData(new Date(selectedDate));
+      await fetchDayData(new Date(selectedDate));
       setLoading(false);
     };
 
@@ -94,7 +94,7 @@ const AttendancePage = () => {
       await axiosInstance.post(`/populate/create/attendances`, payload);
       alert("Checked in successfully");
       await fetchTodayAttendance();
-      await fetchMonthData(new Date(selectedDate));
+      await fetchDayData(new Date(selectedDate));
     } catch (err) {
       console.error("Check-in failed:", err);
       setError("Check-in failed");
@@ -119,7 +119,7 @@ const AttendancePage = () => {
         }
       );
       await fetchTodayAttendance();
-      await fetchMonthData(new Date(selectedDate));
+      await fetchDayData(new Date(selectedDate));
     } catch (err) {
       console.error("Check-out failed:", err);
       setError("Check-out failed");
@@ -129,7 +129,7 @@ const AttendancePage = () => {
   // Calendar tile coloring
   const tileClassName = ({ date, view }) => {
     if (view === "month") {
-      const dayRecord = monthData.find(
+      const dayRecord = dayData.find(
         (rec) => new Date(rec.date).toDateString() === date.toDateString()
       );
 
