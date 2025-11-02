@@ -1,19 +1,22 @@
-import mongoose from "mongoose";
-import Client from "../src/models/Client.js";    // Your Client model
-import projectTypes from "../src/models/ProjectType.js"; // Your ProjectType model
+import express from 'express';
+import http from 'http';
 
-await mongoose.connect("mongodb+srv://root:root123@tracker.vnkyhhp.mongodb.net/tracker?retryWrites=true&w=majority", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
+const app = express();
+const server = http.createServer(app);
+
+app.use(express.json());
+
+app.get('/populate', (req, res) => {
+  // Sample data to populate
+  const sampleData = [
+    { message: 'Hello, World!' },
+  ];
+  res.status(200).json({ data: sampleData });
 });
-const clientId = "68f124dbec5605b8d8266444";
 
-const client = await Client.findById(clientId)
-  .populate({
-    path: "projectTypes",       // name of the field in Client schema
-    // select: "name description", // optional, "*" for all fields
-    strictPopulate: false       // override strictPopulate check
-  })
-  .exec();
+const PORT = 3001;
 
-console.log(client);
+server.listen(PORT, "0.0.0.0", () => {
+  console.log(`Populate service running on port ${PORT}`);
+});
+
