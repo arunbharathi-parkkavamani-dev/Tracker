@@ -7,7 +7,7 @@ const DepartmentSchema = new Schema({
     trim: true,
     unique: true
   },
-  code: { 
+  shortCode: { 
     type: String,
     trim: true,
     unique: true
