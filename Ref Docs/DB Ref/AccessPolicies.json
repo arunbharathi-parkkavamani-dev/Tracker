@@ -1,11 +1,11 @@
 [
     {
-    "role": "68d8b98af397d1d97620ba97", 
-    "modelName": "dailyactivities",
+    "role": "68d8b980f397d1d97620ba96", 
+    "modelName": "notification",
     "permissions": {
       "read": true,
       "create": true,
-      "update": false,
+      "update": true,
       "delete": false
     },
     "forbiddenAccess": {
@@ -21,15 +21,6 @@
       "update": []
     },
     "registry": [],
-    "conditions": {
-      "read":[
-        {
-          "isPopulate":"true",
-          "isRef":"projecttype",
-          "fields":["*"],
-          "effect":"allow"
-        }
-      ]
-    }
+    "conditions": {}
   }
 ]

@@ -1,6 +1,6 @@
 // src/services/notification.js
 import Notification from "../models/notification.js";
-import { emitNotification } from "../utils/socketEmitter.js";
+import { emitNotification } from "../utils/socket.js";
 
 /**
  * Notification Service

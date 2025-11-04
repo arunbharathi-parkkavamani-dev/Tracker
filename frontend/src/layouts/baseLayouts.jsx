@@ -3,6 +3,7 @@ import { useRoutes, useLocation, Navigate } from "react-router-dom";
 import Login from "../pages/login.jsx";
 import routes from "~react-pages";
 import { useAuth } from "../context/authProvider.jsx";
+import TopNavBar from "./topNavBar.jsx";
 
 const BaseLayout = () => {
   const location = useLocation();
@@ -33,8 +34,11 @@ const BaseLayout = () => {
   // Default layout for logged-in users
   return (
     <div className="flex dark:bg-black dark:text-white">
-      <Sidebar />
-      <main className="flex-1 p-4 max-h-screen overflow-auto">{element}</main>
+      <Sidebar/>
+      <main className="flex-1 max-h-screen overflow-auto bg-gray-300 dark:bg-black">
+        <TopNavBar />
+        {element}
+      </main>
     </div>
   );
 };
