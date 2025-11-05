@@ -1,6 +1,5 @@
 import {useAuth} from "../context/authProvider";
 import {useState} from "react";
-import {MdNotifications, MdNotificationsActive, MdNotificationsNone} from "react-icons/md";
 import "../../public/profileImg.png";
 import NotificationDrawer from "../components/NotificationDrawer.jsx";
 import NotificationIndicator from "../components/NotificationIndicator.jsx";
@@ -30,10 +29,7 @@ const TopNavBar = () =>{
                     {/* Notification Icon */}
                     <div className="relative">
                         <button onClick={() => setIsOpen(prev => !prev)} className="relative focus:outline-none">
-                        <MdNotifications size={28} className=" cursor-pointer align-center"/>
-                        <div className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center">
-                            <NotificationIndicator />
-                        </div>
+                        <NotificationIndicator />
                         </button>
                         {isOpen && <NotificationDrawer isOpen={isOpen} setIsOpen={setIsOpen} />}
                     </div>

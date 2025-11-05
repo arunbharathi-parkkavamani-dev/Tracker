@@ -1,79 +1,112 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-import { useEffect, useState } from "react";
-import axiosInstance from "../../api/axiosInstance";
-import { useAuth } from "../../context/authProvider.jsx";
+import { useEffect, useState, useCallback } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
+import axiosInstance from "../../api/axiosInstance";
+import { useAuth } from "../../context/authProvider.jsx";
 
 const AttendancePage = () => {
   const { user, loading: authLoading } = useAuth();
-  // eslint-disable-next-line no-unused-vars
-  const [attendance, setAttendance] = useState([]); // daily attendance array
-  const [todayRecord, setTodayRecord] = useState(null); // today's attendance
-  const [dayData, setDayData] = useState([]); // for calendar
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+
+  // 📊 State
+  const [todayRecord, setTodayRecord] = useState(null);
+  const [dayData, setDayData] = useState([]);
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0]
   );
-  const [hasCheckedIn, setHasCheckedIn] = useState(false);
-  const [hasCheckedOut, setHasCheckedOut] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [location, setLocation] = useState("");
+  const [timeNow, setTimeNow] = useState(new Date());
 
-  // Fetch attendance for a specific date
-  const fetchTodayAttendance = async () => {
+  const hasCheckedIn = !!todayRecord?.checkIn;
+  const hasCheckedOut = !!todayRecord?.checkOut;
+
+  // 🕐 Realtime clock
+  useEffect(() => {
+    const interval = setInterval(() => setTimeNow(new Date()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // 🧭 Fetch location name (reverse geocoding)
+  useEffect(() => {
+    const fetchLocation = async () => {
+      if (!todayRecord?.location) return;
+      const { latitude, longitude } = todayRecord.location;
+      const url = `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`;
+
+      try {
+        const response = await fetch(url, {
+          headers: { "User-Agent": "YourAppName/1.0" },
+        });
+        const data = await response.json();
+        setLocation(data?.display_name || "Unknown location");
+      } catch (err) {
+        console.error("Error fetching location:", err);
+        setLocation("Error fetching location");
+      }
+    };
+    fetchLocation();
+  }, [todayRecord]);
+
+  // 🧩 Utility: Get month start & end date
+  const getMonthRange = useCallback((date) => {
+    const start = new Date(date.getFullYear(), date.getMonth(), 1)
+      .toISOString()
+      .slice(0, 10);
+    const end = new Date(date.getFullYear(), date.getMonth() + 1, 0)
+      .toISOString()
+      .slice(0, 10);
+    return { start, end };
+  }, []);
+
+  // 📅 Fetch attendance for selected day
+  const fetchTodayAttendance = useCallback(async () => {
     if (!user) return;
     try {
       const response = await axiosInstance.get(
         `/populate/read/attendances?employee=${user.id}&date=${selectedDate}`
       );
-      const records = response.data.data || [];
-      const record = records[0] || null;
-      
+      const record = response.data?.data?.[0] || null;
       setTodayRecord(record);
-      setHasCheckedIn(!!record?.checkIn);
-      setHasCheckedOut(!!record?.checkOut);
-      setAttendance(records);
     } catch (err) {
       console.error("Failed to fetch today's attendance:", err);
       setError("Failed to load today's attendance");
     }
-  };
-  console.log(hasCheckedIn)
+  }, [user, selectedDate]);
 
-  // Fetch attendance for month (calendar)
-  const fetchDayData = async (date) => {
-    if (!user) return;
-    try {
-      const day = date.toISOString().slice(0, 10); // YYYY-MM-DD
-      const response = await axiosInstance.get(
-        `/populate/read/attendances?employee=${user.id}&date=${day}`
-      );
-      setDayData(response.data.data || []);
-    } catch (err) {
-      console.error("Failed to fetch day data:", err);
-    }
-  };
+  // 📆 Fetch all attendances for month
+  const fetchDayData = useCallback(
+    async (monthDate) => {
+      if (!user) return;
+      try {
+        const { start, end } = getMonthRange(monthDate);
+        const response = await axiosInstance.get(`/populate/read/attendances`, {
+          params: {
+            employee: user.id,
+            "filter[date][$gte]": start,
+            "filter[date][$lte]": end,
+          },
+        });
+        setDayData(response.data?.data || []);
+      } catch (err) {
+        console.error("Failed to fetch monthly data:", err);
+      }
+    },
+    [user, getMonthRange]
+  );
 
-  // Fetch data when user or selectedDate changes
+  // 🔁 Initial fetch
   useEffect(() => {
-    if (authLoading) return;
-    if (!user) {
-      setError("User not logged in");
-      setLoading(false);
-      return;
-    }
-
-    const fetchData = async () => {
+    if (authLoading || !user) return;
+    (async () => {
       setLoading(true);
       await fetchTodayAttendance();
       await fetchDayData(new Date(selectedDate));
       setLoading(false);
-    };
+    })();
+  }, [user, authLoading, selectedDate, fetchTodayAttendance, fetchDayData]);
 
-    fetchData();
-  }, [user, authLoading, selectedDate]);
-
-  // Handle Check-In
+  // 🟢 Check-In
   const handleCheckIn = async () => {
     if (!user) return;
     const payload = {
@@ -83,13 +116,8 @@ const AttendancePage = () => {
       checkIn: new Date().toISOString(),
       status: "Present",
       managerId: user.managerId,
-      location: {
-        latitude: 10.9338987,
-        longitude: 76.9839277,
-      },
+      location: { latitude: 10.9338987, longitude: 76.9839277 },
     };
-    console.log(user)
-
     try {
       await axiosInstance.post(`/populate/create/attendances`, payload);
       alert("Checked in successfully");
@@ -101,7 +129,7 @@ const AttendancePage = () => {
     }
   };
 
-  // Handle Check-Out
+  // 🔴 Check-Out
   const handleCheckOut = async () => {
     if (!todayRecord) return;
     try {
@@ -112,10 +140,7 @@ const AttendancePage = () => {
           employeeName: user.name,
           date: selectedDate,
           checkOut: new Date().toISOString(),
-          location: {
-            latitude: 10.9338987,
-            longitude: 76.9839277,
-          },
+          location: { latitude: 10.9338987, longitude: 76.9839277 },
         }
       );
       await fetchTodayAttendance();
@@ -126,106 +151,122 @@ const AttendancePage = () => {
     }
   };
 
-  // Calendar tile coloring
-  const tileClassName = ({ date, view }) => {
-    if (view === "month") {
-      const dayRecord = dayData.find(
-        (rec) => new Date(rec.date).toDateString() === date.toDateString()
-      );
+  // 🎨 Tile coloring logic
+  const tileClassName = useCallback(
+    ({ date, view }) => {
+      if (view === "month") {
+        const record = dayData.find(
+          (rec) => new Date(rec.date).toDateString() === date.toDateString()
+        );
 
-      if (dayRecord) {
-        switch (dayRecord.status) {
-          case "Present":
-            return "bg-green-400 text-white";
-          case "Absent":
-            return "bg-red-400 text-white";
-          case "Leave":
-            return "bg-yellow-400 text-black";
-          case "Half Day":
-            return "bg-orange-400 text-white";
-          case "Work From Home":
-            return "bg-blue-400 text-white";
-          case "Early check-out":
-            return "bg-purple-400 text-orange-900";
-          case "Check-Out":
-            return "bg-teal-400 text-white";
-          default:
-            return "";
-        }
+        if (!record?.status) return "";
+
+        const status = record.status.trim().toLowerCase();
+        const map = {
+          "present": "!bg-green-400 !text-white",
+          "absent": "!bg-red-400 !text-white",
+          "leave": "!bg-green-400 !text-black",
+          "half day": "!bg-orange-400 !text-white",
+          "work from home": "!bg-blue-400 !text-white",
+          "early check-out": "!bg-purple-400 !text-orange-900",
+          "check-out": "!bg-teal-400 !text-white",
+          "lop" : "!bg-red-700 !text-white"
+        };
+        return map[status] || "";
       }
-    }
-    return "";
-  };
+      return "";
+    },
+    [dayData]
+  );
 
-  if (loading || authLoading) return <p>Loading attendance...</p>;
+  if (loading || authLoading)
+    return <p className="text-gray-600 dark:text-gray-300">Loading attendance...</p>;
   if (error) return <p className="text-red-500">{error}</p>;
 
   return (
-    <div className="p-4 grid grid-cols-4 gap-6 h-screen dark:text-white">
-      {/* Left Panel */}
-      <div className="col-span-3 flex flex-col items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          {!hasCheckedIn ? (
-            <button
-              onClick={handleCheckIn}
-              className="w-40 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg"
-            >
-              Check In
-            </button>
-          ) : (
-            <div className="flex flex-col items-center">
+    <div className="dark:text-white text-black">
+      <h2 className="text-2xl font-bold mb-4 pl-4 pt-4">Attendance</h2>
+
+      <div className="pl-4 grid grid-cols-5 gap-3">
+        {/* Left Panel */}
+        <div className="col-span-3 bg-white/70 backdrop-blur-md shadow-lg rounded-lg p-6">
+          {/* Check-in panel */}
+          {!hasCheckedIn && (
+            <div className="flex justify-between items-center">
+              <div>
+                <p>Welcome back, {user.name}! 🖐️</p>
+                <p className="text-lg text-gray-700">
+                  Current Time:{" "}
+                  <b>{timeNow.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</b>
+                </p>
+                <p>Checked in Location:</p>
+                <p>Loading...</p>
+              </div>
               <button
-                disabled
-                className="w-40 bg-gray-400 text-black font-semibold py-2 px-4 rounded-lg cursor-not-allowed dark:text-white"
+                onClick={handleCheckIn}
+                className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
               >
-                Checked In
+                Check In
               </button>
-              <p className="text-lg text-black mt-2">
-                <strong>Check-In:</strong>{" "}
-                {todayRecord?.checkIn
-                  ? new Date(todayRecord.checkIn).toLocaleTimeString()
-                  : "—"}
-              </p>
             </div>
           )}
 
-          {hasCheckedIn && !hasCheckedOut ? (
-            <button
-              onClick={handleCheckOut}
-              className="w-40 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg"
-            >
-              Check Out
-            </button>
-          ) : (
-            <div className="flex flex-col items-center">
+          {/* Check-out panel */}
+          {hasCheckedIn && !hasCheckedOut && (
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-2xl font-bold">Check In</p>
+                <p className="text-lg text-gray-700">
+                  {new Date(todayRecord.checkIn).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: true,
+                  })}
+                </p>
+                <p>Checked in Location:</p>
+                <p className="pr-4">{location}</p>
+              </div>
+              <button
+                onClick={handleCheckOut}
+                className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
+              >
+                Check Out
+              </button>
+            </div>
+          )}
+
+          {/* Completed Check-out */}
+          {hasCheckedOut && (
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-2xl font-bold">Checked Out</p>
+                <p className="text-lg text-gray-700">
+                  {new Date(todayRecord.checkOut).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: true,
+                  })}
+                </p>
+              </div>
               <button
                 disabled
-                className="w-40 bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg cursor-not-allowed"
+                className="bg-gray-400 text-black font-bold py-2 px-4 rounded cursor-not-allowed"
               >
-                {hasCheckedOut ? "Checked Out" : "Check Out"}
+                Checked Out
               </button>
-              <p className="text-lg text-black mt-2">
-                <strong>Check-Out:</strong>{" "}
-                {todayRecord?.checkOut
-                  ? new Date(todayRecord.checkOut).toLocaleTimeString()
-                  : "—"}
-              </p>
             </div>
           )}
         </div>
-      </div>
 
-      {/* Right Panel Calendar */}
-      <div className="col-span-1 relative pl-6 flex flex-col">
-        <div className="absolute left-0 top-0 bottom-0 border-l-2 border-gray-300"></div>
-        <h2 className="text-lg text-black mb-2">Attendance Calendar</h2>
-        <Calendar
-          onChange={(value) =>
-            setSelectedDate(new Date(value).toISOString().split("T")[0])
-          }
-          value={new Date(selectedDate)}
-          tileClassName={tileClassName}
-        />
+        {/* Right Panel - Calendar */}
+        <div className="col-span-2 row-span-2 pl-4">
+          <Calendar
+            onChange={(date) => setSelectedDate(date.toISOString().slice(0, 10))}
+            onActiveStartDateChange={({ activeStartDate }) => fetchDayData(activeStartDate)}
+            value={new Date(selectedDate)}
+            tileClassName={tileClassName}
+          />
+        </div>
       </div>
     </div>
   );

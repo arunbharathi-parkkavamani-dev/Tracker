@@ -19,6 +19,7 @@ export default async function buildUpdateQuery({
     // 🧩 Step 1: Check service cache first
     const serviceCache = getAllServices();
     const modelService = serviceCache?.[modelName];
+    console.log("Service Cache in buildUpdateQuery:", modelService);
 
     if (modelService) {
       const fileUrl = pathToFileURL(modelService).href;
@@ -41,6 +42,8 @@ export default async function buildUpdateQuery({
 export async function genericFallback({ role, userId, modelName, docId, filter, body }) {
   try {
     // 🧩 Step 2: Fallback to generic Mongoose update
+    console.log("Using Generic Fallback for buildUpdateQuery:", { modelName, docId, filter, body });
+    const serviceCache = getAllServices();
     const Model = models[modelName] || console.log(`Unsupported Model ${modelName}`);
 
     // Role policy enforcement

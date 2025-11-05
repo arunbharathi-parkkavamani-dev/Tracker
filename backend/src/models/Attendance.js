@@ -6,9 +6,8 @@ const AttendanceSchema = new Schema(
     employee: {
       type: Schema.Types.ObjectId,
       ref: "Employee",
-      required: true,
     },
-    date: { type: Date, required: true },
+    date: { type: Date },
     status: {
       type: String,
       enum: [
@@ -35,15 +34,15 @@ const AttendanceSchema = new Schema(
     checkIn: { type: Date },
     checkOut: { type: Date },
     location: {
-      latitude: { type: Number, required: true },
-      longitude: { type: Number, required: true },
+      latitude: { type: Number },
+      longitude: { type: Number },
     },
     request: { type: String },
     managerId: {
       type: Schema.Types.ObjectId,
       ref: "Employee",
     },
-    employeeName: { type: String, required: true },
+    employeeName: { type: String },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
   },

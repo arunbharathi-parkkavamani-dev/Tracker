@@ -33,7 +33,7 @@ const NotificationDrawer = ({ isOpen, setIsOpen }) => {
             onClick={() => markAsRead(notif._id)}
             className={`px-4 py-3 border-b cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 ${
               notif.read
-                ? "font-normal text-gray-700"
+                ? "font-normal text-black dark:text-white"
                 : "font-semibold bg-blue-50 dark:bg-gray-700"
             }`}
           >
