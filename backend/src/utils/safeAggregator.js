@@ -41,7 +41,7 @@ const safeAggregate = async (model, pipeline = [], options = []) => {
 
         // Execute aggregation with disk use enabled   
         const results = await model.aggregate(pipeline, { allowDiskUse: true, ...options });
-        console.log(`✅ Aggregation successful for ${model.modelName}: ${results.length} records retrieved.`);
+        console.log(`✅ Aggregation successful for ${model.modelName}: ${results} records retrieved.`);
         return results;
     } catch (error) {
         console.error(`❌ Aggregation error for ${model.modelName}:`, error.message);
