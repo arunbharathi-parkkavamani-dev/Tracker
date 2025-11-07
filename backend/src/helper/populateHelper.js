@@ -6,9 +6,22 @@ export async function populateHelper(req, res, next) {
     const user = req.user;
     
     // Extract and normalize query parameters
-    let { fields, filter, ...extra } = req.query;
-    if (!filter && Object.keys(extra).length > 0) filter = extra;
-    console.log("req.query:", filter);
+    let { fields, filter, ...extraQuery } = req.query;
+    if(req.body) {
+
+      const { params = {}, ...bodyData } = req.body;
+      
+      // Merge everything into a single filter
+      filter = filter || {};
+      filter = {
+        ...filter,
+        ...extraQuery,
+        ...params,
+        ...bodyData,
+      };
+    }
+      
+    console.log("🔍 Final merged filter:", JSON.stringify(filter, null, 2));
     
 
     // Main buildQuery call

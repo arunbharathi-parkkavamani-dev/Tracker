@@ -2,6 +2,7 @@ import models from "../models/Collection.js";
 import { getAllServices } from "../utils/servicesCache.js";
 import { pathToFileURL } from "url";
 import safeAggregate from "../utils/safeAggregator.js";
+import mongoose from "mongoose";
 
 
 /**
@@ -114,8 +115,9 @@ async function genericFallback({ role, userId, modelName, docId, filter, fields 
   if (filter?.aggregate && Array.isArray(filter.stages)) {
     console.log("Using safe aggregation pipeline for filter stages.");
 
+    // @ts-ignore
     const matchStage = docId
-      ? [{ $match : { _id: Model.schema.Types.ObjectId(docId) } }]
+      ? [{ $match: { _id: new mongoose.Types.ObjectId(docId) } }]
       : filter.matchStage
       ? [{ $match: filter.matchStage }]
       : [];

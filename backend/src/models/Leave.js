@@ -6,8 +6,8 @@ const LeaveSchema = new mongoose.Schema({
         ref: 'Employee',
         required: true
     },
-    departmentID:{ type: mongoose.Schema.Types.ObjectId, ref: 'Department' },
-    leaveTypeId: { type: mongoose.Schema.Types.ObjectId, ref: 'LeaveType'},
+    departmentName:{ type: String },
+    leaveTypeName: { type: String},
     startDate: { type: Date},
     endDate: { type: Date },
     totalDays:{ type: Number},
