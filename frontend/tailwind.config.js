@@ -1,5 +1,6 @@
 // tailwind.config.js
 import lineClamp from '@tailwindcss/line-clamp';
+import Scrollbar from 'tailwind-scrollbar-hide';
 
 export default {
   darkMode: "class", // ✅ enable class-based dark mode
@@ -7,5 +8,5 @@ export default {
   theme: {
     extend: {},
   },
-  plugins: [lineClamp],
+  plugins: [lineClamp, Scrollbar],
 };

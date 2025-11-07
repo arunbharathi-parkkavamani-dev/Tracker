@@ -14,6 +14,7 @@ import projecttypes from "./ProjectType.js";
 import accesspolicies from "./AccessPolicies.js";
 import role from "./Role.js";
 import notification from "./notification.js";
+import leave from "./Leave.js"
 
 const models = {
   accesspolicies,
@@ -31,6 +32,7 @@ const models = {
   projecttypes,
   role,
   notification,
+  leave,
 };
 
 export default models;

@@ -1,6 +1,8 @@
 import models from "../models/Collection.js";
 import { getAllServices } from "../utils/servicesCache.js";
 import { pathToFileURL } from "url";
+import safeAggregate from "../utils/safeAggregator.js";
+
 
 /**
  * Build Read Query (Service First + Generic Fallback)
@@ -108,6 +110,25 @@ async function genericFallback({ role, userId, modelName, docId, filter, fields 
     }
   }
 
+  console.log("Filter after processing:", filter);
+  if (filter?.aggregate && Array.isArray(filter.stages)) {
+    console.log("Using safe aggregation pipeline for filter stages.");
+
+    const matchStage = docId
+      ? [{ $match : { _id: Model.schema.Types.ObjectId(docId) } }]
+      : filter.matchStage
+      ? [{ $match: filter.matchStage }]
+      : [];
+
+    const pipeline = [
+      ...matchStage,
+      ...filter.stages,
+      ...(filter.project ? [{ $project: filter.project }] : []),
+    ];
+
+    return await safeAggregate(Model, pipeline);
+  }
+
   // 🧩 Build the Mongoose query
   let query = docId ? Model.findById(docId) : Model.find(filter || {});
 
@@ -123,4 +144,3 @@ async function genericFallback({ role, userId, modelName, docId, filter, fields 
   console.log(`✅ Generic read used for model: ${modelName}`);
   return results;
 }
-

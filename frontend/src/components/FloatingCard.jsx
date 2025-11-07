@@ -30,12 +30,12 @@ const FloatingCard = ({ onClose, children }) => {
 
 
   return (
-    <div className="fixed inset-0 z-20 bg-black/10 flex justify-center items-start p-4 w-full h-full overflow-y-scroll scroll-auto">
+    <div className="fixed inset-0 z-20 bg-black/10 flex justify-center items-start p-4 ">
       {/* Soft blur overlay */}
-      <div className="absolute inset-0 backdrop-blur-sm transition-all duration-300" />
+      <div className="absolute inset-0 backdrop-blur-sm transition-all duration-300 w-full" />
       <div
         ref={cardRef}
-        className="relative bg-white rounded-2xl shadow-xl z-10 p-4 w-100"
+        className="relative bg-white rounded-2xl shadow-xl z-10 p-4  w-100 h-146 overflow-y-scroll scrollbar-hide"
       >
         {children}
       </div>

@@ -3,6 +3,8 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import axiosInstance from "../../api/axiosInstance";
 import { useAuth } from "../../context/authProvider.jsx";
+import FloatingCard from "../../components/FloatingCard.jsx";
+import LeaveAndRegularization from "./Leave&Regularization.jsx";
 
 const AttendancePage = () => {
   const { user, loading: authLoading } = useAuth();
@@ -17,6 +19,7 @@ const AttendancePage = () => {
   const [error, setError] = useState(null);
   const [location, setLocation] = useState("");
   const [timeNow, setTimeNow] = useState(new Date());
+  const [showModal, setShowModal] = useState(false);
 
   const hasCheckedIn = !!todayRecord?.checkIn;
   const hasCheckedOut = !!todayRecord?.checkOut;
@@ -127,6 +130,16 @@ const AttendancePage = () => {
       console.error("Check-in failed:", err);
       setError("Check-in failed");
     }
+  };
+
+  const handleOpenAdd = () => {
+    setShowModal(true);
+    window.history.pushState(null, "", `/attendance/add`);
+  };
+
+  const handleCloseAdd = () => {
+    setShowModal(false);
+    window.history.pushState(null, "", `/attendance`);
   };
 
   // 🔴 Check-Out
@@ -260,14 +273,29 @@ const AttendancePage = () => {
 
         {/* Right Panel - Calendar */}
         <div className="col-span-2 row-span-2 pl-4">
-          <Calendar
-            onChange={(date) => setSelectedDate(date.toISOString().slice(0, 10))}
-            onActiveStartDateChange={({ activeStartDate }) => fetchDayData(activeStartDate)}
-            value={new Date(selectedDate)}
-            tileClassName={tileClassName}
-          />
+          <div>
+            <button
+              onClick={handleOpenAdd}
+              className="mb-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            >
+              Leave & Regularization
+            </button>
+          </div>
+          <div>
+            <Calendar
+              onChange={(date) => setSelectedDate(date.toISOString().slice(0, 10))}
+              onActiveStartDateChange={({ activeStartDate }) => fetchDayData(activeStartDate)}
+              value={new Date(selectedDate)}
+              tileClassName={tileClassName}
+            />
+          </div>
         </div>
       </div>
+      {showModal && (
+        <FloatingCard onClose={handleCloseAdd}>
+          <LeaveAndRegularization onClose={handleCloseAdd} />
+        </FloatingCard>
+      )}
     </div>
   );
 };

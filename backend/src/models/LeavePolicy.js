@@ -2,11 +2,6 @@
 import { Schema, model } from 'mongoose';
 
 const LeavePolicySchema = new Schema({
-  designation: {
-    type: Schema.Types.ObjectId,
-    ref: 'Designation',
-    required: true
-  },
   leaves: [
     {
       leaveType: { type: Schema.Types.ObjectId, ref: 'LeaveType' },
