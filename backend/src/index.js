@@ -10,6 +10,7 @@ import { apiHitLogger } from "./middlewares/apiHitLogger.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import connectDB from "./Config/ConnectDB.js";
 import cookieParser from "cookie-parser";
+import "./cron/AttendanceCron.js";
 
 dotenv.config();
 connectDB();

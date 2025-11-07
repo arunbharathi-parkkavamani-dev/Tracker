@@ -22,7 +22,7 @@ const Sidebar = () => {
   }, []);
 
   return (
-    <div className="w-52 h-screen bg-white shadow-lg p-4 dark:bg-black dark:text-white">
+    <div className="w-52 h-screen bg-blue-600 shadow-lg p-4 dark:bg-blue-900 text-white">
       {navItems.length > 0 ? (
         <ul className="space-y-2 dark:text-white">
           {navItems.map((item) => {
@@ -34,8 +34,8 @@ const Sidebar = () => {
                 onClick={() => navigate(item.route)}
                 className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-blue-400 transition dark:text-white"
               >
-                <Icon className="text-xl text-gray-600 dark:text-white" />
-                <span className="text-gray-800 font-medium dark:text-white">
+                <Icon className="text-xl text-white dark:text-white" />
+                <span className="text-white font-medium dark:text-white">
                   {item.title}
                 </span>
               </li>

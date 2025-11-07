@@ -4,10 +4,10 @@ import Employee from "../models/Employee.js";
 // import Holiday from "../models/Holiday.js";
 import dayjs from "dayjs";
 
-// Run job every day at 08:52 AM
-cron.schedule("52 08 * * *", async () => {
+// Run job every day at 01:22 AM
+cron.schedule("22 01 * * *", async () => {
   try {
-
+    console.log("Running attendance cron job...");
     const today = dayjs().startOf("day").toDate();
     const employees = await Employee.find();
 
@@ -20,7 +20,7 @@ cron.schedule("52 08 * * *", async () => {
 
       if (existingRecord) {
         // Record already exists → update if needed (like unchecked check-in later in day)
-        if (existingRecord.status == "Week Off" || !existingRecord.checkOut) {
+        if (existingRecord.status !== "Week Off" || !existingRecord.checkOut) {
           existingRecord.status = "Unchecked";
           await existingRecord.save();
         }

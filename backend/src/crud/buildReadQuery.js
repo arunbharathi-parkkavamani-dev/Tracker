@@ -1,6 +1,8 @@
 import models from "../models/Collection.js";
 import { getAllServices } from "../utils/servicesCache.js";
 import { pathToFileURL } from "url";
+import safeAggregate from "../utils/safeAggregator.js";
+
 
 /**
  * Build Read Query (Service First + Generic Fallback)
@@ -50,6 +52,9 @@ export default async function buildReadQuery({
 /**
  * 🧩 Generic fallback for Mongoose read
  */
+/**
+ * 🧩 Generic fallback for Mongoose read
+ */
 async function genericFallback({ role, userId, modelName, docId, filter, fields }) {
   const serviceCache = getAllServices();
   const Model = models[modelName];
@@ -64,21 +69,77 @@ async function genericFallback({ role, userId, modelName, docId, filter, fields 
     throw new Error(`Role "${role}" not authorized to read ${modelName}`);
   }
 
-  // 🧩 Build query
+  // ✅ Normalize flat query keys like 'filter[date][$gte]' → { filter: { date: { $gte: ... } } }
+  if (filter && Object.keys(filter).length > 0) {
+    const parsedFilter = {};
+    for (const key in filter) {
+      if (key.includes("[")) {
+        const path = key.replace(/\]/g, "").split("["); // e.g. ['filter', 'date', '$gte']
+        let current = parsedFilter;
+        path.forEach((p, idx) => {
+          if (idx === path.length - 1) {
+            current[p] = filter[key];
+          } else {
+            current[p] = current[p] || {};
+            current = current[p];
+          }
+        });
+      } else {
+        parsedFilter[key] = filter[key];
+      }
+    }
+
+    // Extract the inner "filter" key if present
+    filter = parsedFilter.filter || parsedFilter;
+  }
+
+  // 🔒 Restrict employees to their own records (for Attendance model)
+  if (role === "employee" && modelName === "Attendance") {
+    filter.employee = userId;
+  }
+
+  // ✅ Auto-convert date range strings to real Date objects
+  if (filter?.date) {
+    if (filter.date.$gte) {
+      filter.date.$gte = new Date(filter.date.$gte);
+    }
+    if (filter.date.$lte) {
+      const end = new Date(filter.date.$lte);
+      end.setHours(23, 59, 59, 999); // Include full last day
+      filter.date.$lte = end;
+    }
+  }
+
+  console.log("Filter after processing:", filter);
+  if (filter?.aggregate && Array.isArray(filter.stages)) {
+    console.log("Using safe aggregation pipeline for filter stages.");
+
+    const matchStage = docId
+      ? [{ $match : { _id: Model.schema.Types.ObjectId(docId) } }]
+      : filter.matchStage
+      ? [{ $match: filter.matchStage }]
+      : [];
+
+    const pipeline = [
+      ...matchStage,
+      ...filter.stages,
+      ...(filter.project ? [{ $project: filter.project }] : []),
+    ];
+
+    return await safeAggregate(Model, pipeline);
+  }
+
+  // 🧩 Build the Mongoose query
   let query = docId ? Model.findById(docId) : Model.find(filter || {});
 
-  // 🧩 Populate fields if requested (comma separated)
+  // 🧩 Populate fields if requested (comma-separated)
   if (fields) {
     const fieldList = fields.split(",").filter(Boolean);
     fieldList.forEach((f) => query.populate(f));
   }
 
-  // 🧩 Optional role-based filtering logic
-  if (role === "employee" && modelName === "Attendance") {
-    query = query.where("employee").equals(userId);
-  }
-
-  // 🧩 Execute and return
+  console.log("Generic Read Query: ", query.getQuery());
+  // 🧩 Execute and return lean results
   const results = await query.lean();
   console.log(`✅ Generic read used for model: ${modelName}`);
   return results;
