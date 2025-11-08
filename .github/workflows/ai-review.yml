@@ -1,0 +1,92 @@
+name: AI Code Review
+
+on:
+  push:
+    branches:
+      - main
+      - Arun
+      - staging
+  pull_request:
+    branches:
+      - main
+      - Arun
+      - staging
+
+jobs:
+  ai-code-review:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install openai@4.0.0 simple-git@3.21.0
+
+      - name: Generate Code Review using ChatGPT
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          node <<'EOF'
+          import fs from 'fs';
+          import { execSync } from 'child_process';
+          import OpenAI from 'openai';
+          import simpleGit from 'simple-git';
+
+          const git = simpleGit();
+          const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+          // Get the latest commit diff
+          const diff = execSync('git diff HEAD~1 HEAD', { encoding: 'utf8' });
+
+          console.log('🔍 Sending latest code diff to ChatGPT...');
+
+          const prompt = `
+          You are an expert code reviewer for a React Native + Express HR tracker project.
+          Review the following git diff, identify issues, suggest improvements, and summarize your overall impression in one paragraph.
+          Provide a markdown-formatted review.
+          
+          Code diff:
+          ${diff}
+          `;
+
+          const runReview = async () => {
+            const response = await openai.chat.completions.create({
+              model: "gpt-4o-mini",
+              messages: [
+                { role: "system", content: "You are a professional code reviewer." },
+                { role: "user", content: prompt }
+              ],
+              temperature: 0.4,
+            });
+
+            const review = response.choices[0].message.content;
+
+            const date = new Date().toLocaleString();
+            const header = `\n\n---\n### 🧠 AI Review (${date})\n${review}\n`;
+
+            // Append to text.md or create it
+            const filePath = './text.md';
+            fs.appendFileSync(filePath, header);
+            console.log('✅ Review saved to text.md');
+          };
+
+          await runReview();
+          EOF
+
+      - name: Commit and push review file
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add text.md
+          git commit -m "🤖 AI code review update"
+          git push
