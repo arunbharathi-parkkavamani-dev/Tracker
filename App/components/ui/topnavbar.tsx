@@ -38,7 +38,6 @@ export default function TopNavbar({
   useEffect(() => {
     if (!userId) return;
     const newSocket = io(SOCKET_URL);
-    console.log("Socket connected:", newSocket.connected);
 
     setSocket(newSocket);
 

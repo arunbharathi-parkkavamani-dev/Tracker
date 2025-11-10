@@ -1,8 +1,8 @@
 import {useAuth} from "../context/authProvider";
 import {useState} from "react";
-import "../../public/profileImg.png";
-import NotificationDrawer from "../components/NotificationDrawer.jsx";
-import NotificationIndicator from "../components/NotificationIndicator.jsx";
+import "../assets/profileImg.png";
+import NotificationDrawer from "../components/Static/NotificationDrawer.jsx"
+import NotificationIndicator from "../components/Static/NotificationIndicator.jsx";
 
 
 const TopNavBar = () =>{
@@ -37,7 +37,7 @@ const TopNavBar = () =>{
                     <div className="flex items-center space-x-2">
                         <span className="font-medium">{user?.name || "Guest"}</span>
                         <img
-                            src={user?.profilePicture || "../../public/profileImg.png"}
+                            src={user?.profilePicture || "../assets/profileImg.png"}
                             alt="User Avatar"
                             className="w-8 h-8 rounded-full object-cover"
                         />

@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import {useState, useEffect} from "react";
-import { useNotification } from "../context/notificationProvider";
+import { useNotification } from "../../context/notificationProvider";
 import {MdNotificationsActive, MdNotificationsNone} from "react-icons/md";
 
 const NotificationIndicator = () => {

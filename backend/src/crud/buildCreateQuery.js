@@ -25,9 +25,6 @@ export default async function buildCreateQuery({
       const serviceInstance = serviceFactory(); // expected to return { create, update, ... }
       const serviceFn = serviceInstance.create;
 
-      console.log("Loaded model:", modelName);
-      console.log("Service function:", serviceFn?.name || "none");
-
       if (typeof serviceFn === "function") {
         // ✅ Use service create
         return await serviceFn({ role, userId, body });
@@ -67,7 +64,5 @@ async function genericFallback({ modelName, body, role }) {
     doc = new Model(body);
     await doc.save();
   }
-
-  console.log(`✅ Generic fallback used for model: ${modelName}`);
   return doc;
 }

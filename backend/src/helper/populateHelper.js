@@ -20,8 +20,6 @@ export async function populateHelper(req, res, next) {
         ...bodyData,
       };
     }
-      
-    console.log("🔍 Final merged filter:", JSON.stringify(filter, null, 2));
     
 
     // Main buildQuery call

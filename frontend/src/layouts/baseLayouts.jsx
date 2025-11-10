@@ -1,9 +1,9 @@
-import Sidebar from "./Sidebar";
 import { useRoutes, useLocation, Navigate } from "react-router-dom";
-import Login from "../pages/login.jsx";
-import routes from "~react-pages";
 import { useAuth } from "../context/authProvider.jsx";
+import routes from "~react-pages";
+import Sidebar from "./Sidebar";
 import TopNavBar from "./topNavBar.jsx";
+import Login from "../pages/login.jsx";
 
 const BaseLayout = () => {
   const location = useLocation();
@@ -16,7 +16,6 @@ const BaseLayout = () => {
   }
 
   // If not logged in → only allow login & register
-  console.log(user)
   if (!user && location.pathname !== "/login" && location.pathname !== "/register") {
     return <Navigate to="/login" replace />;
   }

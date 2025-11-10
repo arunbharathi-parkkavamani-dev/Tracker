@@ -16,13 +16,11 @@ export default function TestSocket() {
     });
 
     socket.on("connect", () => {
-      console.log("Connected to Socket.IO:", socket.id);
       socket.emit("join", user.id);
     });
 
     // 2️⃣ Listen for live notifications
     socket.on("notification", (data) => {
-      console.log("📩 Received live notification:", data);
       setNotifications((prev) => [data, ...prev]); // prepend new notification
     });
 
@@ -37,9 +35,7 @@ export default function TestSocket() {
         if (res.data && Array.isArray(res.data)) {
           setNotifications(res.data);
         } else if (res.data.data) {
-          console.log("Fetched existing notifications:", res.data);
           setNotifications(res.data.data);
-          console.log("Fetching existing notifications for user:", res.data.data);
         }
       } catch (err) {
         console.error("Failed to load notifications:", err);

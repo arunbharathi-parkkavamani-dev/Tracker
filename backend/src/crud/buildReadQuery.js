@@ -32,8 +32,6 @@ export default async function buildReadQuery({
       const serviceInstance = serviceFactory(); 
       const serviceFn = serviceInstance?.read;
 
-      console.log("Loaded model:", modelName);
-      console.log("Service read function:", serviceFn?.name || "none");
 
       if (typeof serviceFn === "function") {
         // ✅ Custom read handler found
@@ -111,10 +109,7 @@ async function genericFallback({ role, userId, modelName, docId, filter, fields 
     }
   }
 
-  console.log("Filter after processing:", filter);
   if (filter?.aggregate && Array.isArray(filter.stages)) {
-    console.log("Using safe aggregation pipeline for filter stages.");
-
     // @ts-ignore
     const matchStage = docId
       ? [{ $match: { _id: new mongoose.Types.ObjectId(docId) } }]
@@ -140,7 +135,6 @@ async function genericFallback({ role, userId, modelName, docId, filter, fields 
     fieldList.forEach((f) => query.populate(f));
   }
 
-  console.log("Generic Read Query: ", query.getQuery());
   // 🧩 Execute and return lean results
   const results = await query.lean();
   console.log(`✅ Generic read used for model: ${modelName}`);

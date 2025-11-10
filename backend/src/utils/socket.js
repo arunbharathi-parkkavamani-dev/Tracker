@@ -10,7 +10,5 @@ export const emitNotification = (receiverId, payload) => {
     console.warn("⚠️ emitNotification called without receiverId");
     return;
   }
-
-  console.log(`📢 Emitting to user ${receiverId}:`, payload);
   io.to(receiverId.toString()).emit("notification", payload);
 };

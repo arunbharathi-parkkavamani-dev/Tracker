@@ -3,7 +3,7 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import axiosInstance from "../../api/axiosInstance";
 import { useAuth } from "../../context/authProvider.jsx";
-import FloatingCard from "../../components/FloatingCard.jsx";
+import FloatingCard from "../../components/Common/FloatingCard.jsx";
 import LeaveAndRegularization from "./Leave&Regularization.jsx";
 
 const AttendancePage = () => {

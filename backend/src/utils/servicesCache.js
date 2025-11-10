@@ -12,7 +12,6 @@ const CACHE_REFRESH_INTERVAL = 20 * 60 * 1000; // 20 minutes
  * Load all service files dynamically into cache
  */
 function loadServices() {
-  console.log("Running Service Cache")
   const cache = {};
   if (!fs.existsSync(SERVICES_DIR)){
     return cache;
