@@ -78,7 +78,10 @@ const FormRenderer = ({
               ) : field.type === "file" ? (
                 <input
                   type="file"
-                  onChange={(e) => handleFileChange(field.name, e.target.files[0])}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleFileChange(field.name, file);
+                  }}
                   className="border border-gray-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-400 outline-none text-gray-800"
                 />
               ) : (

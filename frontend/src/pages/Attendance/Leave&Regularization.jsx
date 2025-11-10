@@ -66,6 +66,10 @@ const LeaveAndRegularization = ({ onClose }) => {
   const handleSubmit = async (data) => {
     console.log("Form submitted:", data);
     // You can combine userData + data before posting
+    if (!userData) {
+          console.error("User data not loaded");
+              return;
+              }
     const payload = {
       employeeId: userData._id,
       departmentID: userData.departmentName,
