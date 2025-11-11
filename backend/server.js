@@ -1,10 +1,16 @@
-import dotenv from "dotenv";
-import { server, io } from "./src/index.js"; // import the HTTP server, not just app
+import os from "os";
 
-dotenv.config();
+const getLocalIP = () => {
+  const nets = os.networkInterfaces();
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name]) {
+      // Skip over non-IPv4 and internal (i.e. 127.0.0.1) addresses
+      if (net.family === "IPv4" && !net.internal) {
+        return net.address;
+      }
+    }
+  }
+};
 
-const PORT = process.env.PORT || 3000;
-
-server.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on port ${PORT}`);
-});
+const localIP = getLocalIP();
+console.log(`Local server running at: http://${localIP}:3000`);
