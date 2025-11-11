@@ -30,18 +30,38 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, data = {} }) => {
     try {
       let url = field.source;
 
-      // Handle dependency (e.g., :clientId in URL)
-      if (field.dependsOn && formData[field.dependsOn]) {
-        url = url.replace(
-          `:${field.dependsOn}Id`,
-          formData[field.dependsOn]._id || formData[field.dependsOn]
-        );
+      // 🧠 Get dependency info
+      const dependencyName = field.dependsOn;
+      const dependencyValue = dependencyName ? formData[dependencyName] : null;
+
+      // 🛑 Stop if dependency not chosen yet
+      if (dependencyName && !dependencyValue) {
+        console.warn(`Skipping populate for ${field.name}: depends on ${dependencyName}`);
+        return;
       }
 
+      // 🧩 If dependency exists, extract its _id (for AutoComplete values)
+      if (dependencyName && dependencyValue) {
+        const depId =
+          typeof dependencyValue === "object" && dependencyValue._id
+            ? dependencyValue._id
+            : dependencyValue;
+
+        // ✅ Replace placeholder dynamically
+        // Example: /api/.../:clientId?fields=projectTypes
+        // becomes: /api/.../68f124dbec5605b8d8266444?fields=projectTypes
+        url = url.replace(/:clientId/g, depId);
+      }
+
+      console.log("Final URL for populate:", url);
+
+      // 🧠 Fetch and store options
       const res = await axiosInstance.get(url);
-      const list = Array.isArray(res.data.data)
-        ? res.data.data
-        : res.data.data?.projectTypes || [];
+      const data = res.data.data;
+
+      const list = Array.isArray(data)
+        ? data
+        : data?.projectTypes || [];
 
       setDynamicOptions((prev) => ({ ...prev, [field.name]: list }));
     } catch (err) {
@@ -95,7 +115,7 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, data = {} }) => {
           placeholder={field.placeholder}
           value={value || ""}
           onChange={(e) => onChange(e.target.value)}
-          className="border border-gray-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-400 outline-none text-gray-800 w-full"
+          className="w-full border border-gray-400 p-2 text-sm focus:ring-2 focus:ring-blue-400 outline-none text-gray-800 block"
         />
       );
     }
@@ -103,6 +123,7 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, data = {} }) => {
     if (field.type === "AutoComplete") {
       return (
         <Autocomplete
+          fullWidth // ✅ ensures it stretches to parent width
           onOpen={() => handlePopulate(field)}
           options={options}
           getOptionLabel={(opt) => opt.name || ""}
@@ -111,6 +132,7 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, data = {} }) => {
           renderInput={(params) => (
             <TextField
               {...params}
+              fullWidth // ✅ MUI input expands full width
               label={field.placeholder || field.label}
               required={field.required}
             />
@@ -127,19 +149,21 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, data = {} }) => {
             const file = e.target.files?.[0];
             if (file) handleFileChange(field.name, file);
           }}
-          className="border border-gray-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-400 outline-none text-gray-800 w-full"
+          className="w-full rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-400 outline-none text-gray-800 block"
         />
       );
     }
 
     return (
-      <input
-        type={field.type || "text"}
-        placeholder={field.placeholder}
-        value={value || ""}
-        onChange={(e) => onChange(e.target.value)}
-        className="border border-gray-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-400 outline-none text-gray-800 w-full"
-      />
+      <div className="flex flex-col">
+        <input
+          type={field.type || "text"}
+          placeholder={field.placeholder}
+          value={value || ""}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-400 outline-none text-gray-800"
+        />
+      </div>
     );
   };
 
@@ -147,7 +171,7 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, data = {} }) => {
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-5 bg-white p-6 rounded-2xl shadow-md border border-gray-100"
+      className="space-y-5 bg-white p-6 rounded-2xl shadow-md"
     >
       {fields
         .filter((field) => !field.hidden)
@@ -162,7 +186,7 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, data = {} }) => {
                 {groupArray.map((item, index) => (
                   <div
                     key={index}
-                    className="relative p-4 bg-gray-50 rounded-md border"
+                    className="relative p-4 bg-gray-50 rounded-md"
                   >
                     {groupArray.length > 1 && (
                       <button
@@ -173,7 +197,7 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, data = {} }) => {
                         ✕
                       </button>
                     )}
-                    <div className="grid md:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-4">
                       {field.fields.map((subField) => (
                         <div key={subField.name}>
                           <label className="text-sm font-medium text-gray-700 mb-1 block">

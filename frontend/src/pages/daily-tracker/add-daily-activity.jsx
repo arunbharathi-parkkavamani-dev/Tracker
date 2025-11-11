@@ -1,8 +1,8 @@
 import React from "react";
 import { useAuth } from "../../context/authProvider";
 import axiosInstance from "../../api/axiosInstance";
-import FormRenderer from "../common/FormRenderer";
-import ActivityEntryForm from "../../forms/ActivityEntryForm";
+import FormRenderer from "../../components/Common/FormRenderer";
+import ActivityEntryFrom from "../../constants/ActivityEntryFrom";
 
 const AddDailyEntry = ({ onClose }) => {
   const { user } = useAuth();
@@ -20,13 +20,13 @@ const AddDailyEntry = ({ onClose }) => {
         client: clientName._id,
         projectType: projectType._id,
         taskType: act.taskType?._id,
-        activity: act.description,
+        activity: act.activity,
         user: user?.id,
         date: new Date(),
       }));
 
-      await axiosInstance.post("/populate/create/dailyactivities", payload);
-      alert("Daily entry saved successfully!");
+      const res = await axiosInstance.post("/populate/create/dailyactivities", payload);
+      alert("Daily entry saved successfully!", res);
       onClose();
     } catch (err) {
       console.error("Error saving entry:", err);
@@ -35,7 +35,7 @@ const AddDailyEntry = ({ onClose }) => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-lg max-w-4xl w-full">
+    <div className="bg-white p-1 rounded-2xl max-w-4xl w-full">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold">Add Daily Activity</h2>
         <button
@@ -47,7 +47,7 @@ const AddDailyEntry = ({ onClose }) => {
       </div>
 
       <FormRenderer
-        fields={ActivityEntryForm}
+        fields={ActivityEntryFrom}
         submitButton={{ text: "Save Activity", color: "blue" }}
         onSubmit={handleSubmit}
       />

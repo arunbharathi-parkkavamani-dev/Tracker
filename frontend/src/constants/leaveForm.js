@@ -17,8 +17,8 @@ export const leaveFormFields = [
   {
     label: "Leave Type",
     name: "leaveType",
-    type: "select",
-    optionsKey: "leaveTypes", // 👈 link to dynamicOptions prop
+    type: "AutoComplete",
+    source : "/populate/read/leave", // 👈 link to dynamicOptions prop
     placeholder: "Select leave type",
     required: true,
   },

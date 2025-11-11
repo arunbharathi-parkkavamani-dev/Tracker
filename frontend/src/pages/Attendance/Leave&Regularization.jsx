@@ -129,15 +129,6 @@ const LeaveAndRegularization = ({ onClose }) => {
         </div>
       )}
 
-      {formType === "leave" && (
-        <FormRenderer
-          fields={leaveFormFields}
-          submitButton={leaveSubmitButton}
-          onSubmit={handleSubmit}
-          dynamicOptions={{ leaveTypes }} // 👈 dynamically passed options
-        />
-      )}
-
       {formType === "regularization" && (
         <FormRenderer
           fields={regularizationFormFields}
