@@ -29,45 +29,53 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, data = {} }) => {
   const handlePopulate = async (field) => {
     try {
       let url = field.source;
-
-      // 🧠 Get dependency info
+      let options = [];
       const dependencyName = field.dependsOn;
       const dependencyValue = dependencyName ? formData[dependencyName] : null;
 
-      // 🛑 Stop if dependency not chosen yet
+      // 🛑 Skip if dependency not selected yet
       if (dependencyName && !dependencyValue) {
         console.warn(`Skipping populate for ${field.name}: depends on ${dependencyName}`);
         return;
       }
 
-      // 🧩 If dependency exists, extract its _id (for AutoComplete values)
+      // 🧩 Replace dynamic placeholders if needed
       if (dependencyName && dependencyValue) {
         const depId =
           typeof dependencyValue === "object" && dependencyValue._id
             ? dependencyValue._id
             : dependencyValue;
-
-        // ✅ Replace placeholder dynamically
-        // Example: /api/.../:clientId?fields=projectTypes
-        // becomes: /api/.../68f124dbec5605b8d8266444?fields=projectTypes
-        url = url.replace(/:clientId/g, depId);
+        url = url.replace(/:clientId|:depId|:id/g, depId);
       }
 
-      console.log("Final URL for populate:", url);
+      console.log("🔗 Final URL for populate:", url);
 
-      // 🧠 Fetch and store options
-      const res = await axiosInstance.get(url);
-      const data = res.data.data;
+      // 🧠 Handle dynamicOptions (POST with aggregation params)
+      const dynamicOptions = field.dynamicOptions || {};
 
-      const list = Array.isArray(data)
+      let response;
+      if (dynamicOptions.params?.aggregate) {
+        response = await axiosInstance.post(url, dynamicOptions.params);
+      } else {
+        response = await axiosInstance.get(url, { params: dynamicOptions.params });
+      }
+
+      const data = response?.data?.data || [];
+
+      // 🧾 Normalize list
+      options = Array.isArray(data)
         ? data
-        : data?.projectTypes || [];
+        : data?.items || data?.projectTypes || [];
 
-      setDynamicOptions((prev) => ({ ...prev, [field.name]: list }));
+      // 💾 Store options dynamically
+      setDynamicOptions((prev) => ({ ...prev, [field.name]: options }));
+
+      console.log(`✅ Populated ${field.name}:`, options.length, "items");
     } catch (err) {
-      console.error(`Error fetching options for ${field.name}:`, err);
+      console.error(`❌ Error fetching options for ${field.name}:`, err);
     }
   };
+
 
   // --- Handle Multi Group (activities) ---
   const handleGroupChange = (groupName, index, fieldName, value) => {
