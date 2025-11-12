@@ -1,4 +1,4 @@
-import ThemeToggler from "../../components/ThemeToggler";
+import ThemeToggler from "../../components/Common/ThemeToggler";
 const Dashboard = () => {
   return (
     <div className="flex align-middle justify-center h-screen items-center">

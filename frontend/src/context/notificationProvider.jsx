@@ -14,19 +14,17 @@ export const NotificationProvider = ({ children }) => {
   useEffect(() => {
     if (!user?.id) return;
 
-    const socket = io("http://10.94.109.208:3000", {
+    const socket = io("http://10.92.80.208:3000", {
       withCredentials: true,
       transports: ["websocket"],
     });
 
     socket.on("connect", () => {
-      console.log("Connected to Socket.IO:", socket.id);
       socket.emit("join", user.id);
     });
 
     // 2️⃣ Receive live notifications
     socket.on("notification", (data) => {
-      console.log("📩 Received live notification:", data);
       setNotifications((prev) => [data, ...prev]);
     });
 
@@ -56,7 +54,6 @@ export const NotificationProvider = ({ children }) => {
   }, [user?.id]);
 
   // 4️⃣ Compute unread count
-  console.log("Unread notifications count:", notifications)
   const unReadCount = notifications.filter((notif) => !notif.read).length;
 
   // 5️⃣ Mark as read

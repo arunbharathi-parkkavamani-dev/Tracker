@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useRef } from "react";
-import { useNotification } from "../context/notificationProvider";
+import { useNotification } from "../../context/notificationProvider";
 
 const NotificationDrawer = ({ isOpen, setIsOpen }) => {
   const { notifications, markAsRead } = useNotification();

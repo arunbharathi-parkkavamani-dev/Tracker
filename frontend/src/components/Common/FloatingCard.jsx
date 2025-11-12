@@ -4,13 +4,13 @@ import React, { useEffect, useRef } from "react";
 const FloatingCard = ({ onClose, children }) => {
   const cardRef = useRef();
 
-  useEffect(() => {
-    const handleKey = (e) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [onClose]);
+useEffect(() => {
+  const handleKey = (e) => e.key === "Escape" && onClose?.();
+  window.addEventListener("keydown", handleKey);
+  return () => window.removeEventListener("keydown", handleKey);
+}, [onClose]);
 
-  useEffect(() => {
+useEffect(() => {
   const handleClickOutside = (e) => {
     // 1️⃣ Don't close if click inside MUI popper (dropdown list)
     const inAutocomplete =
@@ -20,15 +20,13 @@ const FloatingCard = ({ onClose, children }) => {
 
     // 2️⃣ Don't close if click inside card
     if (cardRef.current && !cardRef.current.contains(e.target)) {
-      onClose();
+      onClose?.();
     }
   };
 
   document.addEventListener("mousedown", handleClickOutside);
   return () => document.removeEventListener("mousedown", handleClickOutside);
 }, [onClose]);
-
-
   return (
     <div className="fixed inset-0 z-20 bg-black/10 flex justify-center items-start p-4 ">
       {/* Soft blur overlay */}

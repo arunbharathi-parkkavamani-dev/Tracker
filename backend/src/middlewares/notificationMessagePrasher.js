@@ -7,7 +7,6 @@
  * @returns {string} - Formatted notification message
  */
 export function generateAttendanceNotification(userName,  status) {
-  console.log(userName, status);
   switch (status) {
     case "Present":
       return `${userName} has checked in for today.`;

@@ -1,9 +1,12 @@
 import { useEffect, useState, useCallback } from "react";
-import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
+import { PickersDay } from "@mui/x-date-pickers/PickersDay";
+import { Badge } from "@mui/material";
 import axiosInstance from "../../api/axiosInstance";
 import { useAuth } from "../../context/authProvider.jsx";
-import FloatingCard from "../../components/FloatingCard.jsx";
+import FloatingCard from "../../components/Common/FloatingCard.jsx";
 import LeaveAndRegularization from "./Leave&Regularization.jsx";
 
 const AttendancePage = () => {
@@ -16,6 +19,7 @@ const AttendancePage = () => {
     new Date().toISOString().split("T")[0]
   );
   const [loading, setLoading] = useState(true);
+  const [isFetchingToday, setIsFetchingToday] = useState(false);
   const [error, setError] = useState(null);
   const [location, setLocation] = useState("");
   const [timeNow, setTimeNow] = useState(new Date());
@@ -30,7 +34,7 @@ const AttendancePage = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // 🧭 Fetch location name (reverse geocoding)
+  // 🧭 Fetch location name
   useEffect(() => {
     const fetchLocation = async () => {
       if (!todayRecord?.location) return;
@@ -39,7 +43,7 @@ const AttendancePage = () => {
 
       try {
         const response = await fetch(url, {
-          headers: { "User-Agent": "YourAppName/1.0" },
+          headers: { "User-Agent": "Logimax-HR/1.0" },
         });
         const data = await response.json();
         setLocation(data?.display_name || "Unknown location");
@@ -51,7 +55,7 @@ const AttendancePage = () => {
     fetchLocation();
   }, [todayRecord]);
 
-  // 🧩 Utility: Get month start & end date
+  // 🧩 Utility: Get month start & end
   const getMonthRange = useCallback((date) => {
     const start = new Date(date.getFullYear(), date.getMonth(), 1)
       .toISOString()
@@ -62,22 +66,41 @@ const AttendancePage = () => {
     return { start, end };
   }, []);
 
-  // 📅 Fetch attendance for selected day
+  // 📅 Fetch attendance for selected date only
   const fetchTodayAttendance = useCallback(async () => {
-    if (!user) return;
+    if (!user || !selectedDate) return;
+
+    setIsFetchingToday(true);
     try {
-      const response = await axiosInstance.get(
-        `/populate/read/attendances?employee=${user.id}&date=${selectedDate}`
+      const startOfDay = new Date(selectedDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(selectedDate);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      const response = await axiosInstance.get(`/populate/read/attendances`, {
+        params: {
+          employee: user.id,
+          "filter[date][$gte]": startOfDay.toISOString(),
+          "filter[date][$lte]": endOfDay.toISOString(),
+        },
+      });
+
+      const records = response.data?.data || [];
+      const record = records.find(
+        (r) =>
+          new Date(r.date).toDateString() ===
+          new Date(selectedDate).toDateString()
       );
-      const record = response.data?.data?.[0] || null;
-      setTodayRecord(record);
+      setTodayRecord(record || null);
     } catch (err) {
       console.error("Failed to fetch today's attendance:", err);
       setError("Failed to load today's attendance");
+    } finally {
+      setIsFetchingToday(false);
     }
   }, [user, selectedDate]);
 
-  // 📆 Fetch all attendances for month
+  // 📆 Fetch monthly attendance data
   const fetchDayData = useCallback(
     async (monthDate) => {
       if (!user) return;
@@ -98,16 +121,22 @@ const AttendancePage = () => {
     [user, getMonthRange]
   );
 
-  // 🔁 Initial fetch
+  // 🔁 Initial data fetch (once)
   useEffect(() => {
     if (authLoading || !user) return;
     (async () => {
       setLoading(true);
       await fetchTodayAttendance();
-      await fetchDayData(new Date(selectedDate));
+      await fetchDayData(new Date());
       setLoading(false);
     })();
-  }, [user, authLoading, selectedDate, fetchTodayAttendance, fetchDayData]);
+  }, [user, authLoading]);
+
+  // 📅 Fetch only today's data when selectedDate changes
+  useEffect(() => {
+    if (!user || authLoading) return;
+    fetchTodayAttendance();
+  }, [selectedDate]);
 
   // 🟢 Check-In
   const handleCheckIn = async () => {
@@ -132,16 +161,6 @@ const AttendancePage = () => {
     }
   };
 
-  const handleOpenAdd = () => {
-    setShowModal(true);
-    window.history.pushState(null, "", `/attendance/add`);
-  };
-
-  const handleCloseAdd = () => {
-    setShowModal(false);
-    window.history.pushState(null, "", `/attendance`);
-  };
-
   // 🔴 Check-Out
   const handleCheckOut = async () => {
     if (!todayRecord) return;
@@ -164,34 +183,79 @@ const AttendancePage = () => {
     }
   };
 
-  // 🎨 Tile coloring logic
-  const tileClassName = useCallback(
-    ({ date, view }) => {
-      if (view === "month") {
-        const record = dayData.find(
-          (rec) => new Date(rec.date).toDateString() === date.toDateString()
-        );
+  const handleOpenAdd = () => {
+    setShowModal(true);
+    window.history.pushState(null, "", `/attendance/add`);
+  };
 
-        if (!record?.status) return "";
+  const handleCloseAdd = () => {
+    setShowModal(false);
+    window.history.pushState(null, "", `/attendance`);
+  };
 
-        const status = record.status.trim().toLowerCase();
-        const map = {
-          "present": "!bg-green-400 !text-white",
-          "absent": "!bg-red-400 !text-white",
-          "leave": "!bg-green-400 !text-black",
-          "half day": "!bg-orange-400 !text-white",
-          "work from home": "!bg-blue-400 !text-white",
-          "early check-out": "!bg-purple-400 !text-orange-900",
-          "check-out": "!bg-teal-400 !text-white",
-          "lop" : "!bg-red-700 !text-white"
-        };
-        return map[status] || "";
-      }
-      return "";
-    },
-    [dayData]
-  );
+  // 🎨 Custom MUI Calendar Day renderer
+  const renderDay = (dayProps) => {
+    const { day, outsideCurrentMonth, ...other } = dayProps;
+    const date = day;
+    const record = dayData.find(
+      (rec) => new Date(rec.date).toDateString() === date.toDateString()
+    );
 
+    let bgColor = "";
+    if (record?.status) {
+      const status = record.status.trim().toLowerCase();
+      const map = {
+        present: "#16a34a",
+        absent: "#dc2626",
+        leave: "#22c55e",
+        "half day": "#fb923c",
+        "work from home": "#3b82f6",
+        "early check-out": "#8b5cf6",
+        "check-out": "#14b8a6",
+        lop: "#7f1d1d",
+      };
+      bgColor = map[status] || "";
+    }
+
+    return (
+      <Badge
+        key={date.toISOString()}
+        overlap="circular"
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        sx={{
+          "& .MuiBadge-badge": {
+            backgroundColor: bgColor,
+            color: "#fff",
+            borderRadius: "50%",
+            width: 8,
+            height: 8,
+          },
+        }}
+      >
+        <PickersDay
+          {...other}
+          day={day}
+          outsideCurrentMonth={outsideCurrentMonth}
+          sx={{
+            borderRadius: "12px",
+            transition: "all 0.2s ease",
+            "&.Mui-selected": {
+              backgroundColor: "#2563eb !important",
+              color: "#fff",
+            },
+            "&:hover": {
+              backgroundColor: "rgba(37,99,235,0.15)",
+            },
+            ...(bgColor && {
+              border: `2px solid ${bgColor}`,
+            }),
+          }}
+        />
+      </Badge>
+    );
+  };
+
+  // ⏳ Loading / Error
   if (loading || authLoading)
     return <p className="text-gray-600 dark:text-gray-300">Loading attendance...</p>;
   if (error) return <p className="text-red-500">{error}</p>;
@@ -200,17 +264,24 @@ const AttendancePage = () => {
     <div className="dark:text-white text-black">
       <h2 className="text-2xl font-bold mb-4 pl-4 pt-4">Attendance</h2>
 
-      <div className="pl-4 grid grid-cols-5 gap-3">
-        {/* Left Panel */}
-        <div className="col-span-3 bg-white/70 backdrop-blur-md shadow-lg rounded-lg p-6">
-          {/* Check-in panel */}
-          {!hasCheckedIn && (
+      {/* Layout Wrapper */}
+      <div className="flex flex-wrap justify-between items-start gap-6 px-6">
+        {/* LEFT PANEL */}
+        <div className="flex-1 min-w-[55%] bg-white/80 backdrop-blur-md shadow-lg rounded-2xl p-6">
+          {isFetchingToday ? (
+            <p className="text-gray-500">Loading selected day...</p>
+          ) : !hasCheckedIn ? (
             <div className="flex justify-between items-center">
               <div>
                 <p>Welcome back, {user.name}! 🖐️</p>
                 <p className="text-lg text-gray-700">
                   Current Time:{" "}
-                  <b>{timeNow.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</b>
+                  <b>
+                    {timeNow.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </b>
                 </p>
                 <p>Checked in Location:</p>
                 <p>Loading...</p>
@@ -222,11 +293,8 @@ const AttendancePage = () => {
                 Check In
               </button>
             </div>
-          )}
-
-          {/* Check-out panel */}
-          {hasCheckedIn && !hasCheckedOut && (
-            <div className="flex justify-between items-center">
+          ) : hasCheckedIn && !hasCheckedOut ? (
+            <div className="flex justify-between items-center w-full">
               <div>
                 <p className="text-2xl font-bold">Check In</p>
                 <p className="text-lg text-gray-700">
@@ -246,10 +314,7 @@ const AttendancePage = () => {
                 Check Out
               </button>
             </div>
-          )}
-
-          {/* Completed Check-out */}
-          {hasCheckedOut && (
+          ) : (
             <div className="flex justify-between items-center">
               <div>
                 <p className="text-2xl font-bold">Checked Out</p>
@@ -271,26 +336,37 @@ const AttendancePage = () => {
           )}
         </div>
 
-        {/* Right Panel - Calendar */}
-        <div className="col-span-2 row-span-2 pl-4">
-          <div>
-            <button
-              onClick={handleOpenAdd}
-              className="mb-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-            >
-              Leave & Regularization
-            </button>
-          </div>
-          <div>
-            <Calendar
-              onChange={(date) => setSelectedDate(date.toISOString().slice(0, 10))}
-              onActiveStartDateChange={({ activeStartDate }) => fetchDayData(activeStartDate)}
+        {/* RIGHT PANEL */}
+        <div className="w-[40%] flex flex-col items-center rounded-2xl pl-5 h-fit">
+          <button
+            onClick={handleOpenAdd}
+            className="mb-5 bg-green-500 hover:bg-green-600 text-white font-semibold px-4 py-2 rounded-lg transition-all"
+          >
+            Leave & Regularization
+          </button>
+
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <DateCalendar
               value={new Date(selectedDate)}
-              tileClassName={tileClassName}
+              onChange={(date) =>
+                date && setSelectedDate(date.toISOString().slice(0, 10))
+              }
+              onMonthChange={(monthDate) => fetchDayData(monthDate)}
+              slots={{ day: renderDay }}
+              sx={{
+                backgroundColor: (theme) =>
+                  theme.palette.mode === "dark"
+                    ? "rgba(30,30,30,0.8)"
+                    : "rgba(255,255,255,0.9)",
+                borderRadius: "12px",
+                padding: 1,
+                boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+              }}
             />
-          </div>
+          </LocalizationProvider>
         </div>
       </div>
+
       {showModal && (
         <FloatingCard onClose={handleCloseAdd}>
           <LeaveAndRegularization onClose={handleCloseAdd} />

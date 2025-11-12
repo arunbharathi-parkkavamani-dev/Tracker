@@ -16,8 +16,6 @@ export const getPendingRequests = async (req, res) => {
       receiver: managerId,
     };
 
-    console.log("Filter for pending requests:", filter);
-
     if (dateFrom) filter.date = { $gte: new Date(dateFrom) };
     if (dateTo) filter.date = { ...filter.date, $lte: new Date(dateTo) };
     if (type) filter.request = type;
@@ -25,7 +23,6 @@ export const getPendingRequests = async (req, res) => {
     const pendingRecords = await Notification.find(filter)
       .populate("employee", "name email")
       .sort({ createdAt: -1 });
-    console.log("Pending attendance records:", pendingRecords);
     res.json({ data: pendingRecords });
   } catch (err) {
     console.error("Failed to fetch pending requests:", err);

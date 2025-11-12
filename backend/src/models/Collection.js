@@ -15,6 +15,8 @@ import accesspolicies from "./AccessPolicies.js";
 import role from "./Role.js";
 import notification from "./notification.js";
 import leave from "./Leave.js"
+import statusGroups from "./StatusGroup.js"
+import status from "./Status.js"
 
 const models = {
   accesspolicies,
@@ -33,6 +35,8 @@ const models = {
   role,
   notification,
   leave,
+  statusGroups,
+  status
 };
 
 export default models;

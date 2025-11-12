@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "../../api/axiosInstance";
 import { useAuth } from "../../context/authProvider.jsx";
-import FloatingCard from "../../components/FloatingCard.jsx";
+import FloatingCard from "../../components/Common/FloatingCard.jsx";
 import AddDailyEntry from "./add-daily-activity.jsx";
 import Task from "./Task.jsx";
 

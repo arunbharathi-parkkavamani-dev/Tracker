@@ -20,7 +20,6 @@ export default function attendances() {
         const request = body.status || attendanceDoc.status;
         if (request === "Present" || request === "Check-Out") return;
         if (request) {
-          console.log(body.managerId);
           const message = generateAttendanceNotification(attendanceDoc.employeeName, attendanceDoc.request);
           await createAndSendNotification({
             senderId: userId,
