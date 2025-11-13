@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Autocomplete, TextField } from "@mui/material";
 import axiosInstance from "../../api/axiosInstance";
 
-const FormRenderer = ({ fields = [], submitButton, onSubmit, data = {} }) => {
+const FormRenderer = ({ fields = [], submitButton, onSubmit, data = {}, userData }) => {
   const [formData, setFormData] = useState(data);
   const [dynamicOptions, setDynamicOptions] = useState({});
 
@@ -29,6 +29,10 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, data = {} }) => {
   const handlePopulate = async (field) => {
     try {
       let url = field.source;
+
+      if(userData?.id){
+        url = url.field(":userId", userData.id)
+      }
       let options = [];
       const dependencyName = field.dependsOn;
       const dependencyValue = dependencyName ? formData[dependencyName] : null;
@@ -66,6 +70,8 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, data = {} }) => {
       options = Array.isArray(data)
         ? data
         : data?.items || data?.projectTypes || [];
+
+      console.log(options)
 
       // 💾 Store options dynamically
       setDynamicOptions((prev) => ({ ...prev, [field.name]: options }));

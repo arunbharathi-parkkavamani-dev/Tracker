@@ -54,11 +54,11 @@ export const leaveFormFields = (user) => [
           { $unwind: "$leaveTypeInfo" },
           {
             $project: {
-              _id: 1,
+             _id: "$leaveTypeInfo._id",
               departmentName: "$departmentDetails.name",
               departmentId: "$departmentDetails._id",
               leaveTypeId: "$leaveTypeInfo._id",
-              leaveName: "$leaveTypeInfo.name",
+              name: "$leaveTypeInfo.name",
             },
           },
         ],
@@ -81,7 +81,11 @@ export const leaveFormFields = (user) => [
   // Hidden Fields
   { name: "employeeId", hidden: true },
   { name: "departmentId", hidden: true },
-  { name: "status", hidden: true },
+  { 
+    name: "status", 
+    hidden: true, 
+    value: "69121b1cd664e361c6738b1f" 
+  },
   { name: "managerId", hidden: true },
 ];
 

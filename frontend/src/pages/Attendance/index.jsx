@@ -8,6 +8,7 @@ import axiosInstance from "../../api/axiosInstance";
 import { useAuth } from "../../context/authProvider.jsx";
 import FloatingCard from "../../components/Common/FloatingCard.jsx";
 import LeaveAndRegularization from "./Leave&Regularization.jsx";
+import toast, {Toaster} from "react-hot-toast";
 
 const AttendancePage = () => {
   const { user, loading: authLoading } = useAuth();
@@ -130,13 +131,13 @@ const AttendancePage = () => {
       await fetchDayData(new Date());
       setLoading(false);
     })();
-  }, [user, authLoading]);
+  }, [user, authLoading, fetchTodayAttendance, fetchDayData]);
 
   // 📅 Fetch only today's data when selectedDate changes
   useEffect(() => {
     if (!user || authLoading) return;
     fetchTodayAttendance();
-  }, [selectedDate]);
+  }, [authLoading, fetchTodayAttendance, selectedDate, user]);
 
   // 🟢 Check-In
   const handleCheckIn = async () => {
@@ -192,6 +193,14 @@ const AttendancePage = () => {
     setShowModal(false);
     window.history.pushState(null, "", `/attendance`);
   };
+
+  const handleLeaveSuccess = () => {
+    toast.success("Leave request submitted successfully!");
+  };
+
+  const handleLeaveFailed = () => {
+    toast.error("You Can't make a leave request")
+  }
 
   // 🎨 Custom MUI Calendar Day renderer
   const renderDay = (dayProps) => {
@@ -262,6 +271,7 @@ const AttendancePage = () => {
 
   return (
     <div className="dark:text-white text-black">
+      <Toaster position="top-right" />
       <h2 className="text-2xl font-bold mb-4 pl-4 pt-4">Attendance</h2>
 
       {/* Layout Wrapper */}
@@ -369,7 +379,11 @@ const AttendancePage = () => {
 
       {showModal && (
         <FloatingCard onClose={handleCloseAdd}>
-          <LeaveAndRegularization onClose={handleCloseAdd} />
+          <LeaveAndRegularization 
+          onClose={handleCloseAdd}
+          onSuccess={handleLeaveSuccess}
+          onFailed={handleLeaveFailed}
+          />
         </FloatingCard>
       )}
     </div>

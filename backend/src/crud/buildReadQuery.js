@@ -109,10 +109,11 @@ async function genericFallback({ role, userId, modelName, docId, filter, fields 
     }
   }
 
+  console.log(userId)
   if (filter?.aggregate && Array.isArray(filter.stages)) {
     // @ts-ignore
     const matchStage = docId
-      ? [{ $match: { _id: new mongoose.Types.ObjectId(docId) } }]
+      ? [{ $match: { _id: new mongoose.Types.ObjectId(userId) } }]
       : filter.matchStage
       ? [{ $match: filter.matchStage }]
       : [];
