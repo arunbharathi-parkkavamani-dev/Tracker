@@ -11,7 +11,7 @@ const generateAccessToken = (payload) =>
   jwt.sign({ id: payload.id, role: payload.role, managerId: payload.managerId, name:payload.name }, process.env.JWT_SECRET, { expiresIn: "60m" });
 
 const generateRefreshToken = (payload) =>
-  jwt.sign({ id: payload.id }, process.env.JWT_SECRET, { expiresIn: "1d" });
+  jwt.sign({ id: payload.id }, process.env.JWT_REFRESH_TOKEN, { expiresIn: "1d" });
 
 // ------------------- LOGIN -------------------
 export const login = async (req, res, next) => {

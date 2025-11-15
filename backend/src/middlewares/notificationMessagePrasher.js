@@ -19,6 +19,6 @@ export function generateAttendanceNotification(userName,  status) {
     case "Early check-out":
       return `${userName} has checked out early, kindly review it.`;
     default:
-      return undefined;
+      return `${userName} has requested ${status}`;
   }
 }

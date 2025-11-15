@@ -26,6 +26,7 @@ export function getPolicy (role,modelName){
         const roleCache = cache.get(role.toLocaleLowerCase());
         if(!roleCache) return console.log("Role permission not able to find");
         if(!modelName) return roleCache;
+        console.log(roleCache);
         return roleCache[modelName] || console.log("model Name is not findable");
     }
     catch (error) {

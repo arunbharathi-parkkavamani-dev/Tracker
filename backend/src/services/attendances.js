@@ -4,104 +4,124 @@ import { generateAttendanceNotification } from "../middlewares/notificationMessa
 
 /**
  * Attendance Service
- * Handles both create & update business logic
+ * Handles create + update lifecycle
  */
 export default function attendances() {
   return {
-    create: async ({ role, userId, body, docId }) => {
-      const today = body.date ? new Date(body.date) : new Date();
+    // ---------------- BEFORE CREATE ----------------
+    beforeCreate: async ({ userId, body, designation }) => {
+      const today = new Date();
+      const isSunday = today.getDay() === 0;
+      const isSaturday = today.getDay() === 6;
 
-      const canModify = (employeeId) => {
-        const isSelf = String(employeeId) === String(userId);
-        return (role === "manager" && !isSelf && body.status === "Leave") || isSelf;
-      };
+      let isAlternative = false;
 
-      const maybeNotify = async (attendanceDoc) => {
-        const request = body.status || attendanceDoc.status;
-        if (request === "Present" || request === "Check-Out") return;
-        if (request) {
-          const message = generateAttendanceNotification(attendanceDoc.employeeName, attendanceDoc.request);
-          await createAndSendNotification({
-            senderId: userId,
-            receiverId: attendanceDoc.managerId || body.managerId,
-            message,
-            model: { model: "Attendance", modelId: attendanceDoc._id },
-          });
-        }
-      };
+      // Check alternate Saturday logic
+      if (isSaturday) {
+        const lastWeek = new Date(today);
+        lastWeek.setDate(today.getDate() - 7);
+        const lastWeekIso = lastWeek.toISOString().split("T")[0];
 
-      if (!docId) {
-        if (!canModify(body.employee)) throw new Error("Not allowed to create this attendance record");
-
-        const isSunday = today.getDay() === 0;
-
-        if (isSunday || (role === "developer" && !body.alternative)) {
-          body.request = body.status;
-          body.status = "Pending";
-        } else {
-          if (body.workType === "fixed") {
-            const checkIn = new Date(body.checkIn);
-            const checkInMinutes = checkIn.getHours() * 60 + checkIn.getMinutes();
-            const cutOff = 10 * 60 + 20;
-            body.status = checkInMinutes > cutOff ? "Late Entry" : "Check-In";
-          } else {
-            body.status = "Present";
-          }
-        }
-
-        const attendance = new Attendance({
-          ...body,
-          employee: body.employee || userId,
-          employeeName: body.employeeName,
-          date: today,
-          checkIn: body.checkIn || new Date(),
+        const lastSatAttendance = await Attendance.findOne({
+          employee: userId,
+          checkIn: {
+            $gte: new Date(`${lastWeekIso}T00:00:00Z`),
+            $lte: new Date(`${lastWeekIso}T23:59:59Z`),
+          },
         });
 
-        const savedAttendance = await attendance.save();
-        await maybeNotify(savedAttendance);
-        return savedAttendance;
+        isAlternative = !!lastSatAttendance;
       }
+
+      // Sunday OR Developer & alt Saturday → set request workflow
+      if (
+        isSunday ||
+        (designation?.toLowerCase() === "developer" && isAlternative)
+      ) {
+        body.request = body.status;
+        body.status = "Pending";
+      } else {
+        // Normal attendance logic
+        if (body.workType === "fixed") {
+          const checkIn = new Date(body.checkIn);
+          const checkInMinutes = checkIn.getHours() * 60 + checkIn.getMinutes();
+          const cutOff = 10 * 60 + 20; // 10:20 AM
+          body.status = checkInMinutes > cutOff ? "Late Entry" : "Check-In";
+        } else {
+          body.status = "Present";
+        }
+      }
+
+      return body;
     },
 
-    update: async ({ role, userId, body, docId }) => {
+    // ---------------- AFTER CREATE ----------------
+    afterCreate: async ({ body, docId, userId }) => {
       const attendanceDoc = await Attendance.findById(docId);
-      if (!attendanceDoc) throw new Error("Attendance record not found");
+      if (!attendanceDoc) return;
 
-      const canModify = (employeeId) => {
-        const isSelf = String(employeeId) === String(userId);
-        return (role === "manager" && !isSelf && body.status === "Leave") || isSelf;
-      };
+      const request = attendanceDoc.request || attendanceDoc.status;
 
-      if (!canModify(attendanceDoc.employee)) throw new Error("Not allowed to update this attendance record");
+      // Skip for these statuses
+      if (["Present", "Check-Out", "Check-In"].includes(request)) return;
+
+      const message = generateAttendanceNotification(
+        attendanceDoc.employeeName,
+        request
+      );
+      await createAndSendNotification({
+        senderId: userId,
+        receiverId: attendanceDoc.managerId || body.managerId,
+        message,
+        model: { model: "Attendance", modelId: attendanceDoc._id },
+      });
+    },
+
+    // ---------------- BEFORE UPDATE ----------------
+    beforeUpdate: async ({ body, docId }) => {
+      const attendanceDoc = await Attendance.findById(docId);
+      if (!attendanceDoc) return;
 
       const checkIn = new Date(attendanceDoc.checkIn);
       const checkOut = body.checkOut ? new Date(body.checkOut) : null;
       if (!checkOut) throw new Error("Check-out time required");
 
-      const isMale = body.gender === "male";
+      const isMale = attendanceDoc.gender === "male";
       const workedMinutes = (checkOut - checkIn) / (1000 * 60);
+
       const femaleWorkingTime = workedMinutes >= 7.5 * 60;
       const maleWorkingTime = workedMinutes >= 8.5 * 60;
-      const femaleCutOff = 18 * 60 + 30;
-      const maleCutOff = 19 * 60 + 30;
 
-      body.status =
-        (!isMale && (!femaleWorkingTime || checkOut.getHours() * 60 + checkOut.getMinutes() < femaleCutOff)) ||
-        (isMale && (!maleWorkingTime || checkOut.getHours() * 60 + checkOut.getMinutes() < maleCutOff))
-          ? "Early check-out"
-          : "Check-Out";
+      const checkOutMinutes = checkOut.getHours() * 60 + checkOut.getMinutes();
+      const femaleCutOff = 18 * 60 + 30; // 6:30 PM
+      const maleCutOff = 19 * 60 + 30; // 7:30 PM
 
-      Object.assign(attendanceDoc, body);
-      const updatedAttendance = await attendanceDoc.save();
+      const isEarly =
+        (!isMale && (!femaleWorkingTime || checkOutMinutes < femaleCutOff)) ||
+        (isMale && (!maleWorkingTime || checkOutMinutes < maleCutOff));
 
+      body.status = isEarly ? "Early check-out" : "Check-Out";
+      return body;
+    },
+
+    // ---------------- AFTER UPDATE ----------------
+    afterUpdate: async ({ userId, body, docId }) => {
+      const attendanceDoc = await Attendance.findById(docId);
+      if (!attendanceDoc) return;
+
+      const request = attendanceDoc.request || attendanceDoc.status;
+      if (["Present", "Check-Out", "Check-In"].includes(request)) return;
+
+      const message = generateAttendanceNotification(
+        attendanceDoc.employeeName,
+        request
+      );
       await createAndSendNotification({
         senderId: userId,
         receiverId: attendanceDoc.managerId || body.managerId,
-        message: generateAttendanceNotification(attendanceDoc.employeeName, attendanceDoc.status),
+        message,
         model: { model: "Attendance", modelId: attendanceDoc._id },
       });
-
-      return updatedAttendance;
     },
   };
 }

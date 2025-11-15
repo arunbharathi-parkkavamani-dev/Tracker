@@ -29,7 +29,6 @@
     }, [user.id]);
 
     const handleSubmit = async (data) => {
-      console.log("Form submitted:", data);
       // You can combine userData + data before posting
       if (!userData) {
             console.error("User data not loaded");
@@ -47,8 +46,8 @@
         if (onSuccess) onSuccess();
         if (onClose) onClose();
       } catch (err) {
-        if (onFailed) onFailed();
         console.log(err);
+        if (onFailed) onFailed();
       }
     };
 

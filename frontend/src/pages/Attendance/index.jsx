@@ -149,6 +149,7 @@ const AttendancePage = () => {
       checkIn: new Date().toISOString(),
       status: "Present",
       managerId: user.managerId,
+      workType : "fixed",
       location: { latitude: 10.9338987, longitude: 76.9839277 },
     };
     try {

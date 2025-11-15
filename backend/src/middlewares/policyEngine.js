@@ -1,45 +1,72 @@
 import models from "../models/Collection.js";
 import { setCache, getPolicy } from "../utils/cache.js";
 import { getService } from "../utils/servicesCache.js";
+import validator from "../utils/Validator.js";
 
 setCache();
 
-export async function buildQuery({ role, userId, action, modelName, docId, fields, body, filter }) {
+export async function buildQuery({
+  role,
+  userId,
+  action,
+  modelName,
+  docId,
+  fields,
+  body,
+  filter
+}) {
   if (!role || !modelName) throw new Error("Role and modelName are required");
 
-  const model = models[modelName];
-  if (!model) throw new Error(`Model "${modelName}" not found`);
+  const Model = models[modelName];
+  if (!Model) throw new Error(`Model "${modelName}" not found`);
 
-  // Get role-based policy
+  // Load model-specific policy
   const policy = getPolicy(role, modelName);
-  if (!policy) throw new Error(`Policy not found for ${role} on ${modelName}`);
+  if (!policy) throw new Error(`Policy not found for role '${role}' on model '${modelName}'`);
 
-  // Dynamically import CRUD builder based on action
+  // --------------------------------------------------
+  //  1️⃣ VALIDATE BEFORE CRUD (NO FAIL-OPEN ANYMORE)
+  // --------------------------------------------------
+  const { filter: safeFilter, fields: safeFields, body: safeBody } = validator({
+    action,
+    modelName,
+    role,
+    userId,
+    docId,
+    filter,
+    fields,
+    body,
+    policy,
+    getPolicy        // <-- important for lookup protection
+  });
+
+  // --------------------------------------------------
+  //  2️⃣ IMPORT THE CORRECT CRUD HANDLER
+  // --------------------------------------------------
   const crudFile = `../crud/build${capitalize(action)}Query.js`;
   let crudHandler;
   try {
     crudHandler = (await import(crudFile)).default;
   } catch (err) {
-    console.log(err);
+    throw new Error(`❌ CRUD handler not found: ${crudFile}`);
   }
 
-  // Execute CRUD logic
-  const result = await crudHandler({
+  // --------------------------------------------------
+  //  3️⃣ EXECUTE CRUD WITH SAFE DATA ONLY
+  // --------------------------------------------------
+  return await crudHandler({
     modelName,
     role,
     userId,
     docId,
-    fields,
-    body,
-    filter,
+    fields: safeFields,
+    body: safeBody,
+    filter: safeFilter,
     policy,
-    getService,
+    getService
   });
-
-  return result;
 }
 
 function capitalize(str) {
-  const capital = str.charAt(0).toUpperCase() + str.slice(1);
-  return capital
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }

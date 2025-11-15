@@ -23,6 +23,7 @@ const AttendanceSchema = new Schema(
         "Holiday",
         "Week Off",
         "Pending",
+        "Late Entry"
       ],
       default: "Present",
     },

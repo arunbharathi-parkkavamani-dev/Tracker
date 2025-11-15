@@ -3,66 +3,78 @@ import { getAllServices } from "../utils/servicesCache.js";
 import { pathToFileURL } from "url";
 
 /**
- * Build Create Query (Service First + Generic Fallback)
- * @param {Object} params
- * @returns {Promise<any>}
+ * Build Create Query (Service First + Generic Fallback with Lifecycle)
  */
 export default async function buildCreateQuery({
   role,
   userId,
   modelName,
   body,
+  managerId,
+  designation,
 }) {
   try {
-    // 🧩 Step 1: Try cached service first
     const serviceCache = getAllServices();
     const modelService = serviceCache?.[modelName];
+    const Model = models[modelName];
 
+    if (!Model) return message("Invalid Model")
+
+    let serviceInstance = null;
+
+    // ---------------- Try dynamic service ----------------
     if (modelService) {
       const fileUrl = pathToFileURL(modelService).href;
       const serviceModule = await import(fileUrl);
-      const serviceFactory = serviceModule.default;
-      const serviceInstance = serviceFactory(); // expected to return { create, update, ... }
-      const serviceFn = serviceInstance.create;
-
-      if (typeof serviceFn === "function") {
-        // ✅ Use service create
-        return await serviceFn({ role, userId, body });
-      }
+      serviceInstance = serviceModule.default?.();
     }
 
-    // 🧩 Step 2: Fallback to generic Mongoose create
-    return await genericFallback({ modelName, body, role });
+    // Extract lifecycle functions (if available)
+    const beforeCreate = serviceInstance?.beforeCreate;
+    const afterCreate = serviceInstance?.afterCreate;
 
-  } catch (error) {
-    console.error(`buildCreateQuery(${modelName}) error:`, error.message);
-    throw error;
+    // -------------------------------- BEFORE CREATE --------------------------------
+    if (typeof beforeCreate === "function") {
+      const result = await beforeCreate({
+        role,
+        userId,
+        body,
+        managerId,
+        designation,
+      });
+
+      // If beforeCreate returns mutated body, use it
+      if (result && typeof result === "object") body = result;
+    }
+
+    // ----------------------------- CREATE OPERATION ---------------------------------
+    let createdDocument;
+
+    if (Array.isArray(body)) {
+      // Array bulk insert
+      createdDocument = await Model.insertMany(body);
+    } else {
+      const doc = new Model(body);
+      createdDocument = await doc.save();
+    }
+
+
+    // -------------------------------- AFTER CREATE ---------------------------------
+    if (typeof afterCreate === "function") {
+      await afterCreate({
+        role,
+        userId,
+        body,
+        docId: createdDocument._id,
+        managerId,
+        designation,
+      });
+    }
+
+    // Final return
+    return createdDocument;
+  } catch (err) {
+    console.error(`buildCreateQuery(${modelName}) error:`, err.message);
+    throw err;
   }
-}
-
-/**
- * 🧩 Generic fallback create operation
- */
-async function genericFallback({ modelName, body, role }) {
-  const serviceCache = getAllServices();
-  const Model = models[modelName];
-
-  if (!Model) {
-    throw new Error(`Unsupported Model: ${modelName}`);
-  }
-
-  // 🔒 Role policy enforcement
-  const accessPolicy = serviceCache?.policies?.[modelName]?.create;
-  if (accessPolicy && !accessPolicy.includes(role)) {
-    throw new Error(`Role "${role}" not authorized to create ${modelName}`);
-  }
-
-  let doc;
-  if (Array.isArray(body)) {
-    doc = await Model.insertMany(body);
-  } else {
-    doc = new Model(body);
-    await doc.save();
-  }
-  return doc;
 }

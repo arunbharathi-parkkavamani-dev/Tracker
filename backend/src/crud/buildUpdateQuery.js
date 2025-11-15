@@ -3,69 +3,87 @@ import { getAllServices } from "../utils/servicesCache.js";
 import { pathToFileURL } from "url";
 
 /**
- * Build Update Query (Service First + Generic Fallback)
- * @param {Object} params
- * @returns {Promise<any>}
+ * Build Update Query (Service First + Generic Fallback + Lifecycle Hooks)
  */
 export default async function buildUpdateQuery({
   role,
   userId,
   modelName,
   docId,
-  filter,
+  filter = {},
   body,
+  managerId,
+  designation
 }) {
   try {
-    // 🧩 Step 1: Check service cache first
     const serviceCache = getAllServices();
     const modelService = serviceCache?.[modelName];
+    const Model = models[modelName];
 
+    if (!Model) throw new Error(`Invalid model: ${modelName}`);
+
+    let serviceInstance = null;
+
+    // ------------------- Load dynamic service if exists -------------------
     if (modelService) {
       const fileUrl = pathToFileURL(modelService).href;
       const serviceModule = await import(fileUrl);
-      const serviceFactory = serviceModule.default;
-      const serviceInstance = serviceFactory();
-      const serviceFn = serviceInstance.update;
-      if (typeof serviceFn === "function") {
-        return await serviceFn({ role, userId, body, docId, filter });
+      serviceInstance = serviceModule.default?.();
+    }
+
+    // Extract lifecycle functions
+    const beforeUpdate = serviceInstance?.beforeUpdate;
+    const afterUpdate = serviceInstance?.afterUpdate;
+
+    // ----------------------- BEFORE UPDATE (lifecycle) ----------------------
+    if (typeof beforeUpdate === "function") {
+      const result = await beforeUpdate({
+        role,
+        userId,
+        body,
+        docId,
+        managerId,
+        designation
+      });
+
+      // If result returns mutated body or extra properties, use them
+      if (result && typeof result === "object") {
+        body = result;
       }
     }
-    return await genericFallback({ role, userId, modelName, docId, filter, body });
-  } catch (error) {
-    console.error(`buildUpdateQuery(${modelName}) error:`, error.message);
-    throw error;
-  }
-}
 
-export async function genericFallback({ role, userId, modelName, docId, filter, body }) {
-  try {
-    // 🧩 Step 2: Fallback to generic Mongoose update
-    const serviceCache = getAllServices();
-    const Model = models[modelName] || console.log(`Unsupported Model ${modelName}`);
-
-    // Role policy enforcement
-    const accessPolicy = serviceCache?.policies?.[modelName]?.update;
-    if (accessPolicy && !accessPolicy.includes(role, userId)) {
-      throw new Error(`Role "${role}" not authorized to update ${modelName}`);
-    }
-
-    let doc;
+    // ------------------------------ UPDATE OPERATION ------------------------------
+    let updatedDoc;
 
     if (docId) {
-      doc = await Model.findById(docId);
-      if (!doc) throw new Error(`${modelName} document not found`);
-      Object.assign(doc, body);
-      await doc.save();
-    } else if (filter) {
-      doc = await Model.updateMany(filter, { $set: body });
+      updatedDoc = await Model.findByIdAndUpdate(docId, body, {
+        new: true,
+        runValidators: true,
+      });
     } else {
-      throw new Error("docId or filter must be provided for update");
+      updatedDoc = await Model.findOneAndUpdate(filter, body, {
+        new: true,
+        runValidators: true,
+      });
     }
 
-    return doc;
+    if (!updatedDoc) throw new Error(`${modelName} not found`);
+
+    // ----------------------- AFTER UPDATE (lifecycle) ----------------------
+    if (typeof afterUpdate === "function") {
+      await afterUpdate({
+        role,
+        userId,
+        body,
+        docId: updatedDoc._id,
+        managerId,
+        designation
+      });
+    }
+
+    return updatedDoc;
   } catch (error) {
     console.error(`buildUpdateQuery(${modelName}) error:`, error.message);
     throw error;
   }
 }
-

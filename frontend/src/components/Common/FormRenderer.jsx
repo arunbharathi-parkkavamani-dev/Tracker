@@ -52,7 +52,6 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, data = {}, userData
         url = url.replace(/:clientId|:depId|:id/g, depId);
       }
 
-      console.log("🔗 Final URL for populate:", url);
 
       // 🧠 Handle dynamicOptions (POST with aggregation params)
       const dynamicOptions = field.dynamicOptions || {};
@@ -71,12 +70,10 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, data = {}, userData
         ? data
         : data?.items || data?.projectTypes || [];
 
-      console.log(options)
 
       // 💾 Store options dynamically
       setDynamicOptions((prev) => ({ ...prev, [field.name]: options }));
 
-      console.log(`✅ Populated ${field.name}:`, options.length, "items");
     } catch (err) {
       console.error(`❌ Error fetching options for ${field.name}:`, err);
     }

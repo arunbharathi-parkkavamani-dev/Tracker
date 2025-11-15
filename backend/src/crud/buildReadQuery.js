@@ -109,7 +109,6 @@ async function genericFallback({ role, userId, modelName, docId, filter, fields 
     }
   }
 
-  console.log(userId)
   if (filter?.aggregate && Array.isArray(filter.stages)) {
     // @ts-ignore
     const matchStage = docId
@@ -138,6 +137,5 @@ async function genericFallback({ role, userId, modelName, docId, filter, fields 
 
   // 🧩 Execute and return lean results
   const results = await query.lean();
-  console.log(`✅ Generic read used for model: ${modelName}`);
   return results;
 }

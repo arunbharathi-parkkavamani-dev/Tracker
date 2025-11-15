@@ -24,43 +24,14 @@ export const leaveFormFields = (user) => [
       params: {
         aggregate: true,
         stages: [
-          {
-            $lookup: {
-              from: "departments",
-              localField: "professionalInfo.department",
-              foreignField: "_id",
-              as: "departmentDetails",
-            },
-          },
+          {$lookup: {from: "departments",localField: "professionalInfo.department",foreignField: "_id",as: "departmentDetails",}},
           { $unwind: "$departmentDetails" },
-          {
-            $lookup: {
-              from: "leavepolicies",
-              localField: "departmentDetails.leavePolicy",
-              foreignField: "_id",
-              as: "leavePolicyDetails",
-            },
-          },
+          {$lookup: {from: "leavepolicies",localField: "departmentDetails.leavePolicy",foreignField: "_id",as: "leavePolicyDetails",}},
           { $unwind: "$leavePolicyDetails" },
           { $unwind: "$leavePolicyDetails.leaves" },
-          {
-            $lookup: {
-              from: "leavetypes",
-              localField: "leavePolicyDetails.leaves.leaveType",
-              foreignField: "_id",
-              as: "leaveTypeInfo",
-            },
-          },
+          { $lookup: { from: "leavetypes",localField: "leavePolicyDetails.leaves.leaveType",foreignField: "_id",as: "leaveTypeInfo",}},
           { $unwind: "$leaveTypeInfo" },
-          {
-            $project: {
-             _id: "$leaveTypeInfo._id",
-              departmentName: "$departmentDetails.name",
-              departmentId: "$departmentDetails._id",
-              leaveTypeId: "$leaveTypeInfo._id",
-              name: "$leaveTypeInfo.name",
-            },
-          },
+          {$project: {_id: "$leaveTypeInfo._id",departmentName: "$departmentDetails.name", departmentId: "$departmentDetails._id",leaveTypeId: "$leaveTypeInfo._id",name: "$leaveTypeInfo.name", }},
         ],
       },
     },
@@ -81,10 +52,10 @@ export const leaveFormFields = (user) => [
   // Hidden Fields
   { name: "employeeId", hidden: true },
   { name: "departmentId", hidden: true },
-  { 
-    name: "status", 
-    hidden: true, 
-    value: "69121b1cd664e361c6738b1f" 
+  {
+    name: "status",
+    hidden: true,
+    value: "69121b1cd664e361c6738b1f",
   },
   { name: "managerId", hidden: true },
 ];
