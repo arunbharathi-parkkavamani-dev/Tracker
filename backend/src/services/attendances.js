@@ -1,6 +1,6 @@
 import Attendance from "../models/Attendance.js";
 import { createAndSendNotification } from "../utils/notificationService.js";
-import { generateAttendanceNotification } from "../middlewares/notificationMessagePrasher.js";
+import { generateNotification } from "../middlewares/notificationMessagePrasher.js";
 
 /**
  * Attendance Service
@@ -56,7 +56,7 @@ export default function attendances() {
     },
 
     // ---------------- AFTER CREATE ----------------
-    afterCreate: async ({ body, docId, userId }) => {
+    afterCreate: async ({ modelName, body, docId, userId }) => {
       const attendanceDoc = await Attendance.findById(docId);
       if (!attendanceDoc) return;
 
@@ -65,9 +65,10 @@ export default function attendances() {
       // Skip for these statuses
       if (["Present", "Check-Out", "Check-In"].includes(request)) return;
 
-      const message = generateAttendanceNotification(
+      const message = generateNotification(
         attendanceDoc.employeeName,
-        request
+        request,
+        modelName
       );
       await createAndSendNotification({
         senderId: userId,
@@ -105,7 +106,7 @@ export default function attendances() {
     },
 
     // ---------------- AFTER UPDATE ----------------
-    afterUpdate: async ({ userId, body, docId }) => {
+    afterUpdate: async ({ modelName, userId, body, docId }) => {
       const attendanceDoc = await Attendance.findById(docId);
       if (!attendanceDoc) return;
 
@@ -114,7 +115,8 @@ export default function attendances() {
 
       const message = generateAttendanceNotification(
         attendanceDoc.employeeName,
-        request
+        request,
+        modelName
       );
       await createAndSendNotification({
         senderId: userId,

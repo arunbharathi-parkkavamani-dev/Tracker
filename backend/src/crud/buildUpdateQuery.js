@@ -77,7 +77,8 @@ export default async function buildUpdateQuery({
         body,
         docId: updatedDoc._id,
         managerId,
-        designation
+        designation,
+        modelName
       });
     }
 

@@ -1,10 +1,12 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useRef } from "react";
 import { useNotification } from "../../context/notificationProvider";
+import { useNavigate } from "react-router-dom";
 
 const NotificationDrawer = ({ isOpen, setIsOpen }) => {
   const { notifications, markAsRead } = useNotification();
   const drawerRef = useRef(null);
+  const navigate = useNavigate();
 
   // Close drawer when clicking outside
   useEffect(() => {
@@ -30,7 +32,11 @@ const NotificationDrawer = ({ isOpen, setIsOpen }) => {
         notifications.map((notif) => (
           <div
             key={notif._id}
-            onClick={() => markAsRead(notif._id)}
+            onClick={() => {
+              markAsRead(notif._id)
+              navigate(`/${notif.meta.model}/${notif.meta.modelId}`)
+              setIsOpen(false)
+            }}
             className={`px-4 py-3 border-b cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 ${
               notif.read
                 ? "font-normal text-black dark:text-white"

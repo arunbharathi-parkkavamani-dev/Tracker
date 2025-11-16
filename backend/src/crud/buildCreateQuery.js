@@ -62,12 +62,9 @@ export default async function buildCreateQuery({
     // -------------------------------- AFTER CREATE ---------------------------------
     if (typeof afterCreate === "function") {
       await afterCreate({
-        role,
         userId,
-        body,
         docId: createdDocument._id,
-        managerId,
-        designation,
+        modelName
       });
     }
 

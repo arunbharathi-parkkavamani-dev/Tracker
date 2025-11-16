@@ -35,8 +35,10 @@ const LeaveAndRegularization = ({ onClose, onSuccess, onFailed }) => {
 
     const payload = {
       employeeId: userData._id,
+      employeeName : userData.basicInfo.firstName,
       departmentId: leave?.departmentId,
-      leaveTypeId: leave?.leaveTypeId || leave?._id,
+      leaveTypeId: leave?.leaveTypeId,
+      leaveName : leave?.name,
       status: leave?.statusId,
       statusOrderKey: leave?.orderKey,
       managerId: userData.professionalInfo?.reportingManager,
@@ -48,7 +50,7 @@ const LeaveAndRegularization = ({ onClose, onSuccess, onFailed }) => {
     console.log(payload)
 
     try {
-      await axiosInstance.post("/populate/create/leave", payload);
+      await axiosInstance.post("/populate/create/leaves", payload);
       onSuccess?.();
       onClose?.();
     } catch (err) {
