@@ -16,10 +16,10 @@ const safeAggregate = async (model, pipeline = [], options = []) => {
         const totalStages = pipeline.length;
 
         // Define safe limits
-        const MAX_LOOKUPS = 7;
-        const MAX_UNWINDS = 7;
+        const MAX_LOOKUPS = 9;
+        const MAX_UNWINDS = 9;
         const MAX_MATCHES = 10;
-        const MAX_TOTAL_STAGES = 20;
+        const MAX_TOTAL_STAGES = 25;
 
         // Check against limits
         if (lookupCount > MAX_LOOKUPS ||
@@ -39,13 +39,15 @@ const safeAggregate = async (model, pipeline = [], options = []) => {
             };
         }
 
+         console.log(model, pipeline, options)
         // Execute aggregation with disk use enabled   
         const results = await model.aggregate(pipeline, { allowDiskUse: true, ...options });
+        console.log(results)
         return results;
     } catch (error) {
         console.error(`❌ Aggregation error for ${model.modelName}:`, error.message);
 
-        const fallback = await getSchemaAwareFallback(model, 5);
+        const fallback = await getSchemaAwareFallback(model, 7);
         return {
             error: "Aggregation failed, returned fallback data.",
             count: fallback.length,

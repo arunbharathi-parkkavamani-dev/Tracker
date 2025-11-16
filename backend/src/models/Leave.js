@@ -1,25 +1,25 @@
 import mongoose from "mongoose";
 
 const LeaveSchema = new mongoose.Schema({
-    employeeId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Employee',
-        required: true
-    },
-    departmentId: {type: mongoose.Schema.Types.ObjectId, ref: 'Department'},
-    leaveId : { type: mongoose.Schema.Types.ObjectId, ref:'LeaveTypes'},
-    startDate: { type: Date},
-    endDate: { type: Date },
-    totalDays:{ type: Number},
-    reason: {type:String, maxLength :500, minLength: 5, trim: true},
-    status:{ type: mongoose.Schema.Types.ObjectId, ref: 'Status'},
-    managerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee' },
-    managerComments: { type: String, maxLength :500, minLength: 5, trim: true },
-    approvedAt: { type: Date },
-    document :{ type: String },      
+  employeeId: { type: mongoose.Schema.Types.ObjectId, ref: "Employee", required: true },
+  departmentId: { type: mongoose.Schema.Types.ObjectId, ref: "Department" },
+  leaveId: { type: mongoose.Schema.Types.ObjectId, ref: "LeaveTypes" },
+  startDate: { type: Date },
+  endDate: { type: Date },
+  totalDays: { type: Number },
+  reason: { type: String, maxLength: 500, minLength: 5, trim: true },
+  status: { type: mongoose.Schema.Types.ObjectId, ref: "Status", required: true },
+  statusOrderKey: { type: Number, required: true }, // order key snapshots from StatusGroup
+  managerId: { type: mongoose.Schema.Types.ObjectId, ref: "Employee" },
+  managerComments: { type: String, maxLength: 500, minLength: 5, trim: true },
+  approvedAt: { type: Date },
+  document: { type: String },
 }, { timestamps: true });
 
-LeaveSchema.index({ employee: 1, date: 1 }, { unique: true }); 
-const Leave = mongoose.models.Leave || mongoose.model('Leave', LeaveSchema);
+// Prevent duplicate leave entries by employee on exact date range
+LeaveSchema.index(
+  { employeeId: 1, startDate: 1, endDate: 1 },
+  { unique: true }
+);
 
-export default Leave;
+export default mongoose.models.Leave || mongoose.model("Leave", LeaveSchema);

@@ -1,7 +1,7 @@
 [
-    {
-    "role": "68d8b98af397d1d97620ba97", 
-    "modelName": "leave",
+  {
+    "role": "68d8b98af397d1d97620ba97",
+    "modelName": "leaves",
     "permissions": {
       "read": true,
       "create": true,

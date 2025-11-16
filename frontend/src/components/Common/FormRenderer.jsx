@@ -3,7 +3,13 @@ import { useState, useEffect } from "react";
 import { Autocomplete, TextField } from "@mui/material";
 import axiosInstance from "../../api/axiosInstance";
 
-const FormRenderer = ({ fields = [], submitButton, onSubmit, data = {}, userData }) => {
+const FormRenderer = ({
+  fields = [],
+  submitButton,
+  onSubmit,
+  data = {},
+  userData,
+}) => {
   const [formData, setFormData] = useState(data);
   const [dynamicOptions, setDynamicOptions] = useState({});
 
@@ -11,7 +17,9 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, data = {}, userData
   useEffect(() => {
     const hiddenDefaults = {};
     fields.forEach((field) => {
-      if (field.hidden) hiddenDefaults[field.name] = field.value || "";
+      if (field.hidden && field.value !== undefined) {
+        hiddenDefaults[field.name] = field.value;
+      }
     });
     setFormData((prev) => ({ ...hiddenDefaults, ...prev }));
   }, [fields]);
@@ -30,8 +38,8 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, data = {}, userData
     try {
       let url = field.source;
 
-      if(userData?.id){
-        url = url.field(":userId", userData.id)
+      if (userData?.id) {
+        url = url.field(":userId", userData.id);
       }
       let options = [];
       const dependencyName = field.dependsOn;
@@ -39,7 +47,9 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, data = {}, userData
 
       // 🛑 Skip if dependency not selected yet
       if (dependencyName && !dependencyValue) {
-        console.warn(`Skipping populate for ${field.name}: depends on ${dependencyName}`);
+        console.warn(
+          `Skipping populate for ${field.name}: depends on ${dependencyName}`
+        );
         return;
       }
 
@@ -52,15 +62,18 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, data = {}, userData
         url = url.replace(/:clientId|:depId|:id/g, depId);
       }
 
-
       // 🧠 Handle dynamicOptions (POST with aggregation params)
       const dynamicOptions = field.dynamicOptions || {};
+
+      console.log(url, dynamicOptions.params);
 
       let response;
       if (dynamicOptions.params?.aggregate) {
         response = await axiosInstance.post(url, dynamicOptions.params);
       } else {
-        response = await axiosInstance.get(url, { params: dynamicOptions.params });
+        response = await axiosInstance.get(url, {
+          params: dynamicOptions.params,
+        });
       }
 
       const data = response?.data?.data || [];
@@ -70,15 +83,12 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, data = {}, userData
         ? data
         : data?.items || data?.projectTypes || [];
 
-
       // 💾 Store options dynamically
       setDynamicOptions((prev) => ({ ...prev, [field.name]: options }));
-
     } catch (err) {
       console.error(`❌ Error fetching options for ${field.name}:`, err);
     }
   };
-
 
   // --- Handle Multi Group (activities) ---
   const handleGroupChange = (groupName, index, fieldName, value) => {
@@ -104,7 +114,9 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, data = {}, userData
 
   const handleRemoveGroup = (groupName, index) => {
     setFormData((prev) => {
-      const updatedGroup = (prev[groupName] || []).filter((_, i) => i !== index);
+      const updatedGroup = (prev[groupName] || []).filter(
+        (_, i) => i !== index
+      );
       return { ...prev, [groupName]: updatedGroup };
     });
   };
@@ -186,6 +198,7 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, data = {}, userData
     >
       {fields
         .filter((field) => !field.hidden)
+        .sort((a, b) => (a.orderKey ?? 999) - (b.orderKey ?? 999))
         .map((field) => {
           // 🧱 MultiGroup Section
           if (field.type === "multiGroup") {
@@ -214,16 +227,13 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, data = {}, userData
                           <label className="text-sm font-medium text-gray-700 mb-1 block">
                             {subField.label}
                           </label>
-                          {renderField(
-                            subField,
-                            item[subField.name],
-                            (val) =>
-                              handleGroupChange(
-                                field.name,
-                                index,
-                                subField.name,
-                                val
-                              )
+                          {renderField(subField, item[subField.name], (val) =>
+                            handleGroupChange(
+                              field.name,
+                              index,
+                              subField.name,
+                              val
+                            )
                           )}
                         </div>
                       ))}
@@ -247,9 +257,7 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, data = {}, userData
             <div key={field.name} className="flex flex-col">
               <label className="text-sm font-medium text-gray-700 mb-1">
                 {field.label}
-                {field.required && (
-                  <span className="text-red-500 ml-1">*</span>
-                )}
+                {field.required && <span className="text-red-500 ml-1">*</span>}
               </label>
               {renderField(field, formData[field.name], (val) =>
                 handleChange(field.name, val)

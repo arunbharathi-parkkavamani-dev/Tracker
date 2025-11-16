@@ -8,7 +8,7 @@ import axiosInstance from "../../api/axiosInstance";
 import { useAuth } from "../../context/authProvider.jsx";
 import FloatingCard from "../../components/Common/FloatingCard.jsx";
 import LeaveAndRegularization from "./Leave&Regularization.jsx";
-import toast, {Toaster} from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 
 const AttendancePage = () => {
   const { user, loading: authLoading } = useAuth();
@@ -149,7 +149,7 @@ const AttendancePage = () => {
       checkIn: new Date().toISOString(),
       status: "Present",
       managerId: user.managerId,
-      workType : "fixed",
+      workType: "fixed",
       location: { latitude: 10.9338987, longitude: 76.9839277 },
     };
     try {
@@ -162,6 +162,21 @@ const AttendancePage = () => {
       setError("Check-in failed");
     }
   };
+
+  useEffect(() => {
+    const fetchLeaves = async () => {
+      try {
+        const res = await axiosInstance.get(
+          "/populate/read/leaves?fields=employeeId,departmentId,status,managerId"
+        );
+        console.log(res);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    fetchLeaves();
+  }, []); // <-- dependency array
 
   // 🔴 Check-Out
   const handleCheckOut = async () => {
@@ -200,8 +215,8 @@ const AttendancePage = () => {
   };
 
   const handleLeaveFailed = () => {
-    toast.error("You Can't make a leave request")
-  }
+    toast.error("You Can't make a leave request");
+  };
 
   // 🎨 Custom MUI Calendar Day renderer
   const renderDay = (dayProps) => {
@@ -267,7 +282,9 @@ const AttendancePage = () => {
 
   // ⏳ Loading / Error
   if (loading || authLoading)
-    return <p className="text-gray-600 dark:text-gray-300">Loading attendance...</p>;
+    return (
+      <p className="text-gray-600 dark:text-gray-300">Loading attendance...</p>
+    );
   if (error) return <p className="text-red-500">{error}</p>;
 
   return (
@@ -380,10 +397,10 @@ const AttendancePage = () => {
 
       {showModal && (
         <FloatingCard onClose={handleCloseAdd}>
-          <LeaveAndRegularization 
-          onClose={handleCloseAdd}
-          onSuccess={handleLeaveSuccess}
-          onFailed={handleLeaveFailed}
+          <LeaveAndRegularization
+            onClose={handleCloseAdd}
+            onSuccess={handleLeaveSuccess}
+            onFailed={handleLeaveFailed}
           />
         </FloatingCard>
       )}
