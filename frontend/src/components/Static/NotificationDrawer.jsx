@@ -19,6 +19,7 @@ const NotificationDrawer = ({ isOpen, setIsOpen }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+
   if (!isOpen) return null;
 
   return (
@@ -34,7 +35,7 @@ const NotificationDrawer = ({ isOpen, setIsOpen }) => {
             key={notif._id}
             onClick={() => {
               markAsRead(notif._id)
-              navigate(`/${notif.meta.model}/${notif.meta.modelId}`)
+              navigate(`/${notif.meta.model}/${notif.meta.modelId}`) 
               setIsOpen(false)
             }}
             className={`px-4 py-3 border-b cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 ${

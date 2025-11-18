@@ -10,11 +10,11 @@ const LeaveSchema = new mongoose.Schema({
   endDate: { type: Date },
   totalDays: { type: Number },
   reason: { type: String, maxLength: 500, minLength: 5, trim: true },
-  status: { type: mongoose.Schema.Types.ObjectId, ref: "Status", required: true },
-  statusOrderKey: { type: Number, required: true }, // order key snapshots from StatusGroup
+  status: { type: String, enum:['Pending', 'Approved', 'Rejected'] },
   managerId: { type: mongoose.Schema.Types.ObjectId, ref: "Employee" },
   managerComments: { type: String, maxLength: 500, minLength: 5, trim: true },
   approvedAt: { type: Date },
+  rejectedAt : { type: Date},
   document: { type: String },
 }, { timestamps: true });
 

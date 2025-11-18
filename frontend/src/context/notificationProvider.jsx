@@ -14,7 +14,7 @@ export const NotificationProvider = ({ children }) => {
   useEffect(() => {
     if (!user?.id) return;
 
-    const socket = io("http://10.215.52.208:3000", {
+    const socket = io("http://192.168.137.1:3000", {
       withCredentials: true,
       transports: ["websocket"],
     });
