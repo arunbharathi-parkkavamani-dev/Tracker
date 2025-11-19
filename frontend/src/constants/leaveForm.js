@@ -1,13 +1,12 @@
-// src/constants/leaveForm.js
+export const leaveFormFields = (userData) => [
+  { name: "employeeId", hidden: true, value: userData._id },
+  { name: "departmentId", hidden: true, value: userData.professionalInfo?.department },
 
-export const leaveFormFields = () => [
-  { name: "employeeId", hidden: true },
-  { name: "departmentId", hidden: true },
   {
     label: "Leave Type",
     name: "leaveType",
     type: "AutoComplete",
-    source: `/populate/read/employees/:userId`,
+    source: `/populate/read/employees/${userData._id}`,
     dynamicOptions: {
       params: {
         aggregate: true,
@@ -20,12 +19,7 @@ export const leaveFormFields = () => [
               as: "departmentDetails",
             },
           },
-          {
-            $unwind: {
-              path: "$departmentDetails",
-              preserveNullAndEmptyArrays: true,
-            },
-          },
+          { $unwind: "$departmentDetails" },
           {
             $lookup: {
               from: "leavepolicies",
@@ -34,39 +28,8 @@ export const leaveFormFields = () => [
               as: "leavePolicyDetails",
             },
           },
-          {
-            $unwind: {
-              path: "$leavePolicyDetails",
-              preserveNullAndEmptyArrays: true,
-            },
-          },
-          {
-            $lookup: {
-              from: "statusgroups",
-              localField: "leavePolicyDetails.leaveStatusGroup",
-              foreignField: "_id",
-              as: "sg",
-            },
-          },
-          {
-            $addFields: {
-              defaultStatus: {
-                $first: {
-                  $filter: {
-                    input: { $ifNull: [ { $arrayElemAt: ["$sg.statusArray", 0] }, [] ] },
-                    as: "item",
-                    cond: { $eq: ["$$item.orderKey", 0] },
-                  },
-                },
-              },
-            },
-          },
-          {
-            $unwind: {
-              path: "$leavePolicyDetails.leaves",
-              preserveNullAndEmptyArrays: true,
-            },
-          },
+          { $unwind: "$leavePolicyDetails" },
+          { $unwind: "$leavePolicyDetails.leaves" },
           {
             $lookup: {
               from: "leavetypes",
@@ -75,58 +38,37 @@ export const leaveFormFields = () => [
               as: "leaveTypeInfo",
             },
           },
-          {
-            $unwind: {
-              path: "$leaveTypeInfo",
-              preserveNullAndEmptyArrays: true,
-            },
-          },
+          { $unwind: "$leaveTypeInfo" },
           {
             $project: {
               _id: "$leaveTypeInfo._id",
-              departmentName: "$departmentDetails.name",
-              departmentId: "$departmentDetails._id",
               leaveTypeId: "$leaveTypeInfo._id",
               name: "$leaveTypeInfo.name",
-              statusId: "$defaultStatus.statusDetails",
-              orderKey: "$defaultStatus.orderKey",
+              departmentId: "$departmentDetails._id",
             },
           },
         ],
       },
     },
-    placeholder: "Select leave type",
     required: true,
     orderKey: 3,
   },
-  { name: "leaveTypeId", hidden: true },
-  {
-    label: "From Date",
-    name: "startDate",
-    type: "date",
-    placeholder: "Select From Date",
-    required: true,
-    orderKey: 0,
-  },
-  {
-    label: "To Date",
-    name: "endDate",
-    type: "date",
-    placeholder: "Select To Date",
-    required: true,
-    orderKey: 1,
-  },
+
+  { label: "From Date", name: "startDate", type: "date", required: true, orderKey: 0 },
+  { label: "To Date", name: "endDate", type: "date", required: true, orderKey: 1 },
+
+  // read-only UI field (not submitted)
+  { label: "Available Days", name: "availableDays", type: "label", external: true, orderKey: 3 },
+
   { name: "totalDays", hidden: true },
+
   {
     label: "Reason",
     name: "reason",
     type: "textarea",
-    placeholder: "Enter reason for leave",
+    required: true,
     orderKey: 4,
   },
-  { name: "status", hidden: true },
-  { name: "statusOrderKey", hidden: true },
-  { name: "managerId", hidden: true },
 ];
 
 export const leaveSubmitButton = {

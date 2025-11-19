@@ -1,4 +1,5 @@
 import Leave from "../models/Leave.js";
+import Employee from "../models/Employee.js";
 import Attendance from "../models/Attendance.js";
 import { createAndSendNotification } from "../utils/notificationService.js";
 import { generateNotification } from "../middlewares/notificationMessagePrasher.js";
@@ -27,6 +28,17 @@ export default function leaves() {
       });
     },
 
+    // ---------------- BEFOR CREATE ----------------
+    beforeUpdate : async ({body, userId, docId}) => {
+      if(!docId) return null;
+      
+      if(body?.status ==="Approved") {
+        const data = await Employee.findById(body.employeeId).populate().lean();
+        console.log(data);
+      }
+    },
+
+    // ---------------- AFTER UPDATE ----------------
     afterUpdate: async ({ modelName, userId, docId }) => {
       if (!docId) return;
 

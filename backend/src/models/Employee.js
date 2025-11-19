@@ -8,26 +8,8 @@ const EmployeeSchema = new Schema({
     dob: { type: Date },
     doa: { type: Date }, // Date of Anniversary
     maritalStatus: { type: String, enum: ['Single', 'Married', 'Divorced', 'Widowed'] },
-    phone: { 
-      type: String, 
-      validate: {
-        validator: function(v) {
-          return /^(\+\d{1,3}[- ]?)?\d{10}$/.test(v);
-        },
-        message: props => `${props.value} is not a valid phone number!`
-      }
-    },
-    email: {
-      type: String,
-      lowercase: true,
-      trim: true,
-      validate: {
-        validator: function(v) {
-          return /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(v);
-        },
-        message: props => `${props.value} is not a valid email!`
-      }
-    },
+    phone: { type: String, validate: { validator: function(v) { return /^(\+\d{1,3}[- ]?)?\d{10}$/.test(v); }, message: props => `${props.value} is not a valid phone number!`}},
+    email: { type: String, lowercase: true, trim: true, validate: { validator: function(v) { return /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(v); }, message: props => `${props.value} is not a valid email!` }},
     fatherName: { type: String, trim: true },
     motherName: { type: String, trim: true },
     address: {
@@ -53,35 +35,15 @@ const EmployeeSchema = new Schema({
     confirmDate: { type: Date },
   },
   authInfo:{
-    workEmail: { 
-      type: String, 
-      lowercase: true, 
-      trim: true,
-      validate: {
-        validator: function(v) {
-          return /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(v);
-        },
-        message: props => `${props.value} is not a valid email!`
-      }
-    },
-    password: { type: String } // store hashed
-  },
+    workEmail: { type: String, lowercase: true, trim: true, validate: { validator: function(v) { return /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(v); }, message: props => `${props.value} is not a valid email!` } },
+    password: { type: String }}, // store hashed
 
   accountDetails: {
     accountName: { type: String },
     accountNo: { type: String },
     bankName: { type: String },
     branch: { type: String },
-    ifscCode: { 
-      type: String,
-      validate: {
-        validator: function(v) {
-          return /^[A-Z]{4}0[A-Z0-9]{6}$/.test(v);
-        },
-        message: props => `${props.value} is not a valid IFSC code!`
-      }
-    }
-  },
+    ifscCode: { type: String, validate: { validator: function(v) { return /^[A-Z]{4}0[A-Z0-9]{6}$/.test(v); }, message: props => `${props.value} is not a valid IFSC code!` } } },
 
   salaryDetails: {
     package: { type: Number },
@@ -101,15 +63,7 @@ const EmployeeSchema = new Schema({
         message: props => `${props.value} is not a valid PAN number!`
       }
     },
-    aadhar: { 
-      type: String,
-      validate: {
-        validator: function(v) {
-          return /^\d{12}$/.test(v);
-        },
-        message: props => `${props.value} is not a valid Aadhar number!`
-      }
-    },
+    aadhar: { type: String, validate: { validator: function(v) { return /^\d{12}$/.test(v); }, message: props => `${props.value} is not a valid Aadhar number!` } },
     esi: { type: String },
     pf: { type: String },
     documentFiles: [{ type: String }] // URLs
@@ -120,6 +74,18 @@ const EmployeeSchema = new Schema({
     appraisalLetter: { type: String }, // URL
     otherDocuments: [{ type: String }] // URLs
   },
+
+  // Inside Employee schema
+  leaveStatus: [
+    {
+      leaveType: { type: Schema.Types.ObjectId, ref: "LeaveType" },
+      usedThisMonth: { type: Number, default: 0 },
+      usedThisYear: { type: Number, default: 0 },
+      carriedForward: { type: Number, default: 0 },
+      available: { type: Number, default: 0 } // auto-calculated from policy
+    }
+  ],
+
   status:{ type:String},
 
   createdAt: { type: Date, default: Date.now },
