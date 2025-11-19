@@ -1,24 +1,47 @@
 import { useEffect, useState } from "react";
 import axiosInstance from "../../api/axiosInstance";
+import { useAuth } from "../../context/authProvider";
+import toast, { Toaster } from "react-hot-toast";
 
-const GenericDetailPage = ({ model, id }) => {
+const GenericDetailPage = ({ id }) => {
   const [data, setData] = useState(null);
+  const {user} = useAuth()
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axiosInstance.get(`/populate/read/${model}/${id}`);
+        const res = await axiosInstance.get(`/populate/read/leaves/${id}`);
         setData(res.data);
       } catch (err) {
         console.error(err);
       }
     };
     fetchData();
-  }, [model, id]);
+  }, [id]);
+
+  const handleApprove = async () => {
+    const payload = {
+      employeeId : data?.data?.employeeId,
+      employeeName : data?.data?.employeeName,
+      startDate : data?.data?.startDate,
+      endDate : data?.date?.endDate,
+      reason : data?.data?.reason,
+      managerId : user.id,
+      status : "Approved",
+    }
+    try {
+      const data = await axiosInstance.post(`populate/update/leaves/${id}`, payload);
+      console.log(data);
+      if(data) {
+        toast.success("Leave request submitted successfully!");
+      }
+    } catch {
+      toast.error("You Can't make a leave request");
+    }
+  }
 
   return (
     <>
-      {model === "leaves" && (
         <div className="space-y-4 p-4 max-w-xl mx-auto">
           {/* Title */}
           <h1 className="text-2xl font-bold text-center text-indigo-600 dark:text-indigo-300">
@@ -72,7 +95,9 @@ const GenericDetailPage = ({ model, id }) => {
 
           {/* Action Buttons */}
           <div className="flex justify-center gap-4 pt-2">
-            <button className="px-5 py-2.5 rounded-lg font-semibold text-white bg-green-600 hover:bg-green-700 transition shadow">
+            <button 
+            onClick={handleApprove}
+            className="px-5 py-2.5 rounded-lg font-semibold text-white bg-green-600 hover:bg-green-700 transition shadow">
               Approve
             </button>
             <button className="px-5 py-2.5 rounded-lg font-semibold text-white bg-red-600 hover:bg-red-700 transition shadow">
@@ -80,7 +105,6 @@ const GenericDetailPage = ({ model, id }) => {
             </button>
           </div>
         </div>
-      )}
     </>
   );
 };

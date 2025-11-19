@@ -7,7 +7,7 @@
  * @returns {string} - Formatted notification message
  */
 export function generateNotification(userName, status, modelName) {
-  if (modelName.toLowerCase() === "attendances") {
+  if (modelName === "attendances") {
     switch (status) {
       case "Present":
         return `${userName} has checked in for today.`;
@@ -28,7 +28,13 @@ export function generateNotification(userName, status, modelName) {
       default:
         return `${userName} has requested ${status}`;
     }
-  } else if (modelName.toLowerCase() === 'leaves') {
-    return `${userName} has request ${status?.leaveName} for ${status?.leaveReason}`;
+  } else if (modelName === 'leaves') {
+    if(status?.leaveReason){
+      return `${userName} has request ${status?.leaveName} for ${status?.leaveReason}`;
+    }
+    else {
+      return `${userName} your ${status?.leaveName} has been ${status?.leaveStatus}`
+    }
+    console.log(modelName, status)
   }
 }

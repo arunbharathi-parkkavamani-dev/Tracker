@@ -32,14 +32,16 @@ export default function leaves() {
 
       const leaveDoc = await Leave.findById(docId)
 
-      const request = {
+      const status = {
         leaveName: leaveDoc.leaveName,
+        leaveStatus : leaveDoc.status,
       };
+
+      console.log(modelName);
 
       const message = generateNotification(
         leaveDoc.employeeName,
-        request,
-        leaveDoc.status,
+        status,
         modelName
       );
 
@@ -52,20 +54,21 @@ export default function leaves() {
 
 
 
-      if (body?.status === "Approval") {
+      if (leaveDoc?.status === "Approved") {
+        console.log(leaveDoc.status);
         const payload = {
-          employee : body.employeeId,
-          employeeName : body.employeeName,
-          date : body.startDate,
+          employee : leaveDoc.employeeId,
+          employeeName : leaveDoc.employeeName,
+          date : leaveDoc.startDate,
           status : "Leave",
-          leaveType : body.leaveType,
+          leaveType : leaveDoc.leaveType,
           managerId : userId
         }
-        const data = new Attendance(payload)
+        const data = await Attendance.create(payload);
         return data;
       }
 
-      if(body?.status === "Rejected") return;
+      if(leaveDoc?.status === "Rejected") return;
     },
   };
 }

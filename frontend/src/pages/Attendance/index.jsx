@@ -154,11 +154,12 @@ const AttendancePage = () => {
     };
     try {
       await axiosInstance.post(`/populate/create/attendances`, payload);
-      alert("Checked in successfully");
       await fetchTodayAttendance();
+      handleSuccess();
       await fetchDayData(new Date(selectedDate));
     } catch (err) {
       console.error("Check-in failed:", err);
+      handleFailed();
       setError("Check-in failed");
     }
   };
@@ -193,9 +194,11 @@ const AttendancePage = () => {
         }
       );
       await fetchTodayAttendance();
+      handleSuccess()
       await fetchDayData(new Date(selectedDate));
     } catch (err) {
       console.error("Check-out failed:", err);
+      handleFailed();
       setError("Check-out failed");
     }
   };
@@ -210,11 +213,11 @@ const AttendancePage = () => {
     window.history.pushState(null, "", `/attendance`);
   };
 
-  const handleLeaveSuccess = () => {
+  const handleSuccess = () => {
     toast.success("Leave request submitted successfully!");
   };
 
-  const handleLeaveFailed = () => {
+  const handleFailed = () => {
     toast.error("You Can't make a leave request");
   };
 
@@ -399,8 +402,8 @@ const AttendancePage = () => {
         <FloatingCard onClose={handleCloseAdd}>
           <LeaveAndRegularization
             onClose={handleCloseAdd}
-            onSuccess={handleLeaveSuccess}
-            onFailed={handleLeaveFailed}
+            onSuccess={handleSuccess}
+            onFailed={handleFailed}
           />
         </FloatingCard>
       )}

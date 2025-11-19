@@ -2,7 +2,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 
 const axiosInstance = axios.create({
-  baseURL: "http://10.17.184.208:3000/api",
+  baseURL: "http://10.131.79.208:3000/api",
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
