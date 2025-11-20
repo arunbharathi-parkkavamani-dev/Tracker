@@ -79,6 +79,7 @@ const LeaveAndRegularization = ({ onClose, onSuccess, onFailed }) => {
       }
 
       const leave = data.leaveType;
+      console.log(leave)
 
       const payload = {
         employeeId: userData._id,
@@ -94,6 +95,7 @@ const LeaveAndRegularization = ({ onClose, onSuccess, onFailed }) => {
         totalDays: liveForm.totalDays,
         reason: data.reason,
       };
+      console.log(payload)
 
       try {
         await axiosInstance.post("/populate/create/leaves", payload);

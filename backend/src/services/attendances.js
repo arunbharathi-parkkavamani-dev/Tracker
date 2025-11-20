@@ -46,7 +46,7 @@ export default function attendances() {
           const checkIn = new Date(body.checkIn);
           const checkInMinutes = checkIn.getHours() * 60 + checkIn.getMinutes();
           const cutOff = 10 * 60 + 20; // 10:20 AM
-          body.status = checkInMinutes > cutOff ? "Late Entry" : "Check-In";
+          body.status = checkInMinutes > cutOff ? "Late Entry" : "Present";
         } else {
           body.status = "Present";
         }

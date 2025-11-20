@@ -6,54 +6,60 @@ import { generateNotification } from "../middlewares/notificationMessagePrasher.
 
 export default function leaves() {
   return {
-    // ---------------- AFTER CREATE ----------------
+    // AFTER CREATE  ➝ Triggered once leave request is newly submitted
     afterCreate: async ({ modelName, docId, userId }) => {
-      const leavesDoc = await Leave.findById(docId);
-      if (!leavesDoc) return;
+      const leaveDoc = await Leave.findById(docId);
+      if (!leaveDoc) return;
 
-      const request = {
-        leaveName: leavesDoc.leaveName,
-        leaveReason: leavesDoc.reason,
-      };
-      const message = generateNotification(
-        leavesDoc.employeeName,
-        request,
-        modelName
-      );
-      await createAndSendNotification({
-        senderId: userId,
-        receiverId: leavesDoc.managerId,
-        message,
-        model: { model: modelName, modelId: leavesDoc._id },
-      });
-    },
-
-    // ---------------- BEFOR CREATE ----------------
-    beforeUpdate : async ({body, userId, docId}) => {
-      if(!docId) return null;
-      
-      if(body?.status ==="Approved") {
-        const data = await Employee.findById(body.employeeId).populate().lean();
-        console.log(data);
-      }
-    },
-
-    // ---------------- AFTER UPDATE ----------------
-    afterUpdate: async ({ modelName, userId, docId }) => {
-      if (!docId) return;
-
-      const leaveDoc = await Leave.findById(docId)
-
-      const status = {
+      // Notification body for manager
+      const requestDetails = {
         leaveName: leaveDoc.leaveName,
-        leaveStatus : leaveDoc.status,
+        leaveReason: leaveDoc.reason,
       };
-
-      console.log(modelName);
 
       const message = generateNotification(
         leaveDoc.employeeName,
-        status,
+        requestDetails,
+        modelName
+      );
+
+      // Send notification → Employee ➝ Manager
+      await createAndSendNotification({
+        senderId: userId,
+        receiverId: leaveDoc.managerId,
+        message,
+        model: { model: modelName, modelId: leaveDoc._id },
+      });
+    },
+
+    // BEFORE UPDATE  ➝ Store old status to compare after update
+    beforeUpdate: async ({ body, docId }) => {
+      if (!docId) return;
+
+      // Fetch previous leave document BEFORE the update happens
+      const oldLeave = await Leave.findById(docId).lean();
+
+      // Store old status (Pending → Approved / Approved → Rejected etc.)
+      body._oldStatus = oldLeave.status;
+    },
+
+    // AFTER UPDATE  ➝ Notification + Leave Deduction + Attendance Creation
+    afterUpdate: async ({ modelName, userId, docId, body }) => {
+      if (!docId) return;
+
+      const leaveDoc = await Leave.findById(docId);
+      const prevStatus = body._oldStatus;
+      const newStatus = leaveDoc.status;
+
+      // 🔔 Send notification to employee on every update
+      const statusDetails = {
+        leaveName: leaveDoc.leaveName,
+        leaveStatus: leaveDoc.status,
+      };
+
+      const message = generateNotification(
+        leaveDoc.employeeName,
+        statusDetails,
         modelName
       );
 
@@ -64,23 +70,79 @@ export default function leaves() {
         model: { model: modelName, modelId: docId },
       });
 
+      // CASE 1: Pending/Rejected → Approved (NORMAL APPROVAL FLOW)
+      if (prevStatus !== "Approved" && newStatus === "Approved") {
+        const employee = await Employee.findById(leaveDoc.employeeId);
 
+        const bucket = employee.leaveStatus.find(
+          (i) => i.leaveType.toString() === leaveDoc.leaveTypeId.toString()
+        );
 
-      if (leaveDoc?.status === "Approved") {
-        console.log(leaveDoc.status);
-        const payload = {
-          employee : leaveDoc.employeeId,
-          employeeName : leaveDoc.employeeName,
-          date : leaveDoc.startDate,
-          status : "Leave",
-          leaveType : leaveDoc.leaveType,
-          managerId : userId
+        // Calculate no. of leave days
+        const start = new Date(leaveDoc.startDate);
+        const end = new Date(leaveDoc.endDate);
+        const oneDay = 24 * 60 * 60 * 1000;
+        const totalDays = Math.round((end - start) / oneDay) + 1;
+
+        if (bucket) {
+          bucket.usedThisMonth += totalDays;
+          bucket.usedThisYear += totalDays;
+          bucket.available = Math.max(bucket.available - totalDays, 0); // never negative
         }
-        const data = await Attendance.create(payload);
-        return data;
+        await employee.save();
+
+        // Add attendance for ALL leave days
+        const attendance = [];
+        let current = new Date(start);
+        while (current <= end) {
+          attendance.push({
+            employee: leaveDoc.employeeId,
+            employeeName: leaveDoc.employeeName,
+            date: new Date(current),
+            status: "Leave",
+            leaveType: leaveDoc.leaveType,
+            managerId: userId,
+          });
+          current.setDate(current.getDate() + 1);
+        }
+        await Attendance.insertMany(attendance);
+        return;
       }
 
-      if(leaveDoc?.status === "Rejected") return;
-    },
+      // CASE 2: Approved → Rejected/Cancelled (ROLLBACK FLOW)
+      if (prevStatus === "Approved" && newStatus === "Rejected") {
+        const employee = await Employee.findById(leaveDoc.employeeId);
+
+        const bucket = employee.leaveStatus.find(
+          (i) => i.leaveType.toString() === leaveDoc.leaveTypeId.toString()
+        );
+
+        // Calculate leave days for rollback
+        const start = new Date(leaveDoc.startDate);
+        const end = new Date(leaveDoc.endDate);
+        const oneDay = 24 * 60 * 60 * 1000;
+        const totalDays = Math.round((end - start) / oneDay) + 1;
+
+        if (bucket) {
+          // Reverse deductions
+          bucket.usedThisMonth = Math.max(bucket.usedThisMonth - totalDays, 0);
+          bucket.usedThisYear = Math.max(bucket.usedThisYear - totalDays, 0);
+          bucket.available += totalDays; // restore leave balance
+        }
+        await employee.save();
+
+        // Delete attendance records for that leave period
+        await Attendance.deleteMany({
+          employee: leaveDoc.employeeId,
+          date: { $gte: leaveDoc.startDate, $lte: leaveDoc.endDate },
+          status: "Leave",
+        });
+
+        return;
+      }
+
+      // For other status changes → no action
+      return;
+    }
   };
 }

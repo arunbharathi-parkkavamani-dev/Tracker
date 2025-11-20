@@ -4,7 +4,7 @@ const LeaveSchema = new mongoose.Schema({
   employeeId: { type: mongoose.Schema.Types.ObjectId, ref: "Employee", required: true },
   employeeName : {type : String},
   departmentId: { type: mongoose.Schema.Types.ObjectId, ref: "Department" },
-  leaveId: { type: mongoose.Schema.Types.ObjectId, ref: "LeaveTypes" },
+  leaveTypeId: { type: mongoose.Schema.Types.ObjectId, ref: "LeaveTypes" },
   leaveName : {type: String},
   startDate: { type: Date },
   endDate: { type: Date },

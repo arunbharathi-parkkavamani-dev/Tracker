@@ -39,6 +39,7 @@ export const NotificationProvider = ({ children }) => {
     if (!user?.id) return;
     const fetchNotifications = async () => {
       try {
+        console.log(user.id)
         const res = await axiosInstance.get(`/populate/read/notification?receiver=${user.id}`);
         const data = Array.isArray(res.data)
         ? res.data

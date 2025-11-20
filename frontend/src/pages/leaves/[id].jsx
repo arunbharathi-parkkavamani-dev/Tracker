@@ -2,9 +2,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useState } from "react";
 import FloatingCard from "../../components/Common/FloatingCard.jsx";
 import GenericDetailPage from "./model.jsx";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function DetailModalRoute() {
-  const navigate = useNavigate();
   const { id } = useParams();
   const [open, setOpen] = useState(true);
 
@@ -12,11 +12,26 @@ export default function DetailModalRoute() {
     setOpen(false);               // close modal visually
   };
 
+  const onApprove = () => {
+    toast.success("Leave request Approved successfully!");
+  }
+
+  const onReject = () => {
+    toast.success("Leave request Rejected successfully!");
+  }
+
   if (!open) return null; // just hide, don't navigate here
 
   return (
-    <FloatingCard onClose={handleClose}>
-      <GenericDetailPage id={id} onClose={handleClose} />
-    </FloatingCard>
+    <>
+      <Toaster position="top-right" />
+      <FloatingCard onClose={handleClose}>
+        <GenericDetailPage
+          onApprove={onApprove}
+          onReject={onReject}
+          id={id}
+          onClose={handleClose} />
+      </FloatingCard>
+    </>
   );
 }

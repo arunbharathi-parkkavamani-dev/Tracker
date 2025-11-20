@@ -14,12 +14,19 @@ export async function populateHelper(req, res, next) {
       // Merge everything into a single filter
       filter = filter || {};
       filter = {
-        ...filter,
-        ...extraQuery,
         ...params,
         ...bodyData,
       };
     }
+
+    // Merge everything into a single filter
+      filter = filter || {};
+      filter = {
+        ...filter,
+        ...extraQuery,
+      };
+
+      console.log(filter);
     
 
     // Main buildQuery call

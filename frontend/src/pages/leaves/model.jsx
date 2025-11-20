@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import axiosInstance from "../../api/axiosInstance";
 import { useAuth } from "../../context/authProvider";
-import toast, { Toaster } from "react-hot-toast";
 
-const GenericDetailPage = ({ id }) => {
+
+const GenericDetailPage = ({ id, onApprove, onReject, onClose }) => {
   const [data, setData] = useState(null);
   const {user} = useAuth()
 
@@ -28,13 +28,14 @@ const GenericDetailPage = ({ id }) => {
       reason : data?.data?.reason,
       managerId : user.id,
       status : "Approved",
+      leaveType : data?.data?.leaveType
     }
     try {
       const data = await axiosInstance.post(`populate/update/leaves/${id}`, payload);
       console.log(data);
-      if(data) {
-        toast.success("Leave request submitted successfully!");
-      }
+      if(onApprove) onApprove();
+      if(onClose) onClose();
+      
     } catch {
       toast.error("You Can't make a leave request");
     }

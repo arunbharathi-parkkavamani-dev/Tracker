@@ -4,6 +4,7 @@ import { useAuth } from "../../context/authProvider.jsx";
 import FloatingCard from "../../components/Common/FloatingCard.jsx";
 import AddDailyEntry from "./add-daily-activity.jsx";
 import Task from "./Task.jsx";
+import KanbanBoard from "../../components/Common/KambanBoard.jsx";
 
 const DailyTracker = () => {
   const [data, setData] = useState([]);
@@ -123,11 +124,10 @@ const DailyTracker = () => {
             <button
               key={client._id}
               onClick={() => handleClientSelect(client)}
-              className={`w-full text-left px-4 py-2 rounded-lg border ${
-                selectedClient?._id === client._id
+              className={`w-full text-left px-4 py-2 rounded-lg border ${selectedClient?._id === client._id
                   ? "bg-blue-600 text-white border-blue-700"
                   : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-              }`}
+                }`}
             >
               {client.name}
             </button>
@@ -159,60 +159,33 @@ const DailyTracker = () => {
           </div>
         </div>
 
-        {!selectedClient ? (
-          <p className="text-gray-600 mt-6">
-            Select a client to view activities.
-          </p>
-        ) : Object.keys(groupedByProject).length === 0 ? (
-          <p className="text-gray-500 mt-6">
-            No activities found for this client.
-          </p>
-        ) : (
-          <div className="flex gap-6 h-[calc(100vh-6rem)] relative">
-            {Object.keys(groupedByProject).map((projectType) => (
-              <div
-                key={projectType}
-                className="relative w-80 flex-shrink-0 rounded-2xl overflow-hidden"
-                style={{
-                  backgroundColor: bgColors[projectType] || "#F3F4F6",
-                  height: "100%",
-                }}
-              >
-                <div className="top-0 text-center">
-                  <h2 className="text-lg font-semibold text-gray-800">
-                    {projectType}
-                  </h2>
-                </div>
-
-                <div className="absolute inset-3 overflow-y-auto p-4 z-20 space-y-3">
-                  {groupedByProject[projectType].map((activity) => (
-                    <div
-                      key={activity._id}
-                      onClick={() => handleTaskClick(activity)}
-                      className="bg-white border border-gray-200 rounded-xl p-3 hover:shadow-md transition cursor-pointer relative z-30"
-                    >
-                      <img
-                        className="float-right rounded-full w-8 h-8 object-cover"
-                        src={
-                          user?.basicInfo?.profileImage ||
-                          "../../assets/profile_image.jpg"
-                        }
-                      />
-                      <p className="font-medium text-gray-800">
-                        {activity.taskType?.name}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        User: {activity.user?.basicInfo?.firstName}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-1">
-                        {new Date(activity.date).toLocaleDateString()}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
+        {selectedClient && (
+          <KanbanBoard
+            data={filteredData}
+            groupBy="projectType.name"
+            bgColors={bgColors}
+            onCardClick={handleTaskClick}
+            getCardContent={(activity) => (
+              <>
+                <img
+                  className="float-right rounded-full w-8 h-8 object-cover"
+                  src={
+                    user?.basicInfo?.profileImage ||
+                    "../../assets/profile_image.jpg"
+                  }
+                />
+                <p className="font-medium text-gray-800">
+                  {activity.taskType?.name}
+                </p>
+                <p className="text-sm text-gray-500">
+                  User: {activity.user?.basicInfo?.firstName}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  {new Date(activity.date).toLocaleDateString()}
+                </p>
+              </>
+            )}
+          />
         )}
       </div>
 
