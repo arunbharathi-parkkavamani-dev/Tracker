@@ -25,8 +25,6 @@ export async function populateHelper(req, res, next) {
         ...filter,
         ...extraQuery,
       };
-
-      console.log(filter);
     
 
     // Main buildQuery call
