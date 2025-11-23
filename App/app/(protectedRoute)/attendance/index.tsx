@@ -601,11 +601,11 @@ export default function Attendance() {
                             ))}
                         </View>
 
-                        <View>
-                            <Link href="/(protectedRoute)/attendance/leave-and-regularization" asChild>
-                                <Text>Leave & Regularization</Text>
-                            </Link>
-                        </View>
+                    </View>
+                    <View>
+                        <Link href="/(protectedRoute)/attendance/leave-and-regularization" asChild>
+                            <Text className="bg-green-600 p-6 rounded-lg text-white">Leave & Regularization</Text>
+                        </Link>
                     </View>
                 </View>
             </ScrollView>
