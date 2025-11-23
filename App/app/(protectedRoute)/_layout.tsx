@@ -24,11 +24,10 @@ export default function DrawerLayout() {
       try {
         const response = await axiosInstance.get("/populate/read/sidebar");
         setNavItems(response?.data?.data || []);
-        console.log(response?.data?.data)
       } catch (err: any) {
         if (err?.response?.status === 401) {
           await AsyncStorage.removeItem("token");
-          return router.replace("/Login");
+          return router.replace("/(authRoute)/Login");
         }
       } finally {
         setLoading(false);
@@ -38,7 +37,7 @@ export default function DrawerLayout() {
     fetchNavBar();
   }, []);
 
-  // show loader before drawer is ready
+  // PREVENT rendering before data is ready
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -47,38 +46,37 @@ export default function DrawerLayout() {
     );
   }
 
+  // normalize route from backend → expo-router filesystem route
+  const normalize = (route: string) => {
+    if (!route.startsWith("/")) route = "/" + route;
+    return `/(protectedRoute)${route}`; // always point to protected folder
+  };
+
   return (
     <Drawer screenOptions={{ headerShown: true }}>
       {navItems.map((item) => {
-        // Normalize route (/dashboard vs dashboard)
-        const normalizedRoute = item.route.startsWith("/")
-          ? item.route
-          : `/${item.route}`;
-
-        // Fix MaterialIcons name -> MdDashboard → dashboard
-        const rawIcon = item.icon?.iconName || "";
-        const iconKey = rawIcon.replace(/^Md/, ""); // Remove "Md"
-        const formattedIcon = iconKey.charAt(0).toUpperCase() + iconKey.slice(1);
-        const Icon =
-          MD[formattedIcon as keyof typeof MD] || MD.HelpOutline;
+        // resolve icon name exactly as backend gives (MdDashboard, MdPerson, etc.)
+        const Icon = MD[item.icon?.iconName as keyof typeof MD] || MD["Error"];
 
         return (
           <Drawer.Screen
             key={item._id}
-            name={item.title}
+            // name MUST be filesystem route NOT title
+            name={normalize(item.route)}
             options={{
               title: item.title,
-              drawerIcon: ({ color, size }) => <Icon size={size} color={color} />,
+              drawerIcon: ({ color, size }) => (
+                <Icon size={size} color={color} />
+              ),
             }}
             listeners={{
               drawerItemPress: () => {
-                if (normalizedRoute === "/logout") {
-                  // Handle logout item
+                if (item.route === "/logout" || item.route === "logout") {
                   AsyncStorage.removeItem("token").then(() => {
-                    router.replace("/Login");
+                    router.replace("/(authRoute)/Login");
                   });
                 } else {
-                  router.navigate(normalizedRoute);
+                  router.replace(normalize(item.route));
                 }
               },
             }}
