@@ -113,7 +113,7 @@ export default function attendances() {
       const request = attendanceDoc.request || attendanceDoc.status;
       if (["Present", "Check-Out", "Check-In"].includes(request)) return;
 
-      const message = generateAttendanceNotification(
+      const message = generateNotification(
         attendanceDoc.employeeName,
         request,
         modelName
