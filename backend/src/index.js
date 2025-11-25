@@ -21,17 +21,22 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin: [
-      "http://localhost:3000",
-      "http://localhost:19006",
-      "http://localhost:8081",
-      "exp://*",                 // Expo local preview
-      "https://*",              // Web app later
-      "http://*",               // Android emulator / device
-    ],
+    origin: (origin, callback) => {
+      // Allow requests with no Origin (mobile apps)
+      if (!origin) return callback(null, true);
+      // Allow specific web origins
+      const allowedOrigins = [
+        "https://lmx-tracker--kqx1p6ip7h.expo.app", // Expo Web build
+        "http://localhost:3000",
+        "http://localhost:19006",
+        "http://localhost:8081"
+      ];
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
   })
-)
+);
 app.use(express.json());
 
 app.use(apiHitLogger); // Middleware to log API hits
