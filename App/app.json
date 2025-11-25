@@ -31,6 +31,13 @@
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE",
         "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "CAMERA",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "RECEIVE_BOOT_COMPLETED",
         "VIBRATE"
       ],
       "edgeToEdgeEnabled": true,
@@ -66,6 +73,12 @@
       "eas": {
         "projectId": "d9c689de-12db-4a43-abef-05dac1989da9"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/d9c689de-12db-4a43-abef-05dac1989da9"
     }
   }
 }
