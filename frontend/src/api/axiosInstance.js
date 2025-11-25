@@ -2,7 +2,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 
 const axiosInstance = axios.create({
-  baseURL: "http://10.252.68.208:3000/api",
+  baseURL: "https://tracker-9b5c.onrender.com/api",
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
