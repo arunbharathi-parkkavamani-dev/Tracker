@@ -2,7 +2,7 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const axiosInstance = axios.create({
-  baseURL: "http://10.12.192.208:3000/api",
+  baseURL: "https://tracker-mxp9.onrender.com/api",
   timeout: 1000,
   headers: {
     "Content-Type": "application/json",

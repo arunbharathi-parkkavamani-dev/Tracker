@@ -1,3 +1,4 @@
+import "../global.css"
 import { Slot } from 'expo-router';
 import { AuthProvider } from '@/context/AuthContext';
 import { Provider as PaperProvider } from "react-native-paper";
