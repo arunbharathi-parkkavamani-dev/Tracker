@@ -21,10 +21,17 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin: true,
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:19006",
+      "http://localhost:8081",
+      "exp://*",                 // Expo local preview
+      "https://*",              // Web app later
+      "http://*",               // Android emulator / device
+    ],
     credentials: true,
   })
-);
+)
 app.use(express.json());
 
 app.use(apiHitLogger); // Middleware to log API hits
