@@ -26,7 +26,7 @@ app.use(
       if (!origin) return callback(null, true);
       // Allow specific web origins
       const allowedOrigins = [
-        "https://lmx-tracker--p1hvjsjwqq.expo.app/", // Expo Web build
+        "https://lmx-tracker--p1hvjsjwqq.expo.app", // Expo Web build
         "http://localhost:3000",
         "http://localhost:19006",
         "http://localhost:8081"
