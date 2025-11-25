@@ -2,7 +2,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 
 const axiosInstance = axios.create({
-  baseURL: "https://tracker-9b5c.onrender.com/api",
+  baseURL: "https://tracker-mxp9.onrender.com/api",
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
@@ -20,7 +20,9 @@ axiosInstance.interceptors.response.use(
     if(error.response?.status === 403 && !originalRequest._retry) {
       originalRequest._retry = true
       try {
-        await axios.get("auth/refresh", {withCredentials: true});
+        await axios.get("https://tracker-mxp9.onrender.com/api/auth/refresh", {
+          withCredentials: true,
+        });
         return axiosInstance(originalRequest);
       // eslint-disable-next-line no-unused-vars
       } catch (refreshError) {
