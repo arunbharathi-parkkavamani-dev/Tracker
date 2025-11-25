@@ -1,7 +1,9 @@
-import models from "../models/Collection.js";
-import { setCache, getPolicy } from "../utils/cache.js";
-import { getService } from "../utils/servicesCache.js";
-import validator from "../utils/Validator.js";
+import models from "../../models/Collection.js";
+import { setCache, getPolicy } from "../cache.js";
+import { getService } from "../servicesCache.js";
+import validator from "../Validator.js";
+import { fileURLToPath, pathToFileURL } from "url";
+import path from "path";
 
 setCache();
 
@@ -43,10 +45,13 @@ export async function buildQuery({
   // --------------------------------------------------
   //  2️⃣ IMPORT THE CORRECT CRUD HANDLER
   // --------------------------------------------------
-  const crudFile = `../crud/build${capitalize(action)}Query.js`;
+  const crudFile = path.resolve(
+    path.dirname(fileURLToPath(import.meta.url)),
+    `../../crud/build${capitalize(action)}Query.js`
+  );
   let crudHandler;
   try {
-    crudHandler = (await import(crudFile)).default;
+    crudHandler = (await import(pathToFileURL(crudFile).href)).default;
   } catch (err) {
     throw new Error(`❌ CRUD handler not found: ${crudFile}`);
   }

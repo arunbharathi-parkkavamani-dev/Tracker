@@ -35,6 +35,5 @@ export function generateNotification(userName, status, modelName) {
     else {
       return `${userName} your ${status?.leaveName} has been ${status?.leaveStatus}`
     }
-    console.log(modelName, status)
   }
 }

@@ -1,33 +1,86 @@
-import { buildQuery } from "../middlewares/policyEngine.js";
+// src/helper/populateHelper.js
+
+import { buildQuery } from "../utils/policy/policyEngine.js";
+import { parseFilter } from "../utils/filterParser.js";
 
 export async function populateHelper(req, res, next) {
   try {
     const { action, model, id } = req.params;
     const user = req.user;
-    
-    // Extract and normalize query parameters
-    let { fields, filter, ...extraQuery } = req.query;
-    if(req.body) {
 
-      const { params = {}, ...bodyData } = req.body;
-      
-      // Merge everything into a single filter
-      filter = filter || {};
-      filter = {
-        ...params,
-        ...bodyData,
-      };
+    let { fields, filter, ...params } = req.query;
+
+    // ------------------------ FIELDS NORMALIZATION ------------------------
+    if (typeof fields === "string") {
+      fields = fields
+        .split(",")
+        .map(f => f.trim())
+        .filter(Boolean);
     }
 
-    // Merge everything into a single filter
-      filter = filter || {};
-      filter = {
-        ...filter,
-        ...extraQuery,
-      };
-    
+    // ------------------------ AGGREGATE MODE ------------------------
+    const isAggregate = params.aggregate === "true" || params.aggregate === true;
 
-    // Main buildQuery call
+    let stages;
+    if (params.stages) {
+      try {
+        stages =
+          typeof params.stages === "string"
+            ? JSON.parse(params.stages)
+            : params.stages;
+      } catch {
+        stages = undefined;
+      }
+    }
+
+    // ------------------------ FILTER NORMALIZATION ------------------------
+    let finalFilter = null;
+
+    if (!isAggregate) {
+      if (typeof filter === "string") {
+        let parsed = null;
+
+        // ---------- 1) JSON Mode ----------
+        // ex: {"receiver":"123","read":false}
+        try {
+          parsed = JSON.parse(filter);
+        } catch {}
+
+        // ---------- 2) Simple Key=Value Mode ----------
+        // Only allowed when filter has NO spaces and NO logical operators
+        const isSimple =
+          !filter.includes(" ") &&
+          !filter.includes("&&") &&
+          !filter.includes("||") &&
+          !filter.includes("(") &&
+          !filter.includes(")");
+
+        if (!parsed && isSimple && filter.includes("=")) {
+          const [k, v] = filter.split("=");
+          parsed = { [k.trim()]: v.trim() };
+        }
+
+        // ---------- 3) Expression Mode ----------
+        if (parsed && typeof parsed === "object") {
+          finalFilter = parsed;
+        } else {
+          // ex: (employee = 123 && date >= 2025-01-01 && status != Reject)
+          finalFilter = parseFilter(filter);
+        }
+      }
+
+      // ---------- Already an object from frontend ----------
+      else if (filter && typeof filter === "object") {
+        finalFilter = filter;
+      }
+
+      // ---------- Final Safety ----------
+      if (!finalFilter || typeof finalFilter !== "object") {
+        finalFilter = {};
+      }
+    }
+
+    // ------------------------ EXECUTE MAIN QUERY ------------------------
     const data = await buildQuery({
       role: user.role,
       userId: user.id,
@@ -35,11 +88,12 @@ export async function populateHelper(req, res, next) {
       modelName: model,
       docId: id,
       fields,
+      filter: finalFilter,
+      aggregate: isAggregate,
+      stages,
       body: req.body,
-      filter,
     });
 
-    // Response handling
     const statusCode = action === "create" ? 201 : 200;
 
     return res.status(statusCode).json({

@@ -32,7 +32,6 @@ const GenericDetailPage = ({ id, onApprove, onReject, onClose }) => {
     }
     try {
       const data = await axiosInstance.post(`populate/update/leaves/${id}`, payload);
-      console.log(data);
       if(onApprove) onApprove();
       if(onClose) onClose();
       

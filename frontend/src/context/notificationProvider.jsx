@@ -14,7 +14,7 @@ export const NotificationProvider = ({ children }) => {
   useEffect(() => {
     if (!user?.id) return;
 
-    const socket = io("http://10.131.79.208:3000", {
+    const socket = io("http://192.168.1.34:3000", {
       withCredentials: true,
       transports: ["websocket"],
     });
@@ -39,8 +39,10 @@ export const NotificationProvider = ({ children }) => {
     if (!user?.id) return;
     const fetchNotifications = async () => {
       try {
-        console.log(user.id)
-        const res = await axiosInstance.get(`/populate/read/notification?receiver=${user.id}`);
+        const filter = encodeURIComponent(
+        `receiver=${user.id}`
+      );
+        const res = await axiosInstance.get(`/populate/read/notification?filter=${filter}`);
         const data = Array.isArray(res.data)
         ? res.data
         : Array.isArray(res.data.data)

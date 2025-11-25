@@ -16,7 +16,6 @@ const generateRefreshToken = (payload) =>
 // ------------------- LOGIN -------------------
 export const login = async (req, res, next) => {
   try {
-    console.log(req.body)
     const { workEmail, password } = req.body;
     const employee = await Employee.findOne({ "authInfo.workEmail": workEmail });
     if (!employee) return next(Object.assign(new Error("❎Invalid email or password"), { status: 401 }));

@@ -1,77 +1,119 @@
+// src/crud/buildDeleteQuery.js
 import models from "../models/Collection.js";
 import { getAllServices } from "../utils/servicesCache.js";
-import { pathToFileURL} from "url";
+import { getPolicy } from "../utils/cache.js";
+import { pathToFileURL } from "url";
+import runRegistry from "../utils/registryExecutor.js";
+import {saveAuditLog } from "../utils/auditLogger.js"
 
-/**
- * Build Delete Query (Service First + Generic Fallback)
- * @param {Object} params
- * @returns {Promise<any>}
- */
 export default async function buildDeleteQuery({
   role,
   userId,
   modelName,
   docId,
-  filter,
+  filter = {},
+  policy
 }) {
-  try {
-    // 🧩 Step 1: Try cached service first
-    const serviceCache = getAllServices();
-    const modelService = serviceCache?.[modelName];
+  const Model = models[modelName];
+  if (!Model) throw new Error(`Invalid model: ${modelName}`);
 
-    if (modelService) {
-      const fileUrl = pathToFileURL(modelService).href;
-      // Dynamic Import of Service Module
-      const serviceModule = await import(fileUrl);
-      // The service Default export should return { delete, create, update, read, ... }
-      const serviceFactory = serviceModule.default;
-      const serviceInstance = serviceFactory();
-      const serviceFn = serviceInstance.delete;
-      if (typeof serviceFn === "function") {
-        return await serviceFn({ role, userId, docId, filter });
-      }
-    }
-    // Role policy enforcement
-    return await genericFallback({ role, userId, modelName, docId, filter });
-
-  } catch (error) {
-    console.error(`buildDeleteQuery(${modelName}) error:`, error.message);
-    throw error;
+  /** -----------------------------------------------
+   * 1) DELETE PERMISSION CHECK
+   * ----------------------------------------------- */
+  if (!policy?.permissions?.delete) {
+    throw new Error(`⛔ Role "${role}" has no DELETE permission on "${modelName}"`);
   }
-}
 
-/**
- * 🧩 Generic fallback for Mongoose delete
- */
-async function genericFallback({ role, userId, modelName, docId, filter }) {
-  try {
-    const serviceCache = getAllServices();
+  /** -----------------------------------------------
+   * 2) Registry (must ALSO allow delete — rule #3)
+   * ----------------------------------------------- */
+  const registryOutput = await runRegistry({
+    role,
+    userId,
+    modelName,
+    action: "delete",
+    policy
+  });
 
-    // 🧩 Step 2: Fallback to generic Mongoose delete
-    const Model = models[modelName] || console.log(`Unsupported Model ${modelName}`);
-
-    // Role policy enforcement
-    const accessPolicy = serviceCache?.policies?.[modelName]?.delete;
-    if (accessPolicy && !accessPolicy.includes(role)) {
-      throw new Error(`Role "${role}" not authorized to delete ${modelName}`);
-    }
-
-    let result;
-
-    if (docId) {
-      const doc = await Model.findById(docId);
-      if (!doc) throw new Error(`${modelName} document not found`);
-      result = await doc.deleteOne();
-    } else if (filter) {
-      result = await Model.deleteMany(filter);
-    } else {
-      throw new Error("docId or filter must be provided for delete");
-    }
-
-    console.log(`Deleted ${modelName} document(s)`);
-    return result;
-  } catch (error) {
-    console.error(`genericFallback delete(${modelName}) error:`, error.message);
-    throw error;
+  if (registryOutput?.filter) {
+    filter = registryOutput.filter;
   }
+
+  /** -----------------------------------------------
+   * 3) Lifecycle service loading
+   * ----------------------------------------------- */
+  const serviceCache = getAllServices();
+  const modelService = serviceCache?.[modelName];
+  let serviceInstance = null;
+
+  if (modelService) {
+    const fileUrl = pathToFileURL(modelService).href;
+    const serviceModule = await import(fileUrl);
+    serviceInstance = serviceModule.default?.();
+  }
+
+  const beforeDelete = serviceInstance?.beforeDelete;
+  const afterDelete  = serviceInstance?.afterDelete;
+
+  /** -----------------------------------------------
+   * 4) BEFORE DELETE lifecycle hook
+   * ----------------------------------------------- */
+  if (typeof beforeDelete === "function") {
+    await beforeDelete({ role, userId, docId, filter, modelName });
+  }
+
+  const beforeDoc = await Model.findById(docId).lean();
+
+  /** -----------------------------------------------
+   * 5) SOFT DELETE OPERATION (UPDATE NOT REMOVE)
+   * ----------------------------------------------- */
+  let updateQuery = {
+    deleted: true,
+    deletedAt: new Date(),
+    deletedBy: userId
+  };
+
+  let deletedDoc;
+
+  if (docId) {
+    deletedDoc = await Model.findByIdAndUpdate(
+      docId,
+      { $set: updateQuery },
+      { new: true }
+    );
+  } else {
+    deletedDoc = await Model.findOneAndUpdate(
+      filter,
+      { $set: updateQuery },
+      { new: true }
+    );
+  }
+
+  if (!deletedDoc) throw new Error(`${modelName} not found for delete`);
+
+  /** -----------------------------------------------
+   * 6) AFTER DELETE lifecycle hook
+   * ----------------------------------------------- */
+  if (typeof afterDelete === "function") {
+    await afterDelete({
+      role,
+      userId,
+      docId: deletedDoc._id,
+      modelName,
+      deletedDoc
+    });
+  }
+
+  await saveAuditLog({
+    action: "delete",
+    modelName,
+    userId,
+    role,
+    docId: deletedDoc._id,
+    beforeDoc,
+    afterDoc: deletedDoc,
+    ip: null
+  });
+
+  return deletedDoc;
 }

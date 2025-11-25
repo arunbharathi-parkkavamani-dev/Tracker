@@ -1,15 +1,17 @@
+// src/crud/buildReadQuery.js
 import models from "../models/Collection.js";
 import { getAllServices } from "../utils/servicesCache.js";
+import { getPolicy } from "../utils/cache.js";
 import { pathToFileURL } from "url";
+import { buildMongoFilter } from "../utils/mongoFilterCompiler.js";
+
+
+import runRegistry from "../utils/registryExecutor.js";
+import sanitizeRead from "../utils/sanitizeRead.js";
+import sanitizePopulated from "../utils/sanitizePopulated.js";
 import safeAggregate from "../utils/safeAggregator.js";
 import mongoose from "mongoose";
 
-
-/**
- * Build Read Query (Service First + Generic Fallback)
- * @param {Object} params
- * @returns {Promise<any>}
- */
 export default async function buildReadQuery({
   role,
   userId,
@@ -17,102 +19,81 @@ export default async function buildReadQuery({
   docId,
   filter,
   fields,
+  policy
 }) {
-  try {
-    // 🧩 Step 1: Try cached service first
-    const serviceCache = getAllServices();
-    const modelService = serviceCache?.[modelName];
-
-    if (modelService) {
-      const fileUrl = pathToFileURL(modelService).href;
-      const serviceModule = await import(fileUrl);
-
-      // The service default export should return { create, update, read, ... }
-      const serviceFactory = serviceModule.default;
-      const serviceInstance = serviceFactory(); 
-      const serviceFn = serviceInstance?.read;
-
-
-      if (typeof serviceFn === "function") {
-        // ✅ Custom read handler found
-        return await serviceFn({ role, userId, docId, filter, fields });
-      }
-    }
-
-    // 🧩 Step 2: Fallback to generic Mongoose read
-    return await genericFallback({ role, userId, modelName, docId, filter, fields });
-
-  } catch (error) {
-    console.error(`buildReadQuery(${modelName}) error:`, error.message);
-    throw error;
-  }
-}
-
-/**
- * 🧩 Generic fallback for Mongoose read
- */
-/**
- * 🧩 Generic fallback for Mongoose read
- */
-async function genericFallback({ role, userId, modelName, docId, filter, fields }) {
-  const serviceCache = getAllServices();
   const Model = models[modelName];
+  if (!Model) throw new Error(`Model "${modelName}" not found`);
 
-  if (!Model) {
-    throw new Error(`Unsupported Model: ${modelName}`);
+  /** -----------------------------------------------
+   * 1) CRUD READ PERMISSION
+   * ----------------------------------------------- */
+  if (!policy?.permissions?.read) {
+    throw new Error(`Role "${role}" has no READ permission on model "${modelName}"`);
   }
 
-  // 🔒 Role policy enforcement
-  const accessPolicy = serviceCache?.policies?.[modelName]?.read;
-  if (accessPolicy && !accessPolicy.includes(role)) {
-    throw new Error(`Role "${role}" not authorized to read ${modelName}`);
+  /** -----------------------------------------------
+   * 2) Field sanitization (allowed + forbidden)
+   * ----------------------------------------------- */
+  fields = sanitizeRead({ fields, policy }); // returns an array like ["basicInfo.firstName"]
+
+  /** -----------------------------------------------
+   * 3) Registry execution (populateRef, isSelf, custom)
+   * ----------------------------------------------- */
+  const registryOutput = await runRegistry({
+    role,
+    userId,
+    modelName,
+    action: "read",
+    policy
+  });
+
+  // registry may override direct read control
+  fields = registryOutput?.fields ?? fields;
+  filter = registryOutput?.filter ?? filter;
+
+  /** -----------------------------------------------
+   * 4) beforeRead hook (service)
+   * ----------------------------------------------- */
+  const serviceCache = getAllServices();
+  const modelService = serviceCache?.[modelName];
+  let serviceInstance = null;
+
+  if (modelService) {
+    const fileUrl = pathToFileURL(modelService).href;
+    const serviceModule = await import(fileUrl);
+    serviceInstance = serviceModule.default?.();
+
+    if (typeof serviceInstance?.beforeRead === "function") {
+      const hook = await serviceInstance.beforeRead({ role, userId, docId, filter, fields });
+      if (hook?.filter) filter = hook.filter;
+      if (hook?.fields) fields = hook.fields;
+    }
   }
 
-  // ✅ Normalize flat query keys like 'filter[date][$gte]' → { filter: { date: { $gte: ... } } }
-  if (filter && Object.keys(filter).length > 0) {
-    const parsedFilter = {};
-    for (const key in filter) {
-      if (key.includes("[")) {
-        const path = key.replace(/\]/g, "").split("["); // e.g. ['filter', 'date', '$gte']
-        let current = parsedFilter;
-        path.forEach((p, idx) => {
-          if (idx === path.length - 1) {
-            current[p] = filter[key];
-          } else {
-            current[p] = current[p] || {};
-            current = current[p];
-          }
-        });
-      } else {
-        parsedFilter[key] = filter[key];
+  /** ============================================================
+   *  🔥 5) AGGREGATE READ — With `$lookup` policy enforcement
+   * ============================================================ */
+  if (filter?.aggregate === true && Array.isArray(filter.stages)) {
+    // Enforce permission for every $lookup
+    for (const stage of filter.stages) {
+      if (stage.$lookup?.from) {
+        const targetModel = Object.keys(models).find(
+          m => models[m].collection.collectionName === stage.$lookup.from
+        );
+
+        if (!targetModel) continue; // lookup alias, skip
+
+        const targetPolicy = getPolicy(role, targetModel);
+        if (!targetPolicy || !targetPolicy.permissions?.read) {
+          throw new Error(
+            `❌ Role "${role}" is NOT allowed to READ $lookup model "${targetModel}" inside aggregate`
+          );
+        }
       }
     }
 
-    // Extract the inner "filter" key if present
-    filter = parsedFilter.filter || parsedFilter;
-  }
-
-  // 🔒 Restrict employees to their own records (for Attendance model)
-  if (role === "employee" && modelName === "Attendance") {
-    filter.employee = userId;
-  }
-
-  // ✅ Auto-convert date range strings to real Date objects
-  if (filter?.date) {
-    if (filter.date.$gte) {
-      filter.date.$gte = new Date(filter.date.$gte);
-    }
-    if (filter.date.$lte) {
-      const end = new Date(filter.date.$lte);
-      end.setHours(23, 59, 59, 999); // Include full last day
-      filter.date.$lte = end;
-    }
-  }
-
-  if (filter?.aggregate && Array.isArray(filter.stages)) {
-    // @ts-ignore
     const matchStage = docId
-      ? [{ $match: { _id: new mongoose.Types.ObjectId(userId) } }]
+      ? [{ $match: { _id: new mongoose.Types.ObjectId(docId) } }]
       : filter.matchStage
       ? [{ $match: filter.matchStage }]
       : [];
@@ -120,22 +101,55 @@ async function genericFallback({ role, userId, modelName, docId, filter, fields 
     const pipeline = [
       ...matchStage,
       ...filter.stages,
-      ...(filter.project ? [{ $project: filter.project }] : []),
+      ...(filter.project ? [{ $project: filter.project }] : [])
     ];
 
-    return await safeAggregate(Model, pipeline);
+    let result = await safeAggregate(Model, pipeline);
+
+    if (serviceInstance?.afterRead) {
+      result = await serviceInstance.afterRead({ role, userId, docId, data: result });
+    }
+
+    return result;
   }
 
-  // 🧩 Build the Mongoose query
-  let query = docId ? Model.findById(docId) : Model.find(filter || {});
+  /** -----------------------------------------------
+   * 6) STANDARD READ QUERY
+   * ----------------------------------------------- */
 
-  // 🧩 Populate fields if requested (comma-separated)
-  if (fields) {
-    const fieldList = fields.split(",").filter(Boolean);
-    fieldList.forEach((f) => query.populate(f));
+
+  const mongoFilter = buildMongoFilter(filter);
+  let query = docId
+    ? Model.findById(new mongoose.Types.ObjectId(docId))
+    : Model.find(mongoFilter || {});
+
+  // 🔒 base document projection
+  if (Array.isArray(fields) && fields.length > 0 && fields[0] !== "*") {
+    query = query.select(fields.join(" "));
+    fields.forEach(f => query.populate(f));
   }
 
-  // 🧩 Execute and return lean results
-  const results = await query.lean();
-  return results;
+
+  let result = await query.lean();
+  if (docId && result) result = [result]; // unify with list format for sanitization
+
+  /** -----------------------------------------------
+   * 7) Populate sanitization (populateRef mode)
+   * ----------------------------------------------- */
+  if (registryOutput?.isPopulationContext) {
+    result = sanitizePopulated({
+      results: result,
+      allowedFields: registryOutput.allowedPopulateFields,
+      modelName
+    });
+  }
+
+  /** -----------------------------------------------
+   * 8) afterRead hook
+   * ----------------------------------------------- */
+  if (serviceInstance?.afterRead) {
+    result = await serviceInstance.afterRead({ role, userId, docId, data: result });
+  }
+
+  return docId ? result?.[0] : result;
 }
