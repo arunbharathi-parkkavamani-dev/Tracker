@@ -1,5 +1,5 @@
 import Task from "../models/Tasks.js";
-import CommentsThread from "../models/CommentsThread.js";
+import CommentsThread from "../models/CommentsThreads.js";
 import Employee from "../models/Employee.js";
 import { createAndSendNotification } from "../utils/notificationService.js";
 import { generateNotification } from "../middlewares/notificationMessagePrasher.js";
