@@ -15,6 +15,8 @@ import accesspolicies from "./AccessPolicies.js";
 import role from "./Role.js";
 import notification from "./notification.js";
 import leaves from "./Leave.js"
+import tasks from "./Tasks.js"
+import commentsthreads from "./CommentsThreads.js"
 
 
 const models = {
@@ -34,6 +36,8 @@ const models = {
   role,
   notification,
   leaves,
+  tasks,
+  commentsthreads
 };
 
 export default models;
