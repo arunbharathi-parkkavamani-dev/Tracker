@@ -22,21 +22,31 @@ app.use(cookieParser());
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no Origin (mobile apps)
-      if (!origin) return callback(null, true);
-      // Allow specific web origins
+      if (!origin) return callback(null, true); // mobile apps, postman, curl
+
       const allowedOrigins = [
-        "https://lmx-tracker--p1hvjsjwqq.expo.app", // Expo Web build
+        "https://lmx-tracker--p1hvjsjwqq.expo.app",
         "http://localhost:3000",
         "http://localhost:19006",
-        "http://localhost:8081"
+        "http://localhost:8081",
       ];
-      if (allowedOrigins.includes(origin)) return callback(null, true);
+
+      // Allow Vite or React Native web running in LAN
+      const localNetworkRegex = /^http:\/\/192\.168\.\d+\.\d+:\d+$/;
+
+      if (
+        allowedOrigins.includes(origin) ||
+        localNetworkRegex.test(origin)
+      ) {
+        return callback(null, true);
+      }
+
       return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
   })
 );
+
 app.use(express.json());
 
 app.use(apiHitLogger); // Middleware to log API hits
