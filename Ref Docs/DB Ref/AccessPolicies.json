@@ -1,36 +1,7 @@
 [
   {
-    "role": "68d8b980f397d1d97620ba96", 
-    "modelName": "tasks",
-    "permissions": {
-      "read": true,
-      "create": true,
-      "update": true,
-      "delete": false
-    },
-    "forbiddenAccess": {
-      "read": [],
-      "create": [],
-      "update": [],
-      "delete": []
-    },
-    "allowAccess": {
-      "read": ["*"],
-      "create": ["*"],
-      "update": ["*"],
-      "delete": []
-    },
-    "registry": [],
-    "conditions": {
-      "read": [],
-      "create": [],
-      "update": [],
-      "delete":[]
-    }
-  },
-  {
-    "role": "68d8b980f397d1d97620ba96", 
-    "modelName": "commentsthreads",
+    "role": "68d8b98af397d1d97620ba97", 
+    "modelName": "projecttypes",
     "permissions": {
       "read": true,
       "create": true,
@@ -59,36 +30,7 @@
   },
   {
     "role": "68d8b98af397d1d97620ba97", 
-    "modelName": "tasks",
-    "permissions": {
-      "read": true,
-      "create": true,
-      "update": true,
-      "delete": false
-    },
-    "forbiddenAccess": {
-      "read": [],
-      "create": [],
-      "update": [],
-      "delete": []
-    },
-    "allowAccess": {
-      "read": ["*"],
-      "create": ["*"],
-      "update": ["*"],
-      "delete": []
-    },
-    "registry": [],
-    "conditions": {
-      "read": [],
-      "create": [],
-      "update": [],
-      "delete":[]
-    }
-  },
-  {
-    "role": "68d8b98af397d1d97620ba97", 
-    "modelName": "commentsthreads",
+    "modelName": "tasktypes",
     "permissions": {
       "read": true,
       "create": true,
