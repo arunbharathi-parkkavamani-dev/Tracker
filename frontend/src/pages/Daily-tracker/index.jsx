@@ -3,7 +3,7 @@ import axiosInstance from "../../api/axiosInstance";
 import { useAuth } from "../../context/authProvider.jsx";
 import FloatingCard from "../../components/Common/FloatingCard.jsx";
 import AddDailyEntry from "./add-daily-activity.jsx";
-import Task from "./Task.jsx";
+import Activity from "./activity.jsx";
 import KanbanBoard from "../../components/Common/KambanBoard.jsx";
 
 const DailyTracker = () => {
@@ -12,7 +12,7 @@ const DailyTracker = () => {
   const [refresh, setRefresh] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
   const [bgColors, setBgColors] = useState({});
-  const [selectedTask, setSelectedTask] = useState(null);
+  const [selectedactivity, setSelectedactivity] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
 
   const { user, loading } = useAuth();
@@ -23,7 +23,7 @@ const DailyTracker = () => {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(
-          `/populate/read/dailyactivities?user=${user.id}&fields=projectType,taskType,client,user`,
+          `/populate/read/dailyactivities?user=${user.id}&fields=projectType,activityType,client,user`,
           { withCredentials: true }
         );
         setData(response.data?.data || []);
@@ -59,14 +59,14 @@ const DailyTracker = () => {
     setBgColors(newColors);
   };
 
-  // Handle viewing a task
-  const handleTaskClick = (task) => {
-    setSelectedTask(task);
-    window.history.pushState(null, "", `/daily-tracker/task/${task._id}`);
+  // Handle viewing a activity
+  const handleActivityClick = (activity) => {
+    setSelectedactivity(activity);
+    window.history.pushState(null, "", `/daily-tracker/activity/${activity._id}`);
   };
 
-  const handleCloseTask = () => {
-    setSelectedTask(null);
+  const handleCloseactivity = () => {
+    setSelectedactivity(null);
     window.history.pushState(null, "", `/daily-tracker`);
   };
 
@@ -85,10 +85,10 @@ const DailyTracker = () => {
   useEffect(() => {
     const path = window.location.pathname;
 
-    if (path.includes("/task/")) {
-      const taskId = path.split("/task/")[1];
-      const task = data.find((t) => t._id === taskId);
-      if (task) setSelectedTask(task);
+    if (path.includes("/activity/")) {
+      const activityId = path.split("/activity/")[1];
+      const activity = data.find((t) => t._id === activityId);
+      if (activity) setSelectedactivity(activity);
     } else if (path.endsWith("/add-daily-activity")) {
       setShowAddModal(true);
     }
@@ -164,7 +164,7 @@ const DailyTracker = () => {
             data={filteredData}
             groupBy="projectType.name"
             bgColors={bgColors}
-            onCardClick={handleTaskClick}
+            onCardClick={handleActivityClick}
             getCardContent={(activity) => (
               <>
                 <img
@@ -175,7 +175,7 @@ const DailyTracker = () => {
                   }
                 />
                 <p className="font-medium text-gray-800">
-                  {activity.taskType?.name}
+                  {activity.activityType?.name}
                 </p>
                 <p className="text-sm text-gray-500">
                   User: {activity.user?.basicInfo?.firstName}
@@ -190,9 +190,9 @@ const DailyTracker = () => {
       </div>
 
       {/* Floating modals */}
-      {selectedTask && (
-        <FloatingCard onClose={handleCloseTask}>
-          <Task task={selectedTask} onClose={handleCloseTask} />
+      {selectedactivity && (
+        <FloatingCard onClose={handleCloseactivity}>
+          <Activity activity={selectedactivity} onClose={handleCloseactivity} />
         </FloatingCard>
       )}
       {showAddModal && (

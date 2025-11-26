@@ -1,8 +1,8 @@
 // src/components/Task.jsx
 import React from "react";
 
-const Task = ({ task, onClose }) => {
-  if (!task) return null;
+const Activity = ({ activity, onClose }) => {
+  if (!activity) return null;
 
   return (
     <div className="relative bg-white rounded-2xl p-6 w-full max-w-lg shadow-xl">
@@ -13,28 +13,28 @@ const Task = ({ task, onClose }) => {
         ✕
       </button>
 
-      <h2 className="text-xl font-bold mb-2">{task.taskType?.name}</h2>
+      <h2 className="text-xl font-bold mb-2">{activity.taskType?.name}</h2>
 
       <div className="space-y-1 text-gray-700">
         <p>
-          <span className="font-medium">Client:</span> {task.client?.name}
+          <span className="font-medium">Client:</span> {activity.client?.name}
         </p>
         <p>
-          <span className="font-medium">Project:</span> {task.projectType?.name}
+          <span className="font-medium">Project:</span> {activity.projectType?.name}
         </p>
         <p>
           <span className="font-medium">User:</span>{" "}
-          {task.user?.basicInfo?.firstName}
+          {activity.user?.basicInfo?.firstName}
         </p>
         <p>
-          <span className="font-medium">Description:</span> {task.activity}
+          <span className="font-medium">Description:</span> {activity.activity}
         </p>
         <p className="text-gray-400 mt-2">
-          {new Date(task.date).toLocaleString()}
+          {new Date(activity.date).toLocaleString()}
         </p>
       </div>
     </div>
   );
 };
 
-export default Task;
+export default Activity;

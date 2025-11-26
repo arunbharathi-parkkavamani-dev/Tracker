@@ -1,324 +1,180 @@
-import React, { useState, useMemo, useRef, useEffect } from "react";
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
-import Autocomplete from "@mui/material/Autocomplete";
-import TextField from "@mui/material/TextField";
+import { useEffect, useState } from "react";
+import axiosInstance from "../../api/axiosInstance";
+import { useAuth } from "../../context/authProvider";
+import Task from "./Task.jsx";
+import KanbanBoard from "../../components/Common/KambanBoard.jsx";
+import FloatingCard from "../../components/Common/FloatingCard.jsx";
+import Addtask from "./add-task.jsx";
 
-// ColumnVisibility component (unchanged)
-function ColumnVisibility({ columns, selectedCols, toggleColumn }) {
-  const [open, setOpen] = useState(false);
-  const dropdownRef = useRef();
+const Task = () => {
+    const [data, setData] = useState([]);
+    const [error, setError] = useState(null);
+    const [selectedClient, setSelectedClient] = useState(null);
+    const [bgColors, setBgColors] = useState({});
+    const [selectedTask, setSelectedTask] = useState(null);
+    const [showAddModal, setShowAddModal] = useState(false);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    const { user, loading } = useAuth();
 
-  return (
-    <div className="relative inline-block mb-4">
-      <button
-        onClick={() => setOpen(!open)}
-        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
-      >
-        Column Visibility
-      </button>
-
-      {open && (
-        <div
-          ref={dropdownRef}
-          className="absolute z-10 mt-2 w-56 bg-white border rounded-md shadow-lg p-3 max-h-64 overflow-auto"
-        >
-          {columns.map((col) => (
-            <label
-              key={col}
-              className="flex items-center justify-between p-2 rounded hover:bg-blue-50 cursor-pointer"
-            >
-              <span
-                className={`text-gray-700 ${
-                  selectedCols.includes(col) ? "font-semibold" : "text-gray-400"
-                }`}
-              >
-                {col}
-              </span>
-              <input
-                type="checkbox"
-                checked={selectedCols.includes(col)}
-                onChange={() => toggleColumn(col)}
-                className="accent-blue-500"
-              />
-            </label>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-export default function ExcelColumnExtractor() {
-  const [data, setData] = useState([]);
-  const [columns, setColumns] = useState([]);
-  const [selectedCols, setSelectedCols] = useState([]);
-  const [page, setPage] = useState(1);
-  const [searchCol, setSearchCol] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const rowsPerPage = 20;
-
-  // Handles Excel or JSON uploads
-  const handleUpload = (e) => {
-    const files = e.target.files;
-
-    Array.from(files).forEach((file) => {
-      const reader = new FileReader();
-      const fileType = file.name.split(".").pop().toLowerCase();
-
-      reader.onload = (evt) => {
-        if (fileType === "xlsx" || fileType === "xls") {
-          // Handle Excel
-          const wb = XLSX.read(evt.target.result, { type: "binary" });
-          const ws = wb.Sheets[wb.SheetNames[0]];
-          const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
-          if (rows.length < 2) return;
-
-          const headers = rows[1]; // second row as header
-          const dataRows = rows.slice(2);
-          const json = dataRows.map((row) => {
-            const obj = {};
-            headers.forEach((h, i) => {
-              obj[h] = row[i] ?? "";
-            });
-            return obj;
-          });
-
-          mergeData(json, headers);
-        } else if (fileType === "json") {
-          // Handle JSON
-          try {
-            const json = JSON.parse(evt.target.result);
-            if (!Array.isArray(json) || json.length === 0) return;
-
-            const headers = Object.keys(json[0]);
-            mergeData(json, headers);
-          } catch (error) {
-            alert(`Invalid JSON file: ${file.name}, ${error}`);
-          }
-        } else {
-          alert("Unsupported file type. Please upload Excel or JSON.");
-        }
-      };
-
-      if (fileType === "xlsx" || fileType === "xls")
-        reader.readAsBinaryString(file);
-      else reader.readAsText(file);
-    });
-  };
-
-  // Merge multiple uploads (Excel/JSON)
-  const mergeData = (newData, newHeaders) => {
-    setColumns((prevCols) => {
-      const mergedCols = Array.from(new Set([...prevCols, ...newHeaders]));
-      return mergedCols;
-    });
-
-    setSelectedCols((prevSel) => {
-      const merged = Array.from(new Set([...prevSel, ...newHeaders]));
-      return merged;
-    });
-
-    setData((prevData) => [...prevData, ...newData]);
-  };
-
-  // Toggle column visibility
-  const toggleColumn = (col) => {
-    if (selectedCols.includes(col)) {
-      setSelectedCols(selectedCols.filter((c) => c !== col));
-      if (searchCol === col) setSearchCol("");
-    } else {
-      const newSelected = [...selectedCols, col];
-      const ordered = columns.filter((c) => newSelected.includes(c));
-      setSelectedCols(ordered);
-    }
-  };
-
-  // Export filtered data
-  const exportExcel = () => {
-    const filtered = data.map((row) => {
-      const obj = {};
-      selectedCols.forEach((c) => (obj[c] = row[c]));
-      return obj;
-    });
-
-    const ws = XLSX.utils.json_to_sheet(filtered);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Filtered");
-    const wbout = XLSX.write(wb, { type: "array", bookType: "xlsx" });
-
-    saveAs(
-      new Blob([wbout], { type: "application/octet-stream" }),
-      "filtered.xlsx"
-    );
-  };
-
-  // Filtered + paginated data
-  const filteredData = useMemo(() => {
-    if (!searchCol || !searchTerm) return data;
-    return data.filter((row) =>
-      String(row[searchCol] || "")
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase())
-    );
-  }, [data, searchCol, searchTerm]);
-
-  const paginatedData = filteredData.slice(
-    (page - 1) * rowsPerPage,
-    page * rowsPerPage
-  );
-
-  // Autocomplete suggestions
-  const valueSuggestions = useMemo(() => {
-    if (!searchCol) return [];
-    const values = new Set(data.map((row) => String(row[searchCol] || "")));
-    return Array.from(values);
-  }, [data, searchCol]);
-
-  useEffect(() => setPage(1), [searchTerm, searchCol, selectedCols]);
-
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Excel / JSON Column Extractor</h1>
-
-      {/* File Upload */}
-      <input
-        type="file"
-        multiple
-        accept=".xlsx, .xls, .json"
-        onChange={handleUpload}
-        className="mb-4"
-      />
-
-      {/* Column Visibility */}
-      {columns.length > 0 && (
-        <ColumnVisibility
-          columns={columns}
-          selectedCols={selectedCols}
-          toggleColumn={toggleColumn}
-        />
-      )}
-
-      {/* Search */}
-      {columns.length > 0 && (
-        <div className="mb-6 flex space-x-4">
-          <div className="w-48">
-            <label className="block text-sm font-medium mb-1">
-              Search Column
-            </label>
-            <Autocomplete
-              options={columns}
-              value={searchCol}
-              onChange={(e, val) => setSearchCol(val || "")}
-              renderInput={(params) => (
-                <TextField {...params} label="Select column..." size="small" />
-              )}
-            />
-          </div>
-
-          <div className="w-64">
-            <label className="block text-sm font-medium mb-1">Keyword</label>
-            <Autocomplete
-              options={valueSuggestions}
-              value={searchTerm}
-              onChange={(e, val) => setSearchTerm(val || "")}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Type or select keyword..."
-                  size="small"
-                />
-              )}
-              freeSolo
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Table */}
-      {filteredData.length > 0 && (
-        <div className="overflow-x-auto border rounded-lg shadow">
-          <table className="min-w-full border-collapse">
-            <thead className="bg-blue-400 text-white">
-              <tr>
-                {columns.map(
-                  (col) =>
-                    selectedCols.includes(col) && (
-                      <th
-                        key={col}
-                        className="px-4 py-2 border text-left text-sm font-medium w-40"
-                      >
-                        {col}
-                      </th>
-                    )
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.map((row, idx) => (
-                <tr key={idx} className="hover:bg-gray-50 even:bg-gray-50">
-                  {columns.map(
-                    (col) =>
-                      selectedCols.includes(col) && (
-                        <td
-                          key={col}
-                          className="px-4 py-2 border text-sm text-black w-40 break-words"
-                        >
-                          {row[col]}
-                        </td>
-                      )
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Pagination */}
-      {filteredData.length > rowsPerPage && (
-        <div className="flex justify-between items-center mt-4">
-          <button
-            onClick={() => setPage((p) => Math.max(p - 1, 1))}
-            className="px-3 py-1 border rounded bg-gray-100 hover:bg-gray-200"
-          >
-            Prev
-          </button>
-          <span>
-            Page {page} / {Math.ceil(filteredData.length / rowsPerPage)}
-          </span>
-          <button
-            onClick={() =>
-              setPage((p) =>
-                Math.min(p + 1, Math.ceil(filteredData.length / rowsPerPage))
-              )
+    useEffect(() => {
+        if (!user?.id) return;
+        const fetchData = async () => {
+            try {
+                const filter = encodeURIComponent(
+                    `clientName=${selectedClient} && status != Completed`
+                )
+                const response = await axiosInstance.get(
+                    `/populate/read/tasks?filter=${filter}&fields=taskType, client, user`,
+                    { withCredentials: true }
+                );
+                setData(response?.data?.data || []);
+            } catch (err) {
+                setError(err.message);
             }
-            className="px-3 py-1 border rounded bg-gray-100 hover:bg-gray-200"
-          >
-            Next
-          </button>
-        </div>
-      )}
+        };
+    }, [user]);
 
-      {/* Export */}
-      {data.length > 0 && (
-        <button
-          onClick={exportExcel}
-          className="mt-6 px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700"
-        >
-          Export Selected Columns
-        </button>
-      )}
-    </div>
-  );
+    const getRandomColor = () => {
+        const colors = ["#c3d7d9", "#8a999b", "#a6b7ba"];
+        return colors[Math.floor(Math.random() * colors.length)];
+    };
+
+    const handleClientSelect = (client) => {
+        setSelectedClient(client);
+        const clientData = data.filter((d) => d.client?._id === client._id);
+        const grouped = clientData.reduce((acc, item) => {
+            const key = item.projectType?.name || "Uncategorized";
+            if (!acc[key]) acc[key] = [];
+            acc[key].push(item);
+            return acc;
+        }, {});
+        const newColors = {};
+        Object.keys(grouped).forEach((key) => {
+            newColors[key] = getRandomColor();
+        });
+        setBgColors(newColors);
+    };
+
+    const handleTaskClick = (task) => {
+        setSelectedTask(task);
+        window.history.pushState(null, "", `/tasks/${activity._id}`);
+    };
+
+    const handleCloseTask = () => {
+        setSelectedTask(null);
+        window.history.pushState(null, "", `/tasks`);
+    };
+
+    // Handle Add modal open/close
+    const handleOpenAdd = () => {
+        setShowAddModal(true);
+        window.history.pushState(null, "", `/tasks/add-task`);
+    };
+
+    const handleCloseAdd = () => {
+        setShowAddModal(false);
+        window.history.pushState(null, "", `/tasks`);
+    };
+
+    if (loading) return <p className="p-4">Loading...</p>;
+    if (error) return <p className="text-red-500 p-4">Error: {error}</p>;
+
+    const clients = [
+        ...new Map(data.map((item) => [item.client?._id, item.client])).values(),
+    ];
+
+    const filteredData = selectedClient
+        ? data.filter((d) => d.client?._id === selectedClient._id)
+        : [];
+
+    const groupedByProject = filteredData.reduce((acc, item) => {
+        const key = item.projectType?.name || "Un categorized";
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(item);
+        return acc;
+    }, {});
+
+    return (
+        <div className="flex min-h-screen bg-gray-100 overflow-hidden">
+            {/* LEFT SIDEBAR */}
+            <div className="w-1/4 bg-white p-4 border-r border-gray-200 overflow-y-auto">
+                <h2 className="text-lg font-semibold text-gray-700 mb-3">Clients</h2>
+                <div className="space-y-2">
+                    {clients.map((client) => (
+                        <button
+                            key={client._id}
+                            onClick={() => handleClientSelect(client)}
+                            className={`w-full text-left px-4 py-2 rounded-lg border ${selectedClient?._id === client._id
+                                ? "bg-blue-600 text-white border-blue-700"
+                                : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                                }`}
+                        >
+                            {client.name}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* RIGHT - KANBAN */}
+            <div className="flex-1 p-6 overflow-x-auto relative">
+                <div className="flex justify-between items-center mb-4">
+                    <h1 className="text-2xl font-bold text-gray-800">
+                        {selectedClient
+                            ? `${selectedClient.name} - On Going Tasks`
+                            : "Select a Client"}
+                    </h1>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={handleOpenAdd}
+                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all"
+                        >
+                            +
+                        </button>
+                    </div>
+                </div>
+
+                {selectedClient && (
+                    <KanbanBoard
+                        data={filteredData}
+                        groupBy="projectType.name"
+                        bgColors={bgColors}
+                        onCardClick={handleActivityClick}
+                        getCardContent={(tasks) => (
+                            <>
+                                <img
+                                    className="float-right rounded-full w-8 h-8 object-cover"
+                                    src={
+                                        user?.basicInfo?.profileImage ||
+                                        "../../assets/profile_image.jpg"
+                                    }
+                                />
+                                <p className="font-medium text-gray-800">
+                                    {tasks.activityType?.name}
+                                </p>
+                                <p className="text-sm text-gray-500">
+                                    User: {tasks.user?.basicInfo?.firstName}
+                                </p>
+                                <p className="text-xs text-gray-400 mt-1">
+                                    {new Date(tasks.date).toLocaleDateString()}
+                                </p>
+                            </>
+                        )}
+                    />
+                )}
+            </div>
+
+            {/* Floating modals */}
+            {selectedTask && (
+                <FloatingCard onClose={handleCloseTask}>
+                    <Task activity={selectedTask} onClose={handleCloseTask} />
+                </FloatingCard>
+            )}
+            {showAddModal && (
+                <FloatingCard onClose={handleCloseAdd}>
+                    <Addtask onClose={handleCloseAdd} />
+                </FloatingCard>
+            )}
+        </div>
+    )
+
 }

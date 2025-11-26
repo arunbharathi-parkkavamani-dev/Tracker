@@ -111,13 +111,11 @@ export default function Attendance() {
             const endOfDay = new Date();
             endOfDay.setHours(23, 59, 59, 999);
 
-            const response = await axiosInstance.get(`/populate/read/attendances`, {
-                params: {
-                    employee: user.id,
-                    "filter[date][$gte]": startOfDay.toISOString(),
-                    "filter[date][$lte]": endOfDay.toISOString(),
-                },
-            });
+            const filter = encodeURIComponent(
+                `(employee = ${user.id} && date >= ${startOfDay.toISOString()} && date <= ${endOfDay.toISOString()})`
+            );
+
+            const response = await axiosInstance.get(`/populate/read/attendances?filter=${filter}`);
 
             const records = response?.data?.data || [];
             const record = records[0] || null;
