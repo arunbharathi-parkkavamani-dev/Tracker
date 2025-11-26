@@ -1,4 +1,4 @@
-import Task from "../models/Task.js";
+import Task from "../models/Tasks.js";
 import CommentsThread from "../models/CommentsThread.js";
 import Employee from "../models/Employee.js";
 import { createAndSendNotification } from "../utils/notificationService.js";
