@@ -24,11 +24,11 @@ const EmployeeSchema = new Schema({
 
   professionalInfo: {
     empId: { type: String, trim: true },
-    designation: { type: Schema.Types.ObjectId, ref: 'Designation' },
-    department: { type: Schema.Types.ObjectId, ref: 'Department' },
-    role: { type: Schema.Types.ObjectId, ref: 'Role' },
-    reportingManager: { type: Schema.Types.ObjectId, ref: 'Employee' },
-    teamLead: { type: Schema.Types.ObjectId, ref: 'Employee' },
+    designation: { type: Schema.Types.ObjectId, ref: 'designations' },
+    department: { type: Schema.Types.ObjectId, ref: 'departments' },
+    role: { type: Schema.Types.ObjectId, ref: 'roles' },
+    reportingManager: { type: Schema.Types.ObjectId, ref: 'employees' },
+    teamLead: { type: Schema.Types.ObjectId, ref: 'employees' },
     level: { type: String, enum: ['L1', 'L2', 'L3', 'L4'] },
     doj: { type: Date },
     probationPeriod: { type: String }, // e.g., "6 months"
@@ -78,7 +78,7 @@ const EmployeeSchema = new Schema({
   // Inside Employee schema
   leaveStatus: [
     {
-      leaveType: { type: Schema.Types.ObjectId, ref: "LeaveType" },
+      leaveType: { type: Schema.Types.ObjectId, ref: "leavetypes" },
       usedThisMonth: { type: Number, default: 0 },
       usedThisYear: { type: Number, default: 0 },
       carriedForward: { type: Number, default: 0 },

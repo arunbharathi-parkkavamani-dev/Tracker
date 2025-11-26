@@ -5,7 +5,7 @@ const AttendanceSchema = new Schema(
   {
     employee: {
       type: Schema.Types.ObjectId,
-      ref: "Employee",
+      ref: "employees",
     },
     date: { type: Date },
     status: {
@@ -30,7 +30,7 @@ const AttendanceSchema = new Schema(
     leaveType: {
       // optional, only used when status === 'Leave'
       type: Schema.Types.ObjectId,
-      ref: "LeaveType",
+      ref: "leavetypes",
     },
     checkIn: { type: Date },
     checkOut: { type: Date },
@@ -41,7 +41,7 @@ const AttendanceSchema = new Schema(
     request: { type: String },
     managerId: {
       type: Schema.Types.ObjectId,
-      ref: "Employee",
+      ref: "employees",
     },
     employeeName: { type: String },
     createdAt: { type: Date, default: Date.now },

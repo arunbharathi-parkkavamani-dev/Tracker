@@ -2,12 +2,12 @@ import mongoose from "mongoose";
 
 const TaskSchema = new mongoose.Schema(
   {
-    clientId: { type: mongoose.Schema.Types.ObjectId, ref: "client", required: true },
-    projectTypeId: { type: mongoose.Schema.Types.ObjectId, ref: "projecttype", required:true },
-    taskTypeId: { type: mongoose.Schema.Types.ObjectId, ref: "tasktype", required:true },
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "employee" },
+    clientId: { type: mongoose.Schema.Types.ObjectId, ref: "clients", required: true },
+    projectTypeId: { type: mongoose.Schema.Types.ObjectId, ref: "projecttypes", required:true },
+    taskTypeId: { type: mongoose.Schema.Types.ObjectId, ref: "tasktypes", required:true },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "employees" },
 
-    assignedTo: [{ type: mongoose.Schema.Types.ObjectId, ref: "employee" }],
+    assignedTo: [{ type: mongoose.Schema.Types.ObjectId, ref: "employees" }],
 
     title: { type: String, trim: true, required: true},
     referenceUrl: { type: String },
@@ -18,7 +18,7 @@ const TaskSchema = new mongoose.Schema(
 
     attachments: [{ type: String, default: null }],
 
-    commentsThread: { type: mongoose.Schema.Types.ObjectId, ref: "commentsthread" },
+    commentsThread: { type: mongoose.Schema.Types.ObjectId, ref: "commentsthreads" },
 
     startDate: { type: Date },
     endDate: { type: Date },
@@ -46,7 +46,7 @@ const TaskSchema = new mongoose.Schema(
       default: "Backlogs",
     },
 
-    followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "employee", default: [] }],
+    followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "employees", default: [] }],
   },
   { timestamps: true }
 );

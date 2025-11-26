@@ -13,7 +13,7 @@ const DepartmentSchema = new Schema({
     unique: true
   },
   description: { type: String },
-  leavePolicy : { type: Schema.Types.ObjectId, ref: 'LeavePolicy'},
+  leavePolicy : { type: Schema.Types.ObjectId, ref: 'leavepolicies'},
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });

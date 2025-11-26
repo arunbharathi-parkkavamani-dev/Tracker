@@ -1,17 +1,17 @@
 import mongoose from "mongoose";
 
 const LeaveSchema = new mongoose.Schema({
-  employeeId: { type: mongoose.Schema.Types.ObjectId, ref: "Employee", required: true },
+  employeeId: { type: mongoose.Schema.Types.ObjectId, ref: "employees", required: true },
   employeeName : {type : String},
-  departmentId: { type: mongoose.Schema.Types.ObjectId, ref: "Department" },
-  leaveTypeId: { type: mongoose.Schema.Types.ObjectId, ref: "LeaveTypes" },
+  departmentId: { type: mongoose.Schema.Types.ObjectId, ref: "departments" },
+  leaveTypeId: { type: mongoose.Schema.Types.ObjectId, ref: "leavetypes" },
   leaveName : {type: String},
   startDate: { type: Date },
   endDate: { type: Date },
   totalDays: { type: Number },
   reason: { type: String, maxLength: 500, minLength: 5, trim: true },
   status: { type: String, enum:['Pending', 'Approved', 'Rejected'] },
-  managerId: { type: mongoose.Schema.Types.ObjectId, ref: "Employee" },
+  managerId: { type: mongoose.Schema.Types.ObjectId, ref: "employees" },
   managerComments: { type: String, maxLength: 500, minLength: 5, trim: true },
   approvedAt: { type: Date },
   rejectedAt : { type: Date},

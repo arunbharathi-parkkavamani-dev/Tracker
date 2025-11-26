@@ -3,11 +3,11 @@ import { Schema, model } from "mongoose";
 
 const DailyActivitySchema = new Schema(
   {
-    client: { type: Schema.Types.ObjectId, ref: "Clients" }, // optional link
+    client: { type: Schema.Types.ObjectId, ref: "clients" }, // optional link
     projectType: { type: Schema.Types.ObjectId, ref: "projecttypes" }, // optional link
-    user: { type: Schema.Types.ObjectId, ref: "Employee" },
+    user: { type: Schema.Types.ObjectId, ref: "employees" },
     date: { type: Date, default: Date.now },
-    taskType: { type: Schema.Types.ObjectId, ref: "TaskType" }, // optional link
+    taskType: { type: Schema.Types.ObjectId, ref: "tasktypes" }, // optional link
     activity: { type: String, trim: true }, // description of activity
   },
   { timestamps: true }
