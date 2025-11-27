@@ -27,6 +27,7 @@ export default function sanitizeRead({ fields, policy }) {
   }
 
   // Convert fields string ("a,b,c") → array
+  fields = JSON.stringify(fields);
   if (typeof fields === "string") {
     fields = fields.split(",").map(f => f.trim()).filter(Boolean);
   }
@@ -37,7 +38,7 @@ export default function sanitizeRead({ fields, policy }) {
   }
 
   let sanitized = [...fields];
-
+  
   /** --------------------------------------------------
    * 1) Remove forbidden fields
    * -------------------------------------------------- */
@@ -46,7 +47,7 @@ export default function sanitizeRead({ fields, policy }) {
       (f) => !forbidden.some((deny) => matchField(f, deny))
     );
   }
-
+  
   /** --------------------------------------------------
    * 2) Apply allowed list rules
    * -------------------------------------------------- */
@@ -55,7 +56,7 @@ export default function sanitizeRead({ fields, policy }) {
       (f) => allowed.some((allow) => matchField(f, allow))
     );
   }
-
+  
   /** --------------------------------------------------
    * 3) Final fallback (never return empty = leak-safety)
    * If nothing remains → user asked fields not allowed

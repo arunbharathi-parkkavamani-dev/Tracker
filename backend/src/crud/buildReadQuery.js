@@ -21,6 +21,7 @@ export default async function buildReadQuery({
   fields,
   policy
 }) {
+
   const Model = models[modelName];
   if (!Model) throw new Error(`Model "${modelName}" not found`);
 
@@ -95,8 +96,8 @@ export default async function buildReadQuery({
     const matchStage = docId
       ? [{ $match: { _id: new mongoose.Types.ObjectId(docId) } }]
       : filter.matchStage
-      ? [{ $match: filter.matchStage }]
-      : [];
+        ? [{ $match: filter.matchStage }]
+        : [];
 
     const pipeline = [
       ...matchStage,
@@ -124,13 +125,29 @@ export default async function buildReadQuery({
     : Model.find(mongoFilter || {});
 
   // 🔒 base document projection
+  // 🔒 base document projection + populate
   if (Array.isArray(fields) && fields.length > 0 && fields[0] !== "*") {
     query = query.select(fields.join(" "));
-    fields.forEach(f => query.populate(f));
+    fields.forEach(f => {
+      const raw = typeof f === "string" ? f : String(f);
+      const path = raw.split(".")[0].replace(/[^\w.]/g, ""); // remove quotes, brackets
+      const schemaPath =
+        Model.schema.path(`${path}.$`) ||
+        Model.schema.path(path);
+
+      console.log(schemaPath?.options);
+      console.log(schemaPath?.options?.ref);
+      if (schemaPath?.options?.ref) {
+        query.select(path);
+        query.populate(path);
+      }
+    });
+
   }
 
-
-  let result = await query.lean();
+  // ❗ populate first, then lean
+  let result = await query.populate().lean();
+  console.log(result)
   if (docId && result) result = [result]; // unify with list format for sanitization
 
   /** -----------------------------------------------
