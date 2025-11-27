@@ -10,7 +10,7 @@ const Sidebar = () => {
   useEffect(() => {
     const fetchNavItems = async () => {
       try {
-        const response = await axiosInstance.get("/populate/read/sidebar");
+        const response = await axiosInstance.get("/populate/read/sidebars");
         // your API returns { success, count, data: [...] }
         setNavItems(response.data.data || []); 
       } catch (error) {

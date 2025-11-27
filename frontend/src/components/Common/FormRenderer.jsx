@@ -29,20 +29,41 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
   const handlePopulate = async (field) => {
     try {
       let url = field.source;
-      let response;
 
+      // ⬇ Detect dependency
+      if (field.dependsOn) {
+        const parentValue = formData[field.dependsOn];
+        if (!parentValue?._id) {
+          console.warn(`[Populate skipped] '${field.name}' depends on '${field.dependsOn}' but value missing`);
+          return;
+        }
+
+        // ⬇ Replace ANY ":something" placeholder with parentValue._id automatically
+        url = url.replace(/:\w+/g, parentValue._id);
+      }
+
+      let response;
       if (field.dynamicOptions?.params?.aggregate) {
         response = await axiosInstance.post(url, field.dynamicOptions.params);
       } else {
         response = await axiosInstance.get(url);
       }
 
-      const data = response?.data?.data || [];
+      let data = response?.data?.data || [];
+
+      // If backend returns {_id, projectTypes: [...]}, extract the array
+      if (Array.isArray(data) === false && typeof data === "object") {
+        const values = Object.values(data);
+        const firstArray = values.find((v) => Array.isArray(v));
+        if (firstArray) data = firstArray;
+      }
+
       setDynamicOptions((prev) => ({ ...prev, [field.name]: data }));
     } catch (err) {
       console.error("Autocomplete fetch failed:", err);
     }
   };
+
 
   const renderField = (field, value, onChange) => {
     const options = dynamicOptions[field.name] || field.options || [];
@@ -120,8 +141,8 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
       <button
         type="submit"
         className={`px-4 py-2 rounded text-white ${submitButton?.color === "green"
-            ? "bg-green-500"
-            : "bg-blue-500"
+          ? "bg-green-500"
+          : "bg-blue-500"
           }`}
       >
         {submitButton?.text || "Submit"}

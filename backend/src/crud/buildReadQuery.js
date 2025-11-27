@@ -127,7 +127,6 @@ export default async function buildReadQuery({
   // 🔒 base document projection
   // 🔒 base document projection + populate
   if (Array.isArray(fields) && fields.length > 0 && fields[0] !== "*") {
-    query = query.select(fields.join(" "));
     fields.forEach(f => {
       const raw = typeof f === "string" ? f : String(f);
       const path = raw.split(".")[0].replace(/[^\w.]/g, ""); // remove quotes, brackets
@@ -136,7 +135,6 @@ export default async function buildReadQuery({
         Model.schema.path(path);
 
       if (schemaPath?.options?.ref) {
-        query.select(path);
         query.populate(path);
       }
     });
