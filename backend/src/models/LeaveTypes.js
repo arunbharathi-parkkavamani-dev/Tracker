@@ -12,4 +12,4 @@ const LeaveTypeSchema = new Schema({
   updatedAt: { type: Date, default: Date.now }
 }, {timestamps:true});
 
-export default model('LeaveType', LeaveTypeSchema);
+export default model('leavetypes', LeaveTypeSchema);

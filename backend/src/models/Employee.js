@@ -98,4 +98,4 @@ EmployeeSchema.pre('save', function(next) {
   next();
 });
 
-export default model('Employee', EmployeeSchema);
+export default model('employees', EmployeeSchema);

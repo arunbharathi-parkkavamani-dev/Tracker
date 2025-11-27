@@ -52,4 +52,4 @@ const AttendanceSchema = new Schema(
 
 // ✅ Ensure only one record per employee per date
 AttendanceSchema.index({ employee: 1, date: 1 }, { unique: true });
-export default model("Attendance", AttendanceSchema);
+export default model("attendances", AttendanceSchema);

@@ -9,4 +9,4 @@ const ErrorLogSchema = new Schema({
   level: { type: String, enum: ['Info', 'Warning', 'Error', 'Critical'], default: 'Error' }
 }, { timestamps: true });
 
-export default model('ErrorLog', ErrorLogSchema);
+export default model('errorlogs', ErrorLogSchema);

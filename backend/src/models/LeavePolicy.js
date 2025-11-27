@@ -19,4 +19,4 @@ LeavePolicySchema.pre('save', function(next) {
   next();
 });
 
-export default model('LeavePolicy', LeavePolicySchema);
+export default model('leavepolicies', LeavePolicySchema);

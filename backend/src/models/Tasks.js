@@ -51,5 +51,5 @@ const TaskSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const Task = mongoose.models.Task || mongoose.model("Task", TaskSchema);
+const Task = mongoose.models.Task || mongoose.model("tasks", TaskSchema);
 export default Task;

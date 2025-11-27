@@ -16,4 +16,4 @@ const ClientSchema = new Schema({
   projectTypes: [{ type: Schema.Types.ObjectId, ref: 'projecttypes' }] // ✅ updated
 }, { timestamps: true });
 
-export default model('Clients', ClientSchema);
+export default model('clients', ClientSchema);

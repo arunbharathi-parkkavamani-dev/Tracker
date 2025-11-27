@@ -13,4 +13,4 @@ const DailyActivitySchema = new Schema(
   { timestamps: true }
 );
 
-export default model("DailyActivity", DailyActivitySchema);
+export default model("dailyactivities", DailyActivitySchema);

@@ -24,4 +24,4 @@ const notificationSchema = new mongoose.Schema({
 
 // ✅ Check if model exists before compiling
 export default mongoose.models.Notification ||
-  mongoose.model("Notification", notificationSchema);
+  mongoose.model("notifications", notificationSchema);

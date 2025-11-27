@@ -5,4 +5,4 @@ const TaskTypeScheme = new mongoose.Schema({
     description: { type: String, trim:true}
 }, {timestamps:true});
 
-export default mongoose.model('TaskType', TaskTypeScheme);
+export default mongoose.model('tasktypes', TaskTypeScheme);

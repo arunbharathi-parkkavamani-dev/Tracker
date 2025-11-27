@@ -13,4 +13,4 @@ const SideBarSchema = new mongoose.Schema({
   roles: [{ type: String }]                   // roles who can see this
 }, { timestamps: true });
 
-export default mongoose.model("Sidebar", SideBarSchema);
+export default mongoose.model("sidebars", SideBarSchema);

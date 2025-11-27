@@ -17,4 +17,4 @@ DesignationSchema.pre('save', function(next) {
   next();
 });
 
-export default model('Designation', DesignationSchema);
+export default model('designations', DesignationSchema);

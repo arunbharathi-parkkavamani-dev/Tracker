@@ -24,4 +24,4 @@ LeaveSchema.index(
   { unique: true }
 );
 
-export default mongoose.models.Leave || mongoose.model("Leave", LeaveSchema);
+export default mongoose.models.Leave || mongoose.model("leaves", LeaveSchema);

@@ -34,6 +34,6 @@ const CommentsThreadSchema = new mongoose.Schema(
 
 const CommentsThread =
   mongoose.models.CommentsThread ||
-  mongoose.model("CommentsThread", CommentsThreadSchema);
+  mongoose.model("commentsthreads", CommentsThreadSchema);
 
 export default CommentsThread;

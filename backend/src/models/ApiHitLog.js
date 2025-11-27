@@ -11,4 +11,4 @@ const ApiHitLogSchema = new Schema({
   userAgent: { type: String }
 }, { timestamps: true });
 
-export default model('ApiHitLog', ApiHitLogSchema);
+export default model('apihitLog', ApiHitLogSchema);
