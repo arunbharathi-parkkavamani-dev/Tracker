@@ -135,8 +135,6 @@ export default async function buildReadQuery({
         Model.schema.path(`${path}.$`) ||
         Model.schema.path(path);
 
-      console.log(schemaPath?.options);
-      console.log(schemaPath?.options?.ref);
       if (schemaPath?.options?.ref) {
         query.select(path);
         query.populate(path);
@@ -147,7 +145,6 @@ export default async function buildReadQuery({
 
   // ❗ populate first, then lean
   let result = await query.populate().lean();
-  console.log(result)
   if (docId && result) result = [result]; // unify with list format for sanitization
 
   /** -----------------------------------------------
