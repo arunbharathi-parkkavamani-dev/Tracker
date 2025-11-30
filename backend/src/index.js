@@ -19,29 +19,26 @@ const app = express();
 const server = http.createServer(app);
 app.use(cookieParser());
 
+const allowedOrigins = [
+  "https://lmx-tracker--p1hvjsjwqq.expo.app",
+  "http://localhost:3000",
+  "http://localhost:19006",
+  "http://localhost:8081",
+];
+
+// Allow LAN: 192.x.x.x, 10.x.x.x
+const lanRegex = /^http:\/\/(192\.168|10\.)\.\d+\.\d+:\d+$/;
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin) return callback(null, true); // mobile apps, postman, curl
+      if (!origin) return callback(null, true);
 
-      const allowedOrigins = [
-        "https://lmx-tracker--p1hvjsjwqq.expo.app",
-        "http://localhost:3000",
-        "http://localhost:19006",
-        "http://localhost:8081",
-      ];
-
-      // Allow Vite or React Native web running in LAN
-      const localNetworkRegex = /^http:\/\/192\.168\.\d+\.\d+:\d+$/;
-
-      if (
-        allowedOrigins.includes(origin) ||
-        localNetworkRegex.test(origin)
-      ) {
+      if (allowedOrigins.includes(origin) || lanRegex.test(origin)) {
         return callback(null, true);
       }
 
-      return callback(new Error("Not allowed by CORS"));
+      return callback(new Error("Not allowed by CORS: " + origin));
     },
     credentials: true,
   })
