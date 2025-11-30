@@ -11,7 +11,7 @@ const generateAccessToken = (payload) =>
   jwt.sign({ id: payload.id, role: payload.role, managerId: payload.managerId, name:payload.name }, process.env.JWT_SECRET, { expiresIn: "60m" });
 
 const generateRefreshToken = (payload) =>
-  jwt.sign({ id: payload.id }, process.env.JWT_REFRESH_TOKEN, { expiresIn: "1d" });
+  jwt.sign({ id: payload.id }, process.env.JWT_REFRESH_SECRET, { expiresIn: "1d" });
 
 // ------------------- LOGIN -------------------
 export const login = async (req, res, next) => {
@@ -20,7 +20,7 @@ export const login = async (req, res, next) => {
     const employee = await Employee.findOne({ "authInfo.workEmail": workEmail });
     if (!employee) return next(Object.assign(new Error("❎Invalid email or password"), { status: 401 }));
 
-    const validPassword = await bcrypt.compare(password, employee.authInfo.password);
+    const validPassword = bcrypt.compare(password, employee.authInfo.password);
     if (!validPassword) return next(Object.assign(new Error("❎Invalid email or password"), { status: 401 }));
 
     const payload = {
@@ -34,15 +34,15 @@ export const login = async (req, res, next) => {
     const refreshToken = generateRefreshToken(payload);
 
     res.cookie("auth_token", accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "development",
-      sameSite: "None",
+      httpOnly: false, // Allow frontend access
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
       maxAge: 60 * 60 * 1000,
     });
     res.cookie("refresh_token", refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "development",
-      sameSite: "None",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
       maxAge: 24 * 60 * 60 * 1000,
     });
 
@@ -58,7 +58,7 @@ export const refresh = async (req, res, next) => {
     const refreshToken = req.cookies["refresh_token"];
     if (!refreshToken) return next(Object.assign(new Error("No refresh token provided"), { status: 401 }));
 
-    jwt.verify(refreshToken, process.env.REFRESH_SECRET_KEY, (err, decoded) => {
+    jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, (err, decoded) => {
       if (err) return next(Object.assign(new Error("Invalid or expired refresh token"), { status: 403 }));
 
       const newAccessToken = generateAccessToken({ id: decoded.id, role: decoded.role, managerId: decoded.managerId });

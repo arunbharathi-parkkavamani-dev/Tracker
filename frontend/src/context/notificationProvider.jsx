@@ -14,13 +14,21 @@ export const NotificationProvider = ({ children }) => {
   useEffect(() => {
     if (!user?.id) return;
 
-    const socket = io("http://192.168.1.34:3000", {
+    const socket = io(window.location.origin, {
       withCredentials: true,
-      transports: ["websocket"],
+      transports: ["websocket", "polling"],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
     });
 
     socket.on("connect", () => {
+      console.log("Socket connected");
       socket.emit("join", user.id);
+    });
+
+    socket.on("connect_error", (error) => {
+      console.log("Socket connection error:", error);
     });
 
     // 2️⃣ Receive live notifications
@@ -39,15 +47,9 @@ export const NotificationProvider = ({ children }) => {
     if (!user?.id) return;
     const fetchNotifications = async () => {
       try {
-        const filter = encodeURIComponent(
-        `receiver=${user.id}`
-      );
-        const res = await axiosInstance.get(`/populate/read/notifications?filter=${filter}`);
-        const data = Array.isArray(res.data)
-        ? res.data
-        : Array.isArray(res.data.data)
-        ? res.data.data
-        : [];
+        const filter = JSON.stringify({ recipient: user.id });
+        const res = await axiosInstance.get(`/populate/read/notifications?filter=${encodeURIComponent(filter)}&populateFields=${encodeURIComponent(JSON.stringify({"sender":"basicInfo.firstName,basicInfo.lastName"}))}`);
+        const data = res.data?.data || [];
         setNotifications(data);
       } catch (error) {
         console.error("Error fetching notifications:", error);
@@ -62,8 +64,8 @@ export const NotificationProvider = ({ children }) => {
   // 5️⃣ Mark as read
   const markAsRead = async (notificationId) => {
     try {
-      const res = await axiosInstance.post(
-        `/populate/update/notification/${notificationId}`,
+      const res = await axiosInstance.put(
+        `/populate/update/notifications/${notificationId}`,
         { read: true }
       );
 

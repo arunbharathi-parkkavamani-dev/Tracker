@@ -1,13 +1,12 @@
 import React, { useState } from "react";
-import FloatingCard from "./FloatingCard.jsx";
+import { MdMoreVert, MdAttachment, MdComment } from "react-icons/md";
 
 const KanbanBoard = ({
   data = [],
   groupBy = "",
-  getCardContent,
-  bgColors = {},
+  columns = [],
   onCardMove,
-  currentUserId, // 🆕 Permission check passed by parent
+  currentUserId,
   onCardClick,
 }) => {
   const [draggingCard, setDraggingCard] = useState(null);
@@ -16,98 +15,123 @@ const KanbanBoard = ({
   const getValue = (obj, path) =>
     path.split(".").reduce((acc, key) => (acc ? acc[key] : undefined), obj);
 
-  const grouped = data.reduce((acc, item) => {
-    const key = getValue(item, groupBy) || "Uncategorized";
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(item);
-    return acc;
-  }, {});
+  const getTasksByColumn = (columnId) => {
+    return data.filter(task => getValue(task, groupBy) === columnId);
+  };
 
-
-  /** 🔹 Drag event handlers */
   const handleDragStart = (e, item, fromColumn) => {
     if (item.createdBy?._id !== currentUserId) {
       e.preventDefault();
-      return; // ❌ not allowed
+      return;
     }
-
     setDraggingCard({ item, fromColumn });
     e.dataTransfer.effectAllowed = "move";
   };
 
   const handleDragOver = (e, column) => {
     e.preventDefault();
-    setHighlightedColumn(column); // 🟢 Highlight this column
+    setHighlightedColumn(column);
   };
 
   const handleDrop = (toColumn) => {
     if (!draggingCard) return;
-
     setHighlightedColumn(null);
-
     if (draggingCard.fromColumn !== toColumn) {
       onCardMove?.(draggingCard.item, draggingCard.fromColumn, toColumn);
     }
-
     setDraggingCard(null);
   };
 
-  const handleDragLeave = (column) => {
-    if (highlightedColumn === column) setHighlightedColumn(null);
-  };
+  const TaskCard = ({ task }) => (
+    <div 
+      onClick={() => onCardClick?.(task)}
+      draggable={task.createdBy?._id === currentUserId}
+      onDragStart={(e) => handleDragStart(e, task, getValue(task, groupBy))}
+      className={`bg-white rounded-lg shadow-sm border p-3 mb-3 cursor-pointer hover:shadow-md transition-shadow ${
+        draggingCard?.item?._id === task._id ? "opacity-25" : ""
+      }`}
+    >
+      <div className="flex justify-between items-start mb-2">
+        <h4 className="text-sm font-medium text-gray-900 line-clamp-2 flex-1">
+          {task.title}
+        </h4>
+        <button className="text-gray-400 hover:text-gray-600 ml-2">
+          <MdMoreVert size={16} />
+        </button>
+      </div>
+      
+      {task.userStory && (
+        <p className="text-xs text-gray-600 mb-2 line-clamp-2">
+          {task.userStory}
+        </p>
+      )}
+      
+      <div className="flex items-center justify-between text-xs text-gray-500">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            <MdComment size={12} />
+            <span>1</span>
+          </div>
+        </div>
+        
+        {task.assignedTo && task.assignedTo.filter(Boolean).length > 0 && (
+          <div className="flex -space-x-1">
+            {task.assignedTo.filter(Boolean).slice(0, 2).map((user, index) => (
+              <div
+                key={user._id || index}
+                className="w-6 h-6 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center border-2 border-white"
+              >
+                {user.basicInfo?.firstName?.charAt(0) || 'U'}
+              </div>
+            ))}
+            {task.assignedTo.filter(Boolean).length > 2 && (
+              <div className="w-6 h-6 rounded-full bg-gray-400 text-white text-xs flex items-center justify-center border-2 border-white">
+                +{task.assignedTo.filter(Boolean).length - 2}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
   return (
-    <>
-      <div className="flex gap-6 overflow-x-auto pb-4">
-        {Object.keys(grouped).map((column) => (
-          <div
-            key={column}
-            className={`w-80 flex-shrink-0 rounded-xl overflow-hidden border transition ${
-              highlightedColumn === column
-                ? "border-blue-500 shadow-lg scale-[1.02]" // 🟢 Highlight effect
-                : "border-gray-300"
+    <div className="flex gap-4 min-w-max pb-4">
+      {columns.map((column) => {
+        const columnTasks = getTasksByColumn(column.id);
+        
+        return (
+          <div 
+            key={column.id} 
+            className={`flex-shrink-0 w-80 ${
+              highlightedColumn === column.id ? "scale-[1.02]" : ""
             }`}
-            style={{ backgroundColor: bgColors[column] || "#F3F4F6" }}
-            onDragOver={(e) => handleDragOver(e, column)}
-            onDrop={() => handleDrop(column)}
-            onDragLeave={() => handleDragLeave(column)}
+            onDragOver={(e) => handleDragOver(e, column.id)}
+            onDrop={() => handleDrop(column.id)}
+            onDragLeave={() => setHighlightedColumn(null)}
           >
-            {/* Column Header */}
-            <div className="text-center py-2 bg-white shadow">
-              <h2 className="text-lg font-semibold text-gray-800">
-                {column} ({grouped[column].length})
-              </h2>
+            <div className={`${column.color} text-white rounded-t-lg p-3 flex items-center justify-between`}>
+              <h3 className="font-medium">{column.title}</h3>
+              <span className="bg-white bg-opacity-20 p-2 py-1 rounded text-sm font-medium">
+                {columnTasks.length}
+              </span>
             </div>
-
-            {/* Cards */}
-            <div className="p-3 space-y-3 overflow-y-auto max-h-[70vh]">
-              {grouped[column].map((item) => (
-                <div
-                  key={item._id}
-                  onClick={() => onCardClick?.(item)}
-                  draggable={item.createdBy?._id === currentUserId} // 🔒 permission
-                  onDragStart={(e) => handleDragStart(e, item, column)}
-                  className={`bg-white border rounded-xl p-3 cursor-pointer transition 
-                    ${
-                      draggingCard?.item?._id === item._id
-                        ? "opacity-25 scale-[0.98]"
-                        : "hover:shadow-md"
-                    }
-                    ${
-                      item.createdBy?._id !== currentUserId
-                        ? "cursor-not-allowed opacity-70"
-                        : ""
-                    }
-                  `}
-                >
-                  {getCardContent(item)}
-                </div>
+            
+            <div className="bg-gray-50 rounded-b-lg p-3 min-h-96 max-h-96 overflow-y-auto">
+              {columnTasks.map((task) => (
+                <TaskCard key={task._id} task={task} />
               ))}
+              
+              {columnTasks.length === 0 && (
+                <div className="text-center text-gray-400 py-8">
+                  No tasks
+                </div>
+              )}
             </div>
           </div>
-        ))}
-      </div>
-    </>
+        );
+      })}
+    </div>
   );
 };
 

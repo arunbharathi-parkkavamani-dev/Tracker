@@ -116,52 +116,81 @@ const LeaveAndRegularization = ({ onClose, onSuccess, onFailed }) => {
   };
 
   return (
-    <div className="p-6 text-black">
-      <div className="flex justify-between items-center mb-4">
-        <button
-          onClick={formType ? () => setFormType("") : onClose}
-          className="text-gray-500 hover:text-gray-800 text-2xl"
-        >
-          ×
-        </button>
-      </div>
-
-      {!formType && (
-        <div className="flex gap-4 justify-center my-6">
-          <button
-            onClick={() => setFormType("leave")}
-            className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600"
-          >
-            Apply for Leave
-          </button>
-          <button
-            onClick={() => setFormType("regularization")}
-            className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600"
-          >
-            Regularization
-          </button>
+    <div className="p-8">
+      {!formType ? (
+        <div className="text-center">
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+              Leave & Regularization
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300">
+              Choose the type of request you'd like to submit
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+            <button
+              onClick={() => setFormType("leave")}
+              className="group bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 hover:from-blue-100 hover:to-blue-200 dark:hover:from-blue-800 dark:hover:to-blue-700 p-8 rounded-2xl border border-blue-200 dark:border-blue-700 transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
+            >
+              <div className="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-600 transition-colors">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-blue-800 dark:text-blue-200 mb-2">Apply for Leave</h3>
+              <p className="text-blue-600 dark:text-blue-300 text-sm">Submit a leave request for vacation, sick days, or personal time</p>
+            </button>
+            
+            <button
+              onClick={() => setFormType("regularization")}
+              className="group bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 hover:from-green-100 hover:to-green-200 dark:hover:from-green-800 dark:hover:to-green-700 p-8 rounded-2xl border border-green-200 dark:border-green-700 transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
+            >
+              <div className="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-green-600 transition-colors">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-green-800 dark:text-green-200 mb-2">Regularization</h3>
+              <p className="text-green-600 dark:text-green-300 text-sm">Request attendance regularization for missed check-ins or check-outs</p>
+            </button>
+          </div>
         </div>
-      )}
+      ) : (
+        <div>
+          <div className="flex items-center mb-8">
+            <button
+              onClick={() => setFormType("")}
+              className="mr-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
+            >
+              <svg className="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
+              {formType === "leave" ? "Leave Application" : "Attendance Regularization"}
+            </h2>
+          </div>
+          
+          {formType === "leave" && userData && (
+            <FormRenderer
+              fields={leaveFormFields(userData).map(f =>
+                f.name === "availableDays" ? { ...f, externalValue: availableDays } : f
+              )}
+              submitButton={leaveSubmitButton}
+              onSubmit={handleSubmit}
+              onChange={handleFormChange}
+            />
+          )}
 
-      {formType === "leave" && userData && (
-        <>
-          <FormRenderer
-            fields={leaveFormFields(userData).map(f =>
-              f.name === "availableDays" ? { ...f, externalValue: availableDays } : f
-            )}
-            submitButton={leaveSubmitButton}
-            onSubmit={handleSubmit}
-            onChange={handleFormChange}
-          />
-        </>
-      )}
-
-      {formType === "regularization" && (
-        <FormRenderer
-          fields={regularizationFormFields}
-          submitButton={regularizationSubmitButton}
-          onSubmit={handleSubmit}
-        />
+          {formType === "regularization" && (
+            <FormRenderer
+              fields={regularizationFormFields}
+              submitButton={regularizationSubmitButton}
+              onSubmit={handleSubmit}
+            />
+          )}
+        </div>
       )}
     </div>
   );

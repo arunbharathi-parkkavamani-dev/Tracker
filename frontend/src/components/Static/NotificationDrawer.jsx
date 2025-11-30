@@ -34,9 +34,11 @@ const NotificationDrawer = ({ isOpen, setIsOpen }) => {
           <div
             key={notif._id}
             onClick={() => {
-              markAsRead(notif._id)
-              navigate(`/${notif.meta.model}/${notif.meta.modelId}`) 
-              setIsOpen(false)
+              markAsRead(notif._id);
+              if (notif.relatedModel && notif.relatedId) {
+                navigate(`/${notif.relatedModel}/${notif.relatedId}`);
+              }
+              setIsOpen(false);
             }}
             className={`px-4 py-3 border-b cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 ${
               notif.read
@@ -44,7 +46,17 @@ const NotificationDrawer = ({ isOpen, setIsOpen }) => {
                 : "font-semibold bg-blue-50 dark:bg-gray-700"
             }`}
           >
-            <p className="line-clamp-2 text-sm leading-snug break-words">{notif.message}</p>
+            <div>
+              <p className="line-clamp-2 text-sm leading-snug break-words">{notif.message}</p>
+              <div className="flex justify-between items-center mt-1">
+                <span className="text-xs text-gray-500">
+                  {notif.sender?.basicInfo?.firstName} {notif.sender?.basicInfo?.lastName}
+                </span>
+                <span className="text-xs text-gray-400">
+                  {new Date(notif.createdAt).toLocaleDateString()}
+                </span>
+              </div>
+            </div>
           </div>
         ))
       )}

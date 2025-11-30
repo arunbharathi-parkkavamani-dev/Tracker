@@ -15,18 +15,18 @@ const BaseLayout = () => {
     return <p className="p-4">Loading...</p>;
   }
 
-  // If not logged in → only allow login & register
-  if (!user && location.pathname !== "/login" && location.pathname !== "/register") {
+  // If not logged in → redirect to login
+  if (!user && location.pathname !== "/login") {
     return <Navigate to="/login" replace />;
   }
 
-  // If already logged in → prevent going back to login/register
-  if (user && (location.pathname === "/login" || location.pathname === "/register")) {
+  // If already logged in → prevent going back to login
+  if (user && location.pathname === "/login") {
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Show login/register normally
-  if (location.pathname === "/login" || location.pathname === "/register") {
+  // Show login page
+  if (location.pathname === "/login") {
     return <Login />;
   }
 

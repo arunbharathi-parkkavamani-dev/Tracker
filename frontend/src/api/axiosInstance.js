@@ -2,7 +2,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 
 const axiosInstance = axios.create({
-  baseURL: "http://10.92.122.208:3000/api",
+  baseURL: "http://10.87.125.208:3000/api",
   timeout: 100000,
   headers: {
     "Content-Type": "application/json",
@@ -20,7 +20,7 @@ axiosInstance.interceptors.response.use(
     if(error.response?.status === 403 && !originalRequest._retry) {
       originalRequest._retry = true
       try {
-        await axios.get("http://10.92.122.208:3000/api/auth/refresh", {
+        await axios.get("http://10.87.125.208:3000/api/auth/refresh", {
           withCredentials: true,
         });
         return axiosInstance(originalRequest);

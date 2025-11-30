@@ -111,11 +111,15 @@ export default function Attendance() {
             const endOfDay = new Date();
             endOfDay.setHours(23, 59, 59, 999);
 
-            const filter = encodeURIComponent(
-                `(employee = ${user.id} && date >= ${startOfDay.toISOString()} && date <= ${endOfDay.toISOString()})`
-            );
+            const filter = JSON.stringify({
+                employee: user.id,
+                date: {
+                    $gte: startOfDay.toISOString(),
+                    $lte: endOfDay.toISOString()
+                }
+            });
 
-            const response = await axiosInstance.get(`/populate/read/attendances?filter=${filter}`);
+            const response = await axiosInstance.get(`/populate/read/attendances?filter=${encodeURIComponent(filter)}`);
 
             const records = response?.data?.data || [];
             const record = records[0] || null;
@@ -136,15 +140,16 @@ export default function Attendance() {
             setIsFetchingWeek(true);
             try {
                 const { start, end } = getWeekRange(referenceDate);
-                const response = await axiosInstance.get(
-                    "/populate/read/attendances",
-                    {
-                        params: {
-                            employee: user.id,
-                            "filter[date][$gte]": start.toISOString(),
-                            "filter[date][$lte]": end.toISOString(),
-                        },
+                const filter = JSON.stringify({
+                    employee: user.id,
+                    date: {
+                        $gte: start.toISOString(),
+                        $lte: end.toISOString()
                     }
+                });
+                
+                const response = await axiosInstance.get(
+                    `/populate/read/attendances?filter=${encodeURIComponent(filter)}`
                 );
 
                 setWeeklyData(response?.data?.data || []);

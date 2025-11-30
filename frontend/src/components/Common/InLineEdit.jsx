@@ -1,20 +1,31 @@
-import { useState } from "react";
+  import { useState, useEffect } from "react";
 
 export default function InlineEdit({ value, onSave, canEdit }) {
   const [editing, setEditing] = useState(false);
   const [input, setInput] = useState(value || "");
+
+  useEffect(() => {
+    setInput(value || "");
+  }, [value]);
 
   const save = async () => {
     setEditing(false);
     if (input !== value) await onSave(input);
   };
 
-  if (!canEdit) return <span>{value || "—"}</span>;
+  const startEdit = () => {
+    setInput(value || "");
+    setEditing(true);
+  };
+
+  if (!canEdit) return (
+    <span>{value || "—"}</span>
+  );
 
   return editing ? (
     <input
       autoFocus
-      className="border-none"
+      className="w-full bg-transparent border-none outline-none"
       value={input}
       onChange={(e) => setInput(e.target.value)}
       onBlur={save}
@@ -22,8 +33,8 @@ export default function InlineEdit({ value, onSave, canEdit }) {
     />
   ) : (
     <span
-      className="cursor-pointer p-1 rounded"
-      onClick={() => setEditing(true)}
+      className="cursor-pointer"
+      onClick={startEdit}
     >
       {value || "—"}
     </span>

@@ -15,7 +15,8 @@ export async function buildQuery({
   docId,
   fields,
   body,
-  filter
+  filter,
+  populateFields
 }) {
   if (!role || !modelName) throw new Error("Role and modelName are required");
 
@@ -67,6 +68,7 @@ export async function buildQuery({
     fields: safeFields,
     body: safeBody,
     filter: safeFilter,
+    populateFields,
     policy,
     getService
   });

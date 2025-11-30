@@ -19,6 +19,7 @@ export default async function buildReadQuery({
   docId,
   filter,
   fields,
+  populateFields,
   policy
 }) {
 
@@ -130,16 +131,23 @@ export default async function buildReadQuery({
     fields.forEach(f => {
       const raw = typeof f === "string" ? f : String(f);
       const path = raw.replace(/[^\w.]/g, ""); // remove quotes, brackets
-      console.log(path)
       const schemaPath =
         Model.schema.path(`${path}.$`) ||
         Model.schema.path(path);
       
       if (schemaPath?.options?.ref) {
-        query.populate(path);
+        const selectFields = populateFields?.[path] || 'name';
+        query.populate({ path, select: selectFields });
       }
     });
-
+  } else {
+    // Auto-populate all reference fields with default fields
+    Model.schema.eachPath((pathname, schematype) => {
+      if (schematype.options?.ref) {
+        const selectFields = populateFields?.[pathname] || 'name';
+        query.populate({ path: pathname, select: selectFields });
+      }
+    });
   }
 
   // ❗ populate first, then lean

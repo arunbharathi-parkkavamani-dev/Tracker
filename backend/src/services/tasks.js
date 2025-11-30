@@ -1,7 +1,7 @@
 import Task from "../models/Tasks.js";
 import CommentsThread from "../models/CommentsThreads.js";
 import Employee from "../models/Employee.js";
-import { createAndSendNotification } from "../utils/notificationService.js";
+import { sendNotification } from "../utils/notificationService.js";
 import { generateNotification } from "../middlewares/notificationMessagePrasher.js";
 
 export default function tasks() {
@@ -47,11 +47,14 @@ export default function tasks() {
             { type: "assigned" },
             modelName
           );
-          await createAndSendNotification({
-            senderId: userId,
-            receiverId,
+          await sendNotification({
+            recipient: receiverId,
+            sender: userId,
+            type: 'task_assignment',
+            title: 'Task Assignment',
             message,
-            model: { model: modelName, modelId: docId },
+            relatedModel: modelName,
+            relatedId: docId,
           });
         }
       }
@@ -124,11 +127,14 @@ export default function tasks() {
             modelName
           );
 
-          await createAndSendNotification({
-            senderId: userId,
-            receiverId,
+          await sendNotification({
+            recipient: receiverId,
+            sender: userId,
+            type: 'task_comment',
+            title: 'Task Comment',
             message,
-            model: { model: modelName, modelId: docId },
+            relatedModel: modelName,
+            relatedId: docId,
           });
         }
 
@@ -153,11 +159,14 @@ export default function tasks() {
             modelName
           );
 
-          await createAndSendNotification({
-            senderId: userId,
-            receiverId,
+          await sendNotification({
+            recipient: receiverId,
+            sender: userId,
+            type: 'task_status',
+            title: 'Task Status Update',
             message,
-            model: { model: modelName, modelId: docId },
+            relatedModel: modelName,
+            relatedId: docId,
           });
         }
       }
@@ -174,11 +183,14 @@ export default function tasks() {
             { type: "assigned" },
             modelName
           );
-          await createAndSendNotification({
-            senderId: userId,
-            receiverId,
+          await sendNotification({
+            recipient: receiverId,
+            sender: userId,
+            type: 'task_assignment',
+            title: 'New Task Assignment',
             message,
-            model: { model: modelName, modelId: docId },
+            relatedModel: modelName,
+            relatedId: docId,
           });
         }
       }

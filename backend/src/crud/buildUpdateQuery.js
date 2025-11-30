@@ -109,7 +109,7 @@ export default async function buildUpdateQuery({
       role,
       userId,
       docId: updatedDoc._id,
-      modelName,
+      data: cleanDoc,
       body
     });
   }

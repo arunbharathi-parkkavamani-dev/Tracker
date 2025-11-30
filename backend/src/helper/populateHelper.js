@@ -8,7 +8,7 @@ export async function populateHelper(req, res, next) {
     const { action, model, id } = req.params;
     const user = req.user;
 
-    let { fields, filter, ...params } = req.query;
+    let { fields, filter, populateFields, ...params } = req.query;
 
     // ------------------------ FIELDS NORMALIZATION ------------------------
     if (typeof fields === "string") {
@@ -91,6 +91,7 @@ export async function populateHelper(req, res, next) {
       filter: finalFilter,
       aggregate: isAggregate,
       stages,
+      populateFields: populateFields ? JSON.parse(populateFields) : null,
       body: req.body,
     });
 
@@ -103,6 +104,17 @@ export async function populateHelper(req, res, next) {
     });
   } catch (error) {
     console.error("populateHelper error:", error.message);
-    next(error);
+    
+    // Enhanced error response
+    const statusCode = error.status || 500;
+    const errorResponse = {
+      success: false,
+      message: error.message || "Internal server error",
+      action: req.params?.action,
+      model: req.params?.model,
+      ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
+    };
+    
+    return res.status(statusCode).json(errorResponse);
   }
 }

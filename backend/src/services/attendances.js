@@ -1,5 +1,5 @@
 import Attendance from "../models/Attendance.js";
-import { createAndSendNotification } from "../utils/notificationService.js";
+import { sendNotification } from "../utils/notificationService.js";
 import { generateNotification } from "../middlewares/notificationMessagePrasher.js";
 
 /**
@@ -70,11 +70,14 @@ export default function attendances() {
         request,
         modelName
       );
-      await createAndSendNotification({
-        senderId: userId,
-        receiverId: attendanceDoc.managerId || body.managerId,
+      await sendNotification({
+        recipient: attendanceDoc.managerId || body.managerId,
+        sender: userId,
+        type: 'attendance_request',
+        title: 'Attendance Request',
         message,
-        model: { model: "Attendance", modelId: attendanceDoc._id },
+        relatedModel: 'Attendance',
+        relatedId: attendanceDoc._id,
       });
     },
 
@@ -118,11 +121,14 @@ export default function attendances() {
         request,
         modelName
       );
-      await createAndSendNotification({
-        senderId: userId,
-        receiverId: attendanceDoc.managerId || body.managerId,
+      await sendNotification({
+        recipient: attendanceDoc.managerId || body.managerId,
+        sender: userId,
+        type: 'attendance_request',
+        title: 'Attendance Request',
         message,
-        model: { model: "Attendance", modelId: attendanceDoc._id },
+        relatedModel: 'Attendance',
+        relatedId: attendanceDoc._id,
       });
     },
   };

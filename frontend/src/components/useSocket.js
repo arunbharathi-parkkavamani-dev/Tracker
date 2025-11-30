@@ -1,0 +1,33 @@
+import { useEffect, useRef } from 'react';
+import { io } from 'socket.io-client';
+import { useAuth } from '../context/authProvider';
+
+export const useSocket = () => {
+  const { user } = useAuth();
+  const socketRef = useRef(null);
+
+  useEffect(() => {
+    if (user?.id) {
+      socketRef.current = io(import.meta.env.VITE_API_URL || 'http://localhost:3000', {
+        withCredentials: true
+      });
+
+      socketRef.current.emit('join', user.id);
+
+      socketRef.current.on('notification', (notification) => {
+        if (Notification.permission === 'granted') {
+          new Notification(notification.title, {
+            body: notification.message,
+            icon: '/favicon.ico'
+          });
+        }
+      });
+
+      return () => {
+        socketRef.current?.disconnect();
+      };
+    }
+  }, [user]);
+
+  return socketRef.current;
+};

@@ -70,7 +70,7 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
 
     if (field.type === "label") {
       return (
-        <div className="p-2 bg-gray-100 font-semibold rounded">
+        <div className="p-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 font-semibold rounded-xl border border-gray-200 dark:border-gray-600 text-gray-800 dark:text-white">
           {field.external ? field.externalValue ?? "—" : value ?? "—"}
         </div>
       );
@@ -83,7 +83,7 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
           placeholder={field.placeholder}
           value={value || ""}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full border p-2 rounded"
+          className="w-full border border-gray-200 dark:border-gray-600 p-4 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 dark:bg-gray-700 focus:bg-white dark:focus:bg-gray-600 text-gray-800 dark:text-white resize-none"
         />
       );
     }
@@ -98,7 +98,22 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
           value={value || null}
           onChange={(e, newValue) => onChange(newValue)}
           renderInput={(params) => (
-            <TextField {...params} label={field.label} />
+            <TextField 
+              {...params} 
+              label={field.label}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '12px',
+                  backgroundColor: 'rgb(249 250 251)',
+                  '&:hover': {
+                    backgroundColor: 'white',
+                  },
+                  '&.Mui-focused': {
+                    backgroundColor: 'white',
+                  }
+                }
+              }}
+            />
           )}
         />
       );
@@ -110,7 +125,7 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
         value={value || ""}
         onChange={(e) => onChange(e.target.value)}
         placeholder={field.placeholder}
-        className="w-full border p-2 rounded"
+        className="w-full border border-gray-200 dark:border-gray-600 p-4 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 dark:bg-gray-700 focus:bg-white dark:focus:bg-gray-600 text-gray-800 dark:text-white"
       />
     );
   };
@@ -121,33 +136,36 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
   };
 
   return (
-    <form onSubmit={onSubmitHandler} className="space-y-5">
-      {fields
-        .filter((f) => !f.hidden)
-        .sort((a, b) => (a.orderKey ?? 999) - (b.orderKey ?? 999))
-        .map((field) => (
-          <div key={field.name}>
-            <label className="text-sm font-medium text-gray-700 block mb-1">
-              {field.label}
-            </label>
-            {renderField(
-              field,
-              field.external ? field.externalValue : formData[field.name],
-              (val) => update(field.name, val)
-            )}
-          </div>
-        ))}
+    <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-3xl shadow-xl p-8 border border-white/20">
+      <form onSubmit={onSubmitHandler} className="space-y-6">
+        {fields
+          .filter((f) => !f.hidden)
+          .sort((a, b) => (a.orderKey ?? 999) - (b.orderKey ?? 999))
+          .map((field) => (
+            <div key={field.name} className="space-y-2">
+              <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 block uppercase tracking-wide">
+                {field.label}
+              </label>
+              {renderField(
+                field,
+                field.external ? field.externalValue : formData[field.name],
+                (val) => update(field.name, val)
+              )}
+            </div>
+          ))}
 
-      <button
-        type="submit"
-        className={`px-4 py-2 rounded text-white ${submitButton?.color === "green"
-          ? "bg-green-500"
-          : "bg-blue-500"
+        <button
+          type="submit"
+          className={`w-full px-6 py-4 rounded-xl text-white font-semibold transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl ${
+            submitButton?.color === "green"
+              ? "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+              : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
           }`}
-      >
-        {submitButton?.text || "Submit"}
-      </button>
-    </form>
+        >
+          {submitButton?.text || "Submit"}
+        </button>
+      </form>
+    </div>
   );
 };
 
