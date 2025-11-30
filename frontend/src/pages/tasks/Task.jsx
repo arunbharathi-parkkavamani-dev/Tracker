@@ -1,176 +1,219 @@
-import React, { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
+import InlineEdit from "../../components/Common/InLineEdit";
 import { useAuth } from "../../context/authProvider";
-import axiosInstance from "../../api/axiosInstance";
-import FormRenderer from "../../components/Common/FormRenderer";
-import TaskForm from "../../constants/taskForm";
+import { updateTaskById } from "./updateTaskById";
+import AddComment from "../../components/Common/AddComment";
 
-const STATUS_COLORS = {
-  Backlogs: "#000000",
-  "To Do": "#FFA500",
-  "In Progress": "#FF8A8A",
-  "In Review": "#3B82F6",
-  Approved: "#6EE7B7",
-  Rejected: "#B91C1C",
-  Completed: "#166534",
-};
-
-const Task = ({ task, onClose }) => {
+export default function Task({ task, fetchTask, onStatusChange }) {
   const { user } = useAuth();
-  const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [canEdit, setCanEdit] = useState(false);
+  const [showStatusMenu, setShowStatusMenu] = useState(false);
 
-  if (!task) return null;
+  // 🔥 Maintain local state copy so UI refreshes instantly
+  const [localTask, setLocalTask] = useState(task);
 
-  /** Permission */
-  const canEdit =
-    task.createdBy?._id === user.id ||
-    task.assignedTo?.some((u) => u._id === user.id);
+  // sync if parent sends new data
+  useEffect(() => setLocalTask(task), [task]);
 
-  /** Prepare edit defaults */
-  const initialData = useMemo(() => {
-    return {
-      clientName: task.clientId
-        ? { _id: task.clientId._id, name: task.clientId.name }
-        : null,
-      projectType: task.projectTypeId
-        ? { _id: task.projectTypeId._id, name: task.projectTypeId.name }
-        : null,
-      taskType: task.taskTypeId
-        ? { _id: task.taskTypeId._id, name: task.taskTypeId.name }
-        : null,
-      title: task.title || "",
-      referenceUrl: task.referenceUrl || "",
-      userStory: task.userStory || "",
-      observation: task.observation || "",
-      impacts: task.impacts || "",
-      acceptanceCreteria: task.acceptanceCreteria || "",
-      priorityLevel: task.priorityLevel || "",
-      startDate: task.startDate ? new Date(task.startDate).toISOString().slice(0, 10) : "",
-      endDate: task.endDate ? new Date(task.endDate).toISOString().slice(0, 10) : "",
-      tags: Array.isArray(task.tags) ? task.tags.join(", ") : "",
-    };
-  }, [task]);
+  useEffect(() => {
+    if (user && task.createdBy?._id === user.id) setCanEdit(true);
+  }, [user, task]);
 
-  /** Save */
-  const handleUpdate = async (formData) => {
-    setSaving(true);
+  // 🔥 update backend + local UI immediately
+  const handleInlineUpdate = async (field, value) => {
     try {
-      const payload = {
-        clientId: formData.clientName._id,
-        projectTypeId: formData.projectType._id,
-        taskTypeId: formData.taskType._id,
-        title: formData.title,
-        referenceUrl: formData.referenceUrl,
-        userStory: formData.userStory,
-        observation: formData.observation,
-        impacts: formData.impacts,
-        acceptanceCreteria: formData.acceptanceCreteria,
-        priorityLevel: formData.priorityLevel,
-        startDate: new Date(formData.startDate),
-        endDate: formData.endDate ? new Date(formData.endDate) : undefined,
-        tags: formData.tags ? formData.tags.split(",").map(t => t.trim()) : [],
-      };
+      setSaving(true);
 
-      await axiosInstance.put(`/populate/update/tasks/${task._id}`, payload);
+      // update local task instantly (to refresh UI)
+      setLocalTask(prev => ({ ...prev, [field]: value }));
+
+      await updateTaskById(task._id, { [field]: value });
+      await fetchTask(); // refresh from DB as final source of truth
+    } finally {
       setSaving(false);
-      setIsEditing(false);
-      onClose(); // Parent refreshes
-    } catch (err) {
-      console.error(err);
-      setSaving(false);
-      alert("Update failed.");
     }
   };
 
-  return (
-    <div className="relative bg-white rounded-2xl p-6 w-full max-w-4xl shadow-xl overflow-y-auto max-h-[90vh]">
-      {/* Close button */}
-      <button
-        className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-xl"
-        onClick={onClose}
-      >
-        ✕
-      </button>
+  const STATUS_COLORS = {
+    Backlogs: "#111111d3",
+    "To Do": "#FFA500",
+    "In Progress": "#FF8A8A",
+    "In Review": "#3B82F6",
+    Approved: "#6EE7B7",
+    Rejected: "#B91C1C",
+    Completed: "#166534",
+  };
 
-      {/* Title & Status */}
-      <div className="flex justify-between items-center mb-3">
-        <h2 className="text-2xl font-bold">{task.title}</h2>
+  const STATUS_LIST = [
+    "Backlogs",
+    "To Do",
+    "In Progress",
+    "In Review",
+    "Approved",
+    "Rejected",
+    "Completed",
+    "Deleted",
+  ];
+
+  return (
+    <div className="p-4 mt-4">
+
+      {/* STATUS DROPDOWN */}
+      <div className="relative mb-3">
         <span
-          style={{
-            backgroundColor: STATUS_COLORS[task.status],
-            color: "white",
-            borderRadius: "6px",
-            fontSize: "12px",
-            padding: "5px 12px",
-          }}
+          className="flex justify-between items-center text-white p-2 pl-4 text-1xl font-normal rounded w-48 cursor-pointer"
+          style={{ backgroundColor: STATUS_COLORS[localTask.status] }}
+          onClick={() => canEdit && setShowStatusMenu(!showStatusMenu)}
         >
-          {task.status}
+          {localTask.status}
+          {canEdit && <span className="ml-2 text-lg">▼</span>}
         </span>
+
+        {showStatusMenu && (
+          <div className="absolute mt-1 w-48 bg-gray-800 text-white rounded shadow-lg overflow-hidden z-20">
+            {STATUS_LIST.map((status) => (
+              <div
+                key={status}
+                className={`px-4 py-2 hover:bg-gray-700 cursor-pointer ${status === localTask.status ? "bg-gray-700 font-semibold" : ""
+                  }`}
+                onClick={() => {
+                  setShowStatusMenu(false);
+                  onStatusChange(localTask._id, status);
+                }}
+              >
+                {status}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* EDIT MODE */}
-      {isEditing ? (
-        <FormRenderer
-          fields={TaskForm}
-          data={initialData}
-          submitButton={{ text: saving ? "Saving..." : "Save", color: "green" }}
-          onSubmit={handleUpdate}
+      {/* TITLE */}
+      <div className="mb-4">
+        <InlineEdit
+          value={localTask.title}
+          canEdit={canEdit}
+          onSave={(v) => handleInlineUpdate("title", v)}
         />
-      ) : (
-        /* VIEW MODE — Zoho Style Layout */
-        <div className="grid grid-cols-2 gap-6">
-          {/* Left */}
-          <div className="space-y-4">
-            <p><strong>User Story:</strong> {task.userStory || "—"}</p>
-            <p><strong>Observation:</strong> {task.observation || "—"}</p>
-            <p><strong>Impacts:</strong> {task.impacts || "—"}</p>
-            <p><strong>Acceptance Criteria:</strong> {task.acceptanceCreteria || "—"}</p>
+      </div>
 
-            {task.referenceUrl && (
-              <p>
-                <strong>Reference URL:</strong>{" "}
-                <a href={task.referenceUrl} className="text-blue-600 underline" target="_blank">
-                  {task.referenceUrl}
-                </a>
-              </p>
-            )}
+      <div className="grid grid-cols-4 gap-2">
+
+        {/* LEFT */}
+        <div className="p-2 col-span-3 space-y-2">
+
+          {localTask.referenceUrl && (
+            <p>
+              <a href={localTask.referenceUrl} className="text-blue-600 underline" target="_blank">
+                {localTask.referenceUrl}
+              </a>
+            </p>
+          )}
+
+          <p><strong>Category</strong></p>
+          <p>{localTask.taskTypeId?.name}</p>
+
+          <p><strong>User Story</strong></p>
+          <InlineEdit
+            value={localTask.userStory || "—"}
+            canEdit={canEdit}
+            onSave={(v) => handleInlineUpdate("userStory", v)}
+          />
+
+          <p><strong>Observation</strong></p>
+          <InlineEdit
+            value={localTask.observation || "—"}
+            canEdit={canEdit}
+            onSave={(v) => handleInlineUpdate("observation", v)}
+          />
+
+          <p><strong>Impacts</strong></p>
+          <InlineEdit
+            value={localTask.impacts || "—"}
+            canEdit={canEdit}
+            onSave={(v) => handleInlineUpdate("impacts", v)}
+          />
+
+          <p><strong>Acceptance Criteria</strong></p>
+          <InlineEdit
+            value={localTask.acceptanceCreteria || "—"}
+            canEdit={canEdit}
+            onSave={(v) => handleInlineUpdate("acceptanceCreteria", v)}
+          />
+
+          {/* COMMENTS / ACTIVITY SECTION */}
+          <div className="mt-8 border-t pt-6">
+            <div className="flex space-x-6 border-b pb-2 mb-4">
+              <button className="font-semibold text-blue-700">Activities</button>
+              <button className="text-gray-500 hover:text-blue-600">Comments</button>
+            </div>
+
+            {/* Render Activity Items */}
+            {localTask.commentsThreadDetails?.comments?.map((c) => (
+              <div key={c._id} className="mb-4 flex items-start space-x-3">
+                <div className="w-10 h-10 rounded-full overflow-hidden">
+                  <img
+                    src={`https://ui-avatars.com/api/?name=${c.commentedBy?.basicInfo?.firstName || "U"}`}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+
+                <div>
+                  <p className="text-sm">
+                    <span className="font-semibold text-blue-700">
+                      {c.commentedBy?.basicInfo?.firstName}
+                    </span>{" "}
+                    {c.message}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {new Date(c.createdAt).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            ))}
+
+            {/* COMMENT INPUT */}
+            <AddComment
+              threadId={localTask.commentsThreadDetails?._id}
+              onAdded={async () =>
+                fetchTask().then((updated) => setLocalTask(updated))
+              }
+            />
           </div>
 
-          {/* Right */}
-          <div className="space-y-3 border-l pl-6">
-            <p><strong>Client:</strong> {task.clientId?.name}</p>
-            <p><strong>Project Type:</strong> {task.projectTypeId?.name}</p>
-            <p><strong>Task Type:</strong> {task.taskTypeId?.name}</p>
-            <p><strong>Created By:</strong> {task.createdBy?.basicInfo?.firstName}</p>
-            <p><strong>Priority:</strong> {task.priorityLevel}</p>
-            <p><strong>Tags:</strong> {task.tags?.join(", ") || "—"}</p>
-            <p><strong>Start Date:</strong> {task.startDate ? new Date(task.startDate).toLocaleDateString() : "—"}</p>
-            <p><strong>End Date:</strong> {task.endDate ? new Date(task.endDate).toLocaleDateString() : "—"}</p>
-          </div>
         </div>
-      )}
 
-      {/* EDIT BUTTON */}
-      {canEdit && !isEditing && (
-        <button
-          onClick={() => setIsEditing(true)}
-          className="mt-6 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
-        >
-          ✏ Edit Task
-        </button>
-      )}
+        {/* RIGHT */}
+        <div className="space-y-1 border-l pl-6">
+          <p><strong>Start Date</strong></p>
+          <p>{localTask.startDate ? new Date(localTask.startDate).toLocaleDateString() : "Not Set Yet"}</p>
 
-      {/* CANCEL EDIT BUTTON */}
-      {isEditing && (
-        <button
-          onClick={() => setIsEditing(false)}
-          className="mt-4 px-4 py-2 bg-gray-500 text-white rounded-md"
-        >
-          Cancel
-        </button>
-      )}
+          <p><strong>End Date</strong></p>
+          <p>{localTask.endDate ? new Date(localTask.endDate).toLocaleDateString() : "Not Yet Set"}</p>
+
+          <p><strong>Priority</strong></p>
+          <p>{localTask.priorityLevel}</p>
+
+          <p><strong>Tags</strong></p>
+          <InlineEdit
+            value={localTask.tags?.join(", ") || "No Tags"}
+            canEdit={canEdit}
+            onSave={(v) => {
+              const newTags = v.split(",").map(tag => tag.trim()).filter(Boolean);
+              handleInlineUpdate("tags", newTags);
+            }}
+          />
+
+          <hr className="my-3" />
+
+          <p>About Task</p>
+          <p>{localTask.createdBy?.basicInfo?.firstName}</p>
+          <p>{localTask.clientId?.name}</p>
+        </div>
+      </div>
+
+      {saving && <p className="text-sm text-yellow-700 mt-3">Saving...</p>}
     </div>
   );
-};
-
-export default Task;
+}

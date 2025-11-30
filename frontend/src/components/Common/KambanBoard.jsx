@@ -8,8 +8,8 @@ const KanbanBoard = ({
   bgColors = {},
   onCardMove,
   currentUserId, // 🆕 Permission check passed by parent
+  onCardClick,
 }) => {
-  const [selectedCard, setSelectedCard] = useState(null);
   const [draggingCard, setDraggingCard] = useState(null);
   const [highlightedColumn, setHighlightedColumn] = useState(null);
 
@@ -23,8 +23,6 @@ const KanbanBoard = ({
     return acc;
   }, {});
 
-  const openModal = (item) => setSelectedCard(item);
-  const closeModal = () => setSelectedCard(null);
 
   /** 🔹 Drag event handlers */
   const handleDragStart = (e, item, fromColumn) => {
@@ -86,7 +84,7 @@ const KanbanBoard = ({
               {grouped[column].map((item) => (
                 <div
                   key={item._id}
-                  onClick={() => openModal(item)}
+                  onClick={() => onCardClick?.(item)}
                   draggable={item.createdBy?._id === currentUserId} // 🔒 permission
                   onDragStart={(e) => handleDragStart(e, item, column)}
                   className={`bg-white border rounded-xl p-3 cursor-pointer transition 
@@ -109,13 +107,6 @@ const KanbanBoard = ({
           </div>
         ))}
       </div>
-
-      {/* Floating modal */}
-      {selectedCard && (
-        <FloatingCard onClose={closeModal}>
-          {getCardContent(selectedCard, true)}
-        </FloatingCard>
-      )}
     </>
   );
 };

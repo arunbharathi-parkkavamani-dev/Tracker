@@ -65,7 +65,7 @@ export default async function buildUpdateQuery({
   }
 
   const beforeUpdate = serviceInstance?.beforeUpdate;
-  const afterUpdate  = serviceInstance?.afterUpdate;
+  const afterUpdate = serviceInstance?.afterUpdate;
 
   if (typeof beforeUpdate === "function") {
     const result = await beforeUpdate({ role, userId, docId, body, filter });
@@ -97,6 +97,10 @@ export default async function buildUpdateQuery({
 
   if (!updatedDoc) throw new Error(`${modelName} not found`);
 
+  // Convert before passing to afterUpdate + audit
+  const cleanDoc = updatedDoc.toObject();
+
+
   /** -----------------------------------------------
    * 7) Lifecycle — AFTER UPDATE
    * ----------------------------------------------- */
@@ -117,8 +121,8 @@ export default async function buildUpdateQuery({
     role,
     docId: updatedDoc._id,
     beforeDoc,
-    afterDoc: updatedDoc,
+    afterDoc: cleanDoc,
   });
 
-  return updatedDoc;
+  return cleanDoc;
 }

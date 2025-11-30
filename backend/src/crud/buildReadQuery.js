@@ -129,11 +129,12 @@ export default async function buildReadQuery({
   if (Array.isArray(fields) && fields.length > 0 && fields[0] !== "*") {
     fields.forEach(f => {
       const raw = typeof f === "string" ? f : String(f);
-      const path = raw.split(".")[0].replace(/[^\w.]/g, ""); // remove quotes, brackets
+      const path = raw.replace(/[^\w.]/g, ""); // remove quotes, brackets
+      console.log(path)
       const schemaPath =
         Model.schema.path(`${path}.$`) ||
         Model.schema.path(path);
-
+      
       if (schemaPath?.options?.ref) {
         query.populate(path);
       }
