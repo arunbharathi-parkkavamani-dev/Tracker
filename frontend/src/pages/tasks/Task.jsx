@@ -21,19 +21,23 @@ const Task = ({ task, onClose }) => {
 
   if (!task) return null;
 
-  /** 🔐 Permission logic */
+  /** Permission */
   const canEdit =
     task.createdBy?._id === user.id ||
     task.assignedTo?.some((u) => u._id === user.id);
 
-  /** 🟢 Prepare default form values */
+  /** Prepare edit defaults */
   const initialData = useMemo(() => {
     return {
-      clientName: task.client ? { _id: task.client._id, name: task.client.name } : null,
-      projectType: task.projectType
-        ? { _id: task.projectType._id, name: task.projectType.name }
+      clientName: task.clientId
+        ? { _id: task.clientId._id, name: task.clientId.name }
         : null,
-      taskType: task.taskType ? { _id: task.taskType._id, name: task.taskType.name } : null,
+      projectType: task.projectTypeId
+        ? { _id: task.projectTypeId._id, name: task.projectTypeId.name }
+        : null,
+      taskType: task.taskTypeId
+        ? { _id: task.taskTypeId._id, name: task.taskTypeId.name }
+        : null,
       title: task.title || "",
       referenceUrl: task.referenceUrl || "",
       userStory: task.userStory || "",
@@ -47,7 +51,7 @@ const Task = ({ task, onClose }) => {
     };
   }, [task]);
 
-  /** 💾 Save edit */
+  /** Save */
   const handleUpdate = async (formData) => {
     setSaving(true);
     try {
@@ -62,22 +66,15 @@ const Task = ({ task, onClose }) => {
         impacts: formData.impacts,
         acceptanceCreteria: formData.acceptanceCreteria,
         priorityLevel: formData.priorityLevel,
-        startDate: formData.startDate ? new Date(formData.startDate) : new Date(),
+        startDate: new Date(formData.startDate),
         endDate: formData.endDate ? new Date(formData.endDate) : undefined,
-        tags: formData.tags
-          ? formData.tags.split(",").map((t) => t.trim())
-          : [],
+        tags: formData.tags ? formData.tags.split(",").map(t => t.trim()) : [],
       };
 
-      await axiosInstance.put(
-        `/populate/update/tasks/${task._id}`,
-        payload,
-        { withCredentials: true }
-      );
-
+      await axiosInstance.put(`/populate/update/tasks/${task._id}`, payload);
       setSaving(false);
       setIsEditing(false);
-      onClose(); // modal closes → Tasks index refreshes
+      onClose(); // Parent refreshes
     } catch (err) {
       console.error(err);
       setSaving(false);
@@ -86,7 +83,8 @@ const Task = ({ task, onClose }) => {
   };
 
   return (
-    <div className="relative bg-white rounded-2xl p-6 w-full max-w-4xl shadow-xl grid grid-cols-3 gap-6">
+    <div className="relative bg-white rounded-2xl p-6 w-full max-w-4xl shadow-xl overflow-y-auto max-h-[90vh]">
+      {/* Close button */}
       <button
         className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-xl"
         onClick={onClose}
@@ -94,69 +92,83 @@ const Task = ({ task, onClose }) => {
         ✕
       </button>
 
-      {/* LEFT PANEL */}
-      <div className="col-span-2 space-y-4">
-        {/* Title + Status Badge */}
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold">{task.title}</h2>
+      {/* Title & Status */}
+      <div className="flex justify-between items-center mb-3">
+        <h2 className="text-2xl font-bold">{task.title}</h2>
+        <span
+          style={{
+            backgroundColor: STATUS_COLORS[task.status],
+            color: "white",
+            borderRadius: "6px",
+            fontSize: "12px",
+            padding: "5px 12px",
+          }}
+        >
+          {task.status}
+        </span>
+      </div>
 
-          <span
-            style={{
-              backgroundColor: STATUS_COLORS[task.status],
-              color: "white",
-              borderRadius: "6px",
-              fontSize: "12px",
-              padding: "4px 10px",
-            }}
-          >
-            {task.status}
-          </span>
-        </div>
-
-        {!isEditing ? (
-          /** VIEW MODE */
+      {/* EDIT MODE */}
+      {isEditing ? (
+        <FormRenderer
+          fields={TaskForm}
+          data={initialData}
+          submitButton={{ text: saving ? "Saving..." : "Save", color: "green" }}
+          onSubmit={handleUpdate}
+        />
+      ) : (
+        /* VIEW MODE — Zoho Style Layout */
+        <div className="grid grid-cols-2 gap-6">
+          {/* Left */}
           <div className="space-y-4">
             <p><strong>User Story:</strong> {task.userStory || "—"}</p>
             <p><strong>Observation:</strong> {task.observation || "—"}</p>
             <p><strong>Impacts:</strong> {task.impacts || "—"}</p>
-            <p><strong>Acceptance criteria:</strong> {task.acceptanceCreteria || "—"}</p>
+            <p><strong>Acceptance Criteria:</strong> {task.acceptanceCreteria || "—"}</p>
+
+            {task.referenceUrl && (
+              <p>
+                <strong>Reference URL:</strong>{" "}
+                <a href={task.referenceUrl} className="text-blue-600 underline" target="_blank">
+                  {task.referenceUrl}
+                </a>
+              </p>
+            )}
           </div>
-        ) : (
-          /** EDIT MODE */
-          <FormRenderer
-            fields={TaskForm}
-            data={initialData}
-            submitButton={{ text: saving ? "Saving..." : "Save", color: "green" }}
-            onSubmit={handleUpdate}
-          />
-        )}
-      </div>
 
-      {/* RIGHT PANEL */}
-      <div className="border-l pl-6 space-y-4">
-        {canEdit && (
-          <button
-            onClick={() => setIsEditing(!isEditing)}
-            className={`px-4 py-2 rounded-md text-white ${
-              isEditing ? "bg-gray-500" : "bg-blue-600 hover:bg-blue-700"
-            }`}
-          >
-            {isEditing ? "Cancel Edit" : "Edit Task"}
-          </button>
-        )}
+          {/* Right */}
+          <div className="space-y-3 border-l pl-6">
+            <p><strong>Client:</strong> {task.clientId?.name}</p>
+            <p><strong>Project Type:</strong> {task.projectTypeId?.name}</p>
+            <p><strong>Task Type:</strong> {task.taskTypeId?.name}</p>
+            <p><strong>Created By:</strong> {task.createdBy?.basicInfo?.firstName}</p>
+            <p><strong>Priority:</strong> {task.priorityLevel}</p>
+            <p><strong>Tags:</strong> {task.tags?.join(", ") || "—"}</p>
+            <p><strong>Start Date:</strong> {task.startDate ? new Date(task.startDate).toLocaleDateString() : "—"}</p>
+            <p><strong>End Date:</strong> {task.endDate ? new Date(task.endDate).toLocaleDateString() : "—"}</p>
+          </div>
+        </div>
+      )}
 
-        <p><strong>Client:</strong> {task.client?.name}</p>
-        <p><strong>Project:</strong> {task.projectType?.name}</p>
-        <p><strong>Created by:</strong> {task.createdBy?.basicInfo?.firstName}</p>
+      {/* EDIT BUTTON */}
+      {canEdit && !isEditing && (
+        <button
+          onClick={() => setIsEditing(true)}
+          className="mt-6 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
+        >
+          ✏ Edit Task
+        </button>
+      )}
 
-        <p><strong>Priority:</strong> {task.priorityLevel}</p>
-
-        <p><strong>Tags:</strong> {task.tags?.join(", ") || "—"}</p>
-
-        <p><strong>Start date:</strong> {task.startDate ? new Date(task.startDate).toLocaleDateString() : "—"}</p>
-
-        <p><strong>End date:</strong> {task.endDate ? new Date(task.endDate).toLocaleDateString() : "—"}</p>
-      </div>
+      {/* CANCEL EDIT BUTTON */}
+      {isEditing && (
+        <button
+          onClick={() => setIsEditing(false)}
+          className="mt-4 px-4 py-2 bg-gray-500 text-white rounded-md"
+        >
+          Cancel
+        </button>
+      )}
     </div>
   );
 };

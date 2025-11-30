@@ -42,7 +42,7 @@ export const NotificationProvider = ({ children }) => {
         const filter = encodeURIComponent(
         `receiver=${user.id}`
       );
-        const res = await axiosInstance.get(`/populate/read/notification?filter=${filter}`);
+        const res = await axiosInstance.get(`/populate/read/notifications?filter=${filter}`);
         const data = Array.isArray(res.data)
         ? res.data
         : Array.isArray(res.data.data)
