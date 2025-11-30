@@ -27,7 +27,8 @@ const allowedOrigins = [
 ];
 
 // Allow LAN: 192.x.x.x, 10.x.x.x
-const lanRegex = /^http:\/\/(192\.168|10\.)\.\d+\.\d+:\d+$/;
+const lanRegex = /^http:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+):\d+$/;
+
 
 app.use(
   cors({
