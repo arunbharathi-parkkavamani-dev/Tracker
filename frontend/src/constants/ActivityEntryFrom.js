@@ -30,7 +30,7 @@ const ActivityEntryFrom = [
       {
         type: "textarea",
         name: "activity",
-        label: "activity",
+        label: "Activity Description",
       },
     ],
   },

@@ -6,6 +6,9 @@ import cors from "cors";
 import AuthRouter from "./routes/authRoutes.js";
 import notificationRoutes from "./routes/pendingRoutes.js";
 import populateHelper from "./routes/populateRoutes.js";
+import fileRoutes from "./routes/fileRoutes.js";
+import locationRoutes from "./routes/locationRoutes.js";
+import bankRoutes from "./routes/bankRoutes.js";
 import { apiHitLogger } from "./middlewares/apiHitLogger.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import connectDB from "./Config/ConnectDB.js";
@@ -25,7 +28,7 @@ const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:19006",
   "http://localhost:8081",
-  "http://192.168.29.83:5173",
+  "http://10.11.244.208:5173",
   "https://your-app.vercel.app", // Add your actual Vercel domain here
 ];
 
@@ -57,6 +60,9 @@ app.use(apiHitLogger); // Middleware to log API hits
 app.use("/api/auth", AuthRouter);
 app.use("/api/populate", populateHelper);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/files", fileRoutes);
+app.use("/api", locationRoutes);
+app.use("/api", bankRoutes);
 
 // Error handling middleware
 app.use(errorHandler);

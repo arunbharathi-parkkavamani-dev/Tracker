@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import axiosInstance from "@/api/axiosInstance";
 import { Drawer } from "expo-router/drawer";
 import { DrawerContentScrollView, DrawerItem } from "@react-navigation/drawer";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { ActivityIndicator, View, Text } from "react-native";
+import { AuthContext } from "@/context/AuthContext";
 
 type SidebarItem = {
   _id: string;
@@ -18,6 +19,7 @@ type SidebarItem = {
 function CustomDrawerContent() {
   const [navItems, setNavItems] = useState<SidebarItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const { logout } = useContext(AuthContext);
 
   useEffect(() => {
     const fetchNavBar = async () => {
@@ -82,7 +84,7 @@ function CustomDrawerContent() {
                 <Text style={{ fontSize: size }}>{getEmojiIcon(item.route)}</Text>
               )}
               onPress={() => {
-                const route = item.route.replace(/^\//, '') + '/index';
+                const route = item.route.replace(/^\//, '');
                 router.push(`/(protectedRoute)/${route}`);
               }}
             />
@@ -93,10 +95,9 @@ function CustomDrawerContent() {
         icon={({ size }) => (
           <Text style={{ fontSize: size }}>🚪</Text>
         )}
-        onPress={() => {
-          AsyncStorage.multiRemove(["auth_token", "refresh_token"]).then(() => {
-            router.replace("/(authRoute)/Login");
-          });
+        onPress={async () => {
+          await logout();
+          router.replace("/(authRoute)/Login");
         }}
       />
     </DrawerContentScrollView>

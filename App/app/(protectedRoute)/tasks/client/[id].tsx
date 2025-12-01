@@ -25,6 +25,7 @@ export default function ClientTasks() {
   const [projectTypes, setProjectTypes] = useState<ProjectType[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   useEffect(() => {
     fetchClientData();
@@ -39,9 +40,9 @@ export default function ClientTasks() {
         `/populate/read/clients/${id}?fields=projectTypes&populateFields={"projectTypes":"name"}`
       );
       
-      // Fetch client's tasks
+      // Fetch client's tasks with proper population
       const tasksResponse = await axiosInstance.get(
-        `/populate/read/tasks?filter={"clientId":"${id}","status":{"$ne":"Deleted"}}&populateFields={"projectTypeId":"name","assignedTo":"basicInfo.firstName,basicInfo.lastName"}`
+        `/populate/read/tasks?filter={"clientId":"${id}","status":{"$ne":"Deleted"}}&populateFields={"projectTypeId":"name","assignedTo":"basicInfo"}`
       );
       
       const clientData = clientResponse.data.data;
@@ -102,46 +103,134 @@ export default function ClientTasks() {
           <MaterialIcons name="arrow-back" size={24} color="#6B7280" />
           <Text className="ml-2 text-gray-600">Back to Clients</Text>
         </TouchableOpacity>
-        <Text className="text-2xl font-bold text-gray-900">{name}</Text>
-        <Text className="text-sm text-gray-500 mt-1">Select project type to view tasks</Text>
+        
+        <View className="flex-row items-center justify-between">
+          <View className="flex-1">
+            <Text className="text-2xl font-bold text-gray-900">{name}</Text>
+            <Text className="text-sm text-gray-500 mt-1">Select project type to view tasks</Text>
+          </View>
+          
+          {/* View Toggle */}
+          <View className="flex-row bg-gray-100 rounded-lg p-1">
+            <TouchableOpacity
+              onPress={() => setViewMode('grid')}
+              style={{
+                padding: 8,
+                borderRadius: 6,
+                backgroundColor: viewMode === 'grid' ? 'white' : 'transparent',
+                shadowColor: viewMode === 'grid' ? '#000' : 'transparent',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: viewMode === 'grid' ? 0.1 : 0,
+                shadowRadius: 2,
+                elevation: viewMode === 'grid' ? 2 : 0
+              }}
+            >
+              <MaterialIcons 
+                name="grid-view" 
+                size={20} 
+                color={viewMode === 'grid' ? '#3B82F6' : '#6B7280'} 
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setViewMode('list')}
+              style={{
+                padding: 8,
+                borderRadius: 6,
+                marginLeft: 4,
+                backgroundColor: viewMode === 'list' ? 'white' : 'transparent',
+                shadowColor: viewMode === 'list' ? '#000' : 'transparent',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: viewMode === 'list' ? 0.1 : 0,
+                shadowRadius: 2,
+                elevation: viewMode === 'list' ? 2 : 0
+              }}
+            >
+              <MaterialIcons 
+                name="view-list" 
+                size={20} 
+                color={viewMode === 'list' ? '#3B82F6' : '#6B7280'} 
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
 
-      {/* Project Types Grid */}
-      <FlatList
-        data={projectTypes}
-        keyExtractor={(item) => item.id}
-        numColumns={2}
-        contentContainerStyle={{ padding: 16 }}
-        columnWrapperStyle={{ justifyContent: 'space-between' }}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            onPress={() => handleProjectTypePress(item)}
-            className="bg-white rounded-lg p-4 mb-4 shadow-sm border border-gray-200"
-            style={{ width: '48%' }}
-          >
-            <View className="items-center">
+      {/* Project Types */}
+      {viewMode === 'grid' ? (
+        <FlatList
+          key="grid"
+          data={projectTypes}
+          keyExtractor={(item) => item.id}
+          numColumns={2}
+          contentContainerStyle={{ padding: 16 }}
+          columnWrapperStyle={{ justifyContent: 'space-between' }}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              onPress={() => handleProjectTypePress(item)}
+              className="bg-white rounded-lg p-4 mb-4 shadow-sm border border-gray-200"
+              style={{ width: '48%' }}
+            >
+              <View className="items-center">
+                <View 
+                  className="w-12 h-12 rounded-full items-center justify-center mb-3"
+                  style={{ backgroundColor: item.color }}
+                >
+                  <MaterialIcons name="folder" size={24} color="white" />
+                </View>
+                <Text className="text-lg font-semibold text-gray-900 text-center mb-1">
+                  {item.title}
+                </Text>
+                <Text className="text-sm text-gray-500">
+                  {item.taskCount} task{item.taskCount !== 1 ? 's' : ''}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          )}
+          ListEmptyComponent={
+            <View className="flex-1 justify-center items-center py-20">
+              <MaterialIcons name="folder-open" size={64} color="#D1D5DB" />
+              <Text className="text-gray-500 text-lg mt-4">No project types found</Text>
+            </View>
+          }
+        />
+      ) : (
+        <FlatList
+          key="list"
+          data={projectTypes}
+          keyExtractor={(item) => item.id}
+          numColumns={1}
+          contentContainerStyle={{ padding: 16 }}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              onPress={() => handleProjectTypePress(item)}
+              className="bg-white rounded-lg p-4 mb-3 shadow-sm border border-gray-200 flex-row items-center"
+            >
               <View 
-                className="w-12 h-12 rounded-full items-center justify-center mb-3"
+                className="w-10 h-10 rounded-full items-center justify-center mr-4"
                 style={{ backgroundColor: item.color }}
               >
-                <MaterialIcons name="folder" size={24} color="white" />
+                <MaterialIcons name="folder" size={20} color="white" />
               </View>
-              <Text className="text-lg font-semibold text-gray-900 text-center mb-1">
-                {item.title}
-              </Text>
-              <Text className="text-sm text-gray-500">
-                {item.taskCount} task{item.taskCount !== 1 ? 's' : ''}
-              </Text>
+              <View className="flex-1">
+                <Text className="text-lg font-semibold text-gray-900 mb-1">
+                  {item.title}
+                </Text>
+                <Text className="text-sm text-gray-500">
+                  {item.taskCount} task{item.taskCount !== 1 ? 's' : ''}
+                </Text>
+              </View>
+              <MaterialIcons name="chevron-right" size={24} color="#D1D5DB" />
+            </TouchableOpacity>
+          )}
+          ListEmptyComponent={
+            <View className="flex-1 justify-center items-center py-20">
+              <MaterialIcons name="folder-open" size={64} color="#D1D5DB" />
+              <Text className="text-gray-500 text-lg mt-4">No project types found</Text>
             </View>
-          </TouchableOpacity>
-        )}
-        ListEmptyComponent={
-          <View className="flex-1 justify-center items-center py-20">
-            <MaterialIcons name="folder-open" size={64} color="#D1D5DB" />
-            <Text className="text-gray-500 text-lg mt-4">No project types found</Text>
-          </View>
-        }
-      />
+          }
+        />
+      )}
+
     </View>
   );
 }

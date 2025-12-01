@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Image } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import axiosInstance from '@/api/axiosInstance';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
+import { jwtDecode } from 'jwt-decode';
+import FloatingCard from '@/components/ui/FloatingCard';
+import FormRenderer from '@/components/ui/FormRenderer';
+import { profileFormFields, profileSubmitButton } from '@/constants/Forms/profileForm';
+import Toast from 'react-native-toast-message';
 
 interface Employee {
   _id: string;
@@ -37,6 +42,8 @@ interface Employee {
 export default function Profile() {
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     fetchProfile();
@@ -44,8 +51,19 @@ export default function Profile() {
 
   const fetchProfile = async () => {
     try {
-      const userId = await AsyncStorage.getItem('userId');
-      if (!userId) return;
+      const token = await AsyncStorage.getItem('auth_token');
+      if (!token) {
+        router.replace('/(authRoute)/Login');
+        return;
+      }
+
+      const decoded = jwtDecode(token);
+      const userId = decoded.userId || decoded.id;
+      
+      if (!userId) {
+        Alert.alert('Error', 'User ID not found');
+        return;
+      }
 
       const response = await axiosInstance.get(
         `/populate/read/employees/${userId}?populateFields={"professionalInfo.reportingManager":"basicInfo.firstName,basicInfo.lastName"}`
@@ -70,7 +88,7 @@ export default function Profile() {
           text: 'Logout',
           style: 'destructive',
           onPress: async () => {
-            await AsyncStorage.multiRemove(['token', 'userId']);
+            await AsyncStorage.multiRemove(['auth_token', 'refresh_token']);
             router.replace('/(authRoute)/Login');
           }
         }
@@ -115,17 +133,32 @@ export default function Profile() {
       {/* Header */}
       <View className="bg-blue-600 px-4 py-8">
         <View className="items-center">
-          <View className="w-20 h-20 bg-white rounded-full items-center justify-center mb-4">
-            <Text className="text-2xl font-bold text-blue-600">
-              {employee.basicInfo.firstName?.charAt(0)}{employee.basicInfo.lastName?.charAt(0)}
-            </Text>
-          </View>
+          {employee.basicInfo.profileImage ? (
+            <Image 
+              source={{ uri: `${process.env.EXPO_PUBLIC_API_URL}/api/files/render/profile/${employee.basicInfo.profileImage.split('/').pop()}` }}
+              className="w-20 h-20 rounded-full mb-4"
+            />
+          ) : (
+            <View className="w-20 h-20 bg-white rounded-full items-center justify-center mb-4">
+              <Text className="text-2xl font-bold text-blue-600">
+                {employee.basicInfo.firstName?.charAt(0)}{employee.basicInfo.lastName?.charAt(0)}
+              </Text>
+            </View>
+          )}
           <Text className="text-white text-xl font-bold">
             {employee.basicInfo.firstName} {employee.basicInfo.lastName}
           </Text>
           <Text className="text-blue-100 text-sm mt-1">
             {employee.professionalInfo.role}
           </Text>
+          
+          {/* Edit Button */}
+          <TouchableOpacity
+            onPress={() => setShowEditModal(true)}
+            className="mt-4 bg-white/20 rounded-full p-2"
+          >
+            <MaterialIcons name="edit" size={20} color="white" />
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -167,6 +200,88 @@ export default function Profile() {
           </TouchableOpacity>
         </View>
       </View>
+      
+      {/* Edit Profile Modal */}
+      <FloatingCard
+        visible={showEditModal}
+        onClose={() => setShowEditModal(false)}
+      >
+        <FormRenderer
+          fields={profileFormFields(employee)}
+          submitButton={profileSubmitButton}
+          data={employee}
+          onSubmit={handleUpdateProfile}
+        />
+      </FloatingCard>
     </ScrollView>
   );
+
+  async function handleUpdateProfile(formData: any) {
+    try {
+      setUpdating(true);
+      
+      const token = await AsyncStorage.getItem('auth_token');
+      if (!token) return;
+      
+      const decoded = jwtDecode(token);
+      const userId = decoded.userId || decoded.id;
+      
+      // Create FormData for file upload
+      const updateData = new FormData();
+      
+      // Handle profile image upload
+      if (formData['basicInfo.profileImage']?.uri) {
+        updateData.append('file', {
+          uri: formData['basicInfo.profileImage'].uri,
+          type: formData['basicInfo.profileImage'].mime,
+          name: 'profile.jpg'
+        } as any);
+        delete formData['basicInfo.profileImage'];
+      }
+      
+      // Exclude system fields that cannot be modified
+      const excludeFields = ['_id', 'id', 'createdAt', 'updatedAt', '__v'];
+      
+      // Add other form data
+      Object.keys(formData).forEach(key => {
+        if (!excludeFields.includes(key) && formData[key] !== null && formData[key] !== undefined) {
+          // Handle nested objects
+          if (typeof formData[key] === 'object' && !Array.isArray(formData[key])) {
+            updateData.append(key, JSON.stringify(formData[key]));
+          } else {
+            updateData.append(key, formData[key]);
+          }
+        }
+      });
+      
+      await axiosInstance.put(
+        `/populate/update/employees/${userId}`,
+        updateData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+      
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: 'Profile updated successfully'
+      });
+      
+      setShowEditModal(false);
+      fetchProfile(); // Refresh profile data
+      
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to update profile'
+      });
+    } finally {
+      setUpdating(false);
+    }
+  }
 }

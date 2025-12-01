@@ -32,9 +32,6 @@ const priorityColors: { [key: string]: string } = {
 export default function ProjectTasks() {
   const { projectType, clientName, tasks: tasksParam } = useLocalSearchParams();
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [selectedStatus, setSelectedStatus] = useState<string>('All');
-
-  const statuses = ['All', 'Backlogs', 'To Do', 'In Progress', 'In Review', 'Approved', 'Completed'];
 
   useEffect(() => {
     if (tasksParam) {
@@ -46,10 +43,6 @@ export default function ProjectTasks() {
       }
     }
   }, [tasksParam]);
-
-  const filteredTasks = selectedStatus === 'All' 
-    ? tasks 
-    : tasks.filter(task => task.status === selectedStatus);
 
   const handleTaskPress = (task: Task) => {
     router.push({
@@ -90,22 +83,18 @@ export default function ProjectTasks() {
       )}
       
       <View className="flex-row justify-between items-center">
-        <View className="flex-row">
-          {task.assignedTo?.filter(Boolean).slice(0, 3).map((assignee, index) => (
-            <View
-              key={index}
-              className="w-6 h-6 rounded-full bg-blue-500 items-center justify-center border border-white -ml-1"
-              style={{ marginLeft: index > 0 ? -4 : 0 }}
-            >
-              <Text className="text-white text-xs">
-                {assignee?.basicInfo?.firstName?.charAt(0) || 'U'}
-              </Text>
-            </View>
-          ))}
-          {task.assignedTo?.filter(Boolean).length > 3 && (
-            <View className="w-6 h-6 rounded-full bg-gray-400 items-center justify-center border border-white -ml-1">
-              <Text className="text-white text-xs">+{task.assignedTo.filter(Boolean).length - 3}</Text>
-            </View>
+        <View className="flex-1">
+          {task.assignedTo?.filter(Boolean).length > 0 ? (
+            <Text className="text-sm text-gray-600">
+              Assigned to: {task.assignedTo.filter(Boolean).length === 1 
+                ? (typeof task.assignedTo.filter(Boolean)[0] === 'object' 
+                   ? task.assignedTo.filter(Boolean)[0]?.basicInfo?.firstName || 'User'
+                   : 'User')
+                : `${task.assignedTo.filter(Boolean).length} users`
+              }
+            </Text>
+          ) : (
+            <Text className="text-sm text-gray-400">No assignee</Text>
           )}
         </View>
         <MaterialIcons name="chevron-right" size={20} color="#6B7280" />
@@ -125,36 +114,14 @@ export default function ProjectTasks() {
           <Text className="ml-2 text-gray-600">Back to {clientName}</Text>
         </TouchableOpacity>
         <Text className="text-2xl font-bold text-gray-900">{projectType}</Text>
-        <Text className="text-sm text-gray-500 mt-1">{filteredTasks.length} tasks</Text>
+        <Text className="text-sm text-gray-500 mt-1">{tasks.length} tasks</Text>
       </View>
 
-      {/* Status Filter */}
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        className="bg-white border-b border-gray-200"
-        contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 8 }}
-      >
-        {statuses.map((status) => (
-          <TouchableOpacity
-            key={status}
-            onPress={() => setSelectedStatus(status)}
-            className={`px-3 py-1.5 rounded-full mr-2 ${
-              selectedStatus === status ? 'bg-blue-500' : 'bg-gray-100'
-            }`}
-          >
-            <Text className={`text-xs font-medium ${
-              selectedStatus === status ? 'text-white' : 'text-gray-700'
-            }`}>
-              {status}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+
 
       {/* Tasks List */}
       <FlatList
-        data={filteredTasks}
+        data={tasks}
         keyExtractor={(item) => item._id}
         contentContainerStyle={{ padding: 16 }}
         renderItem={({ item }) => <TaskCard task={item} />}

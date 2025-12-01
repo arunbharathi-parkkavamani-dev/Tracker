@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { Autocomplete, TextField } from "@mui/material";
 import axiosInstance from "../../api/axiosInstance";
+import toast from "react-hot-toast";
 
 const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}, value }) => {
   const [formData, setFormData] = useState(data);
+  const [changedFields, setChangedFields] = useState({});
   const [dynamicOptions, setDynamicOptions] = useState({});
 
   // init hidden default fields
@@ -17,12 +19,71 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
     setFormData((prev) => ({ ...hiddenDefaults, ...prev }));
   }, [fields]);
 
+  // Helper function to get nested values
+  const getNestedValue = (obj, path) => {
+    return path.split('.').reduce((current, key) => current?.[key], obj);
+  };
+
+  // Helper function to set nested values
+  const setNestedValue = (obj, path, value) => {
+    const keys = path.split('.');
+    const lastKey = keys.pop();
+    const target = keys.reduce((current, key) => {
+      if (!current[key]) current[key] = {};
+      return current[key];
+    }, obj);
+    target[lastKey] = value;
+    return obj;
+  };
+
   const update = (name, value) => {
     setFormData((prev) => {
-      const updated = { ...prev, [name]: value };
+      const updated = { ...prev };
+      setNestedValue(updated, name, value);
+      
+      // Track changed fields
+      setChangedFields(prevChanged => {
+        console.log('Tracking change:', name, value instanceof File ? 'File' : value);
+        return {
+          ...prevChanged,
+          [name]: value
+        };
+      });
+      
+      // Clear dependent fields when parent changes
+      if (name.includes('country')) {
+        setNestedValue(updated, name.replace('country', 'state'), null);
+        setNestedValue(updated, name.replace('country', 'city'), null);
+      } else if (name.includes('state')) {
+        setNestedValue(updated, name.replace('state', 'city'), null);
+      }
+      
       onChange?.(updated);
       return updated;
     });
+  };
+
+  // Auto-fetch functionality for fields like IFSC code
+  const handleAutoFetch = async (field, value) => {
+    try {
+      // Use public IFSC API directly from frontend
+      const response = await fetch(`https://ifsc.razorpay.com/${value}`);
+      if (response.ok) {
+        const data = await response.json();
+        const bankName = data.BANK;
+        
+        if (bankName && field.autoFetch.target) {
+          setFormData(prev => {
+            const updated = { ...prev };
+            setNestedValue(updated, field.autoFetch.target, bankName);
+            onChange?.(updated);
+            return updated;
+          });
+        }
+      }
+    } catch (error) {
+      console.log('IFSC lookup failed:', error.message);
+    }
   };
 
   // fetching dynamic autocomplete options
@@ -32,7 +93,7 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
 
       // ⬇ Detect dependency
       if (field.dependsOn) {
-        const parentValue = formData[field.dependsOn];
+        const parentValue = getNestedValue(formData, field.dependsOn);
         if (!parentValue?._id) {
           console.warn(`[Populate skipped] '${field.name}' depends on '${field.dependsOn}' but value missing`);
           return;
@@ -40,6 +101,14 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
 
         // ⬇ Replace ANY ":something" placeholder with parentValue._id automatically
         url = url.replace(/:\w+/g, parentValue._id);
+        
+        // Add country code for cities endpoint
+        if (field.name.includes('city') && field.dependsOn.includes('state')) {
+          const countryValue = getNestedValue(formData, field.dependsOn.replace('state', 'country'));
+          if (countryValue?._id) {
+            url += `?countryCode=${countryValue._id}`;
+          }
+        }
       }
 
       let response;
@@ -92,6 +161,59 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
       );
     }
 
+    if (field.type === "file") {
+      return (
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-700 dark:to-gray-600 rounded-xl p-6 border-2 border-dashed border-blue-300 dark:border-gray-500 transition-all duration-200 hover:border-blue-400 dark:hover:border-gray-400">
+          {value && (
+            <div className="mb-4">
+              {(field.accept?.includes('image') || field.type === 'image') ? (
+                <img 
+                  src={typeof value === 'string' ? value : URL.createObjectURL(value)} 
+                  alt="Preview" 
+                  className="w-24 h-24 object-cover rounded-lg shadow-md"
+                />
+              ) : (
+                <div className="flex items-center gap-2 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                  <svg className="w-6 h-6 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 0v12h8V4H6z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {typeof value === 'string' ? 'Current file' : value.name}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+          <input
+            type="file"
+            accept={field.accept}
+            onChange={(e) => {
+              console.log('File selected:', e.target.files[0]);
+              onChange(e.target.files[0]);
+            }}
+            className="hidden"
+            id={`file-${field.name.replace(/\./g, '-')}`}
+          />
+          <label 
+            htmlFor={`file-${field.name.replace(/\./g, '-')}`}
+            className="flex flex-col items-center justify-center cursor-pointer group"
+          >
+            <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mb-3 group-hover:bg-blue-600 transition-colors">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            </div>
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              {value ? 'Change File' : 'Upload File'}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {field.accept?.replace('/*', ' files') || 'Any file type'}
+            </p>
+          </label>
+        </div>
+      );
+    }
+
     if (field.type === "AutoComplete") {
       return (
         <Autocomplete
@@ -127,36 +249,64 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
       <input
         type={field.type || "text"}
         value={value || ""}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => {
+          onChange(e.target.value);
+          // Auto-fetch functionality for IFSC codes
+          if (field.autoFetch && e.target.value.length === 11) {
+            handleAutoFetch(field, e.target.value);
+          }
+        }}
         placeholder={field.placeholder}
         className="w-full border border-gray-200 dark:border-gray-600 p-4 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 dark:bg-gray-700 focus:bg-white dark:focus:bg-gray-600 text-gray-800 dark:text-white"
       />
     );
   };
 
-  const onSubmitHandler = (e) => {
+  const onSubmitHandler = async (e) => {
     e.preventDefault();
-    onSubmit && onSubmit(formData);
+    console.log('Submit clicked, changed fields:', Object.keys(changedFields));
+    try {
+      await onSubmit?.(changedFields);
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to save changes');
+    }
   };
 
   return (
     <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-3xl shadow-xl p-8 border border-white/20">
       <form onSubmit={onSubmitHandler} className="space-y-6">
-        {fields
-          .filter((f) => !f.hidden)
-          .sort((a, b) => (a.orderKey ?? 999) - (b.orderKey ?? 999))
-          .map((field) => (
-            <div key={field.name} className="space-y-2">
-              <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 block uppercase tracking-wide">
-                {field.label}
-              </label>
-              {renderField(
-                field,
-                field.external ? field.externalValue : formData[field.name],
-                (val) => update(field.name, val)
-              )}
-            </div>
-          ))}
+        <div className="grid grid-cols-2 gap-4">
+          {fields
+            .filter((f) => !f.hidden)
+            .sort((a, b) => (a.orderKey ?? 999) - (b.orderKey ?? 999))
+            .map((field) => (
+              <div key={field.name} className={`space-y-2 ${field.gridClass || 'col-span-1'}`}>
+                {field.type === "file" ? (
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 block uppercase tracking-wide mb-3">
+                      {field.label}
+                    </label>
+                    {renderField(
+                      field,
+                      field.external ? field.externalValue : getNestedValue(formData, field.name),
+                      (val) => update(field.name, val)
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 block uppercase tracking-wide">
+                      {field.label}
+                    </label>
+                    {renderField(
+                      field,
+                      field.external ? field.externalValue : getNestedValue(formData, field.name),
+                      (val) => update(field.name, val)
+                    )}
+                  </>
+                )}
+              </div>
+            ))}
+        </div>
 
         <button
           type="submit"

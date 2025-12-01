@@ -3,11 +3,13 @@ import {useState} from "react";
 import "../assets/profileImg.png";
 import NotificationDrawer from "../components/Static/NotificationDrawer.jsx"
 import NotificationIndicator from "../components/Static/NotificationIndicator.jsx";
+import { useUserProfile } from "../hooks/useUserProfile.js";
 
 
 const TopNavBar = () =>{
     const {user} = useAuth();
     const [isOpen, setIsOpen] = useState(false);
+    const { profileImage } = useUserProfile();
     // const {notifications} = useNotification();
 
     return(
@@ -36,11 +38,23 @@ const TopNavBar = () =>{
                     {/* User Info */}
                     <div className="flex items-center space-x-2">
                         <span className="font-medium">{user?.name || "Guest"}</span>
-                        <img
-                            src={user?.profilePicture || "../assets/profileImg.png"}
-                            alt="User Avatar"
-                            className="w-8 h-8 rounded-full object-cover"
-                        />
+                        {profileImage ? (
+                            <img
+                                src={profileImage}
+                                alt="User Avatar"
+                                className="w-8 h-8 rounded-full object-cover"
+                                onError={(e) => {
+                                    console.log('Image failed to load:', profileImage);
+                                    e.target.style.display = 'none';
+                                }}
+                            />
+                        ) : (
+                            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                                <span className="text-white text-sm font-bold">
+                                    {user?.name?.[0] || "U"}
+                                </span>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

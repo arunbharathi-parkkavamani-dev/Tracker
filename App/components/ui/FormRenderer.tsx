@@ -143,21 +143,37 @@ const FormRenderer = ({
         /** File / Image upload */
         if (field.type === "file" || field.type === "image") {
             return (
-                <View className="gap-y-2">
-                    {value?.uri && field.type === "image" && (
-                        <Image source={{ uri: value.uri }} className="w-24 h-24 rounded-md" />
+                <View className="bg-blue-50 rounded-xl p-4 border-2 border-dashed border-blue-300">
+                    {value?.uri && (
+                        <View className="mb-4">
+                            {field.accept?.includes('image') || field.type === "image" ? (
+                                <Image source={{ uri: value.uri }} className="w-24 h-24 rounded-lg" />
+                            ) : (
+                                <View className="flex-row items-center gap-2 p-3 bg-white rounded-lg">
+                                    <View className="w-6 h-6 bg-blue-500 rounded items-center justify-center">
+                                        <Text className="text-white text-xs">📄</Text>
+                                    </View>
+                                    <Text className="text-sm font-medium text-gray-700">File Selected</Text>
+                                </View>
+                            )}
+                        </View>
                     )}
-
+                    
                     <TouchableOpacity
                         onPress={() => pickFile(field)}
-                        className="bg-gray-200 p-3 rounded-md"
+                        className="items-center py-4"
+                        disabled={loadingFile}
                     >
-                        <Text>{loadingFile ? "Uploading..." : field.placeholder || "Choose File"}</Text>
+                        <View className="w-12 h-12 bg-blue-500 rounded-full items-center justify-center mb-2">
+                            <Text className="text-white text-xl">+</Text>
+                        </View>
+                        <Text className="text-sm font-medium text-gray-700 mb-1">
+                            {loadingFile ? "Uploading..." : value?.uri ? "Change File" : "Upload File"}
+                        </Text>
+                        <Text className="text-xs text-gray-500">
+                            {field.accept || "Any file type"}
+                        </Text>
                     </TouchableOpacity>
-
-                    {value?.uri && (
-                        <Text className="text-xs text-gray-500">Selected</Text>
-                    )}
                 </View>
             );
         }
@@ -248,8 +264,17 @@ const FormRenderer = ({
                 .sort((a, b) => (a.orderKey ?? 999) - (b.orderKey ?? 999))
                 .map((field) => (
                     <View key={field.name}>
-                        <Text className="mb-1 font-semibold text-gray-700">{field.label}</Text>
-                        {renderField(field)}
+                        {field.type !== "file" && field.type !== "image" && (
+                            <Text className="mb-1 font-semibold text-gray-700">{field.label}</Text>
+                        )}
+                        {field.type === "file" || field.type === "image" ? (
+                            <View className="mb-2">
+                                <Text className="mb-2 font-semibold text-gray-700">{field.label}</Text>
+                                {renderField(field)}
+                            </View>
+                        ) : (
+                            renderField(field)
+                        )}
                     </View>
                 ))}
 

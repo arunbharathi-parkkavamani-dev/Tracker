@@ -91,6 +91,26 @@ export async function populateHelper(req, res, next) {
       };
     }
     
+    // Handle file upload for create/update actions
+    let requestBody = req.body;
+    if ((action === 'create' || action === 'update') && req.file) {
+      const folder = req.route.path.includes('profile') || req.file.fieldname === 'profileImage' ? 'profile' : 'general';
+      const filePath = `documents/${folder}/${req.file.filename}`;
+      
+      // Add file path to the request body based on field name
+      if (req.file.fieldname === 'profileImage' || req.file.fieldname === 'file') {
+        requestBody = {
+          ...req.body,
+          'basicInfo.profileImage': filePath
+        };
+      } else {
+        requestBody = {
+          ...req.body,
+          filePath: filePath
+        };
+      }
+    }
+
     const data = await buildQuery({
       role: user.role,
       userId: user.id,
@@ -100,7 +120,7 @@ export async function populateHelper(req, res, next) {
       fields,
       filter: queryFilter,
       populateFields: populateFields ? JSON.parse(populateFields) : null,
-      body: req.body,
+      body: requestBody,
     });
 
     const statusCode = action === "create" ? 201 : 200;

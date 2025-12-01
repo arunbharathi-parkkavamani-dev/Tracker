@@ -8,7 +8,7 @@ export const setAuthLogout = (logoutFn) => {
 };
 
 const axiosInstance = axios.create({
-  baseURL: "https://tracker-mxp9.onrender.com/api",
+  baseURL: "http://10.11.244.208:3000/api",
   timeout: 100000,
   withCredentials: true,
 });
@@ -25,8 +25,8 @@ axiosInstance.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
     
-    // Only set Content-Type for POST/PUT/PATCH with body
-    if (['post', 'put', 'patch'].includes(config.method?.toLowerCase()) && config.data) {
+    // Only set Content-Type for POST/PUT/PATCH with body (but not for FormData)
+    if (['post', 'put', 'patch'].includes(config.method?.toLowerCase()) && config.data && !(config.data instanceof FormData)) {
       config.headers['Content-Type'] = 'application/json';
     }
     return config;
@@ -49,7 +49,7 @@ axiosInstance.interceptors.response.use(
         
         try {
           const refreshResponse = await axios.post(
-            "https://tracker-mxp9.onrender.com/api/auth/refresh",
+            "http://10.11.244.208:3000/api/auth/refresh",
             {},
             { withCredentials: true }
           );

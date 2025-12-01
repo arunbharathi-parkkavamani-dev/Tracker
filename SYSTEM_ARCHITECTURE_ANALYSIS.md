@@ -484,8 +484,115 @@ Socket.io Broadcast → Client Reception → UI Update
 | Daily Activities | ✅ | ✅ | ✅ | Complete |
 | Notifications | ✅ | ✅ | ✅ | Complete |
 | Real-time Updates | ✅ | ✅ | ✅ | Complete |
-| File Upload | ✅ | ✅ | ✅ | Complete |
+| File Upload System | ✅ | ✅ | ✅ | Complete |
+| Profile Management | ✅ | ✅ | ✅ | Complete |
 | Reporting | ✅ | ✅ | ⏳ | Partial |
+
+---
+
+## 📁 FILE UPLOAD SYSTEM
+
+### Architecture Overview
+```
+📦 File Upload System
+├── 🔧 Backend Components
+│   ├── Multer Middleware (/middlewares/multerConfig.js)
+│   ├── File Routes (/routes/fileRoutes.js)
+│   ├── Populate Integration (automatic file handling)
+│   └── Document Storage (/documents/)
+├── 🌐 API Endpoints
+│   ├── Upload: /api/populate/update/:model/:id (with file)
+│   ├── Serve: /api/files/render/:folder/:filename
+│   └── Info: /api/files/info/:folder/:filename
+├── 🎨 Frontend Integration
+│   ├── Web: FormData + multipart/form-data
+│   ├── Mobile: FormData + expo-image-picker
+│   └── Profile Forms: Integrated file upload
+└── 🔒 Security Features
+    ├── File type validation (images, PDFs, docs)
+    ├── Size limits (5MB max)
+    ├── Unique filename generation
+    └── Secure file serving
+```
+
+### File Storage Structure
+```
+backend/src/documents/
+├── profile/              # Profile images
+│   ├── file-timestamp-random.jpg
+│   └── file-timestamp-random.png
+└── general/              # Other documents
+    ├── file-timestamp-random.pdf
+    └── file-timestamp-random.docx
+```
+
+### Database Integration
+```
+File Path Storage:
+├── Profile Images: employees.basicInfo.profileImage
+├── Documents: model.filePath
+└── Format: "documents/folder/filename.ext"
+
+Automatic Handling:
+├── Multer processes uploads on all populate routes
+├── File paths automatically added to request body
+├── Conditional processing (only when files present)
+└── Seamless integration with existing API
+```
+
+### Frontend Usage Patterns
+
+#### Web Implementation
+```javascript
+// Profile update with image
+const formData = new FormData();
+formData.append('file', selectedFile);
+formData.append('basicInfo.firstName', 'John');
+
+await axiosInstance.put('/populate/update/employees/userId', formData, {
+  headers: { 'Content-Type': 'multipart/form-data' }
+});
+
+// Display image
+const imageUrl = `${API_URL}/api/files/render/profile/filename.jpg`;
+```
+
+#### Mobile Implementation
+```javascript
+// File selection with expo-image-picker
+const result = await ImagePicker.launchImageLibraryAsync({
+  mediaTypes: ImagePicker.MediaTypeOptions.Images
+});
+
+// Upload via FormData
+const formData = new FormData();
+formData.append('file', {
+  uri: result.assets[0].uri,
+  type: result.assets[0].mimeType,
+  name: 'profile.jpg'
+});
+```
+
+### Security & Validation
+```
+🛡️ File Security:
+├── MIME Type Validation: images, PDFs, Word docs only
+├── Size Limits: 5MB maximum file size
+├── Filename Sanitization: timestamp + random generation
+├── Directory Isolation: separate folders for different types
+├── Secure Serving: proper headers and caching
+└── Access Control: integrated with existing auth system
+```
+
+### Performance Optimizations
+```
+⚡ Performance Features:
+├── Conditional Processing: only when files present
+├── Efficient Storage: organized directory structure
+├── Caching Headers: 1-year cache for served files
+├── Stream Serving: efficient file delivery
+└── Minimal Overhead: seamless populate integration
+```
 
 ---
 
