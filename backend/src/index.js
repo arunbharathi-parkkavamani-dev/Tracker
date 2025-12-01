@@ -42,7 +42,7 @@ app.use(
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Simple methods only
-    allowedHeaders: ['Content-Type'], // Simple headers only
+    allowedHeaders: ['Content-Type', 'Authorization'], // Simple headers only
   })
 );
 
