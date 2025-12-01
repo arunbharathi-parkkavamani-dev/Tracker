@@ -30,18 +30,19 @@ const allowedOrigins = [
 const lanRegex = /^http:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+):\d+$/;
 
 
+// Simple CORS to avoid preflight requests
 app.use(
   cors({
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
-
       if (allowedOrigins.includes(origin) || lanRegex.test(origin)) {
         return callback(null, true);
       }
-
       return callback(new Error("Not allowed by CORS: " + origin));
     },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Simple methods only
+    allowedHeaders: ['Content-Type'], // Simple headers only
   })
 );
 

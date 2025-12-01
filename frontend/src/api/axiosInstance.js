@@ -4,18 +4,15 @@ import Cookies from "js-cookie";
 const axiosInstance = axios.create({
   baseURL: "https://tracker-mxp9.onrender.com/api",
   timeout: 100000,
-  headers: {
-    "Content-Type": "application/json",
-  },
   withCredentials: true,
 });
 
-// Request interceptor to add token to headers
+// Request interceptor - avoid custom headers to prevent preflight
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = Cookies.get("auth_token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // Only set Content-Type for POST/PUT/PATCH with body
+    if (['post', 'put', 'patch'].includes(config.method?.toLowerCase()) && config.data) {
+      config.headers['Content-Type'] = 'application/json';
     }
     return config;
   },
