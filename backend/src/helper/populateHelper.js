@@ -81,6 +81,16 @@ export async function populateHelper(req, res, next) {
     }
 
     // ------------------------ EXECUTE MAIN QUERY ------------------------
+    let queryFilter = finalFilter;
+    
+    // For aggregate queries, structure the filter properly
+    if (isAggregate && stages) {
+      queryFilter = {
+        aggregate: true,
+        stages: stages
+      };
+    }
+    
     const data = await buildQuery({
       role: user.role,
       userId: user.id,
@@ -88,9 +98,7 @@ export async function populateHelper(req, res, next) {
       modelName: model,
       docId: id,
       fields,
-      filter: finalFilter,
-      aggregate: isAggregate,
-      stages,
+      filter: queryFilter,
       populateFields: populateFields ? JSON.parse(populateFields) : null,
       body: req.body,
     });

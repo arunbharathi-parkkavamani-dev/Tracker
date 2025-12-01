@@ -44,7 +44,11 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
 
       let response;
       if (field.dynamicOptions?.params?.aggregate) {
-        response = await axiosInstance.post(url, field.dynamicOptions.params);
+        // For aggregate queries, send as query params
+        const params = new URLSearchParams();
+        params.append('aggregate', 'true');
+        params.append('stages', JSON.stringify(field.dynamicOptions.params.stages));
+        response = await axiosInstance.get(`${url}?${params.toString()}`);
       } else {
         response = await axiosInstance.get(url);
       }
