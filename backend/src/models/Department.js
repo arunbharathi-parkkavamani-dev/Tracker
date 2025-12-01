@@ -23,4 +23,4 @@ DepartmentSchema.pre('save', function(next) {
   next();
 });
 
-export default model('depatments', DepartmentSchema);
+export default model('departments', DepartmentSchema);

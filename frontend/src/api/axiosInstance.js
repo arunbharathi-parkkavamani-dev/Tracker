@@ -2,7 +2,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 
 const axiosInstance = axios.create({
-  baseURL: "http://10.87.125.208:3000/api",
+  baseURL: "https://tracker-mxp9.onrender.com/api",
   timeout: 100000,
   headers: {
     "Content-Type": "application/json",
@@ -10,17 +10,29 @@ const axiosInstance = axios.create({
   withCredentials: true,
 });
 
-// Interceptor to refresh token automatically
+// Request interceptor to add token to headers
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = Cookies.get("auth_token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Response interceptor to refresh token automatically
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
     // Token expired -> try refresh once
-    if(error.response?.status === 403 && !originalRequest._retry) {
-      originalRequest._retry = true
+    if(error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
       try {
-        await axios.get("http://10.87.125.208:3000/api/auth/refresh", {
+        await axios.get("https://tracker-mxp9.onrender.com/api/auth/refresh", {
           withCredentials: true,
         });
         return axiosInstance(originalRequest);

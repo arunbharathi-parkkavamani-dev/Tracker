@@ -172,15 +172,24 @@ const LeaveAndRegularization = ({ onClose, onSuccess, onFailed }) => {
             </h2>
           </div>
           
-          {formType === "leave" && userData && (
-            <FormRenderer
-              fields={leaveFormFields(userData).map(f =>
-                f.name === "availableDays" ? { ...f, externalValue: availableDays } : f
+          {formType === "leave" && (
+            <div>
+              {!userData ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <p className="text-gray-600">Loading user data...</p>
+                </div>
+              ) : (
+                <FormRenderer
+                  fields={leaveFormFields(userData).map(f =>
+                    f.name === "availableDays" ? { ...f, externalValue: availableDays } : f
+                  )}
+                  submitButton={leaveSubmitButton}
+                  onSubmit={handleSubmit}
+                  onChange={handleFormChange}
+                />
               )}
-              submitButton={leaveSubmitButton}
-              onSubmit={handleSubmit}
-              onChange={handleFormChange}
-            />
+            </div>
           )}
 
           {formType === "regularization" && (

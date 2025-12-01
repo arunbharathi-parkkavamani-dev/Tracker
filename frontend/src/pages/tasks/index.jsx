@@ -62,6 +62,27 @@ const TasksPage = () => {
           return acc;
         }, []);
       setClients(uniqueClients);
+      
+      // Auto-select first client if none selected
+      if (uniqueClients.length > 0 && !selectedClient) {
+        const firstClient = uniqueClients[0];
+        setSelectedClient(firstClient);
+        // Fetch first client's project types
+        try {
+          const clientId = typeof firstClient._id === 'object' ? firstClient._id.toString() : firstClient._id;
+          const response = await axiosInstance.get(`/populate/read/clients/${clientId}?fields=projectTypes&populateFields={"projectTypes":"name"}`);
+          const clientData = response.data.data;
+          const colors = ['bg-purple-500', 'bg-green-500', 'bg-red-500', 'bg-indigo-500', 'bg-yellow-600', 'bg-pink-500'];
+          const clientColumns = clientData.projectTypes?.map((projectType, index) => ({
+            id: projectType.name,
+            title: projectType.name,
+            color: colors[index % colors.length]
+          })) || [];
+          setClientProjectTypes(clientColumns);
+        } catch (error) {
+          console.error('Error fetching first client project types:', error);
+        }
+      }
     } catch (error) {
       console.error('Error fetching tasks:', error);
     } finally {
@@ -258,9 +279,9 @@ const TasksPage = () => {
       <div className="flex gap-6 mb-6 h-screen">
         {/* Client Selection */}
         <div className="w-1/4 bg-white rounded-lg shadow p-4 overflow-y-auto">
-          <h3 className="font-semibold mb-3">Select Client</h3>
+          <h3 className="font-semibold mb-3">Clients ({clients.length})</h3>
           <div className="space-y-2">
-            {clients.map((client) => (
+            {clients.length > 0 ? clients.map((client) => (
               <div
                 key={client._id}
                 onClick={async () => {
@@ -287,13 +308,22 @@ const TasksPage = () => {
                     setClientProjectTypes([]);
                   }
                 }}
-                className={`p-2 rounded cursor-pointer hover:bg-gray-100 ${
-                  selectedClient?._id === client._id ? 'bg-blue-100 border-l-4 border-blue-500' : ''
+                className={`p-3 rounded-lg cursor-pointer transition-all duration-200 ${
+                  selectedClient?._id === client._id 
+                    ? 'bg-blue-100 border-l-4 border-blue-500 shadow-md' 
+                    : 'hover:bg-gray-50 border-l-4 border-transparent'
                 }`}
               >
-                {client.name}
+                <div className="font-medium text-gray-800">{client.name || 'Unnamed Client'}</div>
+                <div className="text-sm text-gray-500 mt-1">
+                  {tasks.filter(task => task.clientId?._id === client._id).length} tasks
+                </div>
               </div>
-            ))}
+            )) : (
+              <div className="text-center text-gray-500 py-4">
+                No clients found
+              </div>
+            )}
           </div>
         </div>
         
