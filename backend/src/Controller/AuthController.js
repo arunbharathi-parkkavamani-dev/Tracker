@@ -50,15 +50,19 @@ export const login = async (req, res, next) => {
       
       res.cookie("auth_token", accessToken, {
         httpOnly: false,
-        secure: process.env.NODE_ENV === "production",
+        secure: false, // Always false for development
         sameSite: "lax",
         maxAge: accessMaxAge,
+        path: "/",
+        domain: process.env.NODE_ENV === "production" ? ".yourdomain.com" : undefined
       });
       res.cookie("refresh_token", refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: false, // Always false for development
         sameSite: "lax",
         maxAge: refreshMaxAge,
+        path: "/",
+        domain: process.env.NODE_ENV === "production" ? ".yourdomain.com" : undefined
       });
     }
 
@@ -102,9 +106,11 @@ export const refresh = async (req, res, next) => {
       if (platform === 'web') {
         res.cookie("auth_token", newAccessToken, {
           httpOnly: false,
-          secure: process.env.NODE_ENV === "production",
+          secure: false, // Always false for development
           sameSite: "lax",
           maxAge: 60 * 60 * 1000,
+          path: "/",
+          domain: process.env.NODE_ENV === "production" ? ".yourdomain.com" : undefined
         });
       }
       

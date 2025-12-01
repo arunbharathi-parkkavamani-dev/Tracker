@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert, TextInput } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert, TextInput, Modal, FlatList } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import axiosInstance from '@/api/axiosInstance';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -24,24 +24,36 @@ export default function DailyTracker() {
   const [activityText, setActivityText] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [showClientDropdown, setShowClientDropdown] = useState(false);
+  const [clientSearch, setClientSearch] = useState('');
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [selectedDate]);
 
   const fetchData = async () => {
     try {
       setLoading(true);
       const userId = await AsyncStorage.getItem('userId');
       
-      // Fetch clients
-      const clientsResponse = await axiosInstance.get('/populate/read/clients?fields=name');
-      setClients(clientsResponse.data.data || []);
+      // Fetch clients like tasks page
+      const tasksResponse = await axiosInstance.get('/populate/read/tasks?filter={"status":{"$ne":"Deleted"}}&populateFields={"clientId":"name"}');
+      const tasksData = tasksResponse.data.data || [];
+      const uniqueClients = tasksData
+        .map((task: any) => task.clientId)
+        .filter((client: any) => client && client._id && client.name)
+        .reduce((acc: Client[], client: Client) => {
+          if (!acc.find(c => c._id === client._id)) {
+            acc.push(client);
+          }
+          return acc;
+        }, []);
+      setClients(uniqueClients);
       
-      // Fetch today's activities
-      const today = new Date().toISOString().split('T')[0];
+      // Fetch activities for selected date
       const activitiesResponse = await axiosInstance.get(
-        `/populate/read/dailyactivities?filter={"employee":"${userId}","date":"${today}"}&populateFields={"clientId":"name"}`
+        `/populate/read/dailyactivities?filter={"employee":"${userId}","date":"${selectedDate}"}&populateFields={"clientId":"name"}`
       );
       setActivities(activitiesResponse.data.data || []);
     } catch (error) {
@@ -61,13 +73,11 @@ export default function DailyTracker() {
     try {
       setSubmitting(true);
       const userId = await AsyncStorage.getItem('userId');
-      const today = new Date().toISOString().split('T')[0];
-
       await axiosInstance.post('/populate/create/dailyactivities', {
         employee: userId,
         clientId: selectedClient._id,
         activity: activityText.trim(),
-        date: today
+        date: selectedDate
       });
 
       setActivityText('');
@@ -89,6 +99,21 @@ export default function DailyTracker() {
     });
   };
 
+  const filteredClients = clients.filter(client =>
+    client.name.toLowerCase().includes(clientSearch.toLowerCase())
+  );
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    if (dateStr === today.toISOString().split('T')[0]) return 'Today';
+    if (dateStr === yesterday.toISOString().split('T')[0]) return 'Yesterday';
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center bg-gray-50">
@@ -100,17 +125,47 @@ export default function DailyTracker() {
 
   return (
     <ScrollView className="flex-1 bg-gray-50">
-      {/* Header */}
+      {/* Header with Date Selector */}
       <View className="bg-white px-4 py-4 border-b border-gray-200">
         <Text className="text-2xl font-bold text-gray-900">Daily Activity Tracker</Text>
-        <Text className="text-sm text-gray-500 mt-1">
-          {new Date().toLocaleDateString('en-US', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-          })}
-        </Text>
+        
+        {/* Date Navigation */}
+        <View className="flex-row items-center justify-between mt-3">
+          <TouchableOpacity
+            onPress={() => {
+              const prevDate = new Date(selectedDate);
+              prevDate.setDate(prevDate.getDate() - 1);
+              setSelectedDate(prevDate.toISOString().split('T')[0]);
+            }}
+            className="p-2"
+          >
+            <MaterialIcons name="chevron-left" size={24} color="#3B82F6" />
+          </TouchableOpacity>
+          
+          <Text className="text-lg font-semibold text-gray-900">
+            {formatDate(selectedDate)} - {new Date(selectedDate).toLocaleDateString('en-US', { 
+              weekday: 'long', month: 'short', day: 'numeric' 
+            })}
+          </Text>
+          
+          <TouchableOpacity
+            onPress={() => {
+              const nextDate = new Date(selectedDate);
+              nextDate.setDate(nextDate.getDate() + 1);
+              if (nextDate <= new Date()) {
+                setSelectedDate(nextDate.toISOString().split('T')[0]);
+              }
+            }}
+            className="p-2"
+            disabled={selectedDate >= new Date().toISOString().split('T')[0]}
+          >
+            <MaterialIcons 
+              name="chevron-right" 
+              size={24} 
+              color={selectedDate >= new Date().toISOString().split('T')[0] ? "#D1D5DB" : "#3B82F6"} 
+            />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View className="px-4 py-4">
@@ -118,31 +173,17 @@ export default function DailyTracker() {
         <View className="bg-white rounded-lg p-4 mb-6 shadow-sm border border-gray-200">
           <Text className="text-lg font-semibold text-gray-900 mb-4">Add New Activity</Text>
           
-          {/* Client Selection */}
+          {/* Client Selection with Autocomplete */}
           <Text className="text-sm font-medium text-gray-700 mb-2">Select Client</Text>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            className="mb-4"
+          <TouchableOpacity
+            onPress={() => setShowClientDropdown(true)}
+            className="border border-gray-300 rounded-lg p-3 mb-4 flex-row items-center justify-between"
           >
-            {clients.map((client) => (
-              <TouchableOpacity
-                key={client._id}
-                onPress={() => setSelectedClient(client)}
-                className={`px-4 py-2 rounded-full mr-2 border ${
-                  selectedClient?._id === client._id 
-                    ? 'bg-blue-500 border-blue-500' 
-                    : 'bg-gray-100 border-gray-300'
-                }`}
-              >
-                <Text className={`text-sm font-medium ${
-                  selectedClient?._id === client._id ? 'text-white' : 'text-gray-700'
-                }`}>
-                  {client.name}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+            <Text className={selectedClient ? 'text-gray-900' : 'text-gray-500'}>
+              {selectedClient ? selectedClient.name : 'Choose a client...'}
+            </Text>
+            <MaterialIcons name="arrow-drop-down" size={24} color="#6B7280" />
+          </TouchableOpacity>
 
           {/* Activity Input */}
           <Text className="text-sm font-medium text-gray-700 mb-2">Activity Details</Text>
@@ -177,14 +218,16 @@ export default function DailyTracker() {
           </TouchableOpacity>
         </View>
 
-        {/* Today's Activities */}
+        {/* Activities for Selected Date */}
         <View className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-          <Text className="text-lg font-semibold text-gray-900 mb-4">Today's Activities</Text>
+          <Text className="text-lg font-semibold text-gray-900 mb-4">
+            Activities for {formatDate(selectedDate)}
+          </Text>
           
           {activities.length === 0 ? (
             <View className="items-center py-8">
               <MaterialIcons name="assignment" size={48} color="#D1D5DB" />
-              <Text className="text-gray-500 mt-2">No activities added today</Text>
+              <Text className="text-gray-500 mt-2">No activities for {formatDate(selectedDate)}</Text>
             </View>
           ) : (
             activities.map((activity, index) => (
@@ -194,7 +237,7 @@ export default function DailyTracker() {
                   <View className="flex-1">
                     <View className="flex-row justify-between items-start mb-1">
                       <Text className="font-semibold text-gray-900">
-                        {activity.clientId.name}
+                        {activity.clientId?.name || 'Unknown Client'}
                       </Text>
                       <Text className="text-xs text-gray-500">
                         {formatTime(activity.createdAt)}
@@ -213,6 +256,56 @@ export default function DailyTracker() {
           )}
         </View>
       </View>
+
+      {/* Client Selection Modal */}
+      <Modal
+        visible={showClientDropdown}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowClientDropdown(false)}
+      >
+        <View className="flex-1 justify-end bg-black/50">
+          <View className="bg-white rounded-t-3xl max-h-96">
+            <View className="p-4 border-b border-gray-200">
+              <View className="flex-row items-center justify-between mb-3">
+                <Text className="text-lg font-semibold">Select Client</Text>
+                <TouchableOpacity onPress={() => setShowClientDropdown(false)}>
+                  <MaterialIcons name="close" size={24} color="#6B7280" />
+                </TouchableOpacity>
+              </View>
+              
+              <TextInput
+                className="border border-gray-300 rounded-lg p-3"
+                placeholder="Search clients..."
+                value={clientSearch}
+                onChangeText={setClientSearch}
+              />
+            </View>
+            
+            <FlatList
+              data={filteredClients}
+              keyExtractor={(item) => item._id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  onPress={() => {
+                    setSelectedClient(item);
+                    setClientSearch('');
+                    setShowClientDropdown(false);
+                  }}
+                  className="p-4 border-b border-gray-100"
+                >
+                  <Text className="text-gray-900 font-medium">{item.name}</Text>
+                </TouchableOpacity>
+              )}
+              ListEmptyComponent={
+                <View className="p-8 items-center">
+                  <Text className="text-gray-500">No clients found</Text>
+                </View>
+              }
+            />
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }

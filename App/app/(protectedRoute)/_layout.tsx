@@ -52,6 +52,18 @@ export default function DrawerLayout() {
     return `/(protectedRoute)${route}`; // always point to protected folder
   };
 
+  // Get proper title based on route
+  const getRouteTitle = (route: string) => {
+    const routeTitles: { [key: string]: string } = {
+      '/dashboard': 'Dashboard',
+      '/daily-tracker': 'Daily Tracker',
+      '/tasks': 'Tasks',
+      '/attendance': 'Attendance',
+      '/profile': 'Profile'
+    };
+    return routeTitles[route] || item.title;
+  };
+
   return (
     <Drawer screenOptions={{ headerShown: true }}>
       {navItems.map((item) => {
@@ -64,7 +76,7 @@ export default function DrawerLayout() {
             // name MUST be filesystem route NOT title
             name={normalize(item.route)}
             options={{
-              title: item.title,
+              title: getRouteTitle(item.route),
               drawerIcon: ({ color, size }) => (
                 <Icon size={size} color={color} />
               ),

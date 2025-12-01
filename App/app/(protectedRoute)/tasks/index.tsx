@@ -26,7 +26,7 @@ export default function Tasks() {
       const tasksData = response.data.data || [];
       const uniqueClients = tasksData
         .map((task: any) => task.clientId)
-        .filter((client: any) => client && client.name)
+        .filter((client: any) => client && client._id && client.name)
         .reduce((acc: Client[], client: Client) => {
           if (!acc.find(c => c._id === client._id)) {
             acc.push(client);

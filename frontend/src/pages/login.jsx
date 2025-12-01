@@ -19,19 +19,47 @@ const Login = () => {
     try {
       const response = await axiosInstance.post(
         "/auth/login",
-        { workEmail, password },
+        { workEmail, password, platform: "web" },
         { withCredentials: true }
       );
 
       if (response.status === 200 && response.data.accessToken) {
         const token = response.data.accessToken;
-
-        // Save token in cookie
-        Cookies.set("auth_token", token, { expires: 7 });
+        console.log("Login successful, token received:", { 
+          platform: response.data.platform,
+          expiresIn: response.data.expiresIn 
+        });
 
         // Decode token and update user context
         const decoded = jwtDecode(token);
+        console.log("Setting user from login:", { 
+          id: decoded.id, 
+          role: decoded.role, 
+          exp: decoded.exp,
+          timeUntilExpiry: Math.round((decoded.exp - Date.now() / 1000) / 60) + ' minutes'
+        });
+        
         setUser(decoded);
+
+        // Check if cookie was set, if not set it manually
+        setTimeout(() => {
+          const cookieToken = Cookies.get("auth_token");
+          console.log("Cookie check after login:", !!cookieToken);
+          
+          if (!cookieToken) {
+            console.log("Backend didn't set cookie, setting manually");
+            Cookies.set("auth_token", token, { 
+              expires: 1/24, // 1 hour in days
+              secure: false,
+              sameSite: "lax"
+            });
+            Cookies.set("refresh_token", response.data.refreshToken, {
+              expires: 7, // 7 days
+              secure: false,
+              sameSite: "lax"
+            });
+          }
+        }, 100);
 
         navigate("/dashboard");
       } else {
