@@ -1,5 +1,12 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router } from "expo-router";
+
+let authContextLogout = null;
+
+export const setAuthLogout = (logoutFn) => {
+  authContextLogout = logoutFn;
+};
 
 const axiosInstance = axios.create({
   baseURL: "https://tracker-mxp9.onrender.com/api",
@@ -59,9 +66,22 @@ axiosInstance.interceptors.response.use(
       }
     }
     
-    // Handle other 401 errors
-    if (error.response?.status === 401 && errorData?.action === "login") {
+    // Handle any 401 error - logout and redirect
+    if (error.response?.status === 401) {
       await AsyncStorage.multiRemove(["auth_token", "refresh_token"]);
+      
+      // Use auth context logout if available
+      if (authContextLogout) {
+        authContextLogout();
+      }
+      
+      // Redirect to login
+      try {
+        router.replace("/(authRoute)/Login");
+      } catch (routerError) {
+        console.log("Router error:", routerError);
+      }
+      
       console.log("Unauthorized - redirect to login");
     }
 

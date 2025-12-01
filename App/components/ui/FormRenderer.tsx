@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity, Image } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Image, FlatList, Modal } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 import axiosInstance from "../../api/axiosInstance";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -29,6 +29,15 @@ const FormRenderer = ({
         setFormData((prev) => ({ ...hiddenDefaults, ...prev }));
     }, [fields]);
 
+    // Separate effect for populating AutoComplete options
+    useEffect(() => {
+        fields.forEach((field) => {
+            if (field.type === "AutoComplete" && field.source) {
+                handlePopulate(field);
+            }
+        });
+    }, [fields]);
+
     // 🔥 detect when user changed something
     const update = (name, value) => {
         setFormData((prev) => {
@@ -43,14 +52,25 @@ const FormRenderer = ({
         try {
             let res;
             if (field.dynamicOptions?.params?.aggregate) {
+                // For aggregate queries, send the full params object
                 res = await axiosInstance.post(field.source, field.dynamicOptions.params);
             } else {
                 res = await axiosInstance.get(field.source);
             }
-            const data = res?.data?.data || [];
+            
+            let data = res?.data?.data || res?.data || [];
+            
+            // Handle case where data is a single object instead of array
+            if (!Array.isArray(data)) {
+                data = [data];
+            }
+            
+            console.log(`Populated ${field.name}:`, data);
+            console.log(`Field config:`, field.dynamicOptions);
+            
             setDynamicOptions((prev) => ({ ...prev, [field.name]: data }));
         } catch (e) {
-            console.log("Failed", e);
+            console.log(`Failed to populate ${field.name}:`, e);
         }
     };
 
@@ -150,24 +170,61 @@ const FormRenderer = ({
                     ? field.options
                     : [];
 
-            const items = options.map((o) => ({ label: o.name, value: o }));
+            const selectedValue = formData[field.name];
+            const displayText = selectedValue?.name || field.placeholder || field.label;
 
             return (
-                <View className="mb-6 z-50">
-                    <DropDownPicker
-                        open={dropdownOpen[field.name] || false}
-                        setOpen={(open) =>
-                            setDropdownOpen((prev) => ({ ...prev, [field.name]: open }))
-                        }
-                        items={items}
-                        multiple={field.multi || false}
-                        value={formData[field.name] || (field.multi ? [] : null)}
-                        setValue={(cb) => update(field.name, cb(formData[field.name]))}
-                        searchable
-                        placeholder={field.placeholder || field.label}
-                        onOpen={() => handlePopulate(field)}
-                        loading={!options.length}   // optional
-                    />
+                <View className="mb-6">
+                    <TouchableOpacity
+                        className="border border-gray-300 p-3 rounded-md"
+                        onPress={() => {
+                            handlePopulate(field);
+                            setDropdownOpen((prev) => ({ ...prev, [field.name]: true }));
+                        }}
+                    >
+                        <Text>{displayText}</Text>
+                    </TouchableOpacity>
+
+                    <Modal
+                        visible={dropdownOpen[field.name] || false}
+                        transparent
+                        animationType="slide"
+                        onRequestClose={() => setDropdownOpen((prev) => ({ ...prev, [field.name]: false }))}
+                    >
+                        <View className="flex-1 justify-end bg-black/50">
+                            <View className="bg-white rounded-t-3xl max-h-96">
+                                <View className="p-4 border-b border-gray-200">
+                                    <Text className="text-lg font-semibold">{field.label}</Text>
+                                    <TouchableOpacity
+                                        className="absolute right-4 top-4"
+                                        onPress={() => setDropdownOpen((prev) => ({ ...prev, [field.name]: false }))}
+                                    >
+                                        <Text className="text-xl">×</Text>
+                                    </TouchableOpacity>
+                                </View>
+                                <FlatList
+                                    data={options}
+                                    keyExtractor={(item, index) => item._id || index.toString()}
+                                    renderItem={({ item }) => (
+                                        <TouchableOpacity
+                                            className="p-4 border-b border-gray-100"
+                                            onPress={() => {
+                                                update(field.name, item);
+                                                setDropdownOpen((prev) => ({ ...prev, [field.name]: false }));
+                                            }}
+                                        >
+                                            <Text className="text-gray-900">{item.name}</Text>
+                                        </TouchableOpacity>
+                                    )}
+                                    ListEmptyComponent={
+                                        <View className="p-8 items-center">
+                                            <Text className="text-gray-500">No options available</Text>
+                                        </View>
+                                    }
+                                />
+                            </View>
+                        </View>
+                    </Modal>
                 </View>
             );
         }

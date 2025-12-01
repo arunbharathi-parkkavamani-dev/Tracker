@@ -11,6 +11,7 @@ import {
     ScrollView,
     ActivityIndicator,
 } from "react-native";
+import { MaterialIcons } from '@expo/vector-icons';
 import * as Location from "expo-location";
 import Toast from "react-native-toast-message";
 import axiosInstance from "@/api/axiosInstance";
@@ -392,22 +393,30 @@ export default function Attendance() {
     }
 
     return (
-        <View className="flex-1 bg-slate-950">
+        <View className="flex-1 bg-gray-50">
             <ScrollView
                 contentContainerStyle={{ paddingBottom: 24 }}
                 className="flex-1"
             >
-                <Text className="text-2xl font-bold mb-4 pl-4 pt-4 text-white">
-                    Attendance
-                </Text>
+                {/* Header */}
+                <View className="bg-white px-4 py-6 border-b border-gray-200">
+                    <Text className="text-2xl font-bold text-gray-900">
+                        Attendance
+                    </Text>
+                    <Text className="text-sm text-gray-500 mt-1">
+                        Track your daily attendance
+                    </Text>
+                </View>
 
                 {error ? (
-                    <Text className="text-red-400 px-4 mb-2">{error}</Text>
+                    <View className="mx-4 mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <Text className="text-red-700 text-sm">{error}</Text>
+                    </View>
                 ) : null}
 
-                <View className="px-4 gap-4">
+                <View className="px-4 gap-4 mt-4">
                     {/* TODAY CARD */}
-                    <View className="bg-white/90 rounded-2xl p-5 shadow-lg">
+                    <View className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
                         {isFetchingToday ? (
                             <View className="flex-row items-center">
                                 <ActivityIndicator />
@@ -463,14 +472,18 @@ export default function Attendance() {
                                         <TouchableOpacity
                                             disabled={isSubmitting}
                                             onPress={handleCheckIn}
-                                            className={`px-4 py-2 rounded-xl ${isSubmitting
+                                            className={`px-6 py-3 rounded-lg flex-row items-center justify-center ${isSubmitting
                                                 ? "bg-gray-400"
-                                                : "bg-emerald-500 active:bg-emerald-600"
+                                                : "bg-green-500 active:bg-green-600"
                                                 }`}
                                         >
-                                            <Text className="text-white font-semibold">
-                                                {isSubmitting ? "Processing..." : "Check In"}
-                                            </Text>
+                                            {isSubmitting ? (
+                                                <ActivityIndicator size="small" color="white" />
+                                            ) : (
+                                                <Text className="text-white font-semibold">
+                                                    Check In
+                                                </Text>
+                                            )}
                                         </TouchableOpacity>
                                     </View>
                                 ) : hasCheckedIn && !hasCheckedOut ? (
@@ -489,14 +502,18 @@ export default function Attendance() {
                                         <TouchableOpacity
                                             disabled={isSubmitting}
                                             onPress={handleCheckOut}
-                                            className={`px-4 py-2 rounded-xl ${isSubmitting
+                                            className={`px-6 py-3 rounded-lg flex-row items-center justify-center ${isSubmitting
                                                 ? "bg-gray-400"
-                                                : "bg-rose-500 active:bg-rose-600"
+                                                : "bg-red-500 active:bg-red-600"
                                                 }`}
                                         >
-                                            <Text className="text-white font-semibold">
-                                                {isSubmitting ? "Processing..." : "Check Out"}
-                                            </Text>
+                                            {isSubmitting ? (
+                                                <ActivityIndicator size="small" color="white" />
+                                            ) : (
+                                                <Text className="text-white font-semibold">
+                                                    Check Out
+                                                </Text>
+                                            )}
                                         </TouchableOpacity>
                                     </View>
                                 ) : (
@@ -514,9 +531,9 @@ export default function Attendance() {
                                         </View>
                                         <TouchableOpacity
                                             disabled
-                                            className="px-4 py-2 rounded-xl bg-gray-200"
+                                            className="px-6 py-3 rounded-lg bg-gray-100 border border-gray-300"
                                         >
-                                            <Text className="text-gray-500 font-semibold">
+                                            <Text className="text-gray-600 font-semibold">
                                                 Completed
                                             </Text>
                                         </TouchableOpacity>
@@ -527,7 +544,7 @@ export default function Attendance() {
                     </View>
 
                     {/* WEEKLY SUMMARY CARD */}
-                    <View className="bg-white/90 rounded-2xl p-5 shadow-lg mt-2">
+                    <View className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
                         <View className="flex-row justify-between items-center lg-3">
                             <View>
                                 <Text className="p-2 text-md font-semibold text-gray-900">
@@ -605,11 +622,13 @@ export default function Attendance() {
                         </View>
 
                     </View>
-                    <View>
-                        <Link href="/(protectedRoute)/attendance/leave-and-regularization" asChild>
-                            <Text className="bg-green-600 p-6 rounded-lg text-white">Leave & Regularization</Text>
-                        </Link>
-                    </View>
+                    {/* Leave & Regularization Button */}
+                    <Link href="/(protectedRoute)/attendance/leave-and-regularization" asChild>
+                        <TouchableOpacity className="bg-blue-500 rounded-xl p-4 flex-row items-center justify-center shadow-sm">
+                            <MaterialIcons name="event-note" size={20} color="white" />
+                            <Text className="text-white font-semibold ml-2">Leave & Regularization</Text>
+                        </TouchableOpacity>
+                    </Link>
                 </View>
             </ScrollView>
         </View>

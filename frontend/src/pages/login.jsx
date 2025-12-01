@@ -24,6 +24,11 @@ const Login = () => {
 
       if (response.status === 200 && response.data.accessToken) {
         const decoded = jwtDecode(response.data.accessToken);
+        
+        // Store tokens in localStorage for cross-origin access
+        localStorage.setItem('auth_token', response.data.accessToken);
+        localStorage.setItem('refresh_token', response.data.refreshToken);
+        
         setUser(decoded);
         navigate("/dashboard");
       } else {

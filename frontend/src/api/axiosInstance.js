@@ -16,8 +16,11 @@ const axiosInstance = axios.create({
 // Request interceptor - add auth token and content-type
 axiosInstance.interceptors.request.use(
   (config) => {
-    // Add auth token from cookies
-    const token = Cookies.get('auth_token');
+    // Add auth token from cookies or localStorage
+    let token = Cookies.get('auth_token');
+    if (!token) {
+      token = localStorage.getItem('auth_token');
+    }
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

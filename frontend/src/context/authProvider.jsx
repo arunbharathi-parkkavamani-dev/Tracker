@@ -11,7 +11,10 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = Cookies.get("auth_token");
+    let token = Cookies.get("auth_token");
+    if (!token) {
+      token = localStorage.getItem("auth_token");
+    }
     
     if (token) {
       try {
@@ -20,6 +23,8 @@ export const AuthProvider = ({ children }) => {
       } catch (err) {
         Cookies.remove("auth_token");
         Cookies.remove("refresh_token");
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("refresh_token");
         setUser(null);
       }
     }
@@ -29,6 +34,8 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     Cookies.remove("auth_token");
     Cookies.remove("refresh_token");
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("refresh_token");
     setUser(null);
   };
 

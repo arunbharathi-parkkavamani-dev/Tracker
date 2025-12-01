@@ -51,11 +51,25 @@ export default function DailyTracker() {
         }, []);
       setClients(uniqueClients);
       
-      // Fetch activities for selected date
+      // Fetch activities for selected date with proper date range
+      const startOfDay = new Date(selectedDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(selectedDate);
+      endOfDay.setHours(23, 59, 59, 999);
+      
+      const dateFilter = {
+        employee: userId,
+        date: {
+          $gte: startOfDay.toISOString(),
+          $lte: endOfDay.toISOString()
+        }
+      };
+      
       const activitiesResponse = await axiosInstance.get(
-        `/populate/read/dailyactivities?filter={"employee":"${userId}","date":"${selectedDate}"}&populateFields={"clientId":"name"}`
+        `/populate/read/dailyactivities?filter=${encodeURIComponent(JSON.stringify(dateFilter))}&populateFields={"clientId":"name"}`
       );
-      setActivities(activitiesResponse.data.data || []);
+      const activitiesData = activitiesResponse.data.data || [];
+      setActivities(activitiesData);
     } catch (error) {
       console.error('Error fetching data:', error);
       Alert.alert('Error', 'Failed to load data');
@@ -237,7 +251,7 @@ export default function DailyTracker() {
                   <View className="flex-1">
                     <View className="flex-row justify-between items-start mb-1">
                       <Text className="font-semibold text-gray-900">
-                        {activity.clientId?.name || 'Unknown Client'}
+                        {activity.clientId?.name || activity.clientId || 'Unknown Client'}
                       </Text>
                       <Text className="text-xs text-gray-500">
                         {formatTime(activity.createdAt)}

@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "@/api/axiosInstance";
-import * as MD from "@expo/vector-icons/MaterialIcons";
 import { Drawer } from "expo-router/drawer";
+import { DrawerContentScrollView, DrawerItem } from "@react-navigation/drawer";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, View, Text } from "react-native";
 
 type SidebarItem = {
   _id: string;
@@ -15,18 +15,29 @@ type SidebarItem = {
   };
 };
 
-export default function DrawerLayout() {
+function CustomDrawerContent() {
   const [navItems, setNavItems] = useState<SidebarItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchNavBar = async () => {
       try {
-        const response = await axiosInstance.get("/populate/read/sidebar");
+        const response = await axiosInstance.get("/populate/read/sidebars");
         setNavItems(response?.data?.data || []);
       } catch (err: any) {
+        const defaultRoutes = [
+          { _id: '1', title: 'Dashboard', route: '/dashboard', icon: { iconName: 'MdDashboard' } },
+          { _id: '2', title: 'Daily Tracker', route: '/daily-tracker', icon: { iconName: 'MdToday' } },
+          { _id: '3', title: 'Tasks', route: '/tasks', icon: { iconName: 'MdTask' } },
+          { _id: '4', title: 'Attendance', route: '/attendance', icon: { iconName: 'MdSchedule' } },
+          { _id: '5', title: 'Profile', route: '/me', icon: { iconName: 'MdPerson' } },
+          { _id: '6', title: 'Salary Expense', route: '/salary-expense', icon: { iconName: 'MdMoney' } },
+          { _id: '7', title: 'Travel Expenses', route: '/travel-expenses', icon: { iconName: 'MdFlight' } }
+        ];
+        setNavItems(defaultRoutes);
+        
         if (err?.response?.status === 401) {
-          await AsyncStorage.removeItem("token");
+          await AsyncStorage.multiRemove(["auth_token", "refresh_token"]);
           return router.replace("/(authRoute)/Login");
         }
       } finally {
@@ -37,7 +48,19 @@ export default function DrawerLayout() {
     fetchNavBar();
   }, []);
 
-  // PREVENT rendering before data is ready
+  const getEmojiIcon = (route: string) => {
+    const iconMap: { [key: string]: string } = {
+      '/dashboard': '📊',
+      '/daily-tracker': '📅', 
+      '/tasks': '✅',
+      '/attendance': '⏰',
+      '/me': '👤',
+      '/salary-expense': '💰',
+      '/travel-expenses': '✈️'
+    };
+    return iconMap[route] || '📋';
+  };
+
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -46,55 +69,45 @@ export default function DrawerLayout() {
     );
   }
 
-  // normalize route from backend → expo-router filesystem route
-  const normalize = (route: string) => {
-    if (!route.startsWith("/")) route = "/" + route;
-    return `/(protectedRoute)${route}`; // always point to protected folder
-  };
-
-  // Get proper title based on route
-  const getRouteTitle = (route: string) => {
-    const routeTitles: { [key: string]: string } = {
-      '/dashboard': 'Dashboard',
-      '/daily-tracker': 'Daily Tracker',
-      '/tasks': 'Tasks',
-      '/attendance': 'Attendance',
-      '/profile': 'Profile'
-    };
-    return routeTitles[route] || item.title;
-  };
-
   return (
-    <Drawer screenOptions={{ headerShown: true }}>
-      {navItems.map((item) => {
-        // resolve icon name exactly as backend gives (MdDashboard, MdPerson, etc.)
-        const Icon = MD[item.icon?.iconName as keyof typeof MD] || MD["Error"];
+    <DrawerContentScrollView>
+      {navItems
+        .filter(item => item.route !== '/logout' && item.route !== 'logout')
+        .map((item) => {
+          return (
+            <DrawerItem
+              key={item._id}
+              label={item.title}
+              icon={({ size }) => (
+                <Text style={{ fontSize: size }}>{getEmojiIcon(item.route)}</Text>
+              )}
+              onPress={() => {
+                const route = item.route.replace(/^\//, '') + '/index';
+                router.push(`/(protectedRoute)/${route}`);
+              }}
+            />
+          );
+        })}
+      <DrawerItem
+        label="Logout"
+        icon={({ size }) => (
+          <Text style={{ fontSize: size }}>🚪</Text>
+        )}
+        onPress={() => {
+          AsyncStorage.multiRemove(["auth_token", "refresh_token"]).then(() => {
+            router.replace("/(authRoute)/Login");
+          });
+        }}
+      />
+    </DrawerContentScrollView>
+  );
+}
 
-        return (
-          <Drawer.Screen
-            key={item._id}
-            // name MUST be filesystem route NOT title
-            name={normalize(item.route)}
-            options={{
-              title: getRouteTitle(item.route),
-              drawerIcon: ({ color, size }) => (
-                <Icon size={size} color={color} />
-              ),
-            }}
-            listeners={{
-              drawerItemPress: () => {
-                if (item.route === "/logout" || item.route === "logout") {
-                  AsyncStorage.removeItem("token").then(() => {
-                    router.replace("/(authRoute)/Login");
-                  });
-                } else {
-                  router.replace(normalize(item.route));
-                }
-              },
-            }}
-          />
-        );
-      })}
-    </Drawer>
+export default function DrawerLayout() {
+  return (
+    <Drawer 
+      screenOptions={{ headerShown: true }}
+      drawerContent={() => <CustomDrawerContent />}
+    />
   );
 }

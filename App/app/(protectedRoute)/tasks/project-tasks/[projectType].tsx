@@ -68,7 +68,7 @@ export default function ProjectTasks() {
     >
       <View className="flex-row justify-between items-start mb-2">
         <View 
-          className="px-2 py-1 rounded-full"
+          className="px-2 py-0.5 rounded-md"
           style={{ backgroundColor: statusColors[task.status] || '#6B7280' }}
         >
           <Text className="text-white text-xs font-medium">{task.status}</Text>
@@ -133,17 +133,17 @@ export default function ProjectTasks() {
         horizontal 
         showsHorizontalScrollIndicator={false}
         className="bg-white border-b border-gray-200"
-        contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 12 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 8 }}
       >
         {statuses.map((status) => (
           <TouchableOpacity
             key={status}
             onPress={() => setSelectedStatus(status)}
-            className={`px-4 py-2 rounded-full mr-2 ${
+            className={`px-3 py-1.5 rounded-full mr-2 ${
               selectedStatus === status ? 'bg-blue-500' : 'bg-gray-100'
             }`}
           >
-            <Text className={`text-sm font-medium ${
+            <Text className={`text-xs font-medium ${
               selectedStatus === status ? 'text-white' : 'text-gray-700'
             }`}>
               {status}

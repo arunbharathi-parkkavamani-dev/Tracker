@@ -3,56 +3,13 @@ export const leaveFormFields = (userData) => [
   { name: "employeeId", hidden: true, value: userData._id },
   { name: "departmentId", hidden: true, value: userData.professionalInfo?.department },
 
-  // Leave Type (Auto-populated from DB)
+  // Leave Type (simplified - get all leave types)
   {
     name: "leaveTypeId",
     label: "Leave Type",
     placeholder: "Select Leave Type",
     type: "AutoComplete",
-    source: `/populate/read/employees/${userData._id}`,
-    dynamicOptions: {
-      params: {
-        aggregate: true,
-        stages: [
-          {
-            $lookup: {
-              from: "departments",
-              localField: "professionalInfo.department",
-              foreignField: "_id",
-              as: "departmentDetails",
-            },
-          },
-          { $unwind: "$departmentDetails" },
-          {
-            $lookup: {
-              from: "leavepolicies",
-              localField: "departmentDetails.leavePolicy",
-              foreignField: "_id",
-              as: "leavePolicyDetails",
-            },
-          },
-          { $unwind: "$leavePolicyDetails" },
-          { $unwind: "$leavePolicyDetails.leaves" },
-          {
-            $lookup: {
-              from: "leavetypes",
-              localField: "leavePolicyDetails.leaves.leaveType",
-              foreignField: "_id",
-              as: "leaveTypeInfo",
-            },
-          },
-          { $unwind: "$leaveTypeInfo" },
-          {
-            $project: {
-              _id: "$leaveTypeInfo._id",
-              leaveTypeId: "$leaveTypeInfo._id",
-              name: "$leaveTypeInfo.name",
-              departmentId: "$departmentDetails._id",
-            },
-          },
-        ],
-      },
-    },
+    source: `/populate/read/leavetypes`,
     required: true,
     orderKey: 2,
   },

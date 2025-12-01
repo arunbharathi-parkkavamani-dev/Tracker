@@ -9,7 +9,7 @@ export async function authMiddleware(req, res, next) {
       token = req.headers.authorization.split(" ")[1];
     }
 
-    console.log("Auth middleware - Token found:", !!token, "From:", token ? (req.cookies?.auth_token ? 'cookie' : 'header') : 'none');
+
 
     if (!token) return res.status(401).json({ error: "Unauthorized", action: "login" });
 

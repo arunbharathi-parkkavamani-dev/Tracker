@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, Children} from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {jwtDecode} from "jwt-decode";
+import { setAuthLogout } from "@/api/axiosInstance";
 
 
 export const AuthContext = createContext();
@@ -32,16 +33,24 @@ export const AuthProvider = ({ children }) => {
         loadToken();
     }, []);
 
-    const login = async (token) => {
+    const login = async (token, refreshToken = null) => {
         await AsyncStorage.setItem("auth_token", token);
+        if (refreshToken) {
+            await AsyncStorage.setItem("refresh_token", refreshToken);
+        }
         const decoded = jwtDecode(token);
         setUser(decoded);
     };
 
     const logout = async () => {
-        await AsyncStorage.removeItem("auth_token");
+        await AsyncStorage.multiRemove(["auth_token", "refresh_token"]);
         setUser(null);
     };
+
+    // Register logout function with axios
+    useEffect(() => {
+        setAuthLogout(logout);
+    }, []);
 
     return(
         <AuthContext.Provider value={{user, loading, login, logout}}>

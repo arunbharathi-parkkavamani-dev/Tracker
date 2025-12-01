@@ -26,6 +26,7 @@ const allowedOrigins = [
   "http://localhost:19006",
   "http://localhost:8081",
   "http://192.168.29.83:5173",
+  "https://your-app.vercel.app", // Add your actual Vercel domain here
 ];
 
 // Allow LAN: 192.x.x.x, 10.x.x.x
