@@ -9,14 +9,14 @@ export async function authMiddleware(req, res, next) {
       token = req.headers.authorization.split(" ")[1];
     }
 
-    if (!token) return res.status(401).json({ error: "Unauthorized" });
+    if (!token) return res.status(401).json({ error: "Unauthorized", action: "login" });
 
     // 2. Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     // 3. Lookup user
     const user = await Employee.findById(decoded.id).lean();
-    if (!user) return res.status(401).json({ error: "User not found" });
+    if (!user) return res.status(401).json({ error: "User not found", action: "login" });
 
     // 4. Attach minimal safe user info with platform info
     req.user = {
@@ -30,6 +30,16 @@ export async function authMiddleware(req, res, next) {
     next();
   } catch (err) {
     console.error("AuthMiddleware error:", err.message);
-    return res.status(401).json({ error: "Unauthorized" });
+    
+    // Handle JWT expiration
+    if (err.name === 'TokenExpiredError') {
+      return res.status(401).json({ 
+        error: "Token expired", 
+        action: "refresh",
+        expired: true 
+      });
+    }
+    
+    return res.status(401).json({ error: "Unauthorized", action: "login" });
   }
 }

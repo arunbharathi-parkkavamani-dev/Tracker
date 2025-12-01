@@ -24,19 +24,45 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    const errorData = error.response?.data;
 
-    // Token expired -> try refresh once
-    if(error.response?.status === 401 && !originalRequest._retry) {
+    // Handle token expiration with automatic refresh
+    if (error.response?.status === 401 && errorData?.expired && !originalRequest._retry) {
       originalRequest._retry = true;
+      
       try {
-        await axios.get("https://tracker-mxp9.onrender.com/api/auth/refresh", {
-          withCredentials: true,
-        });
+        const refreshResponse = await axios.post(
+          "https://tracker-mxp9.onrender.com/api/auth/refresh",
+          {}, // Empty body for web (uses cookies)
+          { withCredentials: true }
+        );
+        
+        // Update token in cookie for web
+        if (refreshResponse.data.accessToken) {
+          Cookies.set("auth_token", refreshResponse.data.accessToken);
+        }
+        
         return axiosInstance(originalRequest);
-      // eslint-disable-next-line no-unused-vars
       } catch (refreshError) {
+        // Refresh failed - logout user
         Cookies.remove("auth_token");
         Cookies.remove("refresh_token");
+        
+        // Redirect to login
+        if (typeof window !== 'undefined') {
+          window.location.href = "/login";
+        }
+        
+        return Promise.reject(refreshError);
+      }
+    }
+    
+    // Handle other 401 errors (invalid token, no token)
+    if (error.response?.status === 401 && errorData?.action === "login") {
+      Cookies.remove("auth_token");
+      Cookies.remove("refresh_token");
+      
+      if (typeof window !== 'undefined') {
         window.location.href = "/login";
       }
     }
