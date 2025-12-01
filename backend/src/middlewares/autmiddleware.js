@@ -18,12 +18,13 @@ export async function authMiddleware(req, res, next) {
     const user = await Employee.findById(decoded.id).lean();
     if (!user) return res.status(401).json({ error: "User not found" });
 
-    // 4. Attach minimal safe user info
+    // 4. Attach minimal safe user info with platform info
     req.user = {
       id: user._id,
       role: decoded.role,
       name: user.basicInfo?.firstName,
       email: user.authInfo?.workEmail,
+      platform: decoded.platform || 'web',
     };
 
     next();
