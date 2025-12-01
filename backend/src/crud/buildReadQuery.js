@@ -94,7 +94,7 @@ export default async function buildReadQuery({
       }
     }
 
-    const matchStage = docId
+    const matchStage = docId && docId.trim() && mongoose.Types.ObjectId.isValid(docId)
       ? [{ $match: { _id: new mongoose.Types.ObjectId(docId) } }]
       : filter.matchStage
         ? [{ $match: filter.matchStage }]
@@ -121,7 +121,7 @@ export default async function buildReadQuery({
 
 
   const mongoFilter = buildMongoFilter(filter);
-  let query = docId
+  let query = docId && docId.trim() && mongoose.Types.ObjectId.isValid(docId)
     ? Model.findById(new mongoose.Types.ObjectId(docId))
     : Model.find(mongoFilter || {});
 
