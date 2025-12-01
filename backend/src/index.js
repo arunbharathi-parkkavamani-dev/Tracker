@@ -22,8 +22,10 @@ app.use(cookieParser());
 const allowedOrigins = [
   "https://lmx-tracker--p1hvjsjwqq.expo.app",
   "http://localhost:3000",
+  "http://localhost:5173",
   "http://localhost:19006",
   "http://localhost:8081",
+  "http://192.168.29.83:5173",
 ];
 
 // Allow LAN: 192.x.x.x, 10.x.x.x
