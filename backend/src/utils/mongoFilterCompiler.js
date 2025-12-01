@@ -1,12 +1,25 @@
 // src/utils/mongoFilterCompiler.js
+import mongoose from "mongoose";
 
 export function buildMongoFilter(node) {
   if (!node) return {};
 
   // leaf case
   if (!node.operation && node.field && node.operator) {
+    let value = node.value;
+    
+    // Handle ObjectId fields - prevent empty string casting
+    if (node.field === '_id' || node.field.endsWith('._id') || node.field.endsWith('Id')) {
+      if (value === '' || value === null || value === undefined) {
+        return {}; // Skip empty ObjectId values
+      }
+      if (typeof value === 'string' && mongoose.Types.ObjectId.isValid(value)) {
+        value = new mongoose.Types.ObjectId(value);
+      }
+    }
+    
     return {
-      [node.field]: { [node.operator]: node.value }
+      [node.field]: { [node.operator]: value }
     };
   }
 
