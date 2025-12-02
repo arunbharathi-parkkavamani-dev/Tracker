@@ -63,7 +63,15 @@ export default function Tasks() {
     <View className="flex-1 bg-gray-50">
       {/* Header */}
       <View className="bg-white px-4 py-3 border-b border-gray-200">
-        <Text className="text-2xl font-bold text-gray-900 mb-3">Select Client</Text>
+        <View className="flex-row items-center justify-between">
+          <Text className="text-2xl font-bold text-gray-900">Select Client</Text>
+          <TouchableOpacity
+            onPress={() => router.push('/tasks/add-task')}
+            className="bg-blue-600 rounded-full p-3"
+          >
+            <MaterialIcons name="add" size={24} color="white" />
+          </TouchableOpacity>
+        </View>
         
         {/* Search Bar */}
         <View className="flex-row items-center bg-gray-100 rounded-lg px-3 py-2">

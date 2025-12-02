@@ -132,8 +132,10 @@ export default function DrawerLayout() {
   };
 
   const swipeGesture = Gesture.Pan()
+    .activeOffsetX([-10, 10])
+    .failOffsetY([-5, 5])
     .onUpdate((event) => {
-      if (event.translationX < -50 && event.velocityX < -500) {
+      if (event.translationX < -50 && event.velocityX < -500 && Math.abs(event.translationY) < 30) {
         openDrawer();
       }
     });

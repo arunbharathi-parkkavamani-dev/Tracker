@@ -9,6 +9,7 @@ import populateHelper from "./routes/populateRoutes.js";
 import fileRoutes from "./routes/fileRoutes.js";
 import locationRoutes from "./routes/locationRoutes.js";
 import bankRoutes from "./routes/bankRoutes.js";
+import testRoutes from "./routes/testRoutes.js";
 import { apiHitLogger } from "./middlewares/apiHitLogger.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import connectDB from "./Config/ConnectDB.js";
@@ -63,6 +64,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/files", fileRoutes);
 app.use("/api", locationRoutes);
 app.use("/api", bankRoutes);
+app.use("/api/test", testRoutes);
 
 // Error handling middleware
 app.use(errorHandler);

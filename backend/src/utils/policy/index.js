@@ -1,7 +1,2 @@
-import { getRegistry } from "./registry/index.js";
-
-const fn = getRegistry(rule.registry);
-if (fn) {
-  const result = await fn({ user, modelName, doc, fields, filter, context });
-  // registry returns decision (true / false) or override object
-}
+// This file should not contain execution logic - it's just for registry management
+// The actual registry execution happens in registryExecutor.js

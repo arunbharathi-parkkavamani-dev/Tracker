@@ -8,7 +8,8 @@ export async function setCache() {
         const data = await AccessPolicies.find({}).lean()
         cache.clear();
         data.forEach((policies)=>{
-            const role = policies.role.toLocaleLowerCase();
+            // Use role ID as string, not toLowerCase since role IDs are ObjectIds
+            const role = policies.role.toString();
             if(!cache.has(role)){
                 cache.set(role,{})
             }
@@ -23,13 +24,23 @@ export async function setCache() {
 
 export function getPolicy (role,modelName){
     try{
-        const roleCache = cache.get(role.toLocaleLowerCase());
-        if(!roleCache) return console.log("Role permission not able to find");
+        // Use role ID as string, not toLowerCase
+        const roleCache = cache.get(role.toString());
+        if(!roleCache) {
+            console.log(`Role permission not found for role: ${role}`);
+            return null;
+        }
         if(!modelName) return roleCache;
-        return roleCache[modelName] || console.log("model Name is not findable");
+        const policy = roleCache[modelName];
+        if(!policy) {
+            console.log(`Model policy not found for role: ${role}, model: ${modelName}`);
+            return null;
+        }
+        return policy;
     }
     catch (error) {
         console.log(error);
+        return null;
     }
 }
 

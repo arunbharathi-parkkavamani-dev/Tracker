@@ -39,18 +39,23 @@ export default async function runRegistry({
     const registryFn = getRegistry(rule.registry);
     if (typeof registryFn !== "function") continue; // ignore missing registry
 
+    // Registry functions expect (user, record, context) parameters
+    const user = { id: userId, role };
+    const record = {}; // This should be populated with actual record data when available
     const context = {
       role,
       userId,
       modelName,
       fields: rule.fields,
-      effect: rule.effect
+      effect: rule.effect,
+      action
     };
 
     let outcome = null;
     try {
-      outcome = await registryFn(context);
-    } catch {
+      outcome = await registryFn(user, record, context);
+    } catch (error) {
+      console.warn(`Registry ${rule.registry} failed:`, error.message);
       continue; // lenient skip if registry throws
     }
 

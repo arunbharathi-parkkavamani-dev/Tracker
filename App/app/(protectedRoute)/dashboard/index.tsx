@@ -1,11 +1,15 @@
-import { View, Text, ScrollView, RefreshControl, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView, RefreshControl } from "react-native";
 import { ActivityIndicator } from "react-native";
 import { useState, useEffect, useContext } from "react";
 import axiosInstance from "@/api/axiosInstance";
-import { LinearGradient } from 'expo-linear-gradient';
 import { AuthContext } from "@/context/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
+import EmployeeDashboard from "@/components/roles/employee/EmployeeDashboard";
+import HRDashboard from "@/components/roles/hr/HRDashboard";
+import ManagerDashboard from "@/components/roles/manager/ManagerDashboard";
+import SuperAdminDashboard from "@/components/roles/superadmin/SuperAdminDashboard";
 
-interface DashboardStats {
+interface HRDashboardStats {
   totalEmployees: number;
   presentToday: number;
   onLeave: number;
@@ -14,13 +18,40 @@ interface DashboardStats {
   completedTasks: number;
 }
 
+interface EmployeeDashboardStats {
+  attendanceStatus: 'checked-in' | 'checked-out' | 'not-started';
+  leaveBalance: number;
+  pendingLeaves: number;
+  myTasks: number;
+  completedTasks: number;
+  monthlyAttendance: number;
+}
+
+interface ManagerDashboardStats {
+  teamMembers: number;
+  pendingApprovals: number;
+  teamTasks: number;
+  completedTasks: number;
+}
+
+interface SuperAdminDashboardStats {
+  totalUsers: number;
+  systemHealth: string;
+  activeRoles: number;
+  systemAlerts: number;
+}
+
 export default function Dashboard() {
   const { user } = useContext(AuthContext);
-  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const { userRole, loading: roleLoading } = useUserRole();
+  const [hrStats, setHrStats] = useState<HRDashboardStats | null>(null);
+  const [employeeStats, setEmployeeStats] = useState<EmployeeDashboardStats | null>(null);
+  const [managerStats, setManagerStats] = useState<ManagerDashboardStats | null>(null);
+  const [superAdminStats, setSuperAdminStats] = useState<SuperAdminDashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchStats = async () => {
+  const fetchHRStats = async () => {
     try {
       const [employeesRes, leavesRes, tasksRes] = await Promise.all([
         axiosInstance.get('/populate/read/employees?fields=basicInfo.firstName'),
@@ -32,16 +63,97 @@ export default function Dashboard() {
       const pendingLeaves = leavesRes.data?.data?.length || 0;
       const activeTasks = tasksRes.data?.data?.length || 0;
 
-      setStats({
+      setHrStats({
         totalEmployees,
-        presentToday: Math.floor(totalEmployees * 0.85), // Mock data
+        presentToday: Math.floor(totalEmployees * 0.85),
         onLeave: Math.floor(totalEmployees * 0.1),
         pendingLeaves,
         activeTasks,
-        completedTasks: Math.floor(activeTasks * 1.5) // Mock data
+        completedTasks: Math.floor(activeTasks * 1.5)
       });
     } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
+      console.error('Error fetching HR stats:', error);
+    }
+  };
+
+  const fetchEmployeeStats = async () => {
+    try {
+      const userId = user?._id;
+      const [attendanceRes, leavesRes, tasksRes] = await Promise.all([
+        axiosInstance.get(`/populate/read/attendances?filter={"employeeId":"${userId}"}&sort={"date":-1}&limit=1`),
+        axiosInstance.get(`/populate/read/leaves?filter={"employeeId":"${userId}"}`),
+        axiosInstance.get(`/populate/read/tasks?filter={"assignedTo":"${userId}"}`)
+      ]);
+
+      const todayAttendance = attendanceRes.data?.data?.[0];
+      const leaves = leavesRes.data?.data || [];
+      const tasks = tasksRes.data?.data || [];
+      
+      const attendanceStatus = todayAttendance?.checkInTime && !todayAttendance?.checkOutTime 
+        ? 'checked-in' 
+        : todayAttendance?.checkOutTime 
+        ? 'checked-out' 
+        : 'not-started';
+
+      setEmployeeStats({
+        attendanceStatus,
+        leaveBalance: 24, // Mock - should come from employee profile
+        pendingLeaves: leaves.filter(l => l.status === 'Pending').length,
+        myTasks: tasks.filter(t => t.status !== 'Completed').length,
+        completedTasks: tasks.filter(t => t.status === 'Completed').length,
+        monthlyAttendance: 22 // Mock - calculate from current month attendance
+      });
+    } catch (error) {
+      console.error('Error fetching employee stats:', error);
+    }
+  };
+
+  const fetchManagerStats = async () => {
+    try {
+      // Mock data for manager - replace with actual API calls
+      setManagerStats({
+        teamMembers: 8,
+        pendingApprovals: 3,
+        teamTasks: 15,
+        completedTasks: 12
+      });
+    } catch (error) {
+      console.error('Error fetching manager stats:', error);
+    }
+  };
+
+  const fetchSuperAdminStats = async () => {
+    try {
+      // Mock data for super admin - replace with actual API calls
+      setSuperAdminStats({
+        totalUsers: 150,
+        systemHealth: 'Good',
+        activeRoles: 4,
+        systemAlerts: 2
+      });
+    } catch (error) {
+      console.error('Error fetching super admin stats:', error);
+    }
+  };
+
+  const fetchStats = async () => {
+    if (!userRole) return;
+    
+    try {
+      switch (userRole) {
+        case 'employee':
+          await fetchEmployeeStats();
+          break;
+        case 'hr':
+          await fetchHRStats();
+          break;
+        case 'manager':
+          await fetchManagerStats();
+          break;
+        case 'superadmin':
+          await fetchSuperAdminStats();
+          break;
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -49,15 +161,17 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    fetchStats();
-  }, []);
+    if (userRole && !roleLoading) {
+      fetchStats();
+    }
+  }, [userRole, roleLoading]);
 
   const onRefresh = () => {
     setRefreshing(true);
     fetchStats();
   };
 
-  if (loading) {
+  if (loading || roleLoading) {
     return (
       <View className="flex-1 justify-center items-center bg-gray-50">
         <ActivityIndicator size="large" color="#667eea" />
@@ -66,29 +180,24 @@ export default function Dashboard() {
     );
   }
 
-  const getIconText = (iconName: string) => {
-    switch (iconName) {
-      case 'People': return '👥';
-      case 'CheckCircle': return '✅';
-      case 'EventBusy': return '📅';
-      case 'Pending': return '⏳';
-      case 'Assignment': return '📋';
-      case 'TaskAlt': return '✔️';
-      default: return 'ℹ️';
+  const renderRoleBasedDashboard = () => {
+    switch (userRole) {
+      case 'employee':
+        return <EmployeeDashboard stats={employeeStats} />;
+      case 'hr':
+        return <HRDashboard stats={hrStats} />;
+      case 'manager':
+        return <ManagerDashboard stats={managerStats} />;
+      case 'superadmin':
+        return <SuperAdminDashboard stats={superAdminStats} />;
+      default:
+        return (
+          <View className="flex-1 justify-center items-center">
+            <Text className="text-lg text-gray-600">Role not recognized</Text>
+          </View>
+        );
     }
   };
-
-  const StatCard = ({ title, value, icon, colors }: { title: string; value: number; icon: string; colors: string[] }) => (
-    <View className="w-[48%] mb-4 rounded-2xl overflow-hidden shadow-lg">
-      <LinearGradient colors={colors} className="p-5">
-        <View className="items-center">
-          <Text className="text-3xl mb-2">{getIconText(icon)}</Text>
-          <Text className="text-3xl font-bold text-white mb-1">{value}</Text>
-          <Text className="text-sm text-white/90 font-medium">{title}</Text>
-        </View>
-      </LinearGradient>
-    </View>
-  );
 
   return (
     <View className="flex-1 bg-gray-50">
@@ -96,54 +205,7 @@ export default function Dashboard() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         showsVerticalScrollIndicator={false}
       >
-        <View className="px-5 flex-row flex-wrap justify-between mt-5">
-          <StatCard
-            title="Employees"
-            value={stats?.totalEmployees || 0}
-            icon="People"
-            colors={['#667eea', '#764ba2']}
-          />
-          <StatCard
-            title="Present"
-            value={stats?.presentToday || 0}
-            icon="CheckCircle"
-            colors={['#f093fb', '#f5576c']}
-          />
-          <StatCard
-            title="On Leave"
-            value={stats?.onLeave || 0}
-            icon="EventBusy"
-            colors={['#4facfe', '#00f2fe']}
-          />
-          <StatCard
-            title="Pending"
-            value={stats?.pendingLeaves || 0}
-            icon="Pending"
-            colors={['#43e97b', '#38f9d7']}
-          />
-        </View>
-
-        <View className="px-5">
-          <Text className="text-xl font-semibold text-gray-800 mb-4">Quick Actions</Text>
-          <View className="flex-row flex-wrap justify-between">
-            <TouchableOpacity className="w-[48%] bg-white p-5 rounded-2xl items-center mb-3 shadow-sm">
-              <Text className="text-3xl mb-2">⏰</Text>
-              <Text className="text-sm font-medium text-gray-700">Attendance</Text>
-            </TouchableOpacity>
-            <TouchableOpacity className="w-[48%] bg-white p-5 rounded-2xl items-center mb-3 shadow-sm">
-              <Text className="text-3xl mb-2">📝</Text>
-              <Text className="text-sm font-medium text-gray-700">Leave Request</Text>
-            </TouchableOpacity>
-            <TouchableOpacity className="w-[48%] bg-white p-5 rounded-2xl items-center mb-3 shadow-sm">
-              <Text className="text-3xl mb-2">✅</Text>
-              <Text className="text-sm font-medium text-gray-700">Tasks</Text>
-            </TouchableOpacity>
-            <TouchableOpacity className="w-[48%] bg-white p-5 rounded-2xl items-center mb-3 shadow-sm">
-              <Text className="text-3xl mb-2">📊</Text>
-              <Text className="text-sm font-medium text-gray-700">Reports</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        {renderRoleBasedDashboard()}
       </ScrollView>
     </View>
   );
