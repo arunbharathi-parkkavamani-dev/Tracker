@@ -12,6 +12,7 @@ import {
     ActivityIndicator,
 } from "react-native";
 import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from "expo-location";
 import Toast from "react-native-toast-message";
 import axiosInstance from "@/api/axiosInstance";
@@ -123,7 +124,22 @@ export default function Attendance() {
             const response = await axiosInstance.get(`/populate/read/attendances?filter=${encodeURIComponent(filter)}`);
 
             const records = response?.data?.data || [];
-            const record = records[0] || null;
+            
+            // Filter records to find today's actual record
+            const today = new Date();
+            const todayDateString = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+            
+            const todayRecords = records.filter(record => {
+                if (!record.date) return false;
+                const recordDate = new Date(record.date).toISOString().split('T')[0];
+                return recordDate === todayDateString && record.employee._id === user.id;
+            });
+            
+            // Get the most recent record for today (in case of multiple)
+            const record = todayRecords.length > 0 
+                ? todayRecords.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
+                : null;
+                
             setTodayRecord(record);
         } catch (err) {
             console.log("Failed to fetch today's attendance:", err);
@@ -214,7 +230,7 @@ export default function Attendance() {
             // Record exists, check status
             const status = (record.status || "").toLowerCase();
 
-            if (status.includes("present")) summary.present += 1;
+            if (status.includes("present") || status.includes("check-out")) summary.present += 1;
             else if (status.includes("leave")) summary.leave += 1;
             else if (status.includes("absent")) summary.absent += 1;
             else summary.others += 1;
@@ -244,7 +260,7 @@ export default function Attendance() {
             const statusLower = statusRaw.toLowerCase();
 
             let statusColor = { bg: "#e5e7eb", text: "#111827" }; // default gray
-            if (statusLower.includes("present"))
+            if (statusLower.includes("present") || statusLower.includes("check-out"))
                 statusColor = { bg: "#dcfce7", text: "#166534" };
             else if (statusLower.includes("absent"))
                 statusColor = { bg: "#fee2e2", text: "#b91c1c" };
@@ -395,18 +411,10 @@ export default function Attendance() {
     return (
         <View className="flex-1 bg-gray-50">
             <ScrollView
-                contentContainerStyle={{ paddingBottom: 24 }}
-                className="flex-1"
+                style={{ flex: 1 }}
+                contentContainerStyle={{ paddingBottom: 24, flexGrow: 1 }}
+                showsVerticalScrollIndicator={false}
             >
-                {/* Header */}
-                <View className="bg-white px-4 py-6 border-b border-gray-200">
-                    <Text className="text-2xl font-bold text-gray-900">
-                        Attendance
-                    </Text>
-                    <Text className="text-sm text-gray-500 mt-1">
-                        Track your daily attendance
-                    </Text>
-                </View>
 
                 {error ? (
                     <View className="mx-4 mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
@@ -634,3 +642,5 @@ export default function Attendance() {
         </View>
     );
 }
+
+

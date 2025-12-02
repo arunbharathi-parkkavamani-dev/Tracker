@@ -27,7 +27,7 @@ const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
   "http://localhost:19006",
-  "http://localhost:8081",
+  "http://10.116.40.208:5173",
   "http://10.11.244.208:5173",
   "https://your-app.vercel.app", // Add your actual Vercel domain here
 ];

@@ -1,11 +1,15 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import axiosInstance from "@/api/axiosInstance";
 import { Drawer } from "expo-router/drawer";
 import { DrawerContentScrollView, DrawerItem } from "@react-navigation/drawer";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { router } from "expo-router";
-import { ActivityIndicator, View, Text } from "react-native";
+import { router, useSegments } from "expo-router";
+import { ActivityIndicator, View, Text, Animated } from "react-native";
 import { AuthContext } from "@/context/AuthContext";
+import AppHeader from "@/components/AppHeader";
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import NotificationDrawer from '@/components/NotificationDrawer';
 
 type SidebarItem = {
   _id: string;
@@ -65,7 +69,7 @@ function CustomDrawerContent() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <View className="flex-1 justify-center items-center">
         <ActivityIndicator size="large" />
       </View>
     );
@@ -81,7 +85,7 @@ function CustomDrawerContent() {
               key={item._id}
               label={item.title}
               icon={({ size }) => (
-                <Text style={{ fontSize: size }}>{getEmojiIcon(item.route)}</Text>
+                <Text className="text-base">{getEmojiIcon(item.route)}</Text>
               )}
               onPress={() => {
                 const route = item.route.replace(/^\//, '');
@@ -93,7 +97,7 @@ function CustomDrawerContent() {
       <DrawerItem
         label="Logout"
         icon={({ size }) => (
-          <Text style={{ fontSize: size }}>🚪</Text>
+          <Text className="text-base">🚪</Text>
         )}
         onPress={async () => {
           await logout();
@@ -105,10 +109,84 @@ function CustomDrawerContent() {
 }
 
 export default function DrawerLayout() {
+  const [showNotificationDrawer, setShowNotificationDrawer] = useState(false);
+  const slideAnim = useRef(new Animated.Value(320)).current;
+
+  const openDrawer = () => {
+    setShowNotificationDrawer(true);
+    Animated.timing(slideAnim, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const closeDrawer = () => {
+    Animated.timing(slideAnim, {
+      toValue: 320,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      setShowNotificationDrawer(false);
+    });
+  };
+
+  const swipeGesture = Gesture.Pan()
+    .onUpdate((event) => {
+      if (event.translationX < -50 && event.velocityX < -500) {
+        openDrawer();
+      }
+    });
+
   return (
-    <Drawer 
-      screenOptions={{ headerShown: true }}
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <GestureDetector gesture={swipeGesture}>
+        <View style={{ flex: 1 }}>
+          <Drawer 
+      screenOptions={({ route }) => {
+        const isParentRoute = route.name.endsWith('/index');
+        
+        return {
+          headerShown: true,
+          drawerActiveTintColor: '#667eea',
+          drawerInactiveTintColor: '#6B7280',
+          swipeEnabled: true,
+          swipeEdgeWidth: 100,
+          header: () => (
+            <AppHeader
+              title={getPageTitle(route.name)}
+              showDrawer={isParentRoute}
+              showBack={!isParentRoute}
+              showNotification
+              onNotificationPress={openDrawer}
+            />
+          )
+        };
+      }}
       drawerContent={() => <CustomDrawerContent />}
-    />
+          />
+          
+          <NotificationDrawer 
+            visible={showNotificationDrawer}
+            onClose={closeDrawer}
+            slideAnim={slideAnim}
+          />
+        </View>
+      </GestureDetector>
+    </GestureHandlerRootView>
   );
+}
+
+function getPageTitle(routeName: string) {
+  const titleMap: { [key: string]: string } = {
+    'dashboard/index': 'Dashboard',
+    'attendance/index': 'Attendance', 
+    'attendance/leave-and-regularization': 'Leave & Regularization',
+    'tasks/index': 'Tasks',
+    'me/index': 'Profile',
+    'daily-tracker/index': 'Daily Tracker',
+    'salary-expense/index': 'Salary Expense',
+    'travel-expenses/index': 'Travel Expenses'
+  };
+  return titleMap[routeName] || 'App';
 }

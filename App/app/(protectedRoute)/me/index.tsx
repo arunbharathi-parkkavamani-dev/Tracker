@@ -53,7 +53,9 @@ export default function Profile() {
     try {
       const token = await AsyncStorage.getItem('auth_token');
       if (!token) {
-        router.replace('/(authRoute)/Login');
+        Alert.alert('Session Expired', 'Please login again', [
+          { text: 'OK', onPress: () => router.replace('/(authRoute)/Login') }
+        ]);
         return;
       }
 
@@ -68,6 +70,12 @@ export default function Profile() {
       const response = await axiosInstance.get(
         `/populate/read/employees/${userId}?populateFields={"professionalInfo.reportingManager":"basicInfo.firstName,basicInfo.lastName"}`
       );
+      
+      console.log('Profile image path:', response.data.data.basicInfo.profileImage);
+      if (response.data.data.basicInfo.profileImage) {
+        const imageUrl = `https://tracker-mxp9.onrender.com/api/files/render/profile/${response.data.data.basicInfo.profileImage.split('/').pop()}`;
+        console.log('Constructed image URL:', imageUrl);
+      }
       
       setEmployee(response.data.data);
     } catch (error) {
@@ -88,8 +96,12 @@ export default function Profile() {
           text: 'Logout',
           style: 'destructive',
           onPress: async () => {
-            await AsyncStorage.multiRemove(['auth_token', 'refresh_token']);
-            router.replace('/(authRoute)/Login');
+            try {
+              await AsyncStorage.multiRemove(['auth_token', 'refresh_token']);
+              router.replace('/(authRoute)/Login');
+            } catch (error) {
+              console.error('Logout error:', error);
+            }
           }
         }
       ]
@@ -129,47 +141,71 @@ export default function Profile() {
   );
 
   return (
-    <ScrollView className="flex-1 bg-gray-50">
-      {/* Header */}
-      <View className="bg-blue-600 px-4 py-8">
-        <View className="items-center">
+    <ScrollView 
+      className="flex-1 bg-gray-50"
+      style={{ flex: 1 }}
+      contentContainerStyle={{ flexGrow: 1 }}
+    >
+      {/* Header with Cover Photo */}
+      <View className="relative">
+        {/* Cover Photo */}
+        <View className="bg-gradient-to-r from-blue-600 to-purple-600 h-80 overflow-hidden">
           {employee.basicInfo.profileImage ? (
             <Image 
-              source={{ uri: `${process.env.EXPO_PUBLIC_API_URL}/api/files/render/profile/${employee.basicInfo.profileImage.split('/').pop()}` }}
-              className="w-20 h-20 rounded-full mb-4"
+              source={{ uri: `https://tracker-mxp9.onrender.com/api/files/render/profile/${employee.basicInfo.profileImage.split('/').pop()}` }}
+              className="w-full"
+              style={{ width: '100%', height: '100%' }}
+              resizeMode="cover"
+              onLoad={() => console.log('Image loaded successfully')}
+              onError={(error) => {
+                console.log('Image load error:', error.nativeEvent.error);
+                console.log('Image URL:', `https://tracker-mxp9.onrender.com/api/files/render/profile/${employee.basicInfo.profileImage.split('/').pop()}`);
+                console.log('Profile image path:', employee.basicInfo.profileImage);
+              }}
             />
           ) : (
-            <View className="w-20 h-20 bg-white rounded-full items-center justify-center mb-4">
-              <Text className="text-2xl font-bold text-blue-600">
+            <View className="w-full h-80 bg-gradient-to-r from-blue-600 to-purple-600 items-center justify-center">
+              <Text className="text-6xl font-bold text-white">
                 {employee.basicInfo.firstName?.charAt(0)}{employee.basicInfo.lastName?.charAt(0)}
               </Text>
             </View>
           )}
-          <Text className="text-white text-xl font-bold">
-            {employee.basicInfo.firstName} {employee.basicInfo.lastName}
-          </Text>
-          <Text className="text-blue-100 text-sm mt-1">
-            {employee.professionalInfo.role}
-          </Text>
           
-          {/* Edit Button */}
-          <TouchableOpacity
-            onPress={() => setShowEditModal(true)}
-            className="mt-4 bg-white/20 rounded-full p-2"
-          >
-            <MaterialIcons name="edit" size={20} color="white" />
-          </TouchableOpacity>
+          {/* Overlay for better text visibility */}
+          <View className="absolute inset-0 bg-black/30" />
+        </View>
+        
+        {/* Profile Info Overlay */}
+        <View className="absolute bottom-4 left-4 right-4">
+          <View className="flex-row items-end justify-between">
+            <View className="flex-1">
+              <Text className="text-white text-2xl font-bold shadow-lg">
+                {employee.basicInfo.firstName} {employee.basicInfo.lastName}
+              </Text>
+              <Text className="text-white/90 text-sm mt-1 shadow-lg">
+                {employee.professionalInfo.role?.name || 'Employee'}
+              </Text>
+            </View>
+            
+            {/* Edit Button */}
+            <TouchableOpacity
+              onPress={() => setShowEditModal(true)}
+              className="bg-white/20 backdrop-blur-sm rounded-full p-3 ml-4"
+            >
+              <MaterialIcons name="edit" size={20} color="white" />
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
 
       <View className="px-4 py-4">
         {/* Basic Information */}
         <InfoCard title="Basic Information">
-          <InfoRow label="Employee ID" value={employee.professionalInfo.employeeId} />
+          <InfoRow label="Employee ID" value={employee.professionalInfo.empId} />
           <InfoRow label="Email" value={employee.basicInfo.email} />
           <InfoRow label="Work Email" value={employee.authInfo.workEmail} />
-          <InfoRow label="Phone" value={employee.basicInfo.phone} />
-          <InfoRow label="Date of Birth" value={employee.basicInfo.dateOfBirth ? new Date(employee.basicInfo.dateOfBirth).toLocaleDateString() : ''} />
+          <InfoRow label="Phone" value={employee.basicInfo.phone?.toString()} />
+          <InfoRow label="Date of Birth" value={employee.basicInfo.dob ? new Date(employee.basicInfo.dob).toLocaleDateString() : ''} />
           <InfoRow label="Gender" value={employee.basicInfo.gender} />
         </InfoCard>
 
@@ -183,10 +219,10 @@ export default function Profile() {
 
         {/* Professional Information */}
         <InfoCard title="Professional Information">
-          <InfoRow label="Department" value={employee.professionalInfo.department} />
-          <InfoRow label="Work Type" value={employee.professionalInfo.workType} />
-          <InfoRow label="Joining Date" value={employee.professionalInfo.joiningDate ? new Date(employee.professionalInfo.joiningDate).toLocaleDateString() : ''} />
-          <InfoRow label="Reporting Manager" value={employee.professionalInfo.reportingManager || 'N/A'} />
+          <InfoRow label="Department" value={employee.professionalInfo.department?.name || 'N/A'} />
+          <InfoRow label="Role" value={employee.professionalInfo.role?.name || 'N/A'} />
+          <InfoRow label="Designation" value={employee.professionalInfo.designation || 'N/A'} />
+          <InfoRow label="Reporting Manager" value={employee.professionalInfo.reportingManager?.basicInfo?.firstName && employee.professionalInfo.reportingManager?.basicInfo?.lastName ? `${employee.professionalInfo.reportingManager.basicInfo.firstName} ${employee.professionalInfo.reportingManager.basicInfo.lastName}` : 'N/A'} />
         </InfoCard>
 
         {/* Actions */}

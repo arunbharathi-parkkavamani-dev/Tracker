@@ -1,8 +1,9 @@
-import { View, Text, ScrollView, StyleSheet, RefreshControl } from "react-native";
-import { Card, Title, Paragraph, ActivityIndicator } from "react-native-paper";
-import { useState, useEffect } from "react";
+import { View, Text, ScrollView, RefreshControl, TouchableOpacity } from "react-native";
+import { ActivityIndicator } from "react-native";
+import { useState, useEffect, useContext } from "react";
 import axiosInstance from "@/api/axiosInstance";
-import * as MD from "@expo/vector-icons/MaterialIcons";
+import { LinearGradient } from 'expo-linear-gradient';
+import { AuthContext } from "@/context/AuthContext";
 
 interface DashboardStats {
   totalEmployees: number;
@@ -14,6 +15,7 @@ interface DashboardStats {
 }
 
 export default function Dashboard() {
+  const { user } = useContext(AuthContext);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -57,9 +59,9 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
-        <Text style={styles.loadingText}>Loading Dashboard...</Text>
+      <View className="flex-1 justify-center items-center bg-gray-50">
+        <ActivityIndicator size="large" color="#667eea" />
+        <Text className="mt-3 text-base text-gray-600">Loading Dashboard...</Text>
       </View>
     );
   }
@@ -76,149 +78,75 @@ export default function Dashboard() {
     }
   };
 
-  const StatCard = ({ title, value, icon, color }: { title: string; value: number; icon: string; color: string }) => (
-    <Card style={[styles.statCard, { borderLeftColor: color, borderLeftWidth: 4 }]}>
-      <Card.Content style={styles.cardContent}>
-        <View style={styles.cardHeader}>
-          <Text style={{ fontSize: 24 }}>{getIconText(icon)}</Text>
-          <Title style={[styles.statValue, { color }]}>{value}</Title>
+  const StatCard = ({ title, value, icon, colors }: { title: string; value: number; icon: string; colors: string[] }) => (
+    <View className="w-[48%] mb-4 rounded-2xl overflow-hidden shadow-lg">
+      <LinearGradient colors={colors} className="p-5">
+        <View className="items-center">
+          <Text className="text-3xl mb-2">{getIconText(icon)}</Text>
+          <Text className="text-3xl font-bold text-white mb-1">{value}</Text>
+          <Text className="text-sm text-white/90 font-medium">{title}</Text>
         </View>
-        <Paragraph style={styles.statTitle}>{title}</Paragraph>
-      </Card.Content>
-    </Card>
+      </LinearGradient>
+    </View>
   );
 
   return (
-    <ScrollView 
-      style={styles.container}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-    >
-      <View style={styles.header}>
-        <Title style={styles.welcomeTitle}>Welcome to HR Tracker</Title>
-        <Paragraph style={styles.subtitle}>Dashboard Overview</Paragraph>
-      </View>
+    <View className="flex-1 bg-gray-50">
+      <ScrollView
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        showsVerticalScrollIndicator={false}
+      >
+        <View className="px-5 flex-row flex-wrap justify-between mt-5">
+          <StatCard
+            title="Employees"
+            value={stats?.totalEmployees || 0}
+            icon="People"
+            colors={['#667eea', '#764ba2']}
+          />
+          <StatCard
+            title="Present"
+            value={stats?.presentToday || 0}
+            icon="CheckCircle"
+            colors={['#f093fb', '#f5576c']}
+          />
+          <StatCard
+            title="On Leave"
+            value={stats?.onLeave || 0}
+            icon="EventBusy"
+            colors={['#4facfe', '#00f2fe']}
+          />
+          <StatCard
+            title="Pending"
+            value={stats?.pendingLeaves || 0}
+            icon="Pending"
+            colors={['#43e97b', '#38f9d7']}
+          />
+        </View>
 
-      <View style={styles.statsGrid}>
-        <StatCard 
-          title="Total Employees" 
-          value={stats?.totalEmployees || 0} 
-          icon="People" 
-          color="#2196F3" 
-        />
-        <StatCard 
-          title="Present Today" 
-          value={stats?.presentToday || 0} 
-          icon="CheckCircle" 
-          color="#4CAF50" 
-        />
-        <StatCard 
-          title="On Leave" 
-          value={stats?.onLeave || 0} 
-          icon="EventBusy" 
-          color="#FF9800" 
-        />
-        <StatCard 
-          title="Pending Leaves" 
-          value={stats?.pendingLeaves || 0} 
-          icon="Pending" 
-          color="#F44336" 
-        />
-        <StatCard 
-          title="Active Tasks" 
-          value={stats?.activeTasks || 0} 
-          icon="Assignment" 
-          color="#9C27B0" 
-        />
-        <StatCard 
-          title="Completed Tasks" 
-          value={stats?.completedTasks || 0} 
-          icon="TaskAlt" 
-          color="#00BCD4" 
-        />
-      </View>
-
-      <Card style={styles.quickActionsCard}>
-        <Card.Content>
-          <Title>Quick Actions</Title>
-          <View style={styles.quickActions}>
-            <Text style={styles.quickActionText}>• Check Attendance</Text>
-            <Text style={styles.quickActionText}>• Submit Leave Request</Text>
-            <Text style={styles.quickActionText}>• View Tasks</Text>
-            <Text style={styles.quickActionText}>• Update Daily Activity</Text>
+        <View className="px-5">
+          <Text className="text-xl font-semibold text-gray-800 mb-4">Quick Actions</Text>
+          <View className="flex-row flex-wrap justify-between">
+            <TouchableOpacity className="w-[48%] bg-white p-5 rounded-2xl items-center mb-3 shadow-sm">
+              <Text className="text-3xl mb-2">⏰</Text>
+              <Text className="text-sm font-medium text-gray-700">Attendance</Text>
+            </TouchableOpacity>
+            <TouchableOpacity className="w-[48%] bg-white p-5 rounded-2xl items-center mb-3 shadow-sm">
+              <Text className="text-3xl mb-2">📝</Text>
+              <Text className="text-sm font-medium text-gray-700">Leave Request</Text>
+            </TouchableOpacity>
+            <TouchableOpacity className="w-[48%] bg-white p-5 rounded-2xl items-center mb-3 shadow-sm">
+              <Text className="text-3xl mb-2">✅</Text>
+              <Text className="text-sm font-medium text-gray-700">Tasks</Text>
+            </TouchableOpacity>
+            <TouchableOpacity className="w-[48%] bg-white p-5 rounded-2xl items-center mb-3 shadow-sm">
+              <Text className="text-3xl mb-2">📊</Text>
+              <Text className="text-sm font-medium text-gray-700">Reports</Text>
+            </TouchableOpacity>
           </View>
-        </Card.Content>
-      </Card>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-  },
-  header: {
-    padding: 20,
-    backgroundColor: '#fff',
-    marginBottom: 10,
-  },
-  welcomeTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 5,
-  },
-  statsGrid: {
-    padding: 10,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  statCard: {
-    width: '48%',
-    marginBottom: 15,
-    elevation: 3,
-  },
-  cardContent: {
-    padding: 15,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 5,
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  statTitle: {
-    fontSize: 14,
-    color: '#666',
-  },
-  quickActionsCard: {
-    margin: 10,
-    marginTop: 0,
-  },
-  quickActions: {
-    marginTop: 10,
-  },
-  quickActionText: {
-    fontSize: 16,
-    marginVertical: 5,
-    color: '#333',
-  },
-});
+

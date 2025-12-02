@@ -274,7 +274,7 @@ export default function ExcelColumnExtractor() {
                           key={col}
                           className="px-4 py-2 border text-sm text-black w-40 break-words"
                         >
-                          {row[col]}
+                          {row[col] || ""}
                         </td>
                       )
                   )}
@@ -287,23 +287,21 @@ export default function ExcelColumnExtractor() {
 
       {/* Pagination */}
       {filteredData.length > rowsPerPage && (
-        <div className="flex justify-between items-center mt-4">
+        <div className="mt-4 flex justify-center space-x-2">
           <button
-            onClick={() => setPage((p) => Math.max(p - 1, 1))}
-            className="px-3 py-1 border rounded bg-gray-100 hover:bg-gray-200"
+            onClick={() => setPage(Math.max(1, page - 1))}
+            disabled={page === 1}
+            className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
           >
-            Prev
+            Previous
           </button>
-          <span>
-            Page {page} / {Math.ceil(filteredData.length / rowsPerPage)}
+          <span className="px-3 py-1">
+            Page {page} of {Math.ceil(filteredData.length / rowsPerPage)}
           </span>
           <button
-            onClick={() =>
-              setPage((p) =>
-                Math.min(p + 1, Math.ceil(filteredData.length / rowsPerPage))
-              )
-            }
-            className="px-3 py-1 border rounded bg-gray-100 hover:bg-gray-200"
+            onClick={() => setPage(Math.min(Math.ceil(filteredData.length / rowsPerPage), page + 1))}
+            disabled={page === Math.ceil(filteredData.length / rowsPerPage)}
+            className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
           >
             Next
           </button>
@@ -314,9 +312,9 @@ export default function ExcelColumnExtractor() {
       {data.length > 0 && (
         <button
           onClick={exportExcel}
-          className="mt-6 px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700"
+          className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
         >
-          Export Selected Columns
+          Export Filtered Data
         </button>
       )}
     </div>
