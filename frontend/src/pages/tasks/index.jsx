@@ -204,18 +204,18 @@ const TasksPage = () => {
   };
 
   if (loading) return (
-    <div className="flex items-center justify-center h-64">
+    <div className="flex items-center justify-center ">
       <div className="text-lg">Loading tasks...</div>
     </div>
   );
 
   return (
-    <div className="p-6">
+    <div className="p-6 dark:bg-black dark:text-white">
       {/* Header with all controls in one line */}
       <div className="flex items-center justify-between gap-4 mb-6">
         <h1 className="text-2xl font-bold">Tasks</h1>
         
-        <div className="relative flex-1 max-w-md">
+        <div className="relative flex-1 max-w-lg">
           <MdSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
           <input
             type="text"
@@ -230,7 +230,7 @@ const TasksPage = () => {
           <select
             value={kanbanView}
             onChange={(e) => setKanbanView(e.target.value)}
-            className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 dark:bg-black border rounded-lg focus:ring-2 focus:ring-blue-500"
           >
             <option value="status">Group by Status</option>
             <option value="projectType">Group by Project Type</option>
@@ -276,9 +276,9 @@ const TasksPage = () => {
       </div>
 
       {/* Client Selection and Task Listing */}
-      <div className="flex gap-6 mb-6 h-screen">
+      <div className="flex gap-6 mb-6">
         {/* Client Selection */}
-        <div className="w-1/4 bg-white rounded-lg shadow p-4 overflow-y-auto">
+        <div className="w-1/4 bg-white rounded-lg shadow p-4 overflow-y-auto dark:bg-gray-800 dark:text-white">
           <h3 className="font-semibold mb-3">Clients ({clients.length})</h3>
           <div className="space-y-2">
             {clients.length > 0 ? clients.map((client) => (
@@ -308,19 +308,19 @@ const TasksPage = () => {
                     setClientProjectTypes([]);
                   }
                 }}
-                className={`p-3 rounded-lg cursor-pointer transition-all duration-200 ${
+                className={`p-3 rounded-lg dark:bg-gray-600 dark:text-white cursor-pointer transition-all duration-200 ${
                   selectedClient?._id === client._id 
                     ? 'bg-blue-100 border-l-4 border-blue-500 shadow-md' 
                     : 'hover:bg-gray-50 border-l-4 border-transparent'
                 }`}
               >
-                <div className="font-medium text-gray-800">{client.name || 'Unnamed Client'}</div>
-                <div className="text-sm text-gray-500 mt-1">
+                <div className="font-medium text-gray-800 dark:text-white">{client.name || 'Unnamed Client'}</div>
+                <div className="text-sm text-gray-500 mt-1 dark:text-white">
                   {tasks.filter(task => task.clientId?._id === client._id).length} tasks
                 </div>
               </div>
             )) : (
-              <div className="text-center text-gray-500 py-4">
+              <div className="text-center text-gray-500 py-4 dark:text-white">
                 No clients found
               </div>
             )}
@@ -328,7 +328,7 @@ const TasksPage = () => {
         </div>
         
         {/* Task Listing */}
-        <div className="flex-1 bg-white rounded-lg shadow p-4 overflow-y-auto" style={{maxWidth: 'calc(100% - 1rem)'}}>
+        <div className="flex-1 bg-white rounded-lg shadow p-4 dark:bg-gray-900" style={{maxWidth: 'calc(100% - 1rem)'}}>
           <h3 className="font-semibold mb-3">
             {selectedClient ? `${selectedClient.name} - Tasks` : 'Select a client to view tasks'}
           </h3>

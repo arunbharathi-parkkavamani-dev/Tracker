@@ -1,78 +1,31 @@
 [
   {
-  "_id": {
-    "$oid": "691e83f1f0eec09991a25d10"
-  },
-  "role": "68d8b98af397d1d97620ba97",
-  "modelName": "employees",
-  "permissions": {
-    "read": true,
-    "create": true,
-    "update": true,
-    "delete": true
-  },
-  "forbiddenAccess": {
-    "read": [
-      "authInfo", "SalaryDetails"
-    ],
-    "create": [ "authInfo", "SalaryDetails"],
-    "update": [
-       "authInfo", "SalaryDetails"
-    ],
-    "delete": [
-       "authInfo", "SalaryDetails"
-    ]
-  },
-  "allowAccess": {
-    "read": [
-      "*"
-    ],
-    "create": [
-      "*"
-    ],
-    "update": [
-      "*"
-    ],
-    "delete": [
-      "*"
-    ]
-  },
-  "registry": ["isRef", "isSelf", "isManager", "isHR"],
-  "conditions": {
-    "read": [
-      {
-        "registry" : "isRef",
-        "fields": [
-          "basicInfo.firstName",
-          "basicInfo.phone",
-          "professionalInfo.designation",
-          "authInfo.workEmail"
-        ],
-        "effect": "allow"
-      },
-      {
-        "registry":"isSelf",
-        "fields": [
-          "*"
-        ],
-        "effect": "allow"
-      }
-    ],
-    "create": [
-      {
-        "registry":"isSelf",
-        "fields":["SalaryDeatils"],
-        "effect": "deny"
-      }
-    ],
-    "update": [
-      {
-        "registry":"isSelf",
-        "fields":["SalaryDeatils"],
-        "effect": "deny"
-      }
-    ],
-    "delete":[]
+    "role": "68d8b98af397d1d97620ba97",
+    "modelName": "roles",
+    "permissions": {
+      "read": true,
+      "create": false,
+      "update": false,
+      "delete": false
+    },
+    "forbiddenAccess": {
+      "read": [],
+      "create": [],
+      "update": [],
+      "delete": []
+    },
+    "allowAccess": {
+      "read": ["*"],
+      "create": [],
+      "update": [],
+      "delete": []
+    },
+    "registry": [],
+    "conditions": {
+      "read": [],
+      "update": [],
+      "create" : [],
+      "delete" : []
+    }
   }
-}
 ]

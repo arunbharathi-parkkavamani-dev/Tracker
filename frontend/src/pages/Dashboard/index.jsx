@@ -1,45 +1,191 @@
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { useAuth } from "../../context/authProvider";
+import { useState, useEffect, useContext } from "react";
 import axiosInstance from "../../api/axiosInstance";
 import ThemeToggler from "../../components/Common/ThemeToggler";
+import { useAuth } from "../../context/authProvider";
+import { useUserRole } from "../../hooks/useUserRole";
 
-const Dashboard = () => {
+// Your existing components (keep same paths)
+import EmployeeDashboard from "../../components/role/Employee/Dashboard";
+
+export default function Dashboard() {
   const { user } = useAuth();
-  const [stats, setStats] = useState({
-    totalEmployees: 0,
-    presentToday: 0,
-    pendingLeaves: 0,
-    activeTasks: 0
-  });
+  const { userRole, loading: roleLoading } = useUserRole();
 
-  useEffect(() => {
-    fetchDashboardStats();
-  }, []);
+  const [hrStats, setHrStats] = useState(null);
+  const [employeeStats, setEmployeeStats] = useState(null);
 
-  const fetchDashboardStats = async () => {
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // -------------------------
+  // 🚀 Fetch HR Stats
+  // -------------------------
+  // const fetchHRStats = async () => {
+  //   try {
+  //     const [employeesRes, leavesRes, tasksRes] = await Promise.all([
+  //       axiosInstance.get('/populate/read/employees?fields=basicInfo.firstName'),
+  //       axiosInstance.get('/populate/read/leaves?filter={"status":"Pending"}'),
+  //       axiosInstance.get('/populate/read/tasks?filter={"status":"Active"}')
+  //     ]);
+
+  //     const totalEmployees = employeesRes.data?.data?.length || 0;
+  //     const pendingLeaves = leavesRes.data?.data?.length || 0;
+  //     const activeTasks = tasksRes.data?.data?.length || 0;
+
+  //     setHrStats({
+  //       totalEmployees,
+  //       presentToday: Math.floor(totalEmployees * 0.85),
+  //       onLeave: Math.floor(totalEmployees * 0.1),
+  //       pendingLeaves,
+  //       activeTasks,
+  //       completedTasks: Math.floor(activeTasks * 1.5)
+  //     });
+  //   } catch (error) {
+  //     console.error('Error fetching HR stats:', error);
+  //   }
+  // };
+
+  // -------------------------
+  // 🚀 Fetch Employee Stats
+  // -------------------------
+  const fetchEmployeeStats = async () => {
+    console.log("Fetching")
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const filter = JSON.stringify({
+      employee: user.id,
+      date: {
+        $gte: startOfDay.toISOString(),
+        $lte: endOfDay.toISOString()
+      }
+    });
+
     try {
-      const [employees, attendances, leaves, tasks] = await Promise.all([
-        axiosInstance.get("/populate/read/employees?fields=basicInfo.firstName,basicInfo.lastName,professionalInfo.designation"),
-        axiosInstance.get("/populate/read/attendances?filter={\"date\":\"" + new Date().toISOString().split('T')[0] + "\"}"),
-        axiosInstance.get("/populate/read/leaves?filter={\"status\":\"Pending\"}"),
-        axiosInstance.get("/populate/read/tasks?filter={\"status\":\"Active\"}")
+      const userId = user?._id;
+      const [attendanceRes, leavesRes, tasksRes] = await Promise.all([
+        axiosInstance.get(`/populate/read/attendances?filter=${encodeURIComponent(filter)}`),
+        axiosInstance.get(`/populate/read/leaves?filter={"employeeId":"${userId}"}`),
+        axiosInstance.get(`/populate/read/tasks?filter={"assignedTo":"${userId}"}`),
       ]);
-      
-      setStats({
-        totalEmployees: employees.data.count || 0,
-        presentToday: attendances.data.count || 0,
-        pendingLeaves: leaves.data.count || 0,
-        activeTasks: tasks.data.count || 0
+
+      const todayAttendance = attendanceRes.data?.data?.[0] || null;
+      const leaves = leavesRes.data?.data || [];
+      const tasks = tasksRes.data?.data || [];
+
+      const attendanceStatus =
+        todayAttendance?.checkIn && !todayAttendance?.checkOut
+          ? "check-in"
+          : todayAttendance?.checkOut
+            ? "check-out"
+            : "not-started";
+
+      setEmployeeStats({
+        attendanceStatus,
+        leaveBalance: 2, // Replace with real value later
+        pendingLeaves: leaves.filter(l => l.status === "Pending").length,
+        myTasks: tasks.filter(t => t.status !== "Completed").length,
+        completedTasks: tasks.filter(t => t.status === "Completed").length,
+        monthlyAttendance: 22,
       });
+
     } catch (error) {
-      console.error("Error fetching dashboard stats:", error);
+      console.error("Error fetching employee stats:", error);
+    }
+  };
+  // -------------------------
+  // 🚀 Fetch SuperAdmin Stats
+  // -------------------------
+  // const fetchSuperAdminStats = async () => {
+  //   try {
+  //     setSuperAdminStats({
+  //       totalUsers: 150,
+  //       systemHealth: "Good",
+  //       activeRoles: 4,
+  //       systemAlerts: 2,
+  //     });
+  //   } catch (error) {
+  //     console.error("Error fetching superadmin stats:", error);
+  //   }
+  // };
+
+  // -------------------------
+  // 🚀 Master Fetch
+  // -------------------------
+  const fetchStats = async () => {
+    if (!userRole) return;
+
+    try {
+      switch (userRole) {
+        case "employee":
+          await fetchEmployeeStats();
+          break;
+
+        // case "hr":
+        //   await fetchHRStats();
+        //   break;
+
+        // case "manager":
+        //   // You said **don't import manager**, so manager UI & fetch removed.
+        //   setManagerStats(null);
+        //   break;
+
+        // case "superadmin":
+        //   await fetchSuperAdminStats();
+        //   break;
+      }
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
   };
 
+  // -------------------------
+  // 🚀 Initial fetch when role loads
+  // -------------------------
+  useEffect(() => {
+    if (userRole && !roleLoading) {
+      fetchStats();
+    }
+  }, [userRole, roleLoading]);
+
+  // -------------------------
+  // 🚀 Role-based UI
+  // -------------------------
+  const renderRoleBasedDashboard = () => {
+    switch (userRole) {
+      case "employee":
+        return <EmployeeDashboard stats={employeeStats} />;
+
+      // case "hr":
+      //   return <HRDashboard stats={hrStats} />;
+
+      // case "superadmin":
+      //   return <SuperAdminDashboard stats={superAdminStats} />;
+
+      default:
+        return (
+          <div className="flex justify-center items-center py-10">
+            <p className="text-gray-600 text-lg">Role not recognized</p>
+          </div>
+        );
+    }
+  };
+
+  if (loading || roleLoading) {
+    return (
+      <div className="flex flex-col justify-center items-center h-screen bg-gray-50">
+        <div className="animate-spin h-10 w-10 border-4 border-gray-300 border-t-blue-500 rounded-full"></div>
+        <p className="mt-3 text-gray-600">Loading Dashboard...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 p-6">
-      {/* Header */}
+    <div className="min-h-screen dark:bg-black dark:text-white bg-gray-50 p-4">
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 space-y-4 lg:space-y-0">
         <div className="space-y-2">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
@@ -55,118 +201,9 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="group bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700 hover:border-blue-200 dark:hover:border-blue-600">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Employees</h3>
-              <p className="text-3xl font-bold text-blue-600 dark:text-blue-400 mt-2">{stats.totalEmployees}</p>
-            </div>
-            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-              <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-        
-        <div className="group bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700 hover:border-green-200 dark:hover:border-green-600">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Present Today</h3>
-              <p className="text-3xl font-bold text-green-600 dark:text-green-400 mt-2">{stats.presentToday}</p>
-            </div>
-            <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-              <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-        
-        <div className="group bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700 hover:border-yellow-200 dark:hover:border-yellow-600">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Pending Leaves</h3>
-              <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400 mt-2">{stats.pendingLeaves}</p>
-            </div>
-            <div className="w-12 h-12 bg-yellow-100 dark:bg-yellow-900 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-              <svg className="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-        
-        <div className="group bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700 hover:border-purple-200 dark:hover:border-purple-600">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Active Tasks</h3>
-              <p className="text-3xl font-bold text-purple-600 dark:text-purple-400 mt-2">{stats.activeTasks}</p>
-            </div>
-            <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-              <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 border border-gray-100 dark:border-gray-700">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">Quick Actions</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Link to="/attendance" className="group p-6 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 rounded-xl hover:from-blue-100 hover:to-blue-200 dark:hover:from-blue-800 dark:hover:to-blue-700 transition-all duration-300 transform hover:scale-105 hover:shadow-lg block">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:bg-blue-700 transition-colors">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="text-blue-700 dark:text-blue-300 font-semibold">
-                Check In/Out
-              </div>
-            </div>
-          </Link>
-          
-          <Link to="/attendance/leave-regularization" className="group p-6 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 rounded-xl hover:from-green-100 hover:to-green-200 dark:hover:from-green-800 dark:hover:to-green-700 transition-all duration-300 transform hover:scale-105 hover:shadow-lg block">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:bg-green-700 transition-colors">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <div className="text-green-700 dark:text-green-300 font-semibold">Apply Leave</div>
-            </div>
-          </Link>
-          
-          <Link to="/tasks" className="group p-6 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900 dark:to-purple-800 rounded-xl hover:from-purple-100 hover:to-purple-200 dark:hover:from-purple-800 dark:hover:to-purple-700 transition-all duration-300 transform hover:scale-105 hover:shadow-lg block">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:bg-purple-700 transition-colors">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-              </div>
-              <div className="text-purple-700 dark:text-purple-300 font-semibold">View Tasks</div>
-            </div>
-          </Link>
-          
-          <Link to="/daily-tracker" className="group p-6 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900 dark:to-orange-800 rounded-xl hover:from-orange-100 hover:to-orange-200 dark:hover:from-orange-800 dark:hover:to-orange-700 transition-all duration-300 transform hover:scale-105 hover:shadow-lg block">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-orange-600 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:bg-orange-700 transition-colors">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-              <div className="text-orange-700 dark:text-orange-300 font-semibold">Daily Activities</div>
-            </div>
-          </Link>
-        </div>
+      <div className="px-2">
+        {renderRoleBasedDashboard()}
       </div>
     </div>
   );
-};
-
-export default Dashboard;
+}

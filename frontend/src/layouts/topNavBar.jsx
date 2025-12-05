@@ -20,15 +20,6 @@ const TopNavBar = () =>{
                     Logimax Technologies
                 </div>
                 <div className="flex items-center space-x-4">
-                    {/* Date Display */}
-                    <div className="">
-                        {new Date().toLocaleDateString(undefined, {
-                            weekday: 'long',
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                        })}
-                    </div>
                     {/* Notification Icon */}
                     <div className="relative">
                         <button onClick={() => setIsOpen(prev => !prev)} className="relative focus:outline-none">

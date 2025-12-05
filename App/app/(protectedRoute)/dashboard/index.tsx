@@ -19,7 +19,7 @@ interface HRDashboardStats {
 }
 
 interface EmployeeDashboardStats {
-  attendanceStatus: 'checked-in' | 'checked-out' | 'not-started';
+  attendanceStatus: 'check-in' | 'check-out' | 'not-started';
   leaveBalance: number;
   pendingLeaves: number;
   myTasks: number;
@@ -76,37 +76,103 @@ export default function Dashboard() {
     }
   };
 
-  const fetchEmployeeStats = async () => {
-    try {
-      const userId = user?._id;
-      const [attendanceRes, leavesRes, tasksRes] = await Promise.all([
-        axiosInstance.get(`/populate/read/attendances?filter={"employeeId":"${userId}"}&sort={"date":-1}&limit=1`),
-        axiosInstance.get(`/populate/read/leaves?filter={"employeeId":"${userId}"}`),
-        axiosInstance.get(`/populate/read/tasks?filter={"assignedTo":"${userId}"}`)
-      ]);
+ const fetchEmployeeStats = async () => {
+  try {
+    if (!user) return;
 
-      const todayAttendance = attendanceRes.data?.data?.[0];
-      const leaves = leavesRes.data?.data || [];
-      const tasks = tasksRes.data?.data || [];
-      
-      const attendanceStatus = todayAttendance?.checkInTime && !todayAttendance?.checkOutTime 
-        ? 'checked-in' 
-        : todayAttendance?.checkOutTime 
-        ? 'checked-out' 
-        : 'not-started';
+    const now = new Date();
 
-      setEmployeeStats({
-        attendanceStatus,
-        leaveBalance: 24, // Mock - should come from employee profile
-        pendingLeaves: leaves.filter(l => l.status === 'Pending').length,
-        myTasks: tasks.filter(t => t.status !== 'Completed').length,
-        completedTasks: tasks.filter(t => t.status === 'Completed').length,
-        monthlyAttendance: 22 // Mock - calculate from current month attendance
-      });
-    } catch (error) {
-      console.error('Error fetching employee stats:', error);
-    }
-  };
+    // ----------------------------
+    // 1️⃣ Build IST Start / End of Today
+    // ----------------------------
+    const IST_OFFSET = 5.5 * 60 * 60 * 1000; // IST = UTC+5:30
+
+    const startIST = new Date(now);
+    startIST.setHours(0, 0, 0, 0); // 00:00 IST
+
+    const endIST = new Date(now);
+    endIST.setHours(23, 59, 59, 999); // 23:59 IST
+
+    // ----------------------------
+    // 2️⃣ Convert IST → UTC for MongoDB filters
+    // ----------------------------
+    const startUTC = new Date(startIST.getTime() - IST_OFFSET);
+    const endUTC = new Date(endIST.getTime() - IST_OFFSET);
+
+    const filter = {
+      employee: user.id,
+      date: {
+        $gte: startUTC.toISOString(),
+        $lte: endUTC.toISOString(),
+      },
+    };
+
+    console.log("IST Start:", startIST.toString());
+    console.log("IST End:", endIST.toString());
+    console.log("UTC Start:", startUTC.toISOString());
+    console.log("UTC End:", endUTC.toISOString());
+
+
+    // ----------------------------
+    // 3️⃣ API Call
+    // ----------------------------
+    const userId = user?._id;
+
+    const [attendanceRes, leavesRes, tasksRes] = await Promise.all([
+      axiosInstance.get(
+        `/populate/read/attendances?filter=${encodeURIComponent(
+          JSON.stringify(filter)
+        )}`
+      ),
+      axiosInstance.get(`/populate/read/leaves?filter={"employeeId":"${userId}"}`),
+      axiosInstance.get(`/populate/read/tasks?filter={"assignedTo":"${userId}"}`),
+    ]);
+
+    const records = attendanceRes?.data?.data || [];
+
+    // ----------------------------
+    // 4️⃣ Filter again in frontend (safety check)
+    // ----------------------------
+    const todayIST = new Date(now);
+    const todayDateString = todayIST.toISOString().split("T")[0]; // YYYY-MM-DD (IST converted)
+
+    const todayRecord = records.find((r) => {
+      if (!r.date) return false;
+      const date = new Date(r.date);
+      return date.toISOString().split("T")[0] === todayDateString;
+    });
+
+    console.log("TODAY RECORD:", todayRecord);
+
+    // ----------------------------
+    // 5️⃣ Attendance Status Logic
+    // ----------------------------
+    const attendanceStatus =
+      todayRecord?.checkIn && !todayRecord?.checkOut
+        ? "check-in"
+        : todayRecord?.checkOut
+        ? "check-out"
+        : "not-started";
+
+    const leaves = leavesRes.data?.data || [];
+    const tasks = tasksRes.data?.data || [];
+
+    // ----------------------------
+    // 6️⃣ Update Dashboard State
+    // ----------------------------
+    setEmployeeStats({
+      attendanceStatus,
+      leaveBalance: 2, // mock
+      pendingLeaves: leaves.filter((l) => l.status === "Pending").length,
+      myTasks: tasks.filter((t) => t.status !== "Completed").length,
+      completedTasks: tasks.filter((t) => t.status === "Completed").length,
+      monthlyAttendance: 22, // mock
+    });
+
+  } catch (error) {
+    console.error("Error fetching employee stats:", error);
+  }
+};
 
   const fetchManagerStats = async () => {
     try {
@@ -138,7 +204,7 @@ export default function Dashboard() {
 
   const fetchStats = async () => {
     if (!userRole) return;
-    
+
     try {
       switch (userRole) {
         case 'employee':

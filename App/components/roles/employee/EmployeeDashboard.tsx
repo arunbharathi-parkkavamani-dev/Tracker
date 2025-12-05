@@ -1,15 +1,16 @@
 import { View, Text, TouchableOpacity } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
-import { Calendar, Clock, CheckSquare, FileText, LogIn, LogOut } from 'lucide-react-native';
+import { Calendar, Clock, CheckSquare, FileText, LogIn, LogOut, Loader, LogInIcon, ClipboardList  } from 'lucide-react-native';
 import { router } from 'expo-router';
 
 interface EmployeeDashboardStats {
-  attendanceStatus: 'checked-in' | 'checked-out' | 'not-started';
+  attendanceStatus: 'check-in' | 'check-out' | 'not-started';
   leaveBalance: number;
   pendingLeaves: number;
   myTasks: number;
   completedTasks: number;
   monthlyAttendance: number;
+  dailyActivity : number;
 }
 
 interface Props {
@@ -64,10 +65,10 @@ export default function EmployeeDashboard({ stats }: Props) {
       <View className="px-5 flex-row flex-wrap justify-between mt-5">
         <StatCard
           title="Attendance"
-          value={stats?.attendanceStatus === 'checked-in' ? 'Checked In' : 
-                 stats?.attendanceStatus === 'checked-out' ? 'Checked Out' : 'Not Started'}
-          icon={stats?.attendanceStatus === 'checked-in' ? LogIn : 
-                stats?.attendanceStatus === 'checked-out' ? LogOut : Clock}
+          value={stats?.attendanceStatus === 'check-in' ? 'Checked In' : 
+                 stats?.attendanceStatus === 'check-out' ? 'Checked Out' : 'Not Started'}
+          icon={stats?.attendanceStatus === 'check-in' ? LogIn : 
+                stats?.attendanceStatus === 'check-out' ? LogOut : Clock}
           colors={getStatusColor(stats?.attendanceStatus || 'not-started')}
         />
         <StatCard
@@ -75,6 +76,13 @@ export default function EmployeeDashboard({ stats }: Props) {
           value={stats?.leaveBalance || 0}
           icon={Calendar}
           colors={['#8b5cf6', '#7c3aed']}
+          subtitle="days remaining"
+        />
+        <StatCard
+          title="Pending Leaves"
+          value={stats?.pendingLeaves || 0}
+          icon={Loader}
+          colors={['#f6f45cff', '#ed733aff']}
           subtitle="days remaining"
         />
         <StatCard
@@ -91,6 +99,20 @@ export default function EmployeeDashboard({ stats }: Props) {
           colors={['#10b981', '#059669']}
           subtitle="this month"
         />
+        <StatCard
+          title="Monthly Attendance"
+          value={stats?.monthlyAttendance || 0}
+          icon={LogInIcon}
+          colors={['#f65cf6ff', '#8e3aedff']}
+          subtitle="days remaining"
+        />
+        <StatCard
+          title="Activity Tasks"
+          value={stats?.dailyActivity || 0}
+          icon={ClipboardList}
+          colors={['#f65cf6ff', '#8e3aedff']}
+          subtitle="days remaining"
+        />
       </View>
 
       <View className="px-5">
@@ -104,7 +126,7 @@ export default function EmployeeDashboard({ stats }: Props) {
           <ActionCard
             title="Request Leave"
             icon={Calendar}
-            onPress={() => router.push('/(protectedRoute)/leaves')}
+            onPress={() => router.push('/(protectedRoute)/attendance/leave-and-regularization')}
           />
           <ActionCard
             title="My Tasks"
@@ -114,7 +136,7 @@ export default function EmployeeDashboard({ stats }: Props) {
           <ActionCard
             title="Profile"
             icon={FileText}
-            onPress={() => router.push('/(protectedRoute)/profile')}
+            onPress={() => router.push('/(protectedRoute)/me')}
           />
         </View>
       </View>

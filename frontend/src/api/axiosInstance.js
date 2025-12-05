@@ -8,7 +8,7 @@ export const setAuthLogout = (logoutFn) => {
 };
 
 const axiosInstance = axios.create({
-  baseURL: "http://192.168.29.83:3000/api",
+  baseURL: "http://192.168.1.156:3000/api",
   timeout: 100000,
   withCredentials: true,
 });
@@ -49,7 +49,7 @@ axiosInstance.interceptors.response.use(
         
         try {
           const refreshResponse = await axios.post(
-            "http://192.168.29.83/api/auth/refresh",
+            "http://192.168.1.156:3000/api/auth/refresh",
             {},
             { withCredentials: true }
           );

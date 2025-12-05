@@ -124,22 +124,22 @@ export default function Attendance() {
             const response = await axiosInstance.get(`/populate/read/attendances?filter=${encodeURIComponent(filter)}`);
 
             const records = response?.data?.data || [];
-            
+
             // Filter records to find today's actual record
             const today = new Date();
             const todayDateString = today.toISOString().split('T')[0]; // YYYY-MM-DD format
-            
+
             const todayRecords = records.filter(record => {
                 if (!record.date) return false;
                 const recordDate = new Date(record.date).toISOString().split('T')[0];
                 return recordDate === todayDateString && record.employee._id === user.id;
             });
-            
+
             // Get the most recent record for today (in case of multiple)
-            const record = todayRecords.length > 0 
+            const record = todayRecords.length > 0
                 ? todayRecords.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
                 : null;
-                
+
             setTodayRecord(record);
         } catch (err) {
             console.log("Failed to fetch today's attendance:", err);
@@ -164,7 +164,7 @@ export default function Attendance() {
                         $lte: end.toISOString()
                     }
                 });
-                
+
                 const response = await axiosInstance.get(
                     `/populate/read/attendances?filter=${encodeURIComponent(filter)}`
                 );
@@ -230,7 +230,8 @@ export default function Attendance() {
             // Record exists, check status
             const status = (record.status || "").toLowerCase();
 
-            if (status.includes("present") || status.includes("check-out")) summary.present += 1;
+
+            if (status.includes("present") || status.includes("check-out")||status.includes("late entry")) summary.present += 1;
             else if (status.includes("leave")) summary.leave += 1;
             else if (status.includes("absent")) summary.absent += 1;
             else summary.others += 1;
@@ -503,7 +504,10 @@ export default function Attendance() {
                                             <Text className="text-2xl font-semibold text-emerald-600">
                                                 {formatTime(todayRecord?.checkIn)}
                                             </Text>
-                                            <Text className="text-xs text-gray-500 mt-2">
+                                            <Text
+                                                numberOfLines={2}
+                                                className="text-xs text-gray-500 mt-2 max-w-[270px]"
+                                            >
                                                 Location: {locationLabel}
                                             </Text>
                                         </View>

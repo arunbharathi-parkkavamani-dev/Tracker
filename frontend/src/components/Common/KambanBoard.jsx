@@ -55,15 +55,15 @@ const KanbanBoard = ({
         onClick={() => onCardClick?.(task)}
         draggable={task.createdBy?._id === currentUserId || task.user?._id === currentUserId}
         onDragStart={(e) => handleDragStart(e, task, getValue(task, groupBy))}
-        className={`bg-white rounded-lg shadow-sm border p-3 mb-3 cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-[1.02] ${
+        className={`bg-white rounded-lg shadow-sm border p-3 mb-3 cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-[1.02] dark:bg-gray-600 dark-text-white ${
           draggingCard?.item?._id === task._id ? "opacity-25" : ""
         }`}
       >
         <div className="flex justify-between items-start mb-2">
-          <h4 className="text-sm font-medium text-gray-900 line-clamp-2 flex-1">
+          <h4 className="text-sm font-medium text-gray-900 line-clamp-2 flex-1 dark:text-white">
             {title || 'Untitled Activity'}
           </h4>
-          <button className="text-gray-400 hover:text-gray-600 ml-2">
+          <button className="text-gray-400 hover:text-gray-600 ml-2 dark:text-white">
             <MdMoreVert size={16} />
           </button>
         </div>
@@ -77,10 +77,10 @@ const KanbanBoard = ({
         )}
         
         <div className="flex items-center justify-between text-xs text-gray-500">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 dark:text-white">
             {date && (
               <div className="flex items-center gap-1">
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
                 <span>{new Date(date).toLocaleDateString()}</span>
@@ -92,7 +92,7 @@ const KanbanBoard = ({
             <div className="flex items-center gap-1">
               {user.basicInfo?.profileImage ? (
                 <img
-                  src={`http://10.11.244.208:3000/api/files/render/profile/${typeof user.basicInfo.profileImage === 'string' ? user.basicInfo.profileImage.split('/').pop() : user.basicInfo.profileImage}`}
+                  src={`http://10.232.224.208:3000/api/files/render/profile/${typeof user.basicInfo.profileImage === 'string' ? user.basicInfo.profileImage.split('/').pop() : user.basicInfo.profileImage}`}
                   alt={user.basicInfo?.firstName || 'User'}
                   className="w-5 h-5 rounded-full object-cover border border-white"
                 />
@@ -109,14 +109,14 @@ const KanbanBoard = ({
   };
 
   return (
-    <div className="flex gap-6 min-w-max pb-4">
+    <div className="flex gap-6 dark:bg-black dark:text-white min-w-max pb-4">
       {columns.map((column) => {
         const columnTasks = getTasksByColumn(column.id);
         
         return (
           <div 
             key={column.id} 
-            className={`flex-shrink-0 w-80 min-w-80 transition-transform duration-200 ${
+            className={`flex-shrink-0 w-80 min-w-80 transition-transform duration-200 dark:bg-gray-700 ${
               highlightedColumn === column.id ? "scale-[1.02]" : ""
             }`}
             onDragOver={(e) => handleDragOver(e, column.id)}
@@ -125,12 +125,12 @@ const KanbanBoard = ({
           >
             <div className={`${column.color} text-white rounded-t-lg p-3 flex items-center justify-between`}>
               <h3 className="font-medium">{column.title}</h3>
-              <span className="bg-white bg-opacity-20 p-2 py-1 rounded text-sm font-medium">
+              <span className="bg-white bg-opacity-20 p-2 py-1 rounded text-sm font-medium text-black">
                 {columnTasks.length}
               </span>
             </div>
             
-            <div className="bg-gray-50 rounded-b-lg p-3 h-[calc(100vh-20rem)] overflow-y-auto">
+            <div className="bg-gray-50 rounded-b-lg p-3 h-[calc(100vh-20rem)] dark:bg-gray-700 overflow-y-auto">
               {columnTasks.map((task) => (
                 <TaskCard key={task._id} task={task} />
               ))}

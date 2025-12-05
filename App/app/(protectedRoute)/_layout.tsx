@@ -28,7 +28,7 @@ function CustomDrawerContent() {
   useEffect(() => {
     const fetchNavBar = async () => {
       try {
-        const response = await axiosInstance.get("/populate/read/sidebars");
+        const response = await axiosInstance.get("/populate/read/sidebar");
         setNavItems(response?.data?.data || []);
       } catch (err: any) {
         const defaultRoutes = [
