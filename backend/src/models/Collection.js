@@ -17,6 +17,7 @@ import notifications from "./notification.js";
 import leaves from "./Leave.js"
 import tasks from "./Tasks.js"
 import commentsthreads from "./CommentsThreads.js"
+import session from "./Session.js";
 
 
 const models = {
@@ -37,7 +38,8 @@ const models = {
   notifications,
   leaves,
   tasks,
-  commentsthreads
+  commentsthreads,
+  session
 };
 
 export default models;

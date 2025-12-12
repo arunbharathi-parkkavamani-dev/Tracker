@@ -21,7 +21,7 @@ const ProfileImage = ({
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
     const filename = typeof imagePath === 'string' ? imagePath.split('/').pop() : imagePath;
-    return `http://192.168.1.156:3000/api/files/render/profile/${filename}`;
+    return `http://10.230.123.208:3000/api/files/render/profile/${filename}`;
   };
 
   const getInitials = () => {

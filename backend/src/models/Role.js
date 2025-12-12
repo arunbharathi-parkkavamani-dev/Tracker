@@ -5,7 +5,10 @@ const roleSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
-  }
+  },
+  capabilities: [{
+    type: String, required: true, unique: true
+  }]
 });
 
 const Role = mongoose.model("roles", roleSchema);

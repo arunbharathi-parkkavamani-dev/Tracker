@@ -38,6 +38,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("refresh_token");
     setUser(null);
   };
+  }
 
   useEffect(() => {
     setAuthLogout(logout);

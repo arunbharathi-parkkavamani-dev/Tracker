@@ -1,47 +1,46 @@
 import jwt from "jsonwebtoken";
 import Employee from "../models/Employee.js";
+import session from "../models/Session.js";
 
-export async function authMiddleware(req, res, next) {
+export const authMiddleware = async (req, res, next) => {
   try {
-    // 1. Retrieve token from cookie or Authorization header
-    let token = req.cookies?.auth_token;
-    if (!token && req.headers.authorization?.startsWith("Bearer ")) {
-      token = req.headers.authorization.split(" ")[1];
-    }
+    const token = req.cookies["auth_token"] || 
+      (req.headers.authorization?.startsWith("Bearer ") &&
+       req.headers.authorization.split(" ")[1]);
 
+    if (!token)
+      return next(Object.assign(new Error("Unauthorized"), { status: 401 }));
 
+    // Step 1: decode to get userId only
+    const decoded = jwt.decode(token);
+    if (!decoded)
+      return next(Object.assign(new Error("Invalid token"), { status: 403 }));
 
-    if (!token) return res.status(401).json({ error: "Unauthorized", action: "login" });
+    // Step 2: get session which contains the real secret
+    const lastSession = await session.findOne({ userId: decoded.id });
 
-    // 2. Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!lastSession)
+      return next(Object.assign(new Error("Session not found"), { status: 404 }));
 
-    // 3. Lookup user
-    const user = await Employee.findById(decoded.id).lean();
-    if (!user) return res.status(401).json({ error: "User not found", action: "login" });
+    // Step 3: verify token with per-session secret
+    jwt.verify(token, lastSession.generatedToken.secret, (err, payload) => {
+      if (err) 
+        return next(Object.assign(new Error("Invalid or expired token"), { status: 403 }));
 
-    // 4. Attach minimal safe user info with platform info
-    req.user = {
-      id: user._id,
-      role: decoded.role,
-      name: user.basicInfo?.firstName,
-      email: user.authInfo?.workEmail,
-      platform: decoded.platform || 'web',
-    };
+      // <= VERY IMPORTANT: your full token payload becomes req.user
+      req.user = {
+        id: payload.id,
+        role: payload.role,
+        name: payload.name,
+        managerId: payload.managerId,
+        platform: payload.platform
+      };
 
-    next();
+      next();
+    });
+
   } catch (err) {
-    console.error("AuthMiddleware error:", err.message);
-    
-    // Handle JWT expiration
-    if (err.name === 'TokenExpiredError') {
-      return res.status(401).json({ 
-        error: "Token expired", 
-        action: "refresh",
-        expired: true 
-      });
-    }
-    
-    return res.status(401).json({ error: "Unauthorized", action: "login" });
+    console.log("Auth error", err);
+    next(Object.assign(new Error("Unauthorized"), { status: 401 }));
   }
-}
+};
