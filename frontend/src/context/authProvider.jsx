@@ -31,12 +31,18 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const logout = () => {
-    Cookies.remove("auth_token");
-    Cookies.remove("refresh_token");
-    localStorage.removeItem("auth_token");
-    localStorage.removeItem("refresh_token");
-    setUser(null);
+  const logout = async() => {
+    try{
+      const response = await axiosInstance.post("/auth/logout", { platform: "web" });
+      console.log(response);
+      Cookies.remove("auth_token");
+      Cookies.remove("refresh_token");
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("refresh_token");
+      setUser(null);
+    } catch (err) {
+      console.log(err)
+    }
   };
 
   useEffect(() => {

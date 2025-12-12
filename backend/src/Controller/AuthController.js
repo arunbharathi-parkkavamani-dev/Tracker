@@ -148,6 +148,11 @@ export const refresh = async (req, res, next) => {
 export const logout = async (req, res, next) => {
   try {
     const { platform = 'web' } = req.body;
+    const token = req.cookies["auth_token"];
+    if(!token) return res.json({message : "invalid Opereation"});
+
+    const decoded = jwt.decode(token)
+    if(!decoded) return res.json({message : "Invalid Token"});
 
     await afterLogout(decoded.id);
 
@@ -158,7 +163,6 @@ export const logout = async (req, res, next) => {
     }
 
     res.json({ message: "Logged out successfully", platform });
-    afterLogout();
   } catch (err) {
     next(err);
   }
