@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import Employee from "../models/Employee.js";
 import session from "../models/Session.js";
-import { generateSecret, generateJti } from "../utils/tokenUtils.js";
+import { generateSecret, generateJti } from "../utils/tokenGenrator.js";
 import { getDeviceInfo } from "../utils/deviceInfo.js";
 
 /* -------------------------------- LOGIN -------------------------------- */
@@ -239,3 +239,25 @@ export const logout = async (req, res) => {
     res.status(500).json({ message: "Logout failed" });
   }
 };
+
+
+
+export const storePushToken = async (res, req, next) => {
+  try { 
+    const {sessionId, fcmToken} = req.body;
+
+    if(!sessionId || !fcmToken) {
+      return res.status(400).json({message: "Session Id and FCM Token are required"});
+    }
+
+    await session.findByIdAndUpdate(sessionId, {
+      fcmToken,
+      lastUsedAt: new Date()
+    });
+
+    return res.json({message: "FCM Token stored successfully"});
+  } catch (err) {
+    console.error("Store push token error:", err);
+    res.status(500).json({ message: "Failed to store push token" });
+  }
+}
