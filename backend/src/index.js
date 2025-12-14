@@ -4,7 +4,6 @@ import { Server } from "socket.io";
 import dotenv from "dotenv";
 import cors from "cors";
 import AuthRouter from "./routes/authRoutes.js";
-import notificationRoutes from "./routes/pendingRoutes.js";
 import populateHelper from "./routes/populateRoutes.js";
 import fileRoutes from "./routes/fileRoutes.js";
 import locationRoutes from "./routes/locationRoutes.js";
@@ -60,7 +59,6 @@ app.use(apiHitLogger); // Middleware to log API hits
 // Define routes
 app.use("/api/auth", AuthRouter);
 app.use("/api/populate", populateHelper);
-app.use("/api/notifications", notificationRoutes);
 app.use("/api/files", fileRoutes);
 app.use("/api", locationRoutes);
 app.use("/api", bankRoutes);

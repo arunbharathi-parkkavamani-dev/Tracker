@@ -1,7 +1,7 @@
 // routes/authRoutes.js
 import express from "express";
 import {
-    login, logout, refresh, authMiddleware
+    login, logout, refresh, authMiddleware, storePushToken
 } from "../Controller/AuthController.js"
 
 const router = express.Router();
