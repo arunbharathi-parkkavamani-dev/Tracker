@@ -1,397 +1,78 @@
 [{
   "_id": {
-    "$oid": "68e480aa0cada13348bb3a5e"
+    "$oid": "692f3c0139a2dc0fd4cd0171"
   },
-  "role": "68d8b8caf397d1d97620ba93",
-  "modelName": "attendances",
-  "permissions": {
-    "read": true,
-    "create": true,
-    "update": true,
-    "delete": false
-  },
-  "forbiddenAccess": {
-    "read": [],
-    "create": [],
-    "update": [],
-    "delete": []
-  },
-  "allowAccess": {
-    "read": ["*"],
-    "create": ["*"],
-    "update": ["*"],
-    "delete": []
-  },
-  "registry": ["isSelf", "isHR"],
-  "conditions": {
-    "read": [],
-    "create": [
-      {
-        "registry": "isSelf",
-        "effect": "allow"
-      },
-      {
-        "registry": "isHR",
-        "fields": ["*"],
-        "effect": "allow"
-      }
-    ],
-    "update": [
-      {
-        "registry": "isSelf",
-        "effect": "allow"
-      },
-      {
-        "registry": "isHR",
-        "fields": ["*"],
-        "effect": "allow"
-      }
-    ],
-    "delete": []
-  }
-},
-{
-  "_id": {
-    "$oid": "68e480aa0cada13348bb3a60"
-  },
-  "role": "68d8b8caf397d1d97620ba93",
-  "modelName": "sidebar",
-  "permissions": {
-    "read": true,
-    "create": false,
-    "update": false,
-    "delete": false
-  },
-  "forbiddenAccess": {
-    "create": [],
-    "delete": [],
-    "read": [],
-    "update": []
-  },
-  "allowAccess": {
-    "create": ["*"],
-    "delete": [],
-    "read": [],
-    "update": []
-  },
-  "registry": [],
-  "conditions": {
-    "read": [],
-    "create": [],
-    "update": [],
-    "delete": []
-  }
-},
-{
-  "_id": {
-    "$oid": "68e480aa0cada13348bb3a64"
-  },
-  "role": "68d8b980f397d1d97620ba96",
-  "modelName": "sidebar",
-  "permissions": {
-    "read": true,
-    "create": false,
-    "update": false,
-    "delete": false
-  },
-  "forbiddenAccess": {
-    "create": [],
-    "delete": [],
-    "read": [],
-    "update": []
-  },
-  "allowAccess": {
-    "create": ["*"],
-    "delete": [],
-    "read": [],
-    "update": []
-  },
-  "registry": [],
-  "conditions": {
-    "read": [],
-    "create": [],
-    "update": [],
-    "delete": []
-  }
-},
-{
-  "_id": {
-    "$oid": "68e480aa0cada13348bb3a5a"
-  },
-  "role": "68d8b94ef397d1d97620ba94",
-  "modelName": "attendances",
-  "permissions": {
-    "read": true,
-    "create": true,
-    "update": true,
-    "delete": false
-  },
-  "forbiddenAccess": {
-    "read": [],
-    "create": [],
-    "update": [],
-    "delete": []
-  },
-  "allowAccess": {
-    "read": ["*"],
-    "create": ["*"],
-    "update": ["*"],
-    "delete": ["*"]
-  },
-  "registry": ["isSelf", "isHR"],
-  "conditions": {
-    "read": [],
-    "create": [
-      {
-        "registry": "isSelf",
-        "effect": "allow"
-      },
-      {
-        "registry": "isHR",
-        "fields": ["*"],
-        "effect": "allow"
-      }
-    ],
-    "update": [
-      {
-        "registry": "isSelf",
-        "effect": "allow"
-      },
-      {
-        "registry": "isHR",
-        "fields": ["*"],
-        "effect": "allow"
-      }
-    ],
-    "delete": []
-  }
-},
-{
-  "_id": {
-    "$oid": "68e480aa0cada13348bb3a63"
-  },
-  "role": "68d8b980f397d1d97620ba96",
-  "modelName": "dailyactivities",
-  "permissions": {
-    "read": true,
-    "create": true,
-    "update": false,
-    "delete": false
-  },
-  "forbiddenAccess": {
-    "create": [],
-    "delete": [],
-    "read": [],
-    "update": []
-  },
-  "allowAccess": {
-    "create": ["*"],
-    "delete": [],
-    "read": ["*"],
-    "update": ["*"]
-  },
-  "registry": ["isSelf"],
-  "conditions": {
-    "read": [],
-    "create": [],
-    "update": [],
-    "delete": [
-      {
-        "registry": "isSelf",
-        "effect": "allow"
-      }
-    ]
-  }
-},
-{
-  "_id": {
-    "$oid": "68e480aa0cada13348bb3a5d"
-  },
-  "role": "68d8b8caf397d1d97620ba93",
+  "role": "68d8b98af397d1d97620ba97",
   "modelName": "employees",
   "permissions": {
     "read": true,
-    "create": true,
+    "create": false,
     "update": true,
-    "delete": true
+    "delete": false
   },
   "forbiddenAccess": {
-    "read": ["authInfo"],
-    "create": [],
-    "update": ["authInfo"],
-    "delete": ["authInfo"]
+    "read": [
+      "authInfo.password",
+      "salaryDetails"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "authInfo",
+      "salaryDetails",
+      "professionalInfo.role",
+      "professionalInfo.department"
+    ],
+    "delete": [
+      "*"
+    ]
   },
   "allowAccess": {
-    "read": ["*"],
-    "create": ["*"],
-    "update": ["*"],
-    "delete": ["*"]
+    "read": [
+      "*"
+    ],
+    "create": [],
+    "update": [
+      "basicInfo",
+      "personalDocuments",
+      "professionalDocuments"
+    ],
+    "delete": []
   },
-  "registry": ["isRef", "isSelf", "isManager", "isHR"],
+  "registry": [
+    "isSelf",
+    "isRef"
+  ],
   "conditions": {
     "read": [
       {
-        "registry": "isRef",
+        "registry": "isSelf",
         "fields": [
-          "basicInfo.firstName",
-          "basicInfo.phone",
-          "professionalInfo.designation",
-          "authInfo.workEmail"
+          "*"
         ],
         "effect": "allow"
       },
       {
-        "registry": "isSelf",
-        "fields": ["*"],
-        "effect": "allow"
-      }
-    ],
-    "create": [
-      {
-        "registry": "isSelf",
-        "fields": ["SalaryDetails"],
-        "effect": "deny"
-      }
-    ],
-    "update": [
-      {
-        "registry": "isSelf",
-        "fields": ["SalaryDetails"],
-        "effect": "deny"
-      }
-    ],
-    "delete": []
-  }
-},
-{
-  "_id": {
-    "$oid": "68e480aa0cada13348bb3a5f"
-  },
-  "role": "68d8b8caf397d1d97620ba93",
-  "modelName": "dailyactivities",
-  "permissions": {
-    "read": true,
-    "create": true,
-    "update": false,
-    "delete": false
-  },
-  "forbiddenAccess": {
-    "create": [],
-    "delete": [],
-    "read": [],
-    "update": []
-  },
-  "allowAccess": {
-    "create": ["*"],
-    "delete": [],
-    "read": ["*"],
-    "update": ["*"]
-  },
-  "registry": ["isSelf"],
-  "conditions": {
-    "read": [],
-    "create": [],
-    "update": [],
-    "delete": [
-      {
-        "registry": "isSelf",
-        "effect": "allow"
-      }
-    ]
-  }
-},
-{
-  "_id": {
-    "$oid": "68e480aa0cada13348bb3a59"
-  },
-  "role": "68d8b94ef397d1d97620ba94",
-  "modelName": "employees",
-  "permissions": {
-    "read": true,
-    "create": true,
-    "update": true,
-    "delete": true
-  },
-  "forbiddenAccess": {
-    "read": ["authInfo"],
-    "create": [],
-    "update": ["authInfo"],
-    "delete": ["authInfo"]
-  },
-  "allowAccess": {
-    "read": ["*"],
-    "create": ["*"],
-    "update": ["*"],
-    "delete": ["*"]
-  },
-  "registry": ["isRef", "isSelf", "isManager", "isHR"],
-  "conditions": {
-    "read": [
-      {
         "registry": "isRef",
         "fields": [
           "basicInfo.firstName",
+          "basicInfo.lastName",
           "basicInfo.phone",
-          "professionalInfo.designation",
-          "authInfo.workEmail"
+          "authInfo.workEmail",
+          "professionalInfo.designation"
         ],
         "effect": "allow"
-      },
-      {
-        "registry": "isSelf",
-        "fields": ["*"],
-        "effect": "allow"
-      }
-    ],
-    "create": [
-      {
-        "registry": "isSelf",
-        "fields": ["SalaryDetails"],
-        "effect": "deny"
       }
     ],
     "update": [
       {
         "registry": "isSelf",
-        "fields": ["SalaryDetails"],
-        "effect": "deny"
-      }
-    ],
-    "delete": []
-  }
-},
-{
-  "_id": {
-    "$oid": "68e480aa0cada13348bb3a5b"
-  },
-  "role": "68d8b94ef397d1d97620ba94",
-  "modelName": "dailyactivities",
-  "permissions": {
-    "read": true,
-    "create": true,
-    "update": false,
-    "delete": false
-  },
-  "forbiddenAccess": {
-    "create": [],
-    "delete": [],
-    "read": [],
-    "update": []
-  },
-  "allowAccess": {
-    "create": ["*"],
-    "delete": [],
-    "read": ["*"],
-    "update": ["*"]
-  },
-  "registry": ["isSelf"],
-  "conditions": {
-    "read": [],
-    "create": [],
-    "update": [],
-    "delete": [
-      {
-        "registry": "isSelf",
+        "fields": [
+          "basicInfo",
+          "personalDocuments",
+          "professionalDocuments"
+        ],
         "effect": "allow"
       }
     ]
@@ -399,41 +80,9 @@
 },
 {
   "_id": {
-    "$oid": "68e480aa0cada13348bb3a5c"
+    "$oid": "692f3c0139a2dc0fd4cd0172"
   },
-  "role": "68d8b94ef397d1d97620ba94",
-  "modelName": "sidebar",
-  "permissions": {
-    "read": true,
-    "create": false,
-    "update": false,
-    "delete": false
-  },
-  "forbiddenAccess": {
-    "create": [],
-    "delete": [],
-    "read": [],
-    "update": []
-  },
-  "allowAccess": {
-    "create": ["*"],
-    "delete": [],
-    "read": [],
-    "update": []
-  },
-  "registry": [],
-  "conditions": {
-    "read": [],
-    "create": [],
-    "update": [],
-    "delete": []
-  }
-},
-{
-  "_id": {
-    "$oid": "68e480aa0cada13348bb3a62"
-  },
-  "role": "68d8b980f397d1d97620ba96",
+  "role": "68d8b98af397d1d97620ba97",
   "modelName": "attendances",
   "permissions": {
     "read": true,
@@ -445,25 +94,35 @@
     "read": [],
     "create": [],
     "update": [],
-    "delete": []
+    "delete": [
+      "*"
+    ]
   },
   "allowAccess": {
-    "read": ["*"],
-    "create": ["*"],
-    "update": ["*"],
-    "delete": ["*"]
-  },
-  "registry": ["isSelf", "isManager"],
-  "conditions": {
-    "read": [],
+    "read": [
+      "*"
+    ],
     "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": []
+  },
+  "registry": [
+    "isSelf"
+  ],
+  "conditions": {
+    "read": [
       {
         "registry": "isSelf",
         "effect": "allow"
-      },
+      }
+    ],
+    "create": [
       {
-        "registry": "isManager",
-        "fields": ["*"],
+        "registry": "isSelf",
         "effect": "allow"
       }
     ],
@@ -471,53 +130,15 @@
       {
         "registry": "isSelf",
         "effect": "allow"
-      },
-      {
-        "registry": "isManager",
-        "fields": ["*"],
-        "effect": "allow"
       }
-    ],
-    "delete": []
+    ]
   }
 },
 {
   "_id": {
-    "$oid": "690a2cdc4e86ae9749a58e29"
+    "$oid": "692f3c0139a2dc0fd4cd0173"
   },
-  "role": "68d8b980f397d1d97620ba96",
-  "modelName": "notifications",
-  "permissions": {
-    "read": true,
-    "create": true,
-    "update": true,
-    "delete": false
-  },
-  "forbiddenAccess": {
-    "create": [],
-    "delete": [],
-    "read": [],
-    "update": []
-  },
-  "allowAccess": {
-    "create": [],
-    "delete": [],
-    "read": [],
-    "update": []
-  },
-  "registry": [],
-  "conditions": {
-    "read": [],
-    "create": [],
-    "update": [],
-    "delete": []
-  }
-},
-{
-  "_id": {
-    "$oid": "6919907c069395e670febca1"
-  },
-  "role": "68d8b980f397d1d97620ba96",
+  "role": "68d8b98af397d1d97620ba97",
   "modelName": "leaves",
   "permissions": {
     "read": true,
@@ -526,88 +147,180 @@
     "delete": false
   },
   "forbiddenAccess": {
-    "create": [],
-    "delete": [],
     "read": [],
-    "update": []
+    "create": [],
+    "update": [
+      "status",
+      "approvedBy",
+      "rejectedBy"
+    ],
+    "delete": [
+      "*"
+    ]
   },
   "allowAccess": {
-    "create": [],
-    "delete": [],
-    "read": [],
-    "update": []
-  },
-  "registry": [],
-  "conditions": {
-    "read": [],
-    "create": [],
-    "update": [],
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
     "delete": []
-  }
-},
-{
-  "_id": {
-    "$oid": "691e83f1f0eec09991a25d10"
   },
-  "role": "68d8b98af397d1d97620ba97",
-  "modelName": "employees",
-  "permissions": {
-    "read": true,
-    "create": true,
-    "update": true,
-    "delete": true
-  },
-  "forbiddenAccess": {
-    "read": ["authInfo", "SalaryDetails"],
-    "create": ["authInfo", "SalaryDetails"],
-    "update": ["authInfo", "SalaryDetails"],
-    "delete": ["authInfo", "SalaryDetails"]
-  },
-  "allowAccess": {
-    "read": ["*"],
-    "create": ["*"],
-    "update": ["*"],
-    "delete": ["*"]
-  },
-  "registry": ["isRef", "isSelf", "isManager", "isHR"],
+  "registry": [
+    "isSelf"
+  ],
   "conditions": {
     "read": [
       {
-        "registry": "isRef",
-        "fields": [
-          "basicInfo.firstName",
-          "basicInfo.phone",
-          "professionalInfo.designation",
-          "authInfo.workEmail"
-        ],
-        "effect": "allow"
-      },
-      {
         "registry": "isSelf",
-        "fields": ["*"],
         "effect": "allow"
       }
     ],
     "create": [
       {
         "registry": "isSelf",
-        "fields": ["SalaryDetails"],
-        "effect": "deny"
+        "effect": "allow"
       }
     ],
     "update": [
       {
         "registry": "isSelf",
-        "fields": ["SalaryDetails"],
-        "effect": "deny"
+        "fields": [
+          "reason",
+          "startDate",
+          "endDate"
+        ],
+        "effect": "allow"
       }
-    ],
-    "delete": []
+    ]
   }
 },
 {
   "_id": {
-    "$oid": "691e83f1f0eec09991a25d1b"
+    "$oid": "692f3c0139a2dc0fd4cd0174"
+  },
+  "role": "68d8b98af397d1d97620ba97",
+  "modelName": "tasks",
+  "permissions": {
+    "read": true,
+    "create": false,
+    "update": true,
+    "delete": false
+  },
+  "forbiddenAccess": {
+    "read": [],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "assignedBy",
+      "assignedTo",
+      "priority"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [],
+    "update": [
+      "status",
+      "progress",
+      "comments"
+    ],
+    "delete": []
+  },
+  "registry": [
+    "isAssigned"
+  ],
+  "conditions": {
+    "read": [
+      {
+        "registry": "isAssigned",
+        "effect": "allow"
+      }
+    ],
+    "update": [
+      {
+        "registry": "isAssigned",
+        "fields": [
+          "status",
+          "progress",
+          "comments",
+          "assignedTo",
+          "priority"
+        ],
+        "effect": "allow"
+      }
+    ]
+  }
+},
+{
+  "_id": {
+    "$oid": "692f3c0139a2dc0fd4cd0175"
+  },
+  "role": "68d8b98af397d1d97620ba97",
+  "modelName": "dailyactivities",
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": false
+  },
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": [
+      "*"
+    ]
+  },
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": []
+  },
+  "registry": [
+    "isSelf"
+  ],
+  "conditions": {
+    "read": [
+      {
+        "registry": "isSelf",
+        "effect": "allow"
+      }
+    ],
+    "create": [
+      {
+        "registry": "isSelf",
+        "effect": "allow"
+      }
+    ],
+    "update": [
+      {
+        "registry": "isSelf",
+        "effect": "allow"
+      }
+    ]
+  }
+},
+{
+  "_id": {
+    "$oid": "692f3c0139a2dc0fd4cd0176"
   },
   "role": "68d8b98af397d1d97620ba97",
   "modelName": "notifications",
@@ -618,87 +331,540 @@
     "delete": false
   },
   "forbiddenAccess": {
-    "create": [],
-    "delete": [],
-    "read": [],
-    "update": []
-  },
-  "allowAccess": {
-    "create": ["*"],
-    "delete": [],
-    "read": [],
-    "update": []
-  },
-  "registry": [],
-  "conditions": {
-    "read": [],
-    "create": [],
-    "update": [],
-    "delete": []
-  }
-},
-{
-  "_id": {
-    "$oid": "691e83f1f0eec09991a25d19"
-  },
-  "role": "68d8b98af397d1d97620ba97",
-  "modelName": "tasktypes",
-  "permissions": {
-    "read": true,
-    "create": false,
-    "update": false,
-    "delete": false
-  },
-  "forbiddenAccess": {
-    "create": [],
-    "delete": [],
-    "read": [],
-    "update": []
-  },
-  "allowAccess": {
-    "create": ["*"],
-    "delete": [],
-    "read": [],
-    "update": []
-  },
-  "registry": [],
-  "conditions": {
-    "read": [],
-    "create": [],
-    "update": [],
-    "delete": []
-  }
-},
-{
-  "_id": {
-    "$oid": "691e83f1f0eec09991a25d12"
-  },
-  "role": "68d8b98af397d1d97620ba97",
-  "modelName": "dailyactivities",
-  "permissions": {
-    "read": true,
-    "create": true,
-    "update": false,
-    "delete": false
-  },
-  "forbiddenAccess": {
-    "create": [],
-    "delete": [],
-    "read": [],
-    "update": []
-  },
-  "allowAccess": {
-    "create": ["*"],
-    "delete": [],
-    "read": ["*"],
-    "update": ["*"]
-  },
-  "registry": ["isSelf"],
-  "conditions": {
     "read": [],
     "create": [],
     "update": [],
     "delete": [
+      "*"
+    ]
+  },
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [],
+    "update": [
+      "isRead"
+    ],
+    "delete": []
+  },
+  "registry": [
+    "isRecipient"
+  ],
+  "conditions": {
+    "read": [
+      {
+        "registry": "isRecipient",
+        "effect": "allow"
+      }
+    ],
+    "update": [
+      {
+        "registry": "isRecipient",
+        "fields": [
+          "isRead"
+        ],
+        "effect": "allow"
+      }
+    ]
+  }
+},
+{
+  "_id": {
+    "$oid": "692f3c0139a2dc0fd4cd0177"
+  },
+  "role": "68d8b980f397d1d97620ba96",
+  "modelName": "employees",
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "forbiddenAccess": {
+    "read": [
+      "authInfo.password"
+    ],
+    "create": [],
+    "update": [
+      "authInfo.password"
+    ],
+    "delete": []
+  },
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "registry": [],
+  "conditions": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  }
+},
+{
+  "_id": {
+    "$oid": "692f3c0139a2dc0fd4cd0178"
+  },
+  "role": "68d8b980f397d1d97620ba96",
+  "modelName": "attendances",
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "registry": [],
+  "conditions": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  }
+},
+{
+  "_id": {
+    "$oid": "692f3c0139a2dc0fd4cd0179"
+  },
+  "role": "68d8b980f397d1d97620ba96",
+  "modelName": "leaves",
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "registry": [],
+  "conditions": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  }
+},
+{
+  "_id": {
+    "$oid": "692f3c0139a2dc0fd4cd017a"
+  },
+  "role": "68d8b980f397d1d97620ba96",
+  "modelName": "tasks",
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "registry": [],
+  "conditions": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  }
+},
+{
+  "_id": {
+    "$oid": "692f3c0139a2dc0fd4cd017b"
+  },
+  "role": "68d8b980f397d1d97620ba96",
+  "modelName": "departments",
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "registry": [],
+  "conditions": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  }
+},
+{
+  "_id": {
+    "$oid": "692f3c0139a2dc0fd4cd017c"
+  },
+  "role": "68d8b980f397d1d97620ba96",
+  "modelName": "designations",
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "registry": [],
+  "conditions": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  }
+},
+{
+  "_id": {
+    "$oid": "692f3c0139a2dc0fd4cd017d"
+  },
+  "role": "68d8b980f397d1d97620ba96",
+  "modelName": "leavetypes",
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "registry": [],
+  "conditions": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  }
+},
+{
+  "_id": {
+    "$oid": "692f3c0139a2dc0fd4cd017e"
+  },
+  "role": "68d8b980f397d1d97620ba96",
+  "modelName": "leavepolicy",
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "registry": [],
+  "conditions": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  }
+},
+{
+  "_id": {
+    "$oid": "692f3c0139a2dc0fd4cd017f"
+  },
+  "role": "68d8b980f397d1d97620ba96",
+  "modelName": "notifications",
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "registry": [],
+  "conditions": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  }
+},
+{
+  "_id": {
+    "$oid": "692f3c0139a2dc0fd4cd0180"
+  },
+  "role": "68d8b8caf397d1d97620ba93",
+  "modelName": "employees",
+  "permissions": {
+    "read": true,
+    "create": false,
+    "update": true,
+    "delete": false
+  },
+  "forbiddenAccess": {
+    "read": [
+      "authInfo.password",
+      "salaryDetails"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "authInfo",
+      "salaryDetails",
+      "professionalInfo.role"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [],
+    "update": [
+      "professionalInfo.designation",
+      "professionalInfo.department"
+    ],
+    "delete": []
+  },
+  "registry": [
+    "isTeamMember",
+    "isSelf"
+  ],
+  "conditions": {
+    "read": [
+      {
+        "registry": "isTeamMember",
+        "effect": "allow"
+      },
+      {
+        "registry": "isSelf",
+        "effect": "allow"
+      }
+    ],
+    "update": [
+      {
+        "registry": "isTeamMember",
+        "fields": [
+          "professionalInfo.designation"
+        ],
+        "effect": "allow"
+      },
+      {
+        "registry": "isSelf",
+        "fields": [
+          "basicInfo",
+          "personalDocuments"
+        ],
+        "effect": "allow"
+      }
+    ]
+  }
+},
+{
+  "_id": {
+    "$oid": "692f3c0139a2dc0fd4cd0181"
+  },
+  "role": "68d8b8caf397d1d97620ba93",
+  "modelName": "attendances",
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": false
+  },
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": [
+      "*"
+    ]
+  },
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": []
+  },
+  "registry": [
+    "isTeamMember",
+    "isSelf"
+  ],
+  "conditions": {
+    "read": [
+      {
+        "registry": "isTeamMember",
+        "effect": "allow"
+      },
+      {
+        "registry": "isSelf",
+        "effect": "allow"
+      }
+    ],
+    "create": [
+      {
+        "registry": "isSelf",
+        "effect": "allow"
+      }
+    ],
+    "update": [
+      {
+        "registry": "isTeamMember",
+        "effect": "allow"
+      },
       {
         "registry": "isSelf",
         "effect": "allow"
@@ -708,7 +874,836 @@
 },
 {
   "_id": {
-    "$oid": "691e83f1f0eec09991a25d18"
+    "$oid": "692f3c0139a2dc0fd4cd0182"
+  },
+  "role": "68d8b8caf397d1d97620ba93",
+  "modelName": "leaves",
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": false
+  },
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": [
+      "*"
+    ]
+  },
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": []
+  },
+  "registry": [
+    "isTeamMember",
+    "isSelf"
+  ],
+  "conditions": {
+    "read": [
+      {
+        "registry": "isTeamMember",
+        "effect": "allow"
+      },
+      {
+        "registry": "isSelf",
+        "effect": "allow"
+      }
+    ],
+    "create": [
+      {
+        "registry": "isSelf",
+        "effect": "allow"
+      }
+    ],
+    "update": [
+      {
+        "registry": "isTeamMember",
+        "fields": [
+          "status",
+          "approvedBy",
+          "rejectedBy",
+          "managerComments"
+        ],
+        "effect": "allow"
+      },
+      {
+        "registry": "isSelf",
+        "fields": [
+          "reason",
+          "startDate",
+          "endDate"
+        ],
+        "effect": "allow"
+      }
+    ]
+  }
+},
+{
+  "_id": {
+    "$oid": "692f3c0139a2dc0fd4cd0183"
+  },
+  "role": "68d8b8caf397d1d97620ba93",
+  "modelName": "tasks",
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "registry": [
+    "isTeamMember",
+    "isAssigned",
+    "isCreatedBy"
+  ],
+  "conditions": {
+    "read": [
+      {
+        "registry": "isTeamMember",
+        "effect": "allow"
+      },
+      {
+        "registry": "isAssigned",
+        "effect": "allow"
+      },
+      {
+        "registry": "isCreatedBy",
+        "effect": "allow"
+      }
+    ],
+    "create": [],
+    "update": [
+      {
+        "registry": "isCreatedBy",
+        "effect": "allow"
+      },
+      {
+        "registry": "isAssigned",
+        "fields": [
+          "status",
+          "progress",
+          "comments"
+        ],
+        "effect": "allow"
+      }
+    ],
+    "delete": [
+      {
+        "registry": "isCreatedBy",
+        "effect": "allow"
+      }
+    ]
+  }
+},
+{
+  "_id": {
+    "$oid": "692f3c0139a2dc0fd4cd0184"
+  },
+  "role": "68d8b8caf397d1d97620ba93",
+  "modelName": "dailyactivities",
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": false
+  },
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": [
+      "*"
+    ]
+  },
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": []
+  },
+  "registry": [
+    "isTeamMember",
+    "isSelf"
+  ],
+  "conditions": {
+    "read": [
+      {
+        "registry": "isTeamMember",
+        "effect": "allow"
+      },
+      {
+        "registry": "isSelf",
+        "effect": "allow"
+      }
+    ],
+    "create": [
+      {
+        "registry": "isSelf",
+        "effect": "allow"
+      }
+    ],
+    "update": [
+      {
+        "registry": "isSelf",
+        "effect": "allow"
+      }
+    ]
+  }
+},
+{
+  "_id": {
+    "$oid": "692f3c0139a2dc0fd4cd0185"
+  },
+  "role": "68d8b8caf397d1d97620ba93",
+  "modelName": "notifications",
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": false
+  },
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [
+      "message",
+      "type"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "isRead"
+    ],
+    "delete": []
+  },
+  "registry": [
+    "isRecipient",
+    "isSender"
+  ],
+  "conditions": {
+    "read": [
+      {
+        "registry": "isRecipient",
+        "effect": "allow"
+      },
+      {
+        "registry": "isSender",
+        "effect": "allow"
+      }
+    ],
+    "create": [],
+    "update": [
+      {
+        "registry": "isRecipient",
+        "fields": [
+          "isRead"
+        ],
+        "effect": "allow"
+      }
+    ]
+  }
+},
+{
+  "_id": {
+    "$oid": "692f3c0139a2dc0fd4cd0186"
+  },
+  "role": "68d8b94ef397d1d97620ba94",
+  "modelName": "employees",
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "registry": [],
+  "conditions": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  }
+},
+{
+  "_id": {
+    "$oid": "692f3c0139a2dc0fd4cd0187"
+  },
+  "role": "68d8b94ef397d1d97620ba94",
+  "modelName": "attendances",
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "registry": [],
+  "conditions": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  }
+},
+{
+  "_id": {
+    "$oid": "692f3c0139a2dc0fd4cd0188"
+  },
+  "role": "68d8b94ef397d1d97620ba94",
+  "modelName": "leaves",
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "registry": [],
+  "conditions": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  }
+},
+{
+  "_id": {
+    "$oid": "692f3c0139a2dc0fd4cd0189"
+  },
+  "role": "68d8b94ef397d1d97620ba94",
+  "modelName": "tasks",
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "registry": [],
+  "conditions": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  }
+},
+{
+  "_id": {
+    "$oid": "692f3c0139a2dc0fd4cd018a"
+  },
+  "role": "68d8b94ef397d1d97620ba94",
+  "modelName": "dailyactivities",
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "registry": [],
+  "conditions": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  }
+},
+{
+  "_id": {
+    "$oid": "692f3c0139a2dc0fd4cd018b"
+  },
+  "role": "68d8b94ef397d1d97620ba94",
+  "modelName": "departments",
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "registry": [],
+  "conditions": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  }
+},
+{
+  "_id": {
+    "$oid": "692f3c0139a2dc0fd4cd018c"
+  },
+  "role": "68d8b94ef397d1d97620ba94",
+  "modelName": "designations",
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "registry": [],
+  "conditions": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  }
+},
+{
+  "_id": {
+    "$oid": "692f3c0139a2dc0fd4cd018d"
+  },
+  "role": "68d8b94ef397d1d97620ba94",
+  "modelName": "leavetypes",
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "registry": [],
+  "conditions": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  }
+},
+{
+  "_id": {
+    "$oid": "692f3c0139a2dc0fd4cd018e"
+  },
+  "role": "68d8b94ef397d1d97620ba94",
+  "modelName": "leavepolicy",
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "registry": [],
+  "conditions": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  }
+},
+{
+  "_id": {
+    "$oid": "692f3c0139a2dc0fd4cd018f"
+  },
+  "role": "68d8b94ef397d1d97620ba94",
+  "modelName": "roles",
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "registry": [],
+  "conditions": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  }
+},
+{
+  "_id": {
+    "$oid": "692f3c0139a2dc0fd4cd0190"
+  },
+  "role": "68d8b94ef397d1d97620ba94",
+  "modelName": "accesspolicies",
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "registry": [],
+  "conditions": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  }
+},
+{
+  "_id": {
+    "$oid": "692f3c0139a2dc0fd4cd0191"
+  },
+  "role": "68d8b94ef397d1d97620ba94",
+  "modelName": "notifications",
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "registry": [],
+  "conditions": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  }
+},
+{
+  "_id": {
+    "$oid": "692f3c0139a2dc0fd4cd0192"
+  },
+  "role": "68d8b94ef397d1d97620ba94",
+  "modelName": "apihitlogs",
+  "permissions": {
+    "read": true,
+    "create": false,
+    "update": false,
+    "delete": true
+  },
+  "forbiddenAccess": {
+    "read": [],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": []
+  },
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [],
+    "update": [],
+    "delete": [
+      "*"
+    ]
+  },
+  "registry": [],
+  "conditions": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  }
+},
+{
+  "_id": {
+    "$oid": "6931719abcac98784a9d7353"
+  },
+  "role": "68d8b98af397d1d97620ba97",
+  "modelName": "sidebars",
+  "permissions": {
+    "read": true,
+    "create": false,
+    "update": true,
+    "delete": false
+  },
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "registry": [],
+  "conditions": {
+    "read": [],
+    "update": [],
+    "create": [],
+    "delete": []
+  }
+},
+{
+  "_id": {
+    "$oid": "6931b538c84f8137da6de071"
   },
   "role": "68d8b98af397d1d97620ba97",
   "modelName": "clients",
@@ -719,176 +1714,30 @@
     "delete": false
   },
   "forbiddenAccess": {
-    "create": [],
-    "delete": [],
-    "read": [],
-    "update": []
-  },
-  "allowAccess": {
-    "create": ["*"],
-    "delete": [],
-    "read": ["*"],
-    "update": []
-  },
-  "registry": [],
-  "conditions": {
-    "read": [],
-    "create": [],
-    "update": [],
-    "delete": []
-  }
-},
-{
-  "_id": {
-    "$oid": "691e83f1f0eec09991a25d11"
-  },
-  "role": "68d8b98af397d1d97620ba97",
-  "modelName": "attendances",
-  "permissions": {
-    "read": true,
-    "create": true,
-    "update": true,
-    "delete": false
-  },
-  "forbiddenAccess": {
     "read": [],
     "create": [],
     "update": [],
     "delete": []
   },
   "allowAccess": {
-    "read": ["*"],
-    "create": ["*"],
-    "update": ["*"],
-    "delete": ["*"]
-  },
-  "registry": ["isSelf", "isHR"],
-  "conditions": {
-    "read": [],
-    "create": [
-      {
-        "registry": "isSelf",
-        "effect": "allow"
-      },
-      {
-        "registry": "isHR",
-        "fields": ["*"],
-        "effect": "allow"
-      }
+    "read": [
+      "*"
     ],
-    "update": [
-      {
-        "registry": "isSelf",
-        "effect": "allow"
-      },
-      {
-        "registry": "isHR",
-        "fields": ["*"],
-        "effect": "allow"
-      }
-    ],
-    "delete": []
-  }
-},
-{
-  "_id": {
-    "$oid": "691e83f1f0eec09991a25d15"
-  },
-  "role": "68d8b98af397d1d97620ba97",
-  "modelName": "leavepolicies",
-  "permissions": {
-    "read": true,
-    "create": false,
-    "update": false,
-    "delete": false
-  },
-  "forbiddenAccess": {
     "create": [],
-    "delete": [],
-    "read": [],
-    "update": []
-  },
-  "allowAccess": {
-    "create": ["*"],
-    "delete": [],
-    "read": [],
-    "update": []
+    "update": [],
+    "delete": []
   },
   "registry": [],
   "conditions": {
     "read": [],
-    "create": [],
     "update": [],
+    "create": [],
     "delete": []
   }
 },
 {
   "_id": {
-    "$oid": "691e83f1f0eec09991a25d1a"
-  },
-  "role": "68d8b98af397d1d97620ba97",
-  "modelName": "projecttypes",
-  "permissions": {
-    "read": true,
-    "create": false,
-    "update": false,
-    "delete": false
-  },
-  "forbiddenAccess": {
-    "create": [],
-    "delete": [],
-    "read": [],
-    "update": []
-  },
-  "allowAccess": {
-    "create": ["*"],
-    "delete": [],
-    "read": [],
-    "update": []
-  },
-  "registry": [],
-  "conditions": {
-    "read": [],
-    "create": [],
-    "update": [],
-    "delete": []
-  }
-},
-{
-  "_id": {
-    "$oid": "691e83f1f0eec09991a25d13"
-  },
-  "role": "68d8b98af397d1d97620ba97",
-  "modelName": "sidebars",
-  "permissions": {
-    "read": true,
-    "create": false,
-    "update": false,
-    "delete": false
-  },
-  "forbiddenAccess": {
-    "create": [],
-    "delete": [],
-    "read": [],
-    "update": []
-  },
-  "allowAccess": {
-    "create": ["*"],
-    "delete": [],
-    "read": [],
-    "update": []
-  },
-  "registry": [],
-  "conditions": {
-    "read": [],
-    "create": [],
-    "update": [],
-    "delete": []
-  }
-},
-{
-  "_id": {
-    "$oid": "691e83f1f0eec09991a25d14"
+    "$oid": "6931b538c84f8137da6de072"
   },
   "role": "68d8b98af397d1d97620ba97",
   "modelName": "departments",
@@ -899,31 +1748,33 @@
     "delete": false
   },
   "forbiddenAccess": {
-    "create": [],
-    "delete": [],
     "read": [],
-    "update": []
+    "create": [],
+    "update": [],
+    "delete": []
   },
   "allowAccess": {
-    "create": ["*"],
-    "delete": [],
-    "read": [],
-    "update": []
+    "read": [
+      "*"
+    ],
+    "create": [],
+    "update": [],
+    "delete": []
   },
   "registry": [],
   "conditions": {
     "read": [],
-    "create": [],
     "update": [],
+    "create": [],
     "delete": []
   }
 },
 {
   "_id": {
-    "$oid": "691e83f1f0eec09991a25d16"
+    "$oid": "6931c5aac84f8137da6de073"
   },
   "role": "68d8b98af397d1d97620ba97",
-  "modelName": "leavetypes",
+  "modelName": "roles",
   "permissions": {
     "read": true,
     "create": false,
@@ -931,182 +1782,24 @@
     "delete": false
   },
   "forbiddenAccess": {
-    "create": [],
-    "delete": [],
-    "read": [],
-    "update": []
-  },
-  "allowAccess": {
-    "create": ["*"],
-    "delete": [],
-    "read": [],
-    "update": []
-  },
-  "registry": [],
-  "conditions": {
-    "read": [],
-    "create": [],
-    "update": [],
-    "delete": []
-  }
-},
-{
-  "_id": {
-    "$oid": "692523aa1292a4a49ec96ec0"
-  },
-  "role": "68d8b98af397d1d97620ba97",
-  "modelName": "leaves",
-  "permissions": {
-    "read": true,
-    "create": true,
-    "update": true,
-    "delete": false
-  },
-  "forbiddenAccess": {
     "read": [],
     "create": [],
     "update": [],
     "delete": []
   },
   "allowAccess": {
-    "read": ["*"],
-    "create": ["*"],
-    "update": ["*"],
+    "read": [
+      "*"
+    ],
+    "create": [],
+    "update": [],
     "delete": []
   },
   "registry": [],
   "conditions": {
     "read": [],
-    "create": [],
     "update": [],
-    "delete": []
-  }
-},
-{
-  "_id": {
-    "$oid": "6926ca7fcc19688dd504522b"
-  },
-  "role": "68d8b980f397d1d97620ba96",
-  "modelName": "tasks",
-  "permissions": {
-    "read": true,
-    "create": true,
-    "update": true,
-    "delete": false
-  },
-  "forbiddenAccess": {
-    "read": [],
     "create": [],
-    "update": [],
-    "delete": []
-  },
-  "allowAccess": {
-    "read": ["*"],
-    "create": ["*"],
-    "update": ["*"],
-    "delete": []
-  },
-  "registry": [],
-  "conditions": {
-    "read": [],
-    "create": [],
-    "update": [],
-    "delete": []
-  }
-},
-{
-  "_id": {
-    "$oid": "6926ca7fcc19688dd504522c"
-  },
-  "role": "68d8b980f397d1d97620ba96",
-  "modelName": "commentsthreads",
-  "permissions": {
-    "read": true,
-    "create": true,
-    "update": true,
-    "delete": false
-  },
-  "forbiddenAccess": {
-    "read": [],
-    "create": [],
-    "update": [],
-    "delete": []
-  },
-  "allowAccess": {
-    "read": ["*"],
-    "create": ["*"],
-    "update": ["*"],
-    "delete": []
-  },
-  "registry": [],
-  "conditions": {
-    "read": [],
-    "create": [],
-    "update": [],
-    "delete": []
-  }
-},
-{
-  "_id": {
-    "$oid": "6926ca7fcc19688dd504522d"
-  },
-  "role": "68d8b98af397d1d97620ba97",
-  "modelName": "tasks",
-  "permissions": {
-    "read": true,
-    "create": true,
-    "update": true,
-    "delete": false
-  },
-  "forbiddenAccess": {
-    "read": [],
-    "create": [],
-    "update": [],
-    "delete": []
-  },
-  "allowAccess": {
-    "read": ["*"],
-    "create": ["*"],
-    "update": ["*"],
-    "delete": []
-  },
-  "registry": [],
-  "conditions": {
-    "read": [],
-    "create": [],
-    "update": [],
-    "delete": []
-  }
-},
-{
-  "_id": {
-    "$oid": "6926ca7fcc19688dd504522e"
-  },
-  "role": "68d8b98af397d1d97620ba97",
-  "modelName": "commentsthreads",
-  "permissions": {
-    "read": true,
-    "create": true,
-    "update": true,
-    "delete": false
-  },
-  "forbiddenAccess": {
-    "read": [],
-    "create": [],
-    "update": [],
-    "delete": []
-  },
-  "allowAccess": {
-    "read": ["*"],
-    "create": ["*"],
-    "update": ["*"],
-    "delete": []
-  },
-  "registry": [],
-  "conditions": {
-    "read": [],
-    "create": [],
-    "update": [],
     "delete": []
   }
 }]
