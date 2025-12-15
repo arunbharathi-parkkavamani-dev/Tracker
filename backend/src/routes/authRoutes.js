@@ -26,6 +26,6 @@ router.get("/me", authMiddleware, (req, res) => {
 });
 
 // FCM Token Registration
-router.post("/auth/store-push-token", authMiddleware, storePushToken);
+router.post("/store-push-token", authMiddleware, storePushToken);
 
 export default router;

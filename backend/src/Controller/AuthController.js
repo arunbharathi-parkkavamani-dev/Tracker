@@ -10,6 +10,7 @@ import { getDeviceInfo } from "../utils/deviceInfo.js";
 export const login = async (req, res, next) => {
   try {
     const { workEmail, password, platform = "web" } = req.body;
+    console.log(`Login attempt for ${workEmail} on ${platform}`);
 
     // 1. Validate user
     const employee = await Employee.findOne({
@@ -30,6 +31,7 @@ export const login = async (req, res, next) => {
       id: employee._id,
       role: employee.professionalInfo.role,
       name: employee.basicInfo.firstName,
+      managerId: employee.professionalInfo.reportingManager,
       platform,
     };
 
@@ -50,7 +52,7 @@ export const login = async (req, res, next) => {
     );
 
     // 5. Create session
-    const session = await session.create({
+    const userSession = await session.create({
       userId: payload.id,
       platform,
       generatedToken: {
@@ -87,7 +89,7 @@ export const login = async (req, res, next) => {
       message: "Login successful",
       accessToken,
       refreshToken,
-      sessionId: session._id,
+      sessionId: userSession._id,
       platform,
     });
   } catch (err) {
@@ -110,20 +112,20 @@ export const authMiddleware = async (req, res, next) => {
     if (!decoded?.id)
       return res.status(401).json({ message: "Invalid token" });
 
-    const session = await session.findOne({
+    const userSession = await session.findOne({
       userId: decoded.id,
       platform: decoded.platform,
       status: "Active",
     });
 
-    if (!session)
+    if (!userSession )
       return res.status(401).json({ message: "Session not found" });
 
     // Verify with stored secret
-    jwt.verify(token, session.generatedToken.secret);
+    jwt.verify(token, userSession.generatedToken.secret);
 
-    session.lastUsedAt = new Date();
-    await session.save();
+    userSession.lastUsedAt = new Date();
+    await userSession.save();
 
     req.user = decoded;
     next();
@@ -147,22 +149,22 @@ export const refresh = async (req, res, next) => {
     if (!decoded?.id || !decoded?.jti)
       return res.status(401).json({ message: "Invalid refresh token" });
 
-    const session = await session.findOne({
+    const userSession = await session.findOne({
       userId: decoded.id,
       platform: decoded.platform,
       status: "Active",
     });
 
-    if (!session)
+    if (!userSession)
       return res.status(401).json({ message: "Session not found" });
 
     // Verify signature
-    jwt.verify(refreshToken, session.refreshToken.secret);
+    jwt.verify(refreshToken, userSession.refreshToken.secret);
 
     // jti check (REPLAY PROTECTION)
-    if (decoded.jti !== session.refreshToken.jti) {
-      session.status = "DeActive";
-      await session.save();
+    if (decoded.jti !== userSession.refreshToken.jti) {
+      userSession.status = "DeActive";
+      await userSession.save();
       return res
         .status(403)
         .json({ message: "Refresh token reuse detected" });
@@ -185,21 +187,21 @@ export const refresh = async (req, res, next) => {
       { expiresIn: "7d" }
     );
 
-    session.generatedToken = {
+    userSession.generatedToken = {
       token: newAccessToken,
       secret: newAccessSecret,
       expiry: "1h",
     };
 
-    session.refreshToken = {
+    userSession.refreshToken = {
       token: newRefreshToken,
       secret: newRefreshSecret,
       jti: newJti,
       expiry: "7d",
     };
 
-    session.lastUsedAt = new Date();
-    await session.save();
+    userSession.lastUsedAt = new Date();
+    await userSession.save();
 
     if (decoded.platform === "web") {
       res.cookie("auth_token", newAccessToken);
@@ -226,7 +228,7 @@ export const logout = async (req, res) => {
     const decoded = jwt.decode(token);
     if (!decoded?.id) return res.json({ message: "Invalid token" });
 
-    await Session.findOneAndUpdate(
+    await session.findOneAndUpdate(
       { userId: decoded.id, platform: decoded.platform },
       { status: "DeActive" }
     );

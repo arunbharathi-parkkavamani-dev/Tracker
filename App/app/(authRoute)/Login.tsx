@@ -30,7 +30,9 @@ export default function Login() {
       );
 
       if (response.status === 200 && response.data.accessToken) {
+        console.log("Login response data:", response.data);
         const { accessToken, sessionId } = response.data;
+        console.log("Login successful, access token:", accessToken, "sessionId:", sessionId);
 
         // 2️⃣ Save auth token (AsyncStorage / Context)
         login(accessToken);
@@ -115,9 +117,6 @@ export default function Login() {
 
         <Text className="text-center text-sm text-gray-600 mt-4">
           Don’t have an account?{" "}
-          <Link href="/Signup">
-            <Text className="text-blue-600 underline">Sign up</Text>
-          </Link>
         </Text>
       </View>
     </View>

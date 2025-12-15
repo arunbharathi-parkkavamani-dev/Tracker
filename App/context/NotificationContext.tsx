@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import axiosInstance from '@/api/axiosInstance';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { jwtDecode } from 'jwt-decode';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import axiosInstance from "@/api/axiosInstance";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { jwtDecode } from "jwt-decode";
+import * as Notifications from "expo-notifications";
 
 interface Notification {
   _id: string;
@@ -25,38 +26,56 @@ interface NotificationContextType {
   refreshNotifications: () => Promise<void>;
 }
 
-const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
+const NotificationContext = createContext<NotificationContextType | undefined>(
+  undefined
+);
 
-export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   const fetchNotifications = async () => {
     try {
-      const token = await AsyncStorage.getItem('auth_token');
+      const token = await AsyncStorage.getItem("auth_token");
       if (!token) return;
 
-      const decoded = jwtDecode(token);
+      const decoded: any = jwtDecode(token);
       const userId = decoded.userId || decoded.id;
-      
-      const filter = JSON.stringify({ recipient: userId });
-      const populateFields = JSON.stringify({ "sender": "basicInfo.firstName,basicInfo.lastName" });
-      
+
+      const filter = JSON.stringify({ receiver: userId });
+      const populateFields = JSON.stringify({
+        sender: "basicInfo.firstName,basicInfo.lastName",
+      });
+
       const res = await axiosInstance.get(
-        `/populate/read/notifications?filter=${encodeURIComponent(filter)}&populateFields=${encodeURIComponent(populateFields)}`
+        `/populate/read/notifications?filter=${encodeURIComponent(
+          filter
+        )}&populateFields=${encodeURIComponent(populateFields)}`
       );
-      
-      const data = res.data?.data || [];
-      setNotifications(data);
+
+      setNotifications(res.data?.data || []);
     } catch (error) {
-      console.error('Error fetching notifications:', error);
+      console.error("Error fetching notifications:", error);
     }
   };
 
+  // 🔹 Initial fetch
   useEffect(() => {
     fetchNotifications();
   }, []);
 
-  const unReadCount = notifications.filter((notif) => !notif.read).length;
+  // 🔹 Refresh when PUSH arrives (FOREGROUND)
+  useEffect(() => {
+    const subscription =
+      Notifications.addNotificationReceivedListener(() => {
+        fetchNotifications();
+      });
+
+    return () => subscription.remove();
+  }, []);
+
+  const unReadCount = notifications.filter((n) => !n.read).length;
 
   const markAsRead = async (notificationId: string) => {
     try {
@@ -67,19 +86,24 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       if (res.data.success) {
         setNotifications((prev) =>
-          prev.map((notif) =>
-            notif._id === notificationId ? { ...notif, read: true } : notif
+          prev.map((n) =>
+            n._id === notificationId ? { ...n, read: true } : n
           )
         );
       }
     } catch (error) {
-      console.error('Error marking notification as read:', error);
+      console.error("Error marking notification as read:", error);
     }
   };
 
   return (
     <NotificationContext.Provider
-      value={{ notifications, markAsRead, unReadCount, refreshNotifications: fetchNotifications }}
+      value={{
+        notifications,
+        markAsRead,
+        unReadCount,
+        refreshNotifications: fetchNotifications,
+      }}
     >
       {children}
     </NotificationContext.Provider>
@@ -88,8 +112,10 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
 export const useNotification = () => {
   const context = useContext(NotificationContext);
-  if (context === undefined) {
-    throw new Error('useNotification must be used within a NotificationProvider');
+  if (!context) {
+    throw new Error(
+      "useNotification must be used within a NotificationProvider"
+    );
   }
   return context;
 };

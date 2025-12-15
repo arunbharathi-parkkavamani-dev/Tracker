@@ -60,7 +60,7 @@ export default function attendances() {
       const attendanceDoc = await Attendance.findById(docId);
       if (!attendanceDoc) return;
 
-      const request = attendanceDoc.request || attendanceDoc.status;
+      const request = attendanceDoc.status;
 
       // Skip for these statuses
       if (["Present", "Check-Out", "Check-In"].includes(request)) return;
@@ -70,9 +70,16 @@ export default function attendances() {
         request,
         modelName
       );
+
+      console.log("Sending notification with message:", message, attendanceDoc.managerId);
+      const receiverId = attendanceDoc.managerId;
+      if (!receiverId) {
+        console.log("No managerId found for attendance, skipping notification.");
+        return;
+      }
       await sendNotification({
-        recipient: attendanceDoc.managerId || body.managerId,
         sender: userId,
+        receiver: receiverId,
         type: 'attendance_request',
         title: 'Attendance Request',
         message,
