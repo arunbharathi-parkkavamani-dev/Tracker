@@ -111,12 +111,15 @@ export const authMiddleware = async (req, res, next) => {
     const decoded = jwt.decode(token);
     if (!decoded?.id)
       return res.status(401).json({ message: "Invalid token" });
+  
 
     const userSession = await session.findOne({
       userId: decoded.id,
       platform: decoded.platform,
       status: "Active",
     });
+    console.log("User session secret:", userSession?.generatedToken?.secret);
+    console.log("Token to verify:", token);
 
     if (!userSession )
       return res.status(401).json({ message: "Session not found" });

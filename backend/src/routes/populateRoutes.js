@@ -1,6 +1,6 @@
 // routes/populateRouter.js
 import express from "express";
-import { authMiddleware } from "../middlewares/autmiddleware.js";
+import { authMiddleware } from "../Controller/AuthController.js";
 import { populateHelper } from "../helper/populateHelper.js";
 import { upload } from "../middlewares/multerConfig.js";
 

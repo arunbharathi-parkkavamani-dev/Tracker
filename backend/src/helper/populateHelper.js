@@ -5,6 +5,7 @@ import { parseFilter } from "../utils/filterParser.js";
 
 export async function populateHelper(req, res, next) {
   try {
+    console.log("🚀 populateHelper called with params:", req.params, "and query:", req.query);
     const { action, model, id } = req.params;
     const user = req.user;
 

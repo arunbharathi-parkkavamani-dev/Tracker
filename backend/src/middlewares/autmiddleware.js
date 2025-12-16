@@ -3,6 +3,7 @@ import Employee from "../models/Employee.js";
 import session from "../models/Session.js";
 
 export const authMiddleware = async (req, res, next) => {
+  console.log("Authenticating request...");
   try {
     const token = req.cookies["auth_token"] || 
       (req.headers.authorization?.startsWith("Bearer ") &&

@@ -9,8 +9,9 @@ export const setAuthLogout = (logoutFn) => {
 };
 
 const axiosInstance = axios.create({
-  baseURL: "https://tracker-mxp9.onrender.com/api",
+  baseURL: "http://10.50.131.208:3000/api",
   timeout: 50000,
+  withCredentials: true,
 });
 
 // Request interceptor - add token from AsyncStorage
@@ -45,7 +46,7 @@ axiosInstance.interceptors.response.use(
         if (!refreshToken) throw new Error("No refresh token");
         
         const refreshResponse = await axios.post(
-          "https://tracker-mxp9.onrender.com/api/auth/refresh",
+          "http://10.50.131.208:3000/api/auth/refresh",
           { refreshToken, platform: "mobile" }
         );
         
