@@ -1,11 +1,12 @@
 import "../global.css"
 import { useEffect } from "react";
 import { Slot } from 'expo-router';
+import { AppState } from 'react-native';
 import { AuthProvider } from '@/context/AuthContext';
 import { NotificationProvider } from '@/context/NotificationContext';
 import { Provider as PaperProvider } from "react-native-paper";
 import Toast from "react-native-toast-message";
-import { registerForPushNotifications } from "@/utils/registerPushToken";
+import { checkAndStoreFCMToken } from "@/utils/fcmTokenManager";
 import * as Notifications from "expo-notifications";
 
 Notifications.setNotificationHandler({
@@ -20,11 +21,21 @@ Notifications.setNotificationHandler({
 export default function RootLayout() {
 
   useEffect(() => {
-    (async () => {
-      const token = await registerForPushNotifications();
-      // ❌ do NOT send to backend yet
-      // Just confirm it logs in console
-    })();
+    // Check FCM token on app start
+    checkAndStoreFCMToken();
+
+    // Check FCM token when app becomes active
+    const handleAppStateChange = (nextAppState) => {
+      if (nextAppState === 'active') {
+        checkAndStoreFCMToken();
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    
+    return () => {
+      subscription?.remove();
+    };
   }, []);
 
   return (

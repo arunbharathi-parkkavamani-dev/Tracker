@@ -49,7 +49,6 @@ export default function Dashboard() {
   // 🚀 Fetch Employee Stats
   // -------------------------
   const fetchEmployeeStats = async () => {
-    console.log("Fetching")
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
 

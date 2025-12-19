@@ -14,7 +14,6 @@ export const login = async (req, res, next) => {
     if (!deviceUUID) {
       return res.status(400).json({ message: "Device UUID is required" });
     }
-    console.log(`Login attempt for ${workEmail} on ${platform}`);
 
     // 1. Validate user
     const employee = await Employee.findOne({
@@ -126,8 +125,6 @@ export const authMiddleware = async (req, res, next) => {
       deviceUUID,
       status: "Active",
     });
-    console.log("User session secret:", userSession?.generatedToken?.secret);
-    console.log("Token to verify:", token);
 
     if (!userSession )
       return res.status(401).json({ message: "Session not found" });
@@ -237,25 +234,39 @@ export const refresh = async (req, res, next) => {
 
 export const logout = async (req, res) => {
   try {
-    const token = req.cookies?.auth_token;
+    const token = req.cookies?.auth_token || req.headers.authorization?.split(" ")[1];
     const deviceUUID = req.headers['x-device-uuid'];
     
-    if (!token) return res.json({ message: "Already logged out" });
-    if (!deviceUUID) return res.status(401).json({ message: "Device UUID required" });
+    
+    if (!deviceUUID) return res.status(400).json({ message: "Device UUID required" });
 
-    const decoded = jwt.decode(token);
-    if (!decoded?.id) return res.json({ message: "Invalid token" });
-
-    await session.findOneAndUpdate(
-      { userId: decoded.id, platform: decoded.platform, deviceUUID },
-      { status: "DeActive" }
-    );
+    if (token) {
+      const decoded = jwt.decode(token);
+      
+      if (decoded?.id) {
+        const updateResult = await session.findOneAndUpdate(
+          { userId: decoded.id, platform: decoded.platform, deviceUUID },
+          { status: "DeActive" },
+          { new: true }
+        );
+        
+        if (!updateResult) {
+          // Try without platform filter as fallback
+          const fallbackResult = await session.findOneAndUpdate(
+            { userId: decoded.id, deviceUUID },
+            { status: "DeActive" },
+            { new: true }
+          );
+        }
+      }
+    }
 
     res.clearCookie("auth_token");
     res.clearCookie("refresh_token");
 
     return res.json({ message: "Logged out successfully" });
   } catch (err) {
+    console.error("Logout error:", err);
     res.status(500).json({ message: "Logout failed" });
   }
 };
@@ -266,18 +277,99 @@ export const storePushToken = async (req, res, next) => {
   try { 
     const {sessionId, fcmToken} = req.body;
 
+
     if(!sessionId || !fcmToken) {
       return res.status(400).json({message: "Session Id and FCM Token are required"});
     }
 
-    await session.findByIdAndUpdate(sessionId, {
+    const updatedSession = await session.findByIdAndUpdate(sessionId, {
       fcmToken,
       lastUsedAt: new Date()
-    });
+    }, { new: true });
 
+    if (!updatedSession) {
+      return res.status(404).json({message: "Session not found"});
+    }
+
+    
+    // Send test notification
+    await sendTestNotification(fcmToken);
+    
     return res.json({message: "FCM Token stored successfully"});
   } catch (err) {
     console.error("Store push token error:", err);
     res.status(500).json({ message: "Failed to store push token" });
   }
-}
+};
+
+const sendTestNotification = async (fcmToken) => {
+  try {
+    const message = {
+      to: fcmToken,
+      sound: 'default',
+      title: 'FCM Token Registered! 🎉',
+      body: 'Your device is now ready to receive push notifications.',
+      data: { type: 'test', timestamp: Date.now() }
+    };
+
+    const response = await fetch('https://exp.host/--/api/v2/push/send', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Accept-encoding': 'gzip, deflate',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(message)
+    });
+
+    const result = await response.json();
+  } catch (error) {
+    console.error('Failed to send test notification:', error);
+  }
+};
+
+export const sendManualTestNotification = async (req, res) => {
+  try {
+    const { message, title } = req.body;
+    const deviceUUID = req.headers['x-device-uuid'];
+    
+    if (!deviceUUID) {
+      return res.status(400).json({ message: "Device UUID required" });
+    }
+
+    const userSession = await session.findOne({
+      userId: req.user.id,
+      deviceUUID,
+      status: "Active"
+    });
+
+    if (!userSession?.fcmToken) {
+      return res.status(404).json({ message: "No FCM token found for this device" });
+    }
+
+    const notification = {
+      to: userSession.fcmToken,
+      sound: 'default',
+      title: title || 'Test Notification 📱',
+      body: message || 'This is a manual test notification from your HR system.',
+      data: { type: 'manual_test', timestamp: Date.now() }
+    };
+
+    const response = await fetch('https://exp.host/--/api/v2/push/send', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Accept-encoding': 'gzip, deflate',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(notification)
+    });
+
+    const result = await response.json();
+    
+    return res.json({ message: "Test notification sent successfully", result });
+  } catch (error) {
+    console.error('Manual test notification error:', error);
+    res.status(500).json({ message: "Failed to send test notification" });
+  }
+};

@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import {jwtDecode} from "jwt-decode";
 import { setAuthLogout } from "../api/axiosInstance";
+import axiosInstance, { getDeviceUUID } from "../api/axiosInstance";
 
 const AuthContext = createContext();
 
@@ -32,17 +33,21 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const logout = async() => {
+    try{
+      await axiosInstance.post("/auth/logout", {}, {
+        headers: {
+          'x-device-uuid': getDeviceUUID()
+        }
+      });
+    } catch (err) {
+      console.log("Logout API error:", err);
+    }
+    
     Cookies.remove("auth_token");
     Cookies.remove("refresh_token");
     localStorage.removeItem("auth_token");
     localStorage.removeItem("refresh_token");
     setUser(null);
-    try{
-      const response = await axiosInstance.post("/auth/logout", { platform: "web" });
-      console.log(response);
-    } catch (err) {
-      console.log(err)
-    }
   };
 
   useEffect(() => {

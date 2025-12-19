@@ -65,8 +65,6 @@ const FormRenderer = ({
                 data = [data];
             }
             
-            console.log(`Populated ${field.name}:`, data);
-            console.log(`Field config:`, field.dynamicOptions);
             
             setDynamicOptions((prev) => ({ ...prev, [field.name]: data }));
         } catch (e) {

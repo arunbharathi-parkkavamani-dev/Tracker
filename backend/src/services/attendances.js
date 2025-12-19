@@ -71,10 +71,8 @@ export default function attendances() {
         modelName
       );
 
-      console.log("Sending notification with message:", message, attendanceDoc.managerId);
       const receiverId = attendanceDoc.managerId;
       if (!receiverId) {
-        console.log("No managerId found for attendance, skipping notification.");
         return;
       }
       await sendNotification({

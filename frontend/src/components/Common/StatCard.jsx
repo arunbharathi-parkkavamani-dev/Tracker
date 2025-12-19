@@ -2,7 +2,6 @@ import React from "react";
 
 export default function StatCard({ title, value, subtitle, icon: Icon, colors }) {
   const gradient = `linear-gradient(135deg, ${colors.join(", ")})`;
-  console.log(title)
 
   return (
     <div

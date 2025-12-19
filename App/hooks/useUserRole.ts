@@ -23,8 +23,6 @@ export const useUserRole = () => {
     // Map role ID to role name
     const roleName = ROLE_MAPPING[user.role] || 'employee';
     setUserRole(roleName);
-    console.log('Role ID from AuthContext:', user.role);
-    console.log('Mapped role name:', roleName);
     setLoading(false);
   }, [user?.role]);
 

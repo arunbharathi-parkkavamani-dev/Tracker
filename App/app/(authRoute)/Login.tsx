@@ -3,7 +3,8 @@ import { View, Text, TouchableOpacity, TextInput } from "react-native";
 import { Link } from "expo-router";
 import { AuthContext } from "@/context/AuthContext";
 import axiosInstance, { getDeviceUUID } from "@/api/axiosInstance";
-import { registerForPushNotifications } from "@/utils/registerPushToken";
+import { storeFCMToken } from "@/utils/fcmTokenManager";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Login() {
   const [workEmail, setWorkEmail] = useState("");
@@ -32,26 +33,21 @@ export default function Login() {
       );
 
       if (response.status === 200 && response.data.accessToken) {
-        console.log("Login response data:", response.data);
         const { accessToken, sessionId } = response.data;
-        console.log("Login successful, access token:", accessToken, "sessionId:", sessionId);
 
-        // 2️⃣ Save auth token (AsyncStorage / Context)
-        login(accessToken);
+        // 2️⃣ Save auth token and session ID
+        await login(accessToken);
+        await AsyncStorage.setItem("current_session_id", sessionId);
+        
+        // Clear previous FCM token storage flag
+        await AsyncStorage.removeItem("fcm_token_stored");
 
-        // 3️⃣ Register push token
-        const pushToken = await registerForPushNotifications();
-
-        // 4️⃣ Store push token against THIS session
-        if (pushToken && sessionId) {
-          await axiosInstance.post(
-            "/auth/store-push-token",
-            {
-              sessionId,
-              fcmToken: pushToken,
-            },
-            { withCredentials: true }
-          );
+        // 3️⃣ Store FCM token (with retry logic)
+        if (sessionId) {
+          // Don't await this - let it happen in background
+          storeFCMToken(sessionId).catch(error => {
+            console.error("❌ FCM token storage failed:", error);
+          });
         }
       } else {
         setError("Login failed");

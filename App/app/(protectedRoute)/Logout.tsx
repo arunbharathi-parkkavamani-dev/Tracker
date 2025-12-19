@@ -2,7 +2,8 @@ import { useState, useEffect, useContext } from "react";
 import { View, ActivityIndicator, Text } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Redirect } from "expo-router";
-import { AuthContext } from "@/context/AuthContext"; // adjust path if needed
+import { AuthContext } from "@/context/AuthContext";
+import axiosInstance, { getDeviceUUID } from "@/api/axiosInstance";
 
 export default function LogoutScreen() {
   const { logout } = useContext(AuthContext);
@@ -11,12 +12,23 @@ export default function LogoutScreen() {
   useEffect(() => {
     const performLogout = async () => {
       try {
-        await logout(); // your context logout
-        await AsyncStorage.removeItem("token");
-        await AsyncStorage.removeItem("refresh_token");
+        // Call logout API
+        await axiosInstance.post("/auth/logout", {}, {
+          headers: {
+            'x-device-uuid': await getDeviceUUID()
+          }
+        });
       } catch (e) {
-        console.error("Logout error:", e);
+        console.error("Logout API error:", e);
       }
+      
+      try {
+        // Clear local storage and context
+        await logout();
+      } catch (e) {
+        console.error("Local logout error:", e);
+      }
+      
       setDone(true);
     };
 

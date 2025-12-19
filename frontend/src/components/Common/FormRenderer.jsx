@@ -43,7 +43,6 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
       
       // Track changed fields
       setChangedFields(prevChanged => {
-        console.log('Tracking change:', name, value instanceof File ? 'File' : value);
         return {
           ...prevChanged,
           [name]: value
@@ -188,7 +187,6 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
             type="file"
             accept={field.accept}
             onChange={(e) => {
-              console.log('File selected:', e.target.files[0]);
               onChange(e.target.files[0]);
             }}
             className="hidden"
@@ -264,7 +262,6 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
 
   const onSubmitHandler = async (e) => {
     e.preventDefault();
-    console.log('Submit clicked, changed fields:', Object.keys(changedFields));
     try {
       await onSubmit?.(changedFields);
     } catch (error) {

@@ -43,7 +43,6 @@ export default function AppHeader({
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           activeOpacity={0.7}
           onPress={() => {
-            console.log('Back button pressed');
             router.back();
           }}
         >

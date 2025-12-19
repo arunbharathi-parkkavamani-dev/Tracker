@@ -16,20 +16,16 @@ export const useUserProfile = () => {
       }
 
       try {
-        console.log('Fetching profile for user:', user.id);
         const response = await axiosInstance.get(`/populate/read/employees/${user.id}`);
         const employee = response.data.data;
-        console.log('Employee data:', employee?.basicInfo?.profileImage);
         
         if (employee?.basicInfo?.profileImage) {
           const imagePath = typeof employee.basicInfo.profileImage === 'string' 
             ? employee.basicInfo.profileImage.split('/').pop() 
             : employee.basicInfo.profileImage;
-          const imageUrl = `http://10.11.244.208:3000/api/files/render/profile/${imagePath}`;
-          console.log('Setting profile image URL:', imageUrl);
+          const imageUrl = `http://10.243.60.208:3000/api/files/render/profile/${imagePath}`;
           setProfileImage(imageUrl);
         } else {
-          console.log('No profile image found');
         }
       } catch (error) {
         console.error('Failed to fetch profile image:', error);

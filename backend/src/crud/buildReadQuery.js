@@ -22,7 +22,6 @@ export default async function buildReadQuery({
   populateFields,
   policy
 }) {
-  console.log("🔍 buildReadQuery called for model:", modelName, role, userId);
 
   const Model = models[modelName];
   if (!Model) throw new Error(`Model "${modelName}" not found`);

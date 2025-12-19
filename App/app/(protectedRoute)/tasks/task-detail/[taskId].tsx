@@ -194,30 +194,22 @@ export default function TaskDetail() {
   };
 
   const handleCommentChange = (text: string) => {
-    console.log('Comment text:', text);
     setNewComment(text);
     
     const lastAtIndex = text.lastIndexOf('@');
-    console.log('Last @ index:', lastAtIndex);
     
     if (lastAtIndex !== -1) {
       const textAfterAt = text.substring(lastAtIndex + 1);
       const spaceIndex = textAfterAt.indexOf(' ');
       
-      console.log('Text after @:', textAfterAt);
-      console.log('Space index:', spaceIndex);
-      
       if (spaceIndex === -1) {
         setMentionQuery(textAfterAt);
         setShowMentions(true);
-        console.log('Showing mentions, query:', textAfterAt);
       } else {
         setShowMentions(false);
-        console.log('Hiding mentions - space found');
       }
     } else {
       setShowMentions(false);
-      console.log('Hiding mentions - no @ found');
     }
   };
 
@@ -237,10 +229,6 @@ export default function TaskDetail() {
     return fullName.includes(mentionQuery.toLowerCase());
   });
   
-  console.log('Employees count:', employees.length);
-  console.log('Filtered employees count:', filteredEmployees.length);
-  console.log('Show mentions:', showMentions);
-  console.log('Mention query:', mentionQuery);
 
   if (loading) {
     return (

@@ -40,10 +40,18 @@ export const AuthProvider = ({ children }) => {
         }
         const decoded = jwtDecode(token);
         setUser(decoded);
+        // Ensure token is available for subsequent requests
+        return decoded;
     };
 
     const logout = async () => {
-        await AsyncStorage.multiRemove(["auth_token", "refresh_token"]);
+        await AsyncStorage.multiRemove([
+            "auth_token", 
+            "refresh_token", 
+            "current_session_id", 
+            "fcm_token_stored",
+            "last_fcm_token"
+        ]);
         setUser(null);
     };
 

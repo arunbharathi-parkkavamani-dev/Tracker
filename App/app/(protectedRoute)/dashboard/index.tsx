@@ -107,11 +107,6 @@ export default function Dashboard() {
       },
     };
 
-    console.log("IST Start:", startIST.toString());
-    console.log("IST End:", endIST.toString());
-    console.log("UTC Start:", startUTC.toISOString());
-    console.log("UTC End:", endUTC.toISOString());
-
 
     // ----------------------------
     // 3️⃣ API Call
@@ -142,7 +137,6 @@ export default function Dashboard() {
       return date.toISOString().split("T")[0] === todayDateString;
     });
 
-    console.log("TODAY RECORD:", todayRecord);
 
     // ----------------------------
     // 5️⃣ Attendance Status Logic

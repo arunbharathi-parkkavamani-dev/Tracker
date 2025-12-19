@@ -2,9 +2,53 @@ import axios from "axios";
 import Cookies from "js-cookie";
 
 let authContextLogout = null;
+let failedRequestCount = 0;
+const MAX_FAILED_REQUESTS = 5;
 
 export const setAuthLogout = (logoutFn) => {
   authContextLogout = logoutFn;
+};
+
+const resetFailedCount = () => {
+  failedRequestCount = 0;
+};
+
+const incrementFailedCount = async () => {
+  failedRequestCount++;
+  
+  if (failedRequestCount >= MAX_FAILED_REQUESTS) {
+    await forceLogout();
+  }
+};
+
+const forceLogout = async () => {
+  try {
+    // Call logout API
+    await axios.post("https://tracker-mxp9.onrender.com/api/auth/logout", {}, {
+      headers: {
+        'x-device-uuid': getDeviceUUID(),
+        'Authorization': `Bearer ${Cookies.get('auth_token') || localStorage.getItem('auth_token')}`
+      },
+      withCredentials: true
+    });
+  } catch (error) {
+    console.log("Logout API failed:", error);
+  }
+  
+  // Clear cookies and localStorage
+  Cookies.remove("auth_token");
+  Cookies.remove("refresh_token");
+  localStorage.removeItem('auth_token');
+  
+  // Reset counter
+  failedRequestCount = 0;
+  
+  // Call auth context logout
+  if (authContextLogout) {
+    authContextLogout();
+  } else if (typeof window !== 'undefined') {
+    window.location.href = "/login";
+  }
 };
 
 const axiosInstance = axios.create({
@@ -49,7 +93,11 @@ axiosInstance.interceptors.request.use(
 
 // Response interceptor to handle 401 and logout
 axiosInstance.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Reset failed count on successful response
+    resetFailedCount();
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
     const errorData = error.response?.data;
@@ -64,12 +112,16 @@ axiosInstance.interceptors.response.use(
           const refreshResponse = await axios.post(
             "https://tracker-mxp9.onrender.com/api/auth/refresh",
             {},
-            { withCredentials: true }
+            { 
+              withCredentials: true,
+              headers: { 'x-device-uuid': getDeviceUUID() }
+            }
           );
           
           if (refreshResponse.data.accessToken) {
             Cookies.set("auth_token", refreshResponse.data.accessToken);
             originalRequest.headers.Authorization = `Bearer ${refreshResponse.data.accessToken}`;
+            resetFailedCount(); // Reset on successful refresh
             return axiosInstance(originalRequest);
           }
         } catch (refreshError) {
@@ -77,16 +129,13 @@ axiosInstance.interceptors.response.use(
         }
       }
       
-      // Use auth context logout if available, otherwise fallback
-      if (authContextLogout) {
-        authContextLogout();
-      } else {
-        Cookies.remove("auth_token");
-        Cookies.remove("refresh_token");
-        if (typeof window !== 'undefined') {
-          window.location.href = "/login";
-        }
-      }
+      await forceLogout();
+      return Promise.reject(error);
+    }
+
+    // Track failed requests (4xx, 5xx errors)
+    if (error.response?.status >= 400) {
+      await incrementFailedCount();
     }
 
     return Promise.reject(error);

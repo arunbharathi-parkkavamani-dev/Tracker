@@ -34,14 +34,12 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
   };
 
   const fetchComments = async () => {
-    console.log('fetchComments called with task:', task);
     if (!task.commentsThread) {
       console.log('No commentsThread found');
       return;
     }
     try {
       const threadId = typeof task.commentsThread === 'object' ? task.commentsThread._id : task.commentsThread;
-      console.log('Thread ID:', threadId);
       if (!threadId) {
         console.log('No valid thread ID');
         return;
@@ -51,10 +49,8 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
         "comments.commentedBy": "basicInfo.firstName,basicInfo.lastName"
       };
       const url = `/populate/read/commentsthreads/${threadId}?populateFields=${encodeURIComponent(JSON.stringify(populateFields))}`;
-      console.log('Making API call to:', url);
       
       const response = await axiosInstance.get(url);
-      console.log('Comments response:', response.data);
       
       // If population didn't work, fetch user details manually
       const commentsWithUsers = await Promise.all(

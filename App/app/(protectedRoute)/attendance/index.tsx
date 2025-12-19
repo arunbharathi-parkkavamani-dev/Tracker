@@ -310,7 +310,6 @@ export default function Attendance() {
 
         setIsSubmitting(true);
         setError("");
-        console.log(user);
 
         try {
             const now = new Date();

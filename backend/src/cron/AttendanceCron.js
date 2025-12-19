@@ -7,7 +7,6 @@ import dayjs from "dayjs";
 // Run job every day at 01:22 AM
 cron.schedule("22 01 * * *", async () => {
   try {
-    console.log("Running attendance cron job...");
     const today = dayjs().startOf("day").toDate();
     const employees = await Employee.find();
 
@@ -75,7 +74,6 @@ cron.schedule("22 01 * * *", async () => {
       });
     }
 
-    console.log("Attendance cron completed ✅");
   } catch (err) {
     console.error("Error running attendance cron:", err);
   }

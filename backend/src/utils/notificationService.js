@@ -12,7 +12,7 @@ export const sendNotification = async ({
 }) => {
   try {
     // 1️⃣ Save notification in DB (source of truth)
-    const notification = await Notification.create({
+    const newNotification = await notification.create({
       sender,
       receiver,
       message,
@@ -23,9 +23,9 @@ export const sendNotification = async ({
 
     // 2️⃣ Socket.IO (real-time UI)
     io.to(receiver.toString()).emit("notification", {
-      id: notification._id,
+      id: newNotification._id,
       message,
-      createdAt: notification.createdAt,
+      createdAt: newNotification.createdAt,
     });
 
     // 3️⃣ Push notification (system alert)
@@ -47,7 +47,7 @@ export const sendNotification = async ({
       });
     }
 
-    return notification;
+    return newNotification;
   } catch (error) {
     console.error("Error sending notification:", error);
   }
