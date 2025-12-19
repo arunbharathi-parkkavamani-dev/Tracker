@@ -2,7 +2,7 @@ import React, { useState, useContext } from "react";
 import { View, Text, TouchableOpacity, TextInput } from "react-native";
 import { Link } from "expo-router";
 import { AuthContext } from "@/context/AuthContext";
-import axiosInstance from "@/api/axiosInstance";
+import axiosInstance, { getDeviceUUID } from "@/api/axiosInstance";
 import { registerForPushNotifications } from "@/utils/registerPushToken";
 
 export default function Login() {
@@ -19,12 +19,14 @@ export default function Login() {
 
     try {
       // 1️⃣ Login API
+      const deviceUUID = await getDeviceUUID();
       const response = await axiosInstance.post(
         "/auth/login",
         {
           workEmail,
           password,
           platform: "mobile", // 🔥 IMPORTANT
+          deviceUUID
         },
         { withCredentials: true }
       );

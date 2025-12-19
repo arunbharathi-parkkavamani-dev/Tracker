@@ -14,6 +14,16 @@ const axiosInstance = axios.create({
   withCredentials: true,
 });
 
+// Generate or get device UUID for mobile
+const getDeviceUUID = async () => {
+  let uuid = await AsyncStorage.getItem('device_uuid');
+  if (!uuid) {
+    uuid = 'mobile_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    await AsyncStorage.setItem('device_uuid', uuid);
+  }
+  return uuid;
+};
+
 // Request interceptor - add token from AsyncStorage
 axiosInstance.interceptors.request.use(
   async (config) => {
@@ -21,6 +31,9 @@ axiosInstance.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Add device UUID to all requests
+    config.headers['x-device-uuid'] = await getDeviceUUID();
     
     if (['post', 'put', 'patch'].includes(config.method?.toLowerCase()) && config.data) {
       config.headers['Content-Type'] = 'application/json';
@@ -90,4 +103,5 @@ axiosInstance.interceptors.response.use(
   }
 );
 
+export { getDeviceUUID };
 export default axiosInstance;

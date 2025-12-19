@@ -29,6 +29,12 @@ const sessionsSchema = new Schema(
       required: true 
     },
 
+    deviceUUID: {
+      type: String,
+      required: true,
+      index: true
+    },
+
     // 🔥 Login approval support
     status: { 
       type: String, 

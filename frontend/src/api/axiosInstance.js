@@ -13,6 +13,16 @@ const axiosInstance = axios.create({
   withCredentials: true,
 });
 
+// Generate or get device UUID
+const getDeviceUUID = () => {
+  let uuid = localStorage.getItem('device_uuid');
+  if (!uuid) {
+    uuid = 'web_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem('device_uuid', uuid);
+  }
+  return uuid;
+};
+
 // Request interceptor - add auth token and content-type
 axiosInstance.interceptors.request.use(
   (config) => {
@@ -24,6 +34,9 @@ axiosInstance.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Add device UUID to all requests
+    config.headers['x-device-uuid'] = getDeviceUUID();
     
     // Only set Content-Type for POST/PUT/PATCH with body (but not for FormData)
     if (['post', 'put', 'patch'].includes(config.method?.toLowerCase()) && config.data && !(config.data instanceof FormData)) {
@@ -80,4 +93,5 @@ axiosInstance.interceptors.response.use(
   }
 )
 
+export { getDeviceUUID };
 export default axiosInstance;

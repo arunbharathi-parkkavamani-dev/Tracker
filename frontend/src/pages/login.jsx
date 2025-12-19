@@ -1,4 +1,4 @@
-import axiosInstance from "../api/axiosInstance";
+import axiosInstance, { getDeviceUUID } from "../api/axiosInstance";
 import { useState } from "react";
 import { useAuth } from "../context/authProvider.jsx";
 import {jwtDecode} from "jwt-decode";
@@ -19,7 +19,7 @@ const Login = () => {
     try {
       const response = await axiosInstance.post(
         "/auth/login",
-        { workEmail, password, platform: "web" }
+        { workEmail, password, platform: "web", deviceUUID: getDeviceUUID() }
       );
 
       if (response.status === 200 && response.data.accessToken) {

@@ -17,13 +17,7 @@ router.post("/refresh", refresh);
 // Logout
 router.post("/logout", logout);
 
-// Example of a protected route
-router.get("/me", authMiddleware, (req, res) => {
-  res.json({
-    message: "User authenticated",
-    user: req.user, // comes from decoded token
-  });
-});
+
 
 // FCM Token Registration
 router.post("/store-push-token", authMiddleware, storePushToken);

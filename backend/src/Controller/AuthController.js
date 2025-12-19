@@ -9,7 +9,11 @@ import { getDeviceInfo } from "../utils/deviceInfo.js";
 
 export const login = async (req, res, next) => {
   try {
-    const { workEmail, password, platform = "web" } = req.body;
+    const { workEmail, password, platform = "web", deviceUUID } = req.body;
+    
+    if (!deviceUUID) {
+      return res.status(400).json({ message: "Device UUID is required" });
+    }
     console.log(`Login attempt for ${workEmail} on ${platform}`);
 
     // 1. Validate user
@@ -55,6 +59,7 @@ export const login = async (req, res, next) => {
     const userSession = await session.create({
       userId: payload.id,
       platform,
+      deviceUUID,
       generatedToken: {
         token: accessToken,
         secret: accessSecret,
@@ -104,8 +109,10 @@ export const authMiddleware = async (req, res, next) => {
     const token =
       req.cookies?.auth_token ||
       req.headers.authorization?.split(" ")[1];
+    const deviceUUID = req.headers['x-device-uuid'];
 
     if (!token) return res.status(401).json({ message: "Unauthorized" });
+    if (!deviceUUID) return res.status(401).json({ message: "Device UUID required" });
 
     // Decode to get userId
     const decoded = jwt.decode(token);
@@ -116,6 +123,7 @@ export const authMiddleware = async (req, res, next) => {
     const userSession = await session.findOne({
       userId: decoded.id,
       platform: decoded.platform,
+      deviceUUID,
       status: "Active",
     });
     console.log("User session secret:", userSession?.generatedToken?.secret);
@@ -151,10 +159,14 @@ export const refresh = async (req, res, next) => {
     const decoded = jwt.decode(refreshToken);
     if (!decoded?.id || !decoded?.jti)
       return res.status(401).json({ message: "Invalid refresh token" });
+    
+    const deviceUUID = req.headers['x-device-uuid'];
+    if (!deviceUUID) return res.status(401).json({ message: "Device UUID required" });
 
     const userSession = await session.findOne({
       userId: decoded.id,
       platform: decoded.platform,
+      deviceUUID,
       status: "Active",
     });
 
@@ -226,13 +238,16 @@ export const refresh = async (req, res, next) => {
 export const logout = async (req, res) => {
   try {
     const token = req.cookies?.auth_token;
+    const deviceUUID = req.headers['x-device-uuid'];
+    
     if (!token) return res.json({ message: "Already logged out" });
+    if (!deviceUUID) return res.status(401).json({ message: "Device UUID required" });
 
     const decoded = jwt.decode(token);
     if (!decoded?.id) return res.json({ message: "Invalid token" });
 
     await session.findOneAndUpdate(
-      { userId: decoded.id, platform: decoded.platform },
+      { userId: decoded.id, platform: decoded.platform, deviceUUID },
       { status: "DeActive" }
     );
 
@@ -247,7 +262,7 @@ export const logout = async (req, res) => {
 
 
 
-export const storePushToken = async (res, req, next) => {
+export const storePushToken = async (req, res, next) => {
   try { 
     const {sessionId, fcmToken} = req.body;
 

@@ -8,7 +8,6 @@ import populateHelper from "./routes/populateRoutes.js";
 import fileRoutes from "./routes/fileRoutes.js";
 import locationRoutes from "./routes/locationRoutes.js";
 import bankRoutes from "./routes/bankRoutes.js";
-import testRoutes from "./routes/testRoutes.js";
 import { apiHitLogger } from "./middlewares/apiHitLogger.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import connectDB from "./Config/ConnectDB.js";
@@ -48,7 +47,7 @@ app.use(
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Simple methods only
-    allowedHeaders: ['Content-Type', 'Authorization'], // Simple headers only
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-device-uuid'], // Simple headers only
   })
 );
 
@@ -62,7 +61,6 @@ app.use("/api/populate", populateHelper);
 app.use("/api/files", fileRoutes);
 app.use("/api", locationRoutes);
 app.use("/api", bankRoutes);
-app.use("/api/test", testRoutes);
 
 // Error handling middleware
 app.use(errorHandler);
