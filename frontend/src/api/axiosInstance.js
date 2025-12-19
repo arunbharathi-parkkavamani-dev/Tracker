@@ -8,7 +8,7 @@ export const setAuthLogout = (logoutFn) => {
 };
 
 const axiosInstance = axios.create({
-  baseURL: "http://10.50.131.208:3000/api",
+  baseURL: "https://tracker-mxp9.onrender.com/api",
   timeout: 100000,
   withCredentials: true,
 });
@@ -49,7 +49,7 @@ axiosInstance.interceptors.response.use(
         
         try {
           const refreshResponse = await axios.post(
-            "http://10.50.131.208:3000/api/auth/refresh",
+            "https://tracker-mxp9.onrender.com/api/auth/refresh",
             {},
             { withCredentials: true }
           );
