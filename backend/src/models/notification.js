@@ -1,27 +1,35 @@
-// models/Notification.js
+// models/notification.js
 import mongoose from "mongoose";
 
 const notificationSchema = new mongoose.Schema({
   sender: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "employees",
-    required: true,
+    required: true
   },
   receiver: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "employees",
-    required: true,
+    required: true
   },
   message: { type: String, required: true },
   meta: {
-    model: { type: String }, // e.g., 'attendances', 'leaveRequests'
-    modelId: { type: mongoose.Schema.Types.ObjectId },
+    model: { type: String, index: true },
+    modelId: { type: mongoose.Schema.Types.ObjectId, index: true },
   },
-  path: { type: String }, // UI navigation path
+  path: { type: String },
   read: { type: Boolean, default: false },
-  createdAt: { type: Date, default: Date.now },
+  priority: { type: String, enum: ['low', 'medium', 'high'], default: 'medium' }
+}, { 
+  timestamps: true,
+  expireAfterSeconds: 90 * 24 * 60 * 60 // Auto-delete after 90 days
 });
 
-// ✅ Check if model exists before compiling
-export default mongoose.models.Notification ||
-  mongoose.model("notifications", notificationSchema);
+// Compound indexes for notification queries
+notificationSchema.index({ receiver: 1, read: 1, createdAt: -1 }); // Unread notifications
+notificationSchema.index({ receiver: 1, priority: 1, createdAt: -1 }); // Priority notifications
+notificationSchema.index({ sender: 1, createdAt: -1 }); // Sent notifications
+notificationSchema.index({ "meta.model": 1, "meta.modelId": 1 }); // Related entity notifications
+notificationSchema.index({ createdAt: -1 }); // Recent notifications
+
+export default mongoose.model("notifications", notificationSchema);

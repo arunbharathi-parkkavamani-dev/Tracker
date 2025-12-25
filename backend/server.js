@@ -1,13 +1,17 @@
 // server.js
 import dotenv from "dotenv";
-import { server } from "./src/index.js"; // ✅ use HTTP server, not app
+import { server } from "./src/index.js";
 import os from "os";
 import https from "https";
+import memoryMonitor from "./src/utils/memoryMonitor.js";
 
 dotenv.config();
 const PORT = process.env.PORT || 3000;
 
-// --- Helper: get local IP ---
+// Memory optimization flags
+process.env.NODE_OPTIONS = '--max-old-space-size=4096 --expose-gc';
+
+// Helper: get local IP
 const getLocalIP = () => {
   const nets = os.networkInterfaces();
   for (const name of Object.keys(nets)) {
@@ -17,7 +21,7 @@ const getLocalIP = () => {
   }
 };
 
-// --- Helper: get public IP ---
+// Helper: get public IP
 const getPublicIP = () =>
   new Promise((resolve, reject) => {
     https
@@ -29,7 +33,7 @@ const getPublicIP = () =>
       .on("error", reject);
   });
 
-// --- Start server ---
+// Start server with memory monitoring
 server.listen(PORT, "0.0.0.0", async () => {
   const localIP = getLocalIP();
   console.log(`✅ Server running on port ${PORT}`);
@@ -42,4 +46,34 @@ server.listen(PORT, "0.0.0.0", async () => {
   } catch (err) {
     console.log("⚠️ Could not fetch public IP:", err.message);
   }
+
+  // Start memory monitoring
+  memoryMonitor.startMonitoring(30000); // Every 30 seconds
+  console.log('🔍 Memory monitoring started');
+  
+  // Log initial memory stats
+  const initialStats = memoryMonitor.getMemoryStats();
+  console.log('📊 Initial memory:', initialStats);
+});
+
+// Graceful shutdown with cleanup
+process.on('SIGTERM', () => {
+  console.log('🔄 Graceful shutdown initiated...');
+  
+  server.close(() => {
+    console.log('✅ Server closed');
+    
+    // Final memory cleanup
+    if (global.gc) {
+      global.gc();
+      console.log('🗑️ Final garbage collection completed');
+    }
+    
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('\n🔄 Received SIGINT, shutting down gracefully...');
+  process.emit('SIGTERM');
 });

@@ -2,21 +2,20 @@
 import { Schema, model } from 'mongoose';
 
 const LeavePolicySchema = new Schema({
-  leaves: [
-    {
-      leaveType: { type: Schema.Types.ObjectId, ref: 'leavetypes' },
-      maxDaysPerMonth: { type: Number, default: 0 }, // override default maxDays if needed
-      maxDaysPerYear: { type: Number, default:0},
-      carryForward: { type: Boolean, default: false}
-    },
-  ],
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
-});
+  name: { type: String, trim: true, required: true, index: true },
+  leaves: [{
+    leaveType: { type: Schema.Types.ObjectId, ref: 'leavetypes', required: true },
+    maxDaysPerMonth: { type: Number, default: 0, min: 0 },
+    maxDaysPerYear: { type: Number, default: 0, min: 0 },
+    carryForward: { type: Boolean, default: false }
+  }],
+  isActive: { type: Boolean, default: true, index: true },
+  applicableRoles: [{ type: Schema.Types.ObjectId, ref: 'roles' }],
+  description: { type: String }
+}, { timestamps: true });
 
-LeavePolicySchema.pre('save', function(next) {
-  this.updatedAt = Date.now();
-  next();
-});
+// Compound indexes
+LeavePolicySchema.index({ isActive: 1, name: 1 });
+LeavePolicySchema.index({ applicableRoles: 1, isActive: 1 });
 
 export default model('leavepolicies', LeavePolicySchema);

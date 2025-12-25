@@ -18,7 +18,14 @@ import leaves from "./Leave.js"
 import tasks from "./Tasks.js"
 import commentsthreads from "./CommentsThreads.js"
 import session from "./Session.js";
-
+import todos from "./Todo.js";
+import auditlog from "./AuditLog.js";
+import errorlog from "./ErrorLog.js";
+import expenses from "./Expense.js";
+import payrolls from "./Payroll.js";
+import tickets from "./Ticket.js";
+import shifts from "./Shift.js";
+import hrpolicies from "./HRPolicy.js";
 
 const models = {
   accesspolicies,
@@ -39,7 +46,15 @@ const models = {
   leaves,
   tasks,
   commentsthreads,
-  session
+  session,
+  todos,
+  auditlog,
+  errorlog,
+  expenses,
+  payrolls,
+  tickets,
+  shifts,
+  hrpolicies
 };
 
 export default models;

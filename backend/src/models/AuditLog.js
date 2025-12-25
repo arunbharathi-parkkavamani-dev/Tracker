@@ -1,23 +1,23 @@
+// models/AuditLog.js
 import mongoose from "mongoose";
 
-const AuditLogSchema = new mongoose.Schema(
-  {
-    model: { type: String, required: true },          // e.g., "employees"
-    docId: { type: mongoose.Schema.Types.ObjectId },  // target document
-    action: { type: String, enum: ["update", "delete"], required: true },
+const AuditLogSchema = new mongoose.Schema({
+  model: { type: String, required: true, index: true },
+  docId: { type: mongoose.Schema.Types.ObjectId, index: true },
+  action: { type: String, enum: ["create", "update", "delete"], required: true, index: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, required: true, index: true },
+  role: { type: String, index: true },
+  before: { type: Object },
+  after: { type: Object },
+  metadata: { type: Object }
+}, { 
+  timestamps: true,
+  expireAfterSeconds: 365 * 24 * 60 * 60 // Auto-delete after 1 year
+});
 
-    // who performed the action
-    userId: { type: mongoose.Schema.Types.ObjectId, required: true },
-    role: { type: String },
-
-    // difference tracking
-    before: { type: Object },   // previous values only (not whole doc)
-    after: { type: Object },    // updated values (only changed fields)
-
-    // pointer for multi-level approval logic later
-    metadata: { type: Object }
-  },
-  { timestamps: true }
-);
+// Compound indexes for audit queries
+AuditLogSchema.index({ model: 1, docId: 1, createdAt: -1 });
+AuditLogSchema.index({ userId: 1, action: 1, createdAt: -1 });
+AuditLogSchema.index({ createdAt: -1 });
 
 export default mongoose.model("auditlogs", AuditLogSchema);

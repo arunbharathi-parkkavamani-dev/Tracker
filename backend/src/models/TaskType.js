@@ -1,8 +1,16 @@
+// models/TaskType.js
 import mongoose from "mongoose";
 
-const TaskTypeScheme = new mongoose.Schema({
-    name: { type: String, trim:true},
-    description: { type: String, trim:true}
-}, {timestamps:true});
+const TaskTypeSchema = new mongoose.Schema({
+  name: { type: String, trim: true, required: true, unique: true, index: true },
+  description: { type: String, trim: true },
+  isActive: { type: Boolean, default: true, index: true },
+  estimatedHours: { type: Number, min: 0 },
+  category: { type: String, enum: ['Development', 'Testing', 'Design', 'Documentation', 'Meeting'], default: 'Development', index: true }
+}, { timestamps: true });
 
-export default mongoose.model('tasktypes', TaskTypeScheme);
+// Compound indexes
+TaskTypeSchema.index({ isActive: 1, category: 1 });
+TaskTypeSchema.index({ isActive: 1, name: 1 });
+
+export default mongoose.model('tasktypes', TaskTypeSchema);

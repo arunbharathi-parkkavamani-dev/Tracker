@@ -32,6 +32,12 @@ const CommentsThreadSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Indexes for optimal filtering
+CommentsThreadSchema.index({ taskId: 1 }, { unique: true });
+CommentsThreadSchema.index({ "comments.commentedBy": 1 });
+CommentsThreadSchema.index({ "comments.mentions": 1 });
+CommentsThreadSchema.index({ createdAt: -1 });
+
 const CommentsThread =
   mongoose.models.CommentsThread ||
   mongoose.model("commentsthreads", CommentsThreadSchema);

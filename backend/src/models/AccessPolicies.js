@@ -1,43 +1,38 @@
-// src/models/AccessPolicies.js
+// models/AccessPolicies.js
 import mongoose from "mongoose";
 
 const AccessPolicySchema = new mongoose.Schema({
-  role: { type: mongoose.Schema.Types.ObjectId, ref: "Role", required: true },
-
-  modelName: { type: String, required: true }, // e.g. "Employee", "Attendance"
-
+  role: { type: mongoose.Schema.Types.ObjectId, ref: "roles", required: true },
+  modelName: { type: String, required: true },
   permissions: {
     read: { type: Boolean, default: false },
     create: { type: Boolean, default: false },
     update: { type: Boolean, default: false },
     delete: { type: Boolean, default: false }
   },
-
   forbiddenAccess: {
     read: { type: [String], default: [] },
     create: { type: [String], default: [] },
     update: { type: [String], default: [] },
     delete: { type: [String], default: [] }
   },
-
   allowAccess: {
     read: { type: [String], default: [] },
     create: { type: [String], default: [] },
     update: { type: [String], default: [] },
     delete: { type: [String], default: [] }
   },
-
   registry: { type: [String], default: [] },
-
   conditions: {
     type: Map,
     of: mongoose.Schema.Types.Mixed,
     default: {}
   }
-
 }, { timestamps: true });
 
-// Ensure uniqueness of (role, modelName) pair
+// Optimized indexes for policy engine performance
 AccessPolicySchema.index({ role: 1, modelName: 1 }, { unique: true });
+AccessPolicySchema.index({ modelName: 1 }); // Fast model lookup
+AccessPolicySchema.index({ role: 1 }); // Fast role lookup
 
-export default mongoose.model("AccessPolicies", AccessPolicySchema);
+export default mongoose.model("accesspolicies", AccessPolicySchema);

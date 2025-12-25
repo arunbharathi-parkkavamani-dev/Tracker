@@ -108,7 +108,7 @@ export const authMiddleware = async (req, res, next) => {
     const token =
       req.cookies?.auth_token ||
       req.headers.authorization?.split(" ")[1];
-    const deviceUUID = req.headers['x-device-uuid'];
+    const deviceUUID = req.headers['x-device-uuid'] || req.headers['X-Device-UUID'];
 
     if (!token) return res.status(401).json({ message: "Unauthorized" });
     if (!deviceUUID) return res.status(401).json({ message: "Device UUID required" });
@@ -117,7 +117,6 @@ export const authMiddleware = async (req, res, next) => {
     const decoded = jwt.decode(token);
     if (!decoded?.id)
       return res.status(401).json({ message: "Invalid token" });
-  
 
     const userSession = await session.findOne({
       userId: decoded.id,
@@ -125,6 +124,7 @@ export const authMiddleware = async (req, res, next) => {
       deviceUUID,
       status: "Active",
     });
+
 
     if (!userSession )
       return res.status(401).json({ message: "Session not found" });
@@ -157,7 +157,7 @@ export const refresh = async (req, res, next) => {
     if (!decoded?.id || !decoded?.jti)
       return res.status(401).json({ message: "Invalid refresh token" });
     
-    const deviceUUID = req.headers['x-device-uuid'];
+    const deviceUUID = req.headers['x-device-uuid'] || req.headers['X-Device-UUID'];
     if (!deviceUUID) return res.status(401).json({ message: "Device UUID required" });
 
     const userSession = await session.findOne({
@@ -235,7 +235,7 @@ export const refresh = async (req, res, next) => {
 export const logout = async (req, res) => {
   try {
     const token = req.cookies?.auth_token || req.headers.authorization?.split(" ")[1];
-    const deviceUUID = req.headers['x-device-uuid'];
+    const deviceUUID = req.headers['x-device-uuid'] || req.headers['X-Device-UUID'];
     
     
     if (!deviceUUID) return res.status(400).json({ message: "Device UUID required" });
@@ -331,7 +331,7 @@ const sendTestNotification = async (fcmToken) => {
 export const sendManualTestNotification = async (req, res) => {
   try {
     const { message, title } = req.body;
-    const deviceUUID = req.headers['x-device-uuid'];
+    const deviceUUID = req.headers['x-device-uuid'] || req.headers['X-Device-UUID'];
     
     if (!deviceUUID) {
       return res.status(400).json({ message: "Device UUID required" });

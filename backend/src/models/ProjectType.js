@@ -2,8 +2,15 @@
 import { Schema, model } from 'mongoose';
 
 const ProjectTypeSchema = new Schema({
-  name: { type: String, trim: true, unique: true }, // e.g., "Web Application"
-  description: { type: String }
+  name: { type: String, trim: true, unique: true, required: true, index: true },
+  description: { type: String },
+  isActive: { type: Boolean, default: true, index: true },
+  estimatedHours: { type: Number, min: 0 },
+  complexity: { type: String, enum: ['Low', 'Medium', 'High'], default: 'Medium', index: true }
 }, { timestamps: true });
+
+// Compound index for active project types
+ProjectTypeSchema.index({ isActive: 1, complexity: 1 });
+ProjectTypeSchema.index({ isActive: 1, name: 1 });
 
 export default model('projecttypes', ProjectTypeSchema);

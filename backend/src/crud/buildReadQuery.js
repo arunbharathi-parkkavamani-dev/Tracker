@@ -23,6 +23,15 @@ export default async function buildReadQuery({
   policy
 }) {
 
+  console.log('🔍 buildReadQuery DEBUG:', {
+    role,
+    userId,
+    modelName,
+    docId,
+    filter: JSON.stringify(filter),
+    fields
+  });
+
   const Model = models[modelName];
   if (!Model) throw new Error(`Model "${modelName}" not found`);
 
@@ -49,9 +58,13 @@ export default async function buildReadQuery({
     policy
   });
 
+  console.log('🔍 Registry Output:', JSON.stringify(registryOutput));
+
   // registry may override direct read control
   fields = registryOutput?.fields ?? fields;
   filter = registryOutput?.filter ?? filter;
+
+  console.log('🔍 Final filter after registry:', JSON.stringify(filter));
 
   /** -----------------------------------------------
    * 4) beforeRead hook (service)
@@ -121,6 +134,8 @@ export default async function buildReadQuery({
 
 
   const mongoFilter = buildMongoFilter(filter);
+  console.log('🔍 MongoDB filter:', JSON.stringify(mongoFilter));
+  
   let query = docId && docId.trim() && docId !== "" && mongoose.Types.ObjectId.isValid(docId)
     ? Model.findById(new mongoose.Types.ObjectId(docId))
     : Model.find(mongoFilter || {});
@@ -141,17 +156,55 @@ export default async function buildReadQuery({
       }
     });
   } else {
-    // Auto-populate all reference fields with default fields
-    Model.schema.eachPath((pathname, schematype) => {
-      if (schematype.options?.ref) {
-        const selectFields = populateFields?.[pathname] || 'name';
-        query.populate({ path: pathname, select: selectFields });
-      }
-    });
+    // Skip auto-populate to avoid cast errors - handled manually below
   }
 
   // ❗ populate first, then lean
-  let result = await query.populate().lean();
+  let result = await query.lean();
+  
+  // Handle populate manually to avoid cast errors
+  if (result) {
+    const docs = Array.isArray(result) ? result : [result];
+    
+    for (const doc of docs) {
+      // Ensure professionalInfo exists
+      if (!doc.professionalInfo) {
+        doc.professionalInfo = {};
+      }
+      
+      // Manually populate designation if it exists and is valid
+      if (doc.professionalInfo?.designation && 
+          mongoose.Types.ObjectId.isValid(doc.professionalInfo.designation)) {
+        try {
+          const designation = await models.designations.findById(doc.professionalInfo.designation).lean();
+          doc.professionalInfo.designation = designation;
+        } catch (e) {
+          doc.professionalInfo.designation = null;
+        }
+      } else {
+        doc.professionalInfo.designation = null;
+      }
+      
+      // Manually populate other refs similarly
+      const refFields = ['department', 'role', 'reportingManager'];
+      for (const field of refFields) {
+        if (doc.professionalInfo?.[field] && 
+            mongoose.Types.ObjectId.isValid(doc.professionalInfo[field])) {
+          try {
+            const refModel = field === 'reportingManager' ? 'employees' : `${field}s`;
+            const refDoc = await models[refModel]?.findById(doc.professionalInfo[field]).lean();
+            doc.professionalInfo[field] = refDoc;
+          } catch (e) {
+            doc.professionalInfo[field] = null;
+          }
+        } else {
+          doc.professionalInfo[field] = null;
+        }
+      }
+    }
+    
+    result = Array.isArray(result) ? docs : docs[0];
+  }
   if (docId && result) result = [result]; // unify with list format for sanitization
 
   /** -----------------------------------------------

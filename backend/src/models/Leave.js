@@ -1,27 +1,32 @@
+// models/Leave.js
 import mongoose from "mongoose";
 
 const LeaveSchema = new mongoose.Schema({
-  employeeId: { type: mongoose.Schema.Types.ObjectId, ref: "employees", required: true },
-  employeeName : {type : String},
-  departmentId: { type: mongoose.Schema.Types.ObjectId, ref: "departments" },
-  leaveTypeId: { type: mongoose.Schema.Types.ObjectId, ref: "leavetypes" },
-  leaveName : {type: String},
-  startDate: { type: Date },
-  endDate: { type: Date },
-  totalDays: { type: Number },
+  employeeId: { type: mongoose.Schema.Types.ObjectId, ref: "employees", required: true, index: true },
+  employeeName: { type: String, index: true },
+  departmentId: { type: mongoose.Schema.Types.ObjectId, ref: "departments", index: true },
+  leaveTypeId: { type: mongoose.Schema.Types.ObjectId, ref: "leavetypes", index: true },
+  leaveName: { type: String },
+  startDate: { type: Date, required: true, index: true },
+  endDate: { type: Date, required: true, index: true },
+  totalDays: { type: Number, required: true, min: 0.5 },
   reason: { type: String, maxLength: 500, minLength: 5, trim: true },
-  status: { type: String, enum:['Pending', 'Approved', 'Rejected'] },
-  managerId: { type: mongoose.Schema.Types.ObjectId, ref: "employees" },
+  status: { type: String, enum: ['Pending', 'Approved', 'Rejected'], default: 'Pending', index: true },
+  managerId: { type: mongoose.Schema.Types.ObjectId, ref: "employees", index: true },
   managerComments: { type: String, maxLength: 500, minLength: 5, trim: true },
   approvedAt: { type: Date },
-  rejectedAt : { type: Date},
+  rejectedAt: { type: Date },
   document: { type: String },
+  isEmergency: { type: Boolean, default: false, index: true }
 }, { timestamps: true });
 
-// Prevent duplicate leave entries by employee on exact date range
-LeaveSchema.index(
-  { employeeId: 1, startDate: 1, endDate: 1 },
-  { unique: true }
-);
+// Compound indexes for optimal filtering
+LeaveSchema.index({ employeeId: 1, startDate: 1, endDate: 1 });
+LeaveSchema.index({ employeeId: 1, status: 1, createdAt: -1 });
+LeaveSchema.index({ managerId: 1, status: 1, startDate: -1 });
+LeaveSchema.index({ departmentId: 1, status: 1, startDate: -1 });
+LeaveSchema.index({ status: 1, startDate: -1 }); // Pending leaves by date
+LeaveSchema.index({ startDate: 1, endDate: 1, status: 1 }); // Date range queries
+LeaveSchema.index({ leaveTypeId: 1, status: 1 }); // Leave type analysis
 
-export default mongoose.models.Leave || mongoose.model("leaves", LeaveSchema);
+export default mongoose.model("leaves", LeaveSchema);
