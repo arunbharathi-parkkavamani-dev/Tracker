@@ -24,8 +24,7 @@ const incrementFailedCount = async () => {
 
 const forceLogout = async () => {
   try {
-    // Call logout API
-    await axios.post("http://10.243.60.208:3000/api/auth/logout", {}, {
+    await axios.post("http://10.167.107.208:3000/api/auth/logout", {}, {
       headers: {
         'x-device-uuid': await getDeviceUUID(),
         'Authorization': `Bearer ${await AsyncStorage.getItem("auth_token")}`
@@ -35,18 +34,13 @@ const forceLogout = async () => {
     console.log("Logout API failed:", error);
   }
   
-  // Clear local storage
   await AsyncStorage.multiRemove(["auth_token", "refresh_token", "current_session_id", "fcm_token_stored"]);
-  
-  // Reset counter
   failedRequestCount = 0;
   
-  // Call auth context logout
   if (authContextLogout) {
     authContextLogout();
   }
   
-  // Navigate to login
   try {
     router.replace("/(authRoute)/Login");
   } catch (routerError) {
@@ -55,12 +49,11 @@ const forceLogout = async () => {
 };
 
 const axiosInstance = axios.create({
-  baseURL: "http://10.243.60.208:3000/api",
+  baseURL: "http://10.167.107.208:3000/api",
   timeout: 50000,
   withCredentials: true,
 });
 
-// Generate or get device UUID for mobile
 const getDeviceUUID = async () => {
   let uuid = await AsyncStorage.getItem('device_uuid');
   if (!uuid) {
@@ -70,7 +63,7 @@ const getDeviceUUID = async () => {
   return uuid;
 };
 
-// Request interceptor - add token from AsyncStorage
+// Enhanced request interceptor with optimized query support
 axiosInstance.interceptors.request.use(
   async (config) => {
     const token = await AsyncStorage.getItem("auth_token");
@@ -78,21 +71,22 @@ axiosInstance.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
     
-    // Add device UUID to all requests
     config.headers['x-device-uuid'] = await getDeviceUUID();
     
-    if (['post', 'put', 'patch'].includes(config.method?.toLowerCase()) && config.data) {
+    // Handle FormData for file uploads
+    if (config.data instanceof FormData) {
+      config.headers['Content-Type'] = 'multipart/form-data';
+    } else if (['post', 'put', 'patch'].includes(config.method?.toLowerCase()) && config.data) {
       config.headers['Content-Type'] = 'application/json';
     }
+    
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// Response interceptor for mobile token refresh
 axiosInstance.interceptors.response.use(
   (response) => {
-    // Reset failed count on successful response
     resetFailedCount();
     return response;
   },
@@ -100,7 +94,6 @@ axiosInstance.interceptors.response.use(
     const originalRequest = error.config;
     const errorData = error.response?.data;
 
-    // Handle token expiration with automatic refresh
     if (error.response?.status === 401 && errorData?.expired && !originalRequest._retry) {
       originalRequest._retry = true;
       
@@ -109,15 +102,14 @@ axiosInstance.interceptors.response.use(
         if (!refreshToken) throw new Error("No refresh token");
         
         const refreshResponse = await axios.post(
-          "http://10.243.60.208:3000/api/auth/refresh",
+          "http://10.167.107.208:3000/api/auth/refresh",
           { refreshToken, platform: "mobile" },
           { headers: { 'x-device-uuid': await getDeviceUUID() } }
         );
         
-        // Update tokens in AsyncStorage
         if (refreshResponse.data.accessToken) {
           await AsyncStorage.setItem("auth_token", refreshResponse.data.accessToken);
-          resetFailedCount(); // Reset on successful refresh
+          resetFailedCount();
         }
         
         return axiosInstance(originalRequest);
@@ -127,13 +119,11 @@ axiosInstance.interceptors.response.use(
       }
     }
     
-    // Handle 401 errors
     if (error.response?.status === 401) {
       await forceLogout();
       return Promise.reject(error);
     }
 
-    // Track failed requests (4xx, 5xx errors)
     if (error.response?.status >= 400) {
       await incrementFailedCount();
     }

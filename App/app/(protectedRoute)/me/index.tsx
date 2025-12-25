@@ -82,7 +82,7 @@ export default function Profile() {
       );
 
       if (response.data.data.basicInfo.profileImage) {
-        const imageUrl = `https://tracker-mxp9.onrender.com/api/files/render/profile/${response.data.data.basicInfo.profileImage.split('/').pop()}`;
+        const imageUrl = `http://10.30.24.208:3000/api/files/render/profile/${response.data.data.basicInfo.profileImage.split('/').pop()}`;
       }
       
       setEmployee(response.data.data);
