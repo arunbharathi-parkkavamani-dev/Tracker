@@ -1,10 +1,24 @@
 //  src/utils/cache.js
 
 import AccessPolicies from "../models/AccessPolicies.js";
+import mongoose from "mongoose";
+
 const cache = new Map()
+let cacheInitialized = false;
 
 export async function setCache() {
     try{
+        // Wait for database connection
+        if (mongoose.connection.readyState !== 1) {
+            await new Promise((resolve) => {
+                if (mongoose.connection.readyState === 1) {
+                    resolve();
+                } else {
+                    mongoose.connection.once('connected', resolve);
+                }
+            });
+        }
+        
         const data = await AccessPolicies.find({}).lean()
         cache.clear();
         data.forEach((policies)=>{
@@ -16,14 +30,21 @@ export async function setCache() {
             const roleCache = cache.get(role);
             roleCache[policies.modelName] = policies;
         });
+        cacheInitialized = true;
     }
     catch (error) {
-        console.log(error)
+        console.log('Cache initialization error:', error.message)
     }
 }
 
 export function getPolicy (role,modelName){
     try{
+        // Check if cache is initialized
+        if (!cacheInitialized) {
+            console.log('Cache not initialized yet, returning null');
+            return null;
+        }
+        
         // Use role ID as string, not toLowerCase
         const roleCache = cache.get(role.toString());
         if(!roleCache) {

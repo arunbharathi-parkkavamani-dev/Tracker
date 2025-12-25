@@ -32,6 +32,8 @@ export default async function runRegistry({
   const rules = policy?.conditions?.[action];
   if (!Array.isArray(rules) || rules.length === 0) return result;
 
+  const filters = [];
+
   // Process every condition entry
   for (const rule of rules) {
     if (!rule.registry) continue;
@@ -73,14 +75,19 @@ export default async function runRegistry({
     }
 
     // -------------------------------------------------------
-    // Any other registry can override fields / filter
-    // outcome format from custom registry:
-    // { fields? , filter? }
+    // Handle registry outcomes
     // -------------------------------------------------------
-    if (outcome && typeof outcome === "object") {
-      if (outcome.fields) result.fields = outcome.fields;
-      if (outcome.filter) result.filter = outcome.filter;
+    if (outcome && typeof outcome === "object" && outcome.filter) {
+      filters.push(outcome.filter);
     }
+    if (outcome && typeof outcome === "object" && outcome.fields) {
+      result.fields = outcome.fields;
+    }
+  }
+
+  // Combine all filters with $or
+  if (filters.length > 0) {
+    result.filter = filters.length === 1 ? filters[0] : { $or: filters };
   }
 
   return result;
