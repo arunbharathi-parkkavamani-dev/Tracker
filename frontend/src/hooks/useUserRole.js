@@ -29,5 +29,5 @@ export const useUserRole = () => {
 
     }, [user]);
 
-    return {userRole, loading, error};
+    return {userRole, loading, error, userId: user?._id};
 }

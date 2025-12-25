@@ -34,15 +34,15 @@ const Profile = () => {
     }
   };
 
-  if (loading) return <div className="p-4">Loading profile...</div>;
-  if (!employee) return <div className="p-4">Profile not found</div>;
+  if (loading) return <div className="p-4 text-black dark:text-white bg-white dark:bg-black">Loading profile...</div>;
+  if (!employee) return <div className="p-4 text-black dark:text-white bg-white dark:bg-black">Profile not found</div>;
 
   // Helper function to render field
   const renderField = (label, value) => (
     <div className="space-y-2">
       <label className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">{label}</label>
-      <div className="p-3 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 rounded-xl border border-gray-200 dark:border-gray-600">
-        <p className="text-gray-800 dark:text-white font-medium">
+      <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600">
+        <p className="text-black dark:text-white font-medium">
           {value || "Not provided"}
         </p>
       </div>
@@ -177,10 +177,10 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 p-6">
+    <div className="min-h-screen bg-white dark:bg-black p-6">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-3xl shadow-2xl p-8 mb-8 border border-white/20">
+        <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-700 rounded shadow-lg p-8 mb-8">
           <div className="flex flex-col lg:flex-row items-center gap-6">
             <div className="relative">
               <ProfileImage 
@@ -190,7 +190,7 @@ const Profile = () => {
                 size="xl"
                 className="shadow-lg"
               />
-              <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-green-500 rounded-full border-4 border-white flex items-center justify-center">
+              <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-blue-800 dark:bg-blue-600 rounded-full border-4 border-white dark:border-black flex items-center justify-center">
                 <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
@@ -198,7 +198,7 @@ const Profile = () => {
             </div>
             
             <div className="flex-1 text-center lg:text-left">
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+              <h1 className="text-4xl font-bold text-blue-800 dark:text-blue-400 mb-2">
                 {employee.basicInfo?.firstName} {employee.basicInfo?.lastName}
               </h1>
               <p className="text-xl text-gray-600 dark:text-gray-300 mb-2">
@@ -211,7 +211,7 @@ const Profile = () => {
             
             <button
               onClick={() => setEditing(!editing)}
-              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+              className="px-6 py-3 bg-blue-800 hover:bg-blue-900 dark:bg-blue-600 dark:hover:bg-blue-500 text-white font-semibold rounded transition-all duration-200 shadow-lg"
             >
               {editing ? "Cancel" : "Edit Profile"}
             </button>
@@ -233,14 +233,14 @@ const Profile = () => {
         {/* Profile Completion Status */}
         {!editing && (
           <div className="mb-8">
-            <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-3xl shadow-xl p-6 border border-white/20">
+            <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-700 rounded shadow-lg p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Profile Completion</h3>
-                <span className="text-2xl font-bold text-blue-600">{Math.round(calculateProfileCompletion(employee))}%</span>
+                <h3 className="text-lg font-semibold text-black dark:text-white">Profile Completion</h3>
+                <span className="text-2xl font-bold text-blue-800 dark:text-blue-400">{Math.round(calculateProfileCompletion(employee))}%</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-3">
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
                 <div 
-                  className="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all duration-500"
+                  className="bg-blue-800 dark:bg-blue-600 h-3 rounded-full transition-all duration-500"
                   style={{ width: `${calculateProfileCompletion(employee)}%` }}
                 ></div>
               </div>
@@ -255,14 +255,14 @@ const Profile = () => {
         {!editing && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Basic Information */}
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-3xl shadow-xl p-8 border border-white/20">
+          <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-700 rounded shadow-lg p-8">
             <div className="flex items-center mb-6">
-              <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-xl flex items-center justify-center mr-4">
-                <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded flex items-center justify-center mr-4">
+                <svg className="w-6 h-6 text-blue-800 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Basic Information</h2>
+              <h2 className="text-2xl font-bold text-black dark:text-white">Basic Information</h2>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -281,14 +281,14 @@ const Profile = () => {
           </div>
 
           {/* Professional Information */}
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-3xl shadow-xl p-8 border border-white/20">
+          <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-700 rounded shadow-lg p-8">
             <div className="flex items-center mb-6">
-              <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900 rounded-xl flex items-center justify-center mr-4">
-                <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded flex items-center justify-center mr-4">
+                <svg className="w-6 h-6 text-blue-800 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 00-2 2H6a2 2 0 00-2-2V4m8 0H8m0 0v2m0 0V4m0 2v2m0-2h8m-8 2H8" />
                 </svg>
               </div>
-              <h2 className="text-xl font-bold text-gray-800 dark:text-white">Professional</h2>
+              <h2 className="text-xl font-bold text-black dark:text-white">Professional</h2>
             </div>
             
             <div className="space-y-4">
@@ -310,14 +310,14 @@ const Profile = () => {
           </div>
 
           {/* Account Details */}
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-3xl shadow-xl p-8 border border-white/20">
+          <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-700 rounded shadow-lg p-8">
             <div className="flex items-center mb-6">
-              <div className="w-10 h-10 bg-green-100 dark:bg-green-900 rounded-xl flex items-center justify-center mr-4">
-                <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded flex items-center justify-center mr-4">
+                <svg className="w-6 h-6 text-blue-800 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                 </svg>
               </div>
-              <h2 className="text-xl font-bold text-gray-800 dark:text-white">Account Details</h2>
+              <h2 className="text-xl font-bold text-black dark:text-white">Account Details</h2>
             </div>
             
             <div className="space-y-4">
@@ -330,14 +330,14 @@ const Profile = () => {
           </div>
 
           {/* Personal Documents */}
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-3xl shadow-xl p-8 border border-white/20">
+          <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-700 rounded shadow-lg p-8">
             <div className="flex items-center mb-6">
-              <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900 rounded-xl flex items-center justify-center mr-4">
-                <svg className="w-6 h-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded flex items-center justify-center mr-4">
+                <svg className="w-6 h-6 text-blue-800 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <h2 className="text-xl font-bold text-gray-800 dark:text-white">Documents</h2>
+              <h2 className="text-xl font-bold text-black dark:text-white">Documents</h2>
             </div>
             
             <div className="space-y-4">

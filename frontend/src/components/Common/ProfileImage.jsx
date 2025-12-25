@@ -1,5 +1,7 @@
 import { useState } from 'react';
 
+const baseUrl = "http://192.168.29.71:3000"
+
 const ProfileImage = ({ 
   profileImage, 
   firstName, 
@@ -21,7 +23,7 @@ const ProfileImage = ({
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
     const filename = typeof imagePath === 'string' ? imagePath.split('/').pop() : imagePath;
-    return `http://10.230.123.208:3000/api/files/render/profile/${filename}`;
+    return `${baseUrl}/api/files/render/profile/${filename}`;
   };
 
   const getInitials = () => {
@@ -42,7 +44,7 @@ const ProfileImage = ({
   }
 
   return (
-    <div className={`${sizes[size]} bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center ${className}`}>
+    <div className={`${sizes[size]} bg-blue-800 dark:bg-blue-600 rounded-full flex items-center justify-center ${className}`}>
       <span className={`font-bold text-white ${sizes[size].split(' ')[2]}`}>
         {getInitials()}
       </span>

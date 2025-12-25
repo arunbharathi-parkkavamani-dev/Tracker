@@ -32,11 +32,13 @@ const BaseLayout = () => {
 
   // Default layout for logged-in users
   return (
-    <div className="flex dark:bg-black dark:text-white">
+    <div className="flex h-screen dark:bg-black dark:text-white">
       <Sidebar/>
-      <main className="flex-1 max-h-screen overflow-auto bg-gray-300 dark:bg-black">
+      <main className="flex-1 flex flex-col overflow-hidden bg-gray-300 dark:bg-black lg:ml-0">
         <TopNavBar />
-        {element}
+        <div className="flex-1 overflow-y-auto lg:pl-0">
+          {element}
+        </div>
       </main>
     </div>
   );

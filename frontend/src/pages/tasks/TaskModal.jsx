@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../context/authProvider";
 import axiosInstance from "../../api/axiosInstance";
 import FloatingCard from "../../components/Common/FloatingCard";
@@ -6,6 +6,7 @@ import InlineEdit from "../../components/Common/InLineEdit";
 import { updateTaskById } from "./updateTaskById";
 import { MdAdd, MdPlayArrow, MdSchedule, MdFlag, MdLabel, MdPersonAdd, MdMoreVert, MdContentCopy, MdDelete } from "react-icons/md";
 import toast from "react-hot-toast";
+import ShareButton from "../../utils/Sharebutton";
 
 const TaskModal = ({ task, onClose, onUpdate }) => {
   const { user } = useAuth();
@@ -15,14 +16,66 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
   const [loading, setLoading] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [employees, setEmployees] = useState([]);
+  const [showAssignDropdown, setShowAssignDropdown] = useState(false);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     if (task) {
-      setFormData(task);
+      // Fetch task with proper population for assignedTo
+      fetchTaskWithPopulation();
       fetchComments();
       fetchEmployees();
     }
   }, [task]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowAssignDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const fetchTaskWithPopulation = async () => {
+    try {
+      const populateFields = {
+        'assignedTo': 'basicInfo.firstName,basicInfo.lastName,basicInfo.profileImage',
+        'createdBy': 'basicInfo.firstName,basicInfo.lastName'
+      };
+      const response = await axiosInstance.get(
+        `/populate/read/tasks/${task._id}?populateFields=${encodeURIComponent(JSON.stringify(populateFields))}`
+      );
+      
+      let taskData = response.data.data;
+      
+      // If assignedTo is still array of strings, manually populate
+      if (taskData.assignedTo && taskData.assignedTo.length > 0 && typeof taskData.assignedTo[0] === 'string') {
+        const populatedAssignedTo = await Promise.all(
+          taskData.assignedTo.map(async (userId) => {
+            try {
+              const userResponse = await axiosInstance.get(`/populate/read/employees/${userId}?fields=basicInfo.firstName,basicInfo.lastName,basicInfo.profileImage`);
+              return userResponse.data.data;
+            } catch (error) {
+              console.error('Error fetching user:', error);
+              return { _id: userId, basicInfo: {} };
+            }
+          })
+        );
+        taskData.assignedTo = populatedAssignedTo;
+      }
+      
+      setFormData(taskData);
+    } catch (error) {
+      console.error('Error fetching task with population:', error);
+      setFormData(task); // Fallback to original task
+    }
+  };
 
   const fetchEmployees = async () => {
     try {
@@ -100,11 +153,38 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
     }
   };
 
+  const handleUnassignUser = async (userId) => {
+    try {
+      const currentAssigned = (formData.assignedTo || []).filter(Boolean);
+      const updatedAssigned = currentAssigned.filter(u => u._id !== userId);
+      await updateTaskById(task._id, { assignedTo: updatedAssigned.map(u => u._id) });
+      
+      // Update local state only
+      setFormData(prev => ({ 
+        ...prev, 
+        assignedTo: updatedAssigned 
+      }));
+      toast.success('User unassigned successfully');
+    } catch (error) {
+      toast.error('Failed to unassign user');
+    }
+  };
+
   const handleAssignUser = async (userId) => {
     try {
       const currentAssigned = (formData.assignedTo || []).filter(Boolean);
       const updatedAssigned = [...currentAssigned.map(u => u._id), userId];
-      await handleFieldUpdate('assignedTo', updatedAssigned);
+      await updateTaskById(task._id, { assignedTo: updatedAssigned });
+      
+      // Fetch user details and update local state
+      const userResponse = await axiosInstance.get(`/populate/read/employees/${userId}?fields=basicInfo.firstName,basicInfo.lastName,basicInfo.profileImage`);
+      const newUser = userResponse.data.data;
+      
+      setFormData(prev => ({ 
+        ...prev, 
+        assignedTo: [...currentAssigned, newUser]
+      }));
+      toast.success('User assigned successfully');
     } catch (error) {
       toast.error('Failed to assign user');
     }
@@ -134,21 +214,14 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
     if (!newComment.trim()) return;
     setLoading(true);
     try {
-      let threadId = task.commentsThread;
-      
-      if (!threadId) {
-        const threadResponse = await axiosInstance.post('/populate/create/commentsthreads', {
-          taskId: task._id,
-          comments: []
-        });
-        threadId = threadResponse.data.data._id;
-        
-        await axiosInstance.put(`/populate/update/tasks/${task._id}`, {
-          commentsThread: threadId
-        });
+      // Comment thread should already exist from task creation
+      if (!task.commentsThread) {
+        console.error('No comment thread found for task');
+        toast.error('Comment thread not found');
+        return;
       }
 
-      const finalThreadId = typeof threadId === 'object' ? threadId._id : threadId;
+      const finalThreadId = typeof task.commentsThread === 'object' ? task.commentsThread._id : task.commentsThread;
       await axiosInstance.put(`/populate/update/commentsthreads/${finalThreadId}`, {
         $push: {
           comments: {
@@ -164,6 +237,7 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
       onUpdate();
     } catch (error) {
       console.error("Error adding comment:", error);
+      toast.error('Failed to add comment');
     } finally {
       setLoading(false);
     }
@@ -198,31 +272,89 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
         </select>
         
         <div className="flex items-center gap-2 flex-1">
-          {formData.assignedTo?.filter(Boolean).length > 0 ? (
-            formData.assignedTo.filter(Boolean).slice(0, 2).map((assignee, index) => (
-              <div
-                key={assignee._id || index}
-                className="w-8 h-8 rounded-full bg-blue-500 text-white text-sm flex items-center justify-center"
+          <div className="relative" ref={dropdownRef}>
+            {formData.assignedTo?.filter(Boolean).length > 0 ? (
+              formData.assignedTo.filter(Boolean).length === 1 ? (
+                // Single user - clickable to show dropdown
+                <div 
+                  className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowAssignDropdown(!showAssignDropdown);
+                  }}
+                  title="Click to manage assignment"
+                >
+                  {formData.assignedTo[0].basicInfo?.profileImage ? (
+                    <img
+                      src={`http://10.232.224.208:3000/api/files/render/profile/${typeof formData.assignedTo[0].basicInfo.profileImage === 'string' ? formData.assignedTo[0].basicInfo.profileImage.split('/').pop() : formData.assignedTo[0].basicInfo.profileImage}`}
+                      alt={formData.assignedTo[0].basicInfo?.firstName || 'User'}
+                      className="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-blue-500 text-white text-sm flex items-center justify-center border-2 border-white shadow-sm">
+                      {formData.assignedTo[0].basicInfo?.firstName?.charAt(0) || 'U'}
+                    </div>
+                  )}
+                  <span className="text-sm font-medium text-gray-700">
+                    {formData.assignedTo[0].basicInfo?.firstName} {formData.assignedTo[0].basicInfo?.lastName}
+                  </span>
+                </div>
+              ) : (
+                // Multiple users - show count and dropdown toggle
+                <div 
+                  className="cursor-pointer hover:bg-gray-100 px-2 py-1 rounded"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowAssignDropdown(!showAssignDropdown);
+                  }}
+                >
+                  <span className="text-sm font-medium text-gray-700">
+                    {formData.assignedTo.filter(Boolean).length} users assigned
+                  </span>
+                </div>
+              )
+            ) : (
+              // No assignee - show dropdown toggle
+              <div 
+                className="cursor-pointer hover:bg-gray-100 px-2 py-1 rounded"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowAssignDropdown(!showAssignDropdown);
+                }}
               >
-                {assignee.basicInfo?.firstName?.charAt(0) || 'U'}
+                <span className="text-gray-500 text-sm">No assignee</span>
               </div>
-            ))
-          ) : (
-            <span className="text-gray-500 text-sm">No assignee</span>
-          )}
-          
-          <select
-            onChange={(e) => e.target.value && handleAssignUser(e.target.value)}
-            className="text-sm border rounded px-2 py-1"
-            value=""
-          >
-            <option value="">Assign to...</option>
-            {employees.map(emp => (
-              <option key={emp._id} value={emp._id}>
-                {emp.basicInfo?.firstName} {emp.basicInfo?.lastName}
-              </option>
-            ))}
-          </select>
+            )}
+            
+            {showAssignDropdown && (
+              <div className="absolute top-full left-0 mt-1 bg-white border rounded shadow-lg py-1 z-20 min-w-48">
+                {employees.map(emp => {
+                  const isAssigned = formData.assignedTo?.some(u => u._id === emp._id);
+                  return (
+                    <div
+                      key={emp._id}
+                      className="flex items-center justify-between px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (isAssigned) {
+                          handleUnassignUser(emp._id);
+                        } else {
+                          handleAssignUser(emp._id);
+                        }
+                      }}
+                    >
+                      <span className="text-sm">
+                        {emp.basicInfo?.firstName} {emp.basicInfo?.lastName}
+                      </span>
+                      {isAssigned && (
+                        <span className="text-green-500 font-bold">✓</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
           
           {formData.createdBy?._id !== user.id && !formData.followers?.includes(user.id) && (
             <button
@@ -244,13 +376,9 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
             
             {showMoreMenu && (
               <div className="absolute right-0 top-8 bg-white border rounded shadow-lg py-1 z-10">
-                <button
-                  onClick={copyTaskUrl}
-                  className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 w-full text-left"
-                >
-                  <MdContentCopy size={16} />
-                  Copy URL
-                </button>
+                <div className="px-3 py-2">
+                  <ShareButton model="tasks" id={task._id} variant="button" className="text-sm" />
+                </div>
                 <button
                   onClick={deleteTask}
                   className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 w-full text-left text-red-600"
@@ -284,7 +412,7 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
               <h3 className="font-semibold text-gray-700 mb-2">Category</h3>
               <div className="text-blue-600">
                 <InlineEdit
-                  value={formData.category || 'Support request'}
+                  value={formData.projectTypeId?.name || 'Support request'}
                   onSave={(value) => handleFieldUpdate('category', value)}
                   canEdit={true}
                 />

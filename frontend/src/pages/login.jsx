@@ -41,33 +41,33 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-200 flex items-center justify-center shadow-lg">
-      <div className="bg-gray-50 p-8 rounded-lg shadow-lg w-full max-w-md">
+    <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
+      <div className="bg-white dark:bg-black p-8 border border-gray-200 dark:border-gray-700 rounded shadow-lg w-full max-w-md">
         <div className="text-center mb-6">
           <img src={LMXLogo} alt="LMX Logo" className="h-16 mx-auto mb-4" />
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded p-3 mb-4">
-            <p className="text-red-700 text-sm">{error}</p>
+          <div className="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded p-3 mb-4">
+            <p className="text-black dark:text-white text-sm">{error}</p>
           </div>
         )}
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-black dark:text-white mb-1">
               Email
             </label>
             <input
               type="email"
               value={workEmail}
               onChange={(e) => setWorkEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-black text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-800 dark:focus:ring-blue-600"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-black dark:text-white mb-1">
               Password
             </label>
             <input
@@ -75,14 +75,14 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-black text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-800 dark:focus:ring-blue-600"
             />
           </div>
 
           <button
             onClick={handleLogin}
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+            className="w-full bg-blue-800 text-white py-2 rounded hover:bg-blue-900 dark:bg-blue-600 dark:hover:bg-blue-500 disabled:opacity-50"
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>

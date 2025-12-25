@@ -48,25 +48,13 @@ const CreateTaskModal = ({ onClose, onCreated }) => {
     setLoading(true);
     
     try {
-      // Create comments thread first
-      const threadResponse = await axiosInstance.post('/populate/create/commentsthreads', {
-        taskId: null, // Will be updated after task creation
-        comments: []
-      });
-
       const taskData = {
         ...formData,
-        createdBy: user.id,
-        commentsThread: threadResponse.data.data._id
+        createdBy: user.id
       };
 
-      const taskResponse = await axiosInstance.post('/populate/create/tasks', taskData);
+      await axiosInstance.post('/populate/create/tasks', taskData);
       
-      // Update comments thread with task ID
-      await axiosInstance.put(`/populate/update/commentsthreads/${threadResponse.data.data._id}`, {
-        taskId: taskResponse.data.data._id
-      });
-
       onCreated();
       onClose();
     } catch (error) {

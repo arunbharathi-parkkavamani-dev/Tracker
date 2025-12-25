@@ -5,6 +5,8 @@ let authContextLogout = null;
 let failedRequestCount = 0;
 const MAX_FAILED_REQUESTS = 5;
 
+const baseUrl = "http://192.168.29.71:3000"
+
 export const setAuthLogout = (logoutFn) => {
   authContextLogout = logoutFn;
 };
@@ -22,9 +24,13 @@ const incrementFailedCount = async () => {
 };
 
 const forceLogout = async () => {
+  // Temporarily disabled force logout
+  console.log('Force logout disabled temporarily');
+  return;
+  
   try {
     // Call logout API
-    await axios.post("https://tracker-mxp9.onrender.com/api/auth/logout", {}, {
+    await axios.post(`${baseUrl}/api/auth/logout`, {}, {
       headers: {
         'x-device-uuid': getDeviceUUID(),
         'Authorization': `Bearer ${Cookies.get('auth_token') || localStorage.getItem('auth_token')}`
@@ -52,7 +58,7 @@ const forceLogout = async () => {
 };
 
 const axiosInstance = axios.create({
-  baseURL: "https://tracker-mxp9.onrender.com/api",
+  baseURL: `${baseUrl}/api`,
   timeout: 100000,
   withCredentials: true,
 });
@@ -104,13 +110,17 @@ axiosInstance.interceptors.response.use(
 
     // Handle any 401 response - clear cookies and redirect
     if (error.response?.status === 401) {
+      // Temporarily disabled 401 handling
+      console.log('401 handling disabled temporarily');
+      return Promise.reject(error);
+      
       // Try refresh only once if token is expired
       if (errorData?.expired && !originalRequest._retry) {
         originalRequest._retry = true;
         
         try {
           const refreshResponse = await axios.post(
-            "https://tracker-mxp9.onrender.com/api/auth/refresh",
+            `${baseUrl}/api/auth/refresh`,
             {},
             { 
               withCredentials: true,
@@ -120,6 +130,7 @@ axiosInstance.interceptors.response.use(
           
           if (refreshResponse.data.accessToken) {
             Cookies.set("auth_token", refreshResponse.data.accessToken);
+            localStorage.setItem('auth_token', refreshResponse.data.accessToken);
             originalRequest.headers.Authorization = `Bearer ${refreshResponse.data.accessToken}`;
             resetFailedCount(); // Reset on successful refresh
             return axiosInstance(originalRequest);
@@ -135,7 +146,8 @@ axiosInstance.interceptors.response.use(
 
     // Track failed requests (4xx, 5xx errors)
     if (error.response?.status >= 400) {
-      await incrementFailedCount();
+      // Temporarily disabled failed request tracking
+      // await incrementFailedCount();
     }
 
     return Promise.reject(error);

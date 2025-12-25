@@ -3,12 +3,29 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import axiosInstance from "../../api/axiosInstance";
 import TaskModal from "./TaskModal";
 import FloatingCard from "../../components/Common/FloatingCard";
+import { useAuth } from "../../context/authProvider.jsx";
+import ShareButton from "../../utils/Sharebutton.jsx";
 
 const TaskDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
   const [task, setTask] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Check if this is direct URL access (not from modal)
+  const isDirectAccess = !location.state?.fromModal && !location.state?.fromNotification;
+
+  useEffect(() => {
+    // If direct access, navigate to dashboard first, then show modal
+    if (isDirectAccess) {
+      navigate('/dashboard', { 
+        replace: true, 
+        state: { showTaskModal: true, taskId: id }
+      });
+    }
+  }, [isDirectAccess, navigate, id]);
 
   useEffect(() => {
     const fetchTask = async () => {
@@ -39,11 +56,19 @@ const TaskDetailPage = () => {
   }, [id]);
 
   const handleClose = () => {
-    navigate('/tasks');
+    if (isDirectAccess) {
+      navigate('/dashboard'); // Go to dashboard for direct access
+    } else {
+      navigate(-1); // Go back for modal access
+    }
   };
 
   const handleUpdate = () => {
-    navigate('/tasks');
+    if (isDirectAccess) {
+      navigate('/dashboard');
+    } else {
+      navigate(-1);
+    }
   };
 
   if (loading) {
@@ -62,31 +87,27 @@ const TaskDetailPage = () => {
     );
   }
 
-  const location = useLocation();
-  const isDirectNavigation = location.pathname.includes('/tasks/');
-
-  if (isDirectNavigation) {
-    // Direct navigation - show as floating card
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
-        <FloatingCard onClose={handleClose}>
-          <TaskModal
-            task={task}
-            onClose={handleClose}
-            onUpdate={handleUpdate}
-          />
-        </FloatingCard>
-      </div>
-    );
+  // For direct access, don't render anything - let dashboard handle it
+  if (isDirectAccess) {
+    return null;
   }
 
-  // Modal mode - return just the TaskModal
+  // Always show FloatingCard - no background content needed
   return (
-    <TaskModal
-      task={task}
-      onClose={handleClose}
-      onUpdate={handleUpdate}
-    />
+    <FloatingCard onClose={handleClose}>
+      <div className="relative">
+        {isDirectAccess && (
+          <div className="absolute top-2 right-2 z-10">
+            <ShareButton model="tasks" id={id} />
+          </div>
+        )}
+        <TaskModal
+          task={task}
+          onClose={handleClose}
+          onUpdate={handleUpdate}
+        />
+      </div>
+    </FloatingCard>
   );
 };
 
