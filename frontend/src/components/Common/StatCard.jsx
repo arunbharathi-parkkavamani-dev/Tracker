@@ -1,25 +1,23 @@
 import React from "react";
 
-export default function StatCard({ title, value, subtitle, icon: Icon, colors }) {
-  const gradient = `linear-gradient(135deg, ${colors.join(", ")})`;
-
+export default function StatCard({ title, value, subtitle, icon: Icon }) {
   return (
-    <div
-      className="p-4 rounded-xl text-white shadow-lg dark:shadow-[0_0_15px_rgba(255,255,255,0.3)] flex items-center gap-4 cursor-pointer min-w-[250px] max-w-[250px] transition-transform hover:scale-105 duration-300"
+    <div className="bg-white dark:bg-zinc-900
+                    border border-gray-200 dark:border-zinc-800
+                    rounded-xl p-4 shadow-sm hover:shadow-md transition">
 
-      style={{ background: gradient }}
-    >
-      {/* Icon */}
-      <div className="bg-white/20 p-3 rounded-lg">
-        <Icon size={28} color="#fff" />
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-gray-500">{title}</p>
+        <div className="p-2 rounded-lg bg-gray-100 dark:bg-zinc-800">
+          <Icon size={18} className="text-gray-600 dark:text-gray-300" />
+        </div>
       </div>
 
-      {/* Text */}
-      <div>
-        <p className="text-sm opacity-80">{title}</p>
-        <p className="text-2xl font-semibold">{value}</p>
-        <p className="text-xs opacity-75">{subtitle}</p>
-      </div>
+      <p className="text-2xl font-semibold mt-3">{value}</p>
+
+      {subtitle && (
+        <p className="text-xs text-gray-400 mt-1">{subtitle}</p>
+      )}
     </div>
   );
 }
