@@ -1,20 +1,20 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "../api/axiosInstance";
-import { useNavigate } from "react-router-dom";
-import * as MD from "react-icons/md"; // all material icons
+import { useNavigate, useLocation } from "react-router-dom";
+import * as MD from "react-icons/md";
 
 const Sidebar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [navItems, setNavItems] = useState([]);
 
   useEffect(() => {
     const fetchNavItems = async () => {
       try {
-        const response = await axiosInstance.get("/populate/read/sidebars");
-        // your API returns { success, count, data: [...] }
-        setNavItems(response.data.data || []); 
-      } catch (error) {
-        console.error("Error fetching nav items:", error);
+        const res = await axiosInstance.get("/populate/read/sidebars");
+        setNavItems(res.data?.data || []);
+      } catch (err) {
+        console.error("Sidebar fetch failed", err);
       }
     };
 
@@ -22,30 +22,50 @@ const Sidebar = () => {
   }, []);
 
   return (
-    <div className="w-52 h-screen bg-blue-600 shadow-lg p-4 dark:bg-blue-900 text-white">
-      {navItems.length > 0 ? (
-        <ul className="space-y-2 dark:text-white">
-          {navItems.map((item) => {
-            // Dynamically pick the icon
+    <aside className="w-60 h-screen bg-blue-700 dark:bg-blue-950 
+                      text-white flex flex-col border-r border-blue-800">
+
+      {/* -------- Brand / Logo -------- */}
+      <div className="px-4 py-5 text-xl font-semibold tracking-wide">
+        LMX<span className="text-blue-300">Tracker</span>
+      </div>
+
+      {/* -------- Navigation -------- */}
+      <nav className="flex-1 px-2 space-y-1">
+        {navItems.length === 0 ? (
+          <p className="text-blue-200 text-sm px-2">Loading…</p>
+        ) : (
+          navItems.map(item => {
             const Icon = MD[item.icon?.iconName] || MD.MdHelpOutline;
+            const isActive = location.pathname === item.route;
+
             return (
-              <li
+              <div
                 key={item._id}
                 onClick={() => navigate(item.route)}
-                className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-blue-400 transition dark:text-white"
+                className={`
+                  flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer
+                  transition-all
+                  ${isActive
+                    ? "bg-blue-600 text-white shadow-inner"
+                    : "text-blue-100 hover:bg-blue-600/70"}
+                `}
               >
-                <Icon className="text-xl text-white dark:text-white" />
-                <span className="text-white font-medium dark:text-white">
+                <Icon className="text-lg" />
+                <span className="text-sm font-medium">
                   {item.title}
                 </span>
-              </li>
+              </div>
             );
-          })}
-        </ul>
-      ) : (
-        <p className="text-gray-500">Loading...</p>
-      )}
-    </div>
+          })
+        )}
+      </nav>
+
+      {/* -------- Footer (optional but 🔥) -------- */}
+      <div className="px-4 py-3 text-xs text-blue-300 border-t border-blue-800">
+        © {new Date().getFullYear()} LMX
+      </div>
+    </aside>
   );
 };
 
