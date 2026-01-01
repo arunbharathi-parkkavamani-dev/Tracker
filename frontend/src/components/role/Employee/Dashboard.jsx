@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 
 import StatCard from "../../Common/StatCard";
-import PriorityTasks from "./PriorityTasks";
+import PriorityTasks from "../../Common/PriorityTasks";
 import RecentActivity from "./RecentActivity";
 
 export default function EmployeeDashboard({ stats }) {
