@@ -26,6 +26,7 @@ import payrolls from "./Payroll.js";
 import tickets from "./Ticket.js";
 import shifts from "./Shift.js";
 import hrpolicies from "./HRPolicy.js";
+import milestones from "./MileStone.js";
 
 const models = {
   accesspolicies,
