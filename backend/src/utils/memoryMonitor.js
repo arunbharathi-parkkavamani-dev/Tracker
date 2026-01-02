@@ -58,8 +58,8 @@ class MemoryMonitor {
       const { stats, warnings } = this.checkMemoryHealth();
       
       if (warnings.length > 0) {
-        console.warn('⚠️ Memory warnings:', warnings);
-        console.log('📊 Memory stats:', stats);
+        // console.warn('⚠️ Memory warnings:', warnings);
+        // console.log('📊 Memory stats:', stats);
         
         // Auto garbage collection if heap usage is high
         if (stats.heapUsed > 512 && Date.now() - this.lastGC > 300000) { // 5 minutes

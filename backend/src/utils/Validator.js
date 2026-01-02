@@ -179,13 +179,26 @@ export default function validator({
   policy,
   getPolicy, // needed for aggregation
 }) {
+  console.log('=== VALIDATOR DEBUG ===');
+  console.log('Action:', action);
+  console.log('Model:', modelName);
+  console.log('User Role:', role);
+  console.log('Policy Role:', policy?.role);
+  console.log('Policy exists:', !!policy);
+  console.log('=======================');
   // If no policy, allow all operations (temporary fix)
   if (!policy) {
     // console.warn(`⚠️ No policy found for ${modelName}, allowing operation`);
     return { filter: filter || {}, fields, body };
   }
   
-  if (policy.role !== role) throw new Error(`⛔ Role mismatch`);
+  if (String(policy.role) !== String(role)) {
+    console.log('Role mismatch debug:');
+    console.log('Policy role:', policy.role);
+    console.log('User role:', role);
+    console.log('Policy:', JSON.stringify(policy, null, 2));
+    throw new Error(`⛔ Role mismatch`);
+  }
   if (policy.permissions?.[action] === false) {
     throw new Error(`⛔ '${role}' has no permission to ${action} '${modelName}'`);
   }

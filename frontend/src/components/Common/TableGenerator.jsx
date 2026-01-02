@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, Search, Filter, Download, RefreshCw } from 'lucide-react';
-import useOptimizedDataFetching from '../../hooks/useOptimizedDataFetching';
 import Pagination from './Pagination';
 
 const TableGenerator = ({ 
@@ -25,37 +24,23 @@ const TableGenerator = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Use optimized data fetching if model is provided, otherwise use local data
-  const {
-    data,
-    loading,
-    error,
-    pagination: paginationInfo,
-    handlePageChange,
-    handleItemsPerPageChange,
-    handleFilterChange,
-    handleSortChange,
-    handleRefresh,
-    handleSearch
-  } = model ? useOptimizedDataFetching(model, {
-    initialLimit: itemsPerPage,
-    initialFilters: filters,
-    enableCache: true,
-    backgroundRefresh: autoRefresh,
-    prefetchNext: true,
-    staleWhileRevalidate: true
-  }) : {
-    data: [],
-    loading: false,
-    error: null,
-    pagination: { currentPage: 1, totalPages: 1, totalItems: 0, itemsPerPage },
-    handlePageChange: () => {},
-    handleItemsPerPageChange: () => {},
-    handleFilterChange: () => {},
-    handleSortChange: () => {},
-    handleRefresh: () => {},
-    handleSearch: () => {}
-  };
+  // Use basic state management instead of optimized data fetching
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [paginationInfo, setPaginationInfo] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    itemsPerPage
+  });
+
+  const handlePageChange = () => {};
+  const handleItemsPerPageChange = () => {};
+  const handleFilterChange = () => {};
+  const handleSortChange = () => {};
+  const handleRefresh = () => {};
+  const handleSearch = () => {};
 
   // Auto-generate columns if not provided
   const autoColumns = data.length > 0 && columns.length === 0 

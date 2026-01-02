@@ -8,16 +8,16 @@ import populateHelper from "./routes/populateRoutes.js";
 import fileRoutes from "./routes/fileRoutes.js";
 import locationRoutes from "./routes/locationRoutes.js";
 import bankRoutes from "./routes/bankRoutes.js";
-import taskRoutes from "./routes/taskRoutes.js";
+
 import { apiHitLogger } from "./middlewares/apiHitLogger.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import connectDB from "./Config/ConnectDB.js";
 import cookieParser from "cookie-parser";
 import databaseIndexer from "./services/databaseIndexer.js";
-import cacheService from "./services/cacheService.js";
-import asyncNotificationService from "./services/asyncNotificationService.js";
-import computationService from "./services/computationService.js";
-import { smartCacheMiddleware, asyncProcessingMiddleware, cacheInvalidationMiddleware, compressionMiddleware } from "./middlewares/performanceMiddleware.js";
+
+
+
+
 import "./cron/AttendanceCron.js";
 
 // Memory optimization
@@ -48,6 +48,17 @@ const server = http.createServer(app);
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 
+// Debug middleware - log all requests
+app.use((req, res, next) => {
+  console.log('=== REQUEST RECEIVED ===');
+  console.log('Method:', req.method);
+  console.log('URL:', req.url);
+  console.log('Headers:', req.headers);
+  console.log('Body:', req.body);
+  console.log('========================');
+  next();
+});
+
 const allowedOrigins = [
   "https://lmx-tracker--p1hvjsjwqq.expo.app",
   "http://localhost:3000",
@@ -62,6 +73,7 @@ const lanRegex = /^http:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+):\d+$/;
 
 app.use(cors({
   origin: (origin, callback) => {
+    console.log('CORS Origin check:', origin);
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin) || lanRegex.test(origin)) {
       return callback(null, true);
@@ -74,16 +86,29 @@ app.use(cors({
 }));
 
 app.use(apiHitLogger);
-app.use(compressionMiddleware);
-app.use(asyncProcessingMiddleware);
+
+// Test endpoint to verify server is working
+app.get('/test', (req, res) => {
+  console.log('TEST ENDPOINT HIT');
+  res.json({ message: 'Server is working', timestamp: new Date().toISOString() });
+});
+
+
 
 // Routes
-app.use("/api/auth", AuthRouter);
-app.use("/api/populate", smartCacheMiddleware, cacheInvalidationMiddleware, populateHelper);
+app.use("/api/auth", (req, res, next) => {
+  console.log('=== AUTH ROUTER REACHED ===');
+  console.log('Auth Route - Method:', req.method);
+  console.log('Auth Route - URL:', req.url);
+  console.log('Auth Route - Body:', req.body);
+  console.log('===========================');
+  next();
+}, AuthRouter);
+app.use("/api/populate", populateHelper);
 app.use("/api/files", fileRoutes);
 app.use("/api", locationRoutes);
 app.use("/api", bankRoutes);
-app.use("/api", taskRoutes);
+
 
 app.use(errorHandler);
 
@@ -194,9 +219,7 @@ process.on('SIGTERM', async () => {
   
   // Close services
   await Promise.all([
-    new Promise(resolve => io.close(resolve)),
-    asyncNotificationService.shutdown(),
-    computationService.shutdown()
+    new Promise(resolve => io.close(resolve))
   ]);
   
   console.log('All services closed');

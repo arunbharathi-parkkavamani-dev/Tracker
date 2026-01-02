@@ -1,4 +1,5 @@
 import models from "../models/Collection.js";
+import { getDefaultPopulateFields } from "../Config/defaultPopulateFields.js";
 
 export default async function buildReportQuery({
   modelName,
@@ -35,27 +36,112 @@ export default async function buildReportQuery({
       }
     }
 
+    // Add population lookups BEFORE grouping
+    if (body.populate && Array.isArray(body.populate)) {
+      console.log('Adding populate lookups for:', body.populate);
+      body.populate.forEach(field => {
+        const lookupModel = getModelForField(field);
+        console.log(`Field: ${field}, LookupModel: ${lookupModel}`);
+        if (lookupModel) {
+          // Get default fields for this populate
+          const selectFields = getDefaultPopulateFields('tasks', field) || 'name';
+          console.log(`SelectFields for ${field}:`, selectFields);
+          
+          const lookupStage = {
+            $lookup: {
+              from: lookupModel,
+              localField: field,
+              foreignField: '_id',
+              as: field + 'Data',
+              pipeline: [
+                {
+                  $project: selectFields.split(',').reduce((acc, f) => {
+                    acc[f.trim()] = 1;
+                    return acc;
+                  }, { _id: 1 })
+                }
+              ]
+            }
+          };
+          console.log(`Lookup stage for ${field}:`, JSON.stringify(lookupStage, null, 2));
+          pipeline.push(lookupStage);
+          
+          // Unwind array fields like assignedTo to create separate documents for each assignee
+          if (field === 'assignedTo') {
+            pipeline.push({ $unwind: { path: `$${field}`, preserveNullAndEmptyArrays: true } });
+            pipeline.push({ $unwind: { path: `$${field}Data`, preserveNullAndEmptyArrays: true } });
+          }
+        }
+      });
+      console.log('Pipeline after populate:', JSON.stringify(pipeline, null, 2));
+    }
+
     // Handle type-based responses
     const type = body.type || 'summary'; // summary or details
 
     if (type === 'summary' && body.groupBy) {
       // Handle subGroupBy for nested grouping
       if (body.subGroupBy) {
+        // Use populated data for grouping if available
+        let groupByField = `$${body.groupBy}`;
+        if (body.populate && body.populate.includes(body.groupBy)) {
+          if (body.groupBy === 'assignedTo') {
+            groupByField = `$assignedToData.basicInfo.firstName`;
+          } else if (body.groupBy.endsWith('Id')) {
+            groupByField = `$${body.groupBy}Data.name`;
+          } else {
+            groupByField = `$${body.groupBy}Data.name`;
+          }
+        }
+        
+        let subGroupByField = `$${body.subGroupBy}`;
+        if (body.populate && body.populate.includes(body.subGroupBy)) {
+          if (body.subGroupBy === 'assignedTo') {
+            subGroupByField = `$${body.subGroupBy}Data.basicInfo.firstName`;
+          } else if (body.subGroupBy.endsWith('Id')) {
+            subGroupByField = `$${body.subGroupBy}Data.name`;
+          } else {
+            subGroupByField = `$${body.subGroupBy}Data.name`;
+          }
+        }
+          
         // First group by main field and subfield
         pipeline.push({
           $group: {
             _id: {
-              main: `$${body.groupBy}`,
-              sub: `$${body.subGroupBy}`
+              main: groupByField,
+              sub: subGroupByField,
+              originalTaskId: '$_id' // Keep original task ID for unique counting
             },
             count: { $sum: 1 }
           }
         });
+        
+        // Add the original task ID to the next stage
+        pipeline.push({
+          $addFields: {
+            originalTaskId: '$_id.originalTaskId'
+          }
+        });
+        
+        // Regroup to get proper structure
+        pipeline.push({
+          $group: {
+            _id: {
+              main: '$_id.main',
+              sub: '$_id.sub'
+            },
+            count: { $sum: '$count' },
+            originalTaskId: { $first: '$originalTaskId' }
+          }
+        });
+        console.log('Pipeline after first group:', JSON.stringify(pipeline, null, 2));  
 
         // Then group by main field and create sub counts
         const groupStage = {
           _id: '$_id.main',
-          total: { $sum: '$count' }
+          total: { $sum: 1 },
+          uniqueTasks: { $addToSet: '$originalTaskId' } // Track unique task IDs
         };
 
         // Create dynamic fields for each sub group value
@@ -71,6 +157,13 @@ export default async function buildReportQuery({
           }
         });
 
+        // Add actual unique task count
+        pipeline.push({
+          $addFields: {
+            total: { $size: '$uniqueTasks' }
+          }
+        });
+
         // Convert subGroups array to object fields
         pipeline.push({
           $addFields: {
@@ -80,7 +173,19 @@ export default async function buildReportQuery({
                   input: '$subGroups',
                   as: 'item',
                   in: {
-                    k: '$$item.key',
+                    k: { 
+                      $cond: {
+                        if: { $eq: ['$$item.key', null] },
+                        then: 'Unknown',
+                        else: {
+                          $cond: {
+                            if: { $isArray: '$$item.key' },
+                            then: { $arrayElemAt: ['$$item.key', 0] },
+                            else: { $toString: '$$item.key' }
+                          }
+                        }
+                      }
+                    },
                     v: '$$item.count'
                   }
                 }
@@ -151,18 +256,29 @@ export default async function buildReportQuery({
       // Sort by count descending
       pipeline.push({ $sort: { count: -1 } });
 
-    } else if (type === 'details') {
+    } else if (type === 'details' || type === 'list') {
       // Return detailed records with population
-      if (populateFields) {
-        populateFields.forEach(field => {
+      if (body.populate && Array.isArray(body.populate)) {
+        body.populate.forEach(field => {
           const lookupModel = getModelForField(field);
           if (lookupModel) {
+            // Get default fields for this populate
+            const selectFields = getDefaultPopulateFields(lookupModel.replace('s', ''), field) || 'name';
+            
             pipeline.push({
               $lookup: {
-                from: lookupModel.toLowerCase() + 's',
+                from: lookupModel,
                 localField: field,
                 foreignField: '_id',
-                as: field + 'Data'
+                as: field + 'Data',
+                pipeline: [
+                  {
+                    $project: selectFields.split(',').reduce((acc, f) => {
+                      acc[f.trim()] = 1;
+                      return acc;
+                    }, { _id: 1 })
+                  }
+                ]
               }
             });
           }
@@ -210,9 +326,14 @@ function getModelForField(field) {
     'assignedTo': 'employees',
     'createdBy': 'employees',
     'client': 'clients',
+    'clientId': 'clients',
     'department': 'departments',
     'role': 'roles',
-    'leaveType': 'leavetypes'
+    'leaveType': 'leavetypes',
+    'taskType': 'tasktypes',
+    'taskTypeId': 'tasktypes',
+    'projectType': 'projecttypes',
+    'projectTypeId': 'projecttypes'
   };
   return fieldModelMap[field];
 }

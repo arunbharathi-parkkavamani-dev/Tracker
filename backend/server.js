@@ -1,12 +1,29 @@
-// server.js
 import dotenv from "dotenv";
-import { server } from "./src/index.js";
+import { server, app } from "./src/index.js";
 import os from "os";
 import https from "https";
 import memoryMonitor from "./src/utils/memoryMonitor.js";
 
 dotenv.config();
 const PORT = process.env.PORT || 3000;
+
+// Add basic request logging at server level
+app.use((req, res, next) => {
+  console.log('=== SERVER LEVEL REQUEST ===');
+  console.log('Time:', new Date().toISOString());
+  console.log('Method:', req.method);
+  console.log('URL:', req.url);
+  console.log('IP:', req.ip);
+  console.log('Headers:', JSON.stringify(req.headers, null, 2));
+  console.log('============================');
+  next();
+});
+
+// Test endpoint to verify server is working
+app.get('/test', (req, res) => {
+  console.log('TEST ENDPOINT HIT');
+  res.json({ message: 'Server is working', timestamp: new Date().toISOString() });
+});
 
 // Memory optimization flags
 process.env.NODE_OPTIONS = '--max-old-space-size=4096 --expose-gc';
@@ -35,6 +52,7 @@ const getPublicIP = () =>
 
 // Start server with memory monitoring
 server.listen(PORT, "0.0.0.0", async () => {
+  console.log('=== SERVER STARTING ===');
   const localIP = getLocalIP();
   console.log(`✅ Server running on port ${PORT}`);
   console.log(`📡 Local Access:  http://localhost:${PORT}`);
@@ -53,7 +71,8 @@ server.listen(PORT, "0.0.0.0", async () => {
   
   // Log initial memory stats
   const initialStats = memoryMonitor.getMemoryStats();
-  console.log('📊 Initial memory:', initialStats);
+  console.log('=== SERVER READY ===');
+  // console.log('📊 Initial memory:', initialStats);
 });
 
 // Graceful shutdown with cleanup

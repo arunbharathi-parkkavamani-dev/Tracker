@@ -9,10 +9,19 @@ import { getDeviceInfo } from "../utils/deviceInfo.js";
 
 export const login = async (req, res, next) => {
   try {
-    const { workEmail, password, platform = "web", deviceUUID } = req.body;
+    console.log("Login attempt:", req.body);
+    console.log("Headers:", req.headers);
+    console.log("Content-Type:", req.headers['content-type']);
+    
+    const { workEmail, password, platform = "web" } = req.body;
+    const deviceUUID = req.headers['x-device-uuid'] || req.headers['deviceuuid'];
+    
+    if (!workEmail || !password) {
+      return res.status(400).json({ message: "Email and password are required" });
+    }
     
     if (!deviceUUID) {
-      return res.status(400).json({ message: "Device UUID is required" });
+      return res.status(400).json({ message: "Device UUID header is required" });
     }
 
     // 1. Validate user
@@ -108,7 +117,7 @@ export const authMiddleware = async (req, res, next) => {
     const token =
       req.cookies?.auth_token ||
       req.headers.authorization?.split(" ")[1];
-    const deviceUUID = req.headers['x-device-uuid'] || req.headers['X-Device-UUID'];
+    const deviceUUID = req.headers['x-device-uuid'] || req.headers['X-Device-UUID'] || req.headers['deviceuuid'];
 
     if (!token) return res.status(401).json({ message: "Unauthorized" });
     if (!deviceUUID) return res.status(401).json({ message: "Device UUID required" });
