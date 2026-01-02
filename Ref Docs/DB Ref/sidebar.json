@@ -5,39 +5,139 @@
       "iconName": "MdDashboard",
       "iconPackage": "react-icons/md"
     },
-    "route": "/dashboard",
-    "roles": ["Super Admin", "HR", "Manager", "Employee"],
-    "permissions": ["view_dashboard"]
+    "mainRoute": "/dashboard",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 1
   },
   {
-    "title": "Attendance",
+    "title": "Feed",
+    "icon": {
+      "iconName": "MdRssFeed",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/feed",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 2
+  },
+  {
+    "title": "Time & Attendance",
     "icon": {
       "iconName": "MdAccessTime",
       "iconPackage": "react-icons/md"
     },
-    "route": "/attendance",
-    "roles": ["Super Admin", "HR", "Employee"],
-    "permissions": ["view_attendance", "manage_attendance"]
+    "mainRoute": "/time-attendance",
+    "isParent": true,
+    "hasChildren": true,
+    "order": 3
   },
   {
-    "title": "Daily Tracker",
+    "title": "Attendance",
+    "icon": {
+      "iconName": "MdSchedule",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/attendance",
+    "parentId": "time-attendance",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 1
+  },
+  {
+    "title": "Attendance Reports",
+    "icon": {
+      "iconName": "MdAssessment",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/attendance-reports",
+    "parentId": "time-attendance",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 2
+  },
+  {
+    "title": "Leave & Regularization",
+    "icon": {
+      "iconName": "MdEventNote",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/leave-regularization",
+    "parentId": "time-attendance",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 3
+  },
+  {
+    "title": "Timesheet Logs",
+    "icon": {
+      "iconName": "MdHistory",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/timesheet-logs",
+    "parentId": "time-attendance",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 4
+  },
+  {
+    "title": "Daily Activity",
     "icon": {
       "iconName": "MdOutlineTrackChanges",
       "iconPackage": "react-icons/md"
     },
-    "route": "/daily-tracker",
-    "roles": ["Super Admin", "HR", "Manager", "Employee"],
-    "permissions": ["view_tracker", "update_tracker"]
+    "mainRoute": "/daily-activity",
+    "parentId": "time-attendance",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 5
   },
   {
-    "title": "Travel Expenses",
+    "title": "Tickets",
     "icon": {
-      "iconName": "MdFlightTakeoff",
+      "iconName": "MdConfirmationNumber",
       "iconPackage": "react-icons/md"
     },
-    "route": "/travel-expenses",
-    "roles": ["Super Admin", "HR", "Manager", "Employee"],
-    "permissions": ["submit_expense", "approve_expense"]
+    "mainRoute": "/tickets",
+    "isParent": true,
+    "hasChildren": true,
+    "order": 4
+  },
+  {
+    "title": "Ticket List",
+    "icon": {
+      "iconName": "MdList",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/tickets",
+    "parentId": "tickets",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 1
+  },
+  {
+    "title": "My Tickets",
+    "icon": {
+      "iconName": "MdPerson",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/tickets/my-tickets",
+    "parentId": "tickets",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 2
+  },
+  {
+    "title": "Ticket Reports",
+    "icon": {
+      "iconName": "MdAssessment",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/tickets/reports",
+    "parentId": "tickets",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 3
   },
   {
     "title": "Tasks",
@@ -45,38 +145,565 @@
       "iconName": "MdTask",
       "iconPackage": "react-icons/md"
     },
-    "route": "/tasks",
-    "roles": ["Super Admin", "Manager", "Employee"],
-    "permissions": ["view_tasks", "assign_tasks", "update_tasks"]
+    "mainRoute": "/tasks",
+    "isParent": true,
+    "hasChildren": true,
+    "order": 5
   },
   {
-    "title": "Me",
+    "title": "Task List",
+    "icon": {
+      "iconName": "MdList",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/tasks",
+    "parentId": "tasks",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 1
+  },
+  {
+    "title": "My Tasks",
     "icon": {
       "iconName": "MdPerson",
       "iconPackage": "react-icons/md"
     },
-    "route": "/me",
-    "roles": ["Super Admin", "HR", "Manager", "Employee"],
-    "permissions": ["view_profile", "update_profile"]
+    "mainRoute": "/tasks/my-tasks",
+    "parentId": "tasks",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 2
   },
   {
-    "title": "Salary Expense",
+    "title": "Task Reports",
+    "icon": {
+      "iconName": "MdAssessment",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/tasks/reports",
+    "parentId": "tasks",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 3
+  },
+  {
+    "title": "Payroll & Expenses",
     "icon": {
       "iconName": "MdAttachMoney",
       "iconPackage": "react-icons/md"
     },
-    "route": "/salary-expense",
-    "roles": ["Super Admin", "HR", "Manager"],
-    "permissions": ["view_salary", "manage_salary"]
+    "mainRoute": "/payroll-expenses",
+    "isParent": true,
+    "hasChildren": true,
+    "order": 6
   },
   {
+    "title": "Payroll",
+    "icon": {
+      "iconName": "MdPayment",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/payroll",
+    "parentId": "payroll-expenses",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 1
+  },
+  {
+    "title": "Expense Management",
+    "icon": {
+      "iconName": "MdReceipt",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/expense-management",
+    "parentId": "payroll-expenses",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 2
+  },
+  {
+    "title": "Profile",
+    "icon": {
+      "iconName": "MdPerson",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/profile",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 7
+  },
+  {
+    "title": "Policies",
+    "icon": {
+      "iconName": "MdPolicy",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/policies",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 8
+  },
+  {
+    "title": "Accounts",
+    "icon": {
+      "iconName": "MdAccountBalance",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/accounts",
+    "isParent": true,
+    "hasChildren": true,
+    "order": 9
+  },
+  {
+    "title": "Client Proforma List",
+    "icon": {
+      "iconName": "MdDescription",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/accounts/proforma",
+    "parentId": "accounts",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 1
+  },
+  {
+    "title": "Milestone Achievements",
+    "icon": {
+      "iconName": "MdFlag",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/accounts/milestones",
+    "parentId": "accounts",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 2
+  },
+  {
+    "title": "GST Reports",
+    "icon": {
+      "iconName": "MdAssessment",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/accounts/gst-reports",
+    "parentId": "accounts",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 3
+  },
+  {
+    "title": "Amendment Order Reports",
+    "icon": {
+      "iconName": "MdEdit",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/accounts/amendment-reports",
+    "parentId": "accounts",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 4
+  },
+  {
+    "title": "AMS Collection Reports",
+    "icon": {
+      "iconName": "MdCollections",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/accounts/ams-reports",
+    "parentId": "accounts",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 5
+  },
+  {
+    "title": "CRM",
+    "icon": {
+      "iconName": "MdPeople",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/crm",
+    "isParent": true,
+    "hasChildren": true,
+    "order": 10
+  },
+  {
+    "title": "Contacts",
+    "icon": {
+      "iconName": "MdContacts",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/crm/contacts",
+    "parentId": "crm",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 1
+  },
+  {
+    "title": "Time Logs",
+    "icon": {
+      "iconName": "MdAccessTime",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/crm/time-logs",
+    "parentId": "crm",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 2
+  },
+  {
+    "title": "Reports",
+    "icon": {
+      "iconName": "MdAssessment",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/crm/reports",
+    "parentId": "crm",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 3
+  },
+  {
+    "title": "Calendar",
+    "icon": {
+      "iconName": "MdCalendarToday",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/crm/calendar",
+    "parentId": "crm",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 4
+  },
+  {
+    "title": "Leads",
+    "icon": {
+      "iconName": "MdTrendingUp",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/crm/leads",
+    "parentId": "crm",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 5
+  },
+  {
+    "title": "Deals",
+    "icon": {
+      "iconName": "MdHandshake",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/crm/deals",
+    "parentId": "crm",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 6
+  },
+  {
+    "title": "Tasks",
+    "icon": {
+      "iconName": "MdTask",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/crm/tasks",
+    "parentId": "crm",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 7
+  },
+  {
+    "title": "Meetings",
+    "icon": {
+      "iconName": "MdMeeting",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/crm/meetings",
+    "parentId": "crm",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 8
+  },
+  {
+    "title": "Master",
+    "icon": {
+      "iconName": "MdStorage",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/master-data",
+    "isParent": true,
+    "hasChildren": true,
+    "order": 11
+  },
+  {
+    "title": "Employees",
+    "icon": {
+      "iconName": "MdPeople",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/master-data/employees",
+    "parentId": "master-data",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 1
+  },
+  {
+    "title": "Clients",
+    "icon": {
+      "iconName": "MdBusiness",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/master-data/clients",
+    "parentId": "master-data",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 2
+  },
+  {
+    "title": "Projects",
+    "icon": {
+      "iconName": "MdWork",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/master-data/projects",
+    "parentId": "master-data",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 3
+  },
+  {
+    "title": "Agents",
+    "icon": {
+      "iconName": "MdSupportAgent",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/master-data/agents",
+    "parentId": "master-data",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 4
+  },
+  {
+    "title": "Task Types",
+    "icon": {
+      "iconName": "MdCategory",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/master-data/task-types",
+    "parentId": "master-data",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 5
+  },
+  {
+    "title": "Shift Management",
+    "icon": {
+      "iconName": "MdSchedule",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/master-data/shifts",
+    "parentId": "master-data",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 6
+  },
+  {
+    "title": "Holidays",
+    "icon": {
+      "iconName": "MdEvent",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/master-data/holidays",
+    "parentId": "master-data",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 7
+  },
+  {
+    "title": "Lead Types",
+    "icon": {
+      "iconName": "MdLabel",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/master-data/lead-types",
+    "parentId": "master-data",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 8
+  },
+  {
+    "title": "Departments",
+    "icon": {
+      "iconName": "MdDomain",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/master-data/departments",
+    "parentId": "master-data",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 9
+  },
+  {
+    "title": "Designations",
+    "icon": {
+      "iconName": "MdBadge",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/master-data/designations",
+    "parentId": "master-data",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 10
+  },
+  {
+    "title": "Roles",
+    "icon": {
+      "iconName": "MdSecurity",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/master-data/roles",
+    "parentId": "master-data",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 11
+  },
+  {
+    "title": "Feed Board",
+    "icon": {
+      "iconName": "MdDashboard",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/master-data/feed-board",
+    "parentId": "master-data",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 12
+  },
+  {
+    "title": "Leave Types",
+    "icon": {
+      "iconName": "MdEventAvailable",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/master-data/leave-types",
+    "parentId": "master-data",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 13
+  },
+  {
+    "title": "Leave Policies",
+    "icon": {
+      "iconName": "MdPolicy",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/master-data/leave-policies",
+    "parentId": "master-data",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 14
+  },
+  {
+    "title": "HR Policies",
+    "icon": {
+      "iconName": "MdGavel",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/master-data/hr-policies",
+    "parentId": "master-data",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 15
+  },
+  {
+    "title": "Settings",
+    "icon": {
+      "iconName": "MdSettings",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/settings",
+    "isParent": true,
+    "hasChildren": true,
+    "order": 12
+  },
+  {
+    "title": "Email Configuration",
+    "icon": {
+      "iconName": "MdEmail",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/settings/email-config",
+    "parentId": "settings",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 1
+  },
+  {
+    "title": "Role Permissions",
+    "icon": {
+      "iconName": "MdSecurity",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/settings/role-permissions",
+    "parentId": "settings",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 2
+  },
+  {
+    "title": "Designation Permissions",
+    "icon": {
+      "iconName": "MdVerifiedUser",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/settings/designation-permissions",
+    "parentId": "settings",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 3
+  },
+  {
+    "title": "Developer Logs",
+    "icon": {
+      "iconName": "MdCode",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/developer-logs",
+    "isParent": true,
+    "hasChildren": true,
+    "order": 13
+  },
+  {
+    "title": "Audit Logs",
+    "icon": {
+      "iconName": "MdHistory",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/developer-logs/audit",
+    "parentId": "developer-logs",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 1
+  },
+  {
+    "title": "Error Logs",
+    "icon": {
+      "iconName": "MdError",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/developer-logs/errors",
+    "parentId": "developer-logs",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 2
+  },
+  {
+    
     "title": "Logout",
     "icon": {
       "iconName": "MdLogout",
       "iconPackage": "react-icons/md"
     },
-    "route": "/logout",
-    "roles": ["Super Admin", "HR", "Manager", "Employee"],
-    "permissions": ["logout"]
+    "mainRoute": "/logout",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 14
   }
 ]

@@ -14,7 +14,11 @@ import NotificationDrawer from '@/components/NotificationDrawer';
 type SidebarItem = {
   _id: string;
   title: string;
-  route: string;
+  mainRoute: string;
+  parentId?: string;
+  hasChildren?: boolean;
+  isParent?: boolean;
+  children?: SidebarItem[];
   icon?: {
     iconName: string;
   };
@@ -22,6 +26,7 @@ type SidebarItem = {
 
 function CustomDrawerContent() {
   const [navItems, setNavItems] = useState<SidebarItem[]>([]);
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const { logout } = useContext(AuthContext);
 
@@ -29,16 +34,27 @@ function CustomDrawerContent() {
     const fetchNavBar = async () => {
       try {
         const response = await axiosInstance.get("/populate/read/sidebars");
-        setNavItems(response?.data?.data || []);
+        const items = response?.data?.data || [];
+        
+        // Build hierarchical structure
+        const parents = items.filter((item: SidebarItem) => item.isParent || !item.parentId);
+        const children = items.filter((item: SidebarItem) => item.parentId);
+        
+        const hierarchical = parents.map((parent: SidebarItem) => ({
+          ...parent,
+          children: children.filter((child: SidebarItem) => child.parentId === parent._id)
+        }));
+        
+        setNavItems(hierarchical);
       } catch (err: any) {
         const defaultRoutes = [
-          { _id: '1', title: 'Dashboard', route: '/dashboard', icon: { iconName: 'MdDashboard' } },
-          { _id: '2', title: 'Daily Tracker', route: '/daily-tracker', icon: { iconName: 'MdToday' } },
-          { _id: '3', title: 'Tasks', route: '/tasks', icon: { iconName: 'MdTask' } },
-          { _id: '4', title: 'Attendance', route: '/attendance', icon: { iconName: 'MdSchedule' } },
-          { _id: '5', title: 'Profile', route: '/me', icon: { iconName: 'MdPerson' } },
-          { _id: '6', title: 'Salary Expense', route: '/salary-expense', icon: { iconName: 'MdMoney' } },
-          { _id: '7', title: 'Travel Expenses', route: '/travel-expenses', icon: { iconName: 'MdFlight' } }
+          { _id: '1', title: 'Dashboard', mainRoute: '/dashboard', icon: { iconName: 'MdDashboard' } },
+          { _id: '2', title: 'Daily Tracker', mainRoute: '/daily-tracker', icon: { iconName: 'MdToday' } },
+          { _id: '3', title: 'Tasks', mainRoute: '/tasks', icon: { iconName: 'MdTask' } },
+          { _id: '4', title: 'Attendance', mainRoute: '/attendance', icon: { iconName: 'MdSchedule' } },
+          { _id: '5', title: 'Profile', mainRoute: '/me', icon: { iconName: 'MdPerson' } },
+          { _id: '6', title: 'Salary Expense', mainRoute: '/salary-expense', icon: { iconName: 'MdMoney' } },
+          { _id: '7', title: 'Travel Expenses', mainRoute: '/travel-expenses', icon: { iconName: 'MdFlight' } }
         ];
         setNavItems(defaultRoutes);
         
@@ -54,6 +70,25 @@ function CustomDrawerContent() {
     fetchNavBar();
   }, []);
 
+  const toggleExpanded = (itemId: string) => {
+    const newExpanded = new Set(expandedItems);
+    if (newExpanded.has(itemId)) {
+      newExpanded.delete(itemId);
+    } else {
+      newExpanded.add(itemId);
+    }
+    setExpandedItems(newExpanded);
+  };
+
+  const handleNavigation = (item: SidebarItem) => {
+    if (item.hasChildren) {
+      toggleExpanded(item._id);
+    } else {
+      const route = item.mainRoute.replace(/^\//, '');
+      router.push(`/(protectedRoute)/${route}`);
+    }
+  };
+
   const getEmojiIcon = (route: string) => {
     const iconMap: { [key: string]: string } = {
       '/dashboard': '📊',
@@ -67,6 +102,36 @@ function CustomDrawerContent() {
     return iconMap[route] || '📋';
   };
 
+  const renderNavItem = (item: SidebarItem, isChild = false) => {
+    const isExpanded = expandedItems.has(item._id);
+    const hasChildren = item.children && item.children.length > 0;
+    
+    return (
+      <View key={item._id}>
+        <DrawerItem
+          label={item.title}
+          labelStyle={isChild ? { fontSize: 14, marginLeft: 20 } : {}}
+          icon={({ size }) => (
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text className="text-base">{getEmojiIcon(item.mainRoute)}</Text>
+              {hasChildren && (
+                <Text style={{ marginLeft: 8, fontSize: 12 }}>
+                  {isExpanded ? '▼' : '▶'}
+                </Text>
+              )}
+            </View>
+          )}
+          onPress={() => handleNavigation(item)}
+        />
+        {hasChildren && isExpanded && (
+          <View>
+            {item.children?.map(child => renderNavItem(child, true))}
+          </View>
+        )}
+      </View>
+    );
+  };
+
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center">
@@ -78,22 +143,8 @@ function CustomDrawerContent() {
   return (
     <DrawerContentScrollView>
       {navItems
-        .filter(item => item.route !== '/logout' && item.route !== 'logout')
-        .map((item) => {
-          return (
-            <DrawerItem
-              key={item._id}
-              label={item.title}
-              icon={({ size }) => (
-                <Text className="text-base">{getEmojiIcon(item.route)}</Text>
-              )}
-              onPress={() => {
-                const route = item.route.replace(/^\//, '');
-                router.push(`/(protectedRoute)/${route}`);
-              }}
-            />
-          );
-        })}
+        .filter(item => item.mainRoute !== '/logout' && item.mainRoute !== 'logout')
+        .map((item) => renderNavItem(item))}
       <DrawerItem
         label="Logout"
         icon={({ size }) => (

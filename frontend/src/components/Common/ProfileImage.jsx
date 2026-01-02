@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const baseUrl = "http://192.168.1.108:3000"
+const baseUrl = "http://10.55.124.208:3000"
 
 const ProfileImage = ({ 
   profileImage, 

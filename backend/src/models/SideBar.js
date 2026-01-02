@@ -21,6 +21,11 @@ const SideBarSchema = new mongoose.Schema({
     type: String,
   }],
 
+  // Parent-child structure
+  parentId: { type: mongoose.Schema.Types.ObjectId, ref: 'sidebars', default: null },
+  hasChildren: { type: Boolean, default: false },
+  isParent: { type: Boolean, default: false },
+
   order: { type: Number, default: 0},
   isActive: { type: Boolean, default: true},
 
@@ -28,5 +33,7 @@ const SideBarSchema = new mongoose.Schema({
 
 // Compound index for active+sorting queries
 SideBarSchema.index({ isActive: 1, order: 1 });
+SideBarSchema.index({ parentId: 1, order: 1 });
+SideBarSchema.index({ isParent: 1, hasChildren: 1 });
 
 export default mongoose.model("sidebars", SideBarSchema);

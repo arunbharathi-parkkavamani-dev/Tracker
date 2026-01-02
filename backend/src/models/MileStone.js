@@ -12,8 +12,8 @@ const MileStoneSchema = new mongoose.Schema({
     completedAt: { type: Date }
 });
 
-MileStoneSchema.Schema.index({clientId: 1});
-MileStoneSchema.Schema.index({clientId: 1, projectId: 1});
+MileStoneSchema.index({clientId: 1});
+MileStoneSchema.index({clientId: 1, projectId: 1});
 
 const milestones = mongoose.models.milestones || mongoose.model('milestones', MileStoneSchema); 
 

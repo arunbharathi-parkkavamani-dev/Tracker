@@ -68,7 +68,10 @@ export default async function buildUpdateQuery({
   const afterUpdate = serviceInstance?.afterUpdate;
 
   if (typeof beforeUpdate === "function") {
-    const result = await beforeUpdate({ role, userId, docId, body, filter });
+    const existingDoc = docId
+      ? await Model.findById(docId).lean()
+      : await Model.findOne(filter).lean();
+    const result = await beforeUpdate({ role, userId, docId, body, filter, existingDoc });
     if (result && typeof result === "object") body = result;
   }
 
@@ -83,16 +86,32 @@ export default async function buildUpdateQuery({
    * ----------------------------------------------- */
   let updatedDoc;
 
-  if (docId) {
-    updatedDoc = await Model.findByIdAndUpdate(docId, { $set: body }, {
-      new: true,
-      runValidators: true
-    });
+  // Handle external agent requests
+  if (req?.agent?.isExternal) {
+    // Skip role-based filtering for external agents
+    if (docId) {
+      updatedDoc = await Model.findByIdAndUpdate(docId, { $set: body }, {
+        new: true,
+        runValidators: true
+      });
+    } else {
+      updatedDoc = await Model.findOneAndUpdate(filter, { $set: body }, {
+        new: true,
+        runValidators: true
+      });
+    }
   } else {
-    updatedDoc = await Model.findOneAndUpdate(filter, { $set: body }, {
-      new: true,
-      runValidators: true
-    });
+    if (docId) {
+      updatedDoc = await Model.findByIdAndUpdate(docId, { $set: body }, {
+        new: true,
+        runValidators: true
+      });
+    } else {
+      updatedDoc = await Model.findOneAndUpdate(filter, { $set: body }, {
+        new: true,
+        runValidators: true
+      });
+    }
   }
 
   if (!updatedDoc) throw new Error(`${modelName} not found`);

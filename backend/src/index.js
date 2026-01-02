@@ -4,12 +4,14 @@ import { Server } from "socket.io";
 import dotenv from "dotenv";
 import cors from "cors";
 import AuthRouter from "./routes/authRoutes.js";
+import agentAuthRouter from "./routes/agentAuth.js";
 import populateHelper from "./routes/populateRoutes.js";
 import fileRoutes from "./routes/fileRoutes.js";
 import locationRoutes from "./routes/locationRoutes.js";
 import bankRoutes from "./routes/bankRoutes.js";
 
 import { apiHitLogger } from "./middlewares/apiHitLogger.js";
+import { agentAuthMiddleware } from "./middlewares/agentAuthMiddleware.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import connectDB from "./Config/ConnectDB.js";
 import cookieParser from "cookie-parser";
@@ -61,12 +63,7 @@ app.use((req, res, next) => {
 
 const allowedOrigins = [
   "https://lmx-tracker--p1hvjsjwqq.expo.app",
-  "http://localhost:3000",
-  "http://localhost:5173",
-  "http://localhost:19006",
-  "http://10.116.40.208:5173",
-  "http://10.11.244.208:5173",
-  "https://your-app.vercel.app"
+  "http://10.45.192.208:4000",
 ];
 
 const lanRegex = /^http:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+):\d+$/;
@@ -82,9 +79,10 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-device-uuid']
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-device-uuid', 'x-source']
 }));
 
+app.use(agentAuthMiddleware);
 app.use(apiHitLogger);
 
 // Test endpoint to verify server is working
@@ -96,6 +94,7 @@ app.get('/test', (req, res) => {
 
 
 // Routes
+app.use("/api/agent", agentAuthRouter);
 app.use("/api/auth", (req, res, next) => {
   console.log('=== AUTH ROUTER REACHED ===');
   console.log('Auth Route - Method:', req.method);
