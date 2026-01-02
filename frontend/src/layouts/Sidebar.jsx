@@ -1,33 +1,20 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "../api/axiosInstance";
-import { useNavigate } from "react-router-dom";
-import * as MD from "react-icons/md"; // all material icons
-
-// Fallback navigation items
-const fallbackNavItems = [
-  { _id: '1', title: 'Dashboard', mainRoute: '/dashboard', icon: { iconName: 'MdDashboard' } },
-  { _id: '2', title: 'Tasks', mainRoute: '/tasks', icon: { iconName: 'MdTask' } },
-  { _id: '3', title: 'Employees', mainRoute: '/employees', icon: { iconName: 'MdPeople' } },
-  { _id: '4', title: 'Attendance', mainRoute: '/attendance', icon: { iconName: 'MdSchedule' } },
-  { _id: '5', title: 'Leaves', mainRoute: '/leaves', icon: { iconName: 'MdEventBusy' } },
-  { _id: '6', title: 'Clients', mainRoute: '/clients', icon: { iconName: 'MdBusiness' } },
-  { _id: '7', title: 'Reports', mainRoute: '/reports', icon: { iconName: 'MdAssessment' } }
-];
+import { useNavigate, useLocation } from "react-router-dom";
+import * as MD from "react-icons/md";
 
 const Sidebar = () => {
   const navigate = useNavigate();
-  const [navItems, setNavItems] = useState(fallbackNavItems);
-  const [isOpen, setIsOpen] = useState(false);
+  const location = useLocation();
+  const [navItems, setNavItems] = useState([]);
 
   useEffect(() => {
     const fetchNavItems = async () => {
       try {
-        const response = await axiosInstance.get("/populate/read/sidebars");
-        if (response.data.success && response.data.data?.length > 0) {
-          setNavItems(response.data.data);
-        }
-      } catch (error) {
-        // Keep fallback items if API fails
+        const res = await axiosInstance.get("/populate/read/sidebars");
+        setNavItems(res.data?.data || []);
+      } catch (err) {
+        console.error("Sidebar fetch failed", err);
       }
     };
 
@@ -35,69 +22,50 @@ const Sidebar = () => {
   }, []);
 
   return (
-    <>
-      {/* Mobile menu button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 bg-blue-600 text-white p-2 rounded-md"
-      >
-        <MD.MdMenu size={24} />
-      </button>
+    <aside className="w-60 h-screen bg-blue-700 dark:bg-blue-950 
+                      text-white flex flex-col border-r border-blue-800">
 
-      {/* Overlay for mobile */}
-      {isOpen && (
-        <div 
-          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
-      <div className={`
-        fixed lg:static inset-y-0 left-0 z-40
-        w-64 lg:w-52 h-screen bg-blue-600 shadow-lg p-4 dark:bg-blue-900 text-white
-        transform transition-transform duration-300 ease-in-out
-        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-      `}>
-        {/* Close button for mobile */}
-        <button
-          onClick={() => setIsOpen(false)}
-          className="lg:hidden absolute top-4 right-4 text-white"
-        >
-          <MD.MdClose size={24} />
-        </button>
-
-        {navItems.length > 0 ? (
-          <ul className="space-y-2 dark:text-white mt-12 lg:mt-0">
-            {navItems.map((item) => {
-              // Dynamically pick the icon
-              const Icon = MD[item.icon?.iconName] || MD.MdHelpOutline;
-              return (
-                <li
-                  key={item._id}
-                  className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-blue-400 transition dark:text-white"
-                >
-                  <button
-                    onClick={() => {
-                      navigate(item.route);
-                      setIsOpen(false); // Close mobile menu after navigation
-                    }}
-                    className="flex items-center gap-3 w-full text-left"
-                  >
-                    <Icon className="text-xl text-white dark:text-white flex-shrink-0" />
-                    <span className="text-white font-medium dark:text-white truncate">
-                      {item.title}
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        ) : (
-          <p className="text-gray-500 mt-12 lg:mt-0">Loading...</p>
-        )}
+      {/* -------- Brand / Logo -------- */}
+      <div className="px-4 py-5 text-xl font-semibold tracking-wide">
+        LMX<span className="text-blue-300">Tracker</span>
       </div>
-    </>
+
+      {/* -------- Navigation -------- */}
+      <nav className="flex-1 px-2 space-y-1">
+        {navItems.length === 0 ? (
+          <p className="text-blue-200 text-sm px-2">Loading…</p>
+        ) : (
+          navItems.map(item => {
+            const Icon = MD[item.icon?.iconName] || MD.MdHelpOutline;
+            const isActive = location.pathname === item.route;
+
+            return (
+              <div
+                key={item._id}
+                onClick={() => navigate(item.route)}
+                className={`
+                  flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer
+                  transition-all
+                  ${isActive
+                    ? "bg-blue-600 text-white shadow-inner"
+                    : "text-blue-100 hover:bg-blue-600/70"}
+                `}
+              >
+                <Icon className="text-lg" />
+                <span className="text-sm font-medium">
+                  {item.title}
+                </span>
+              </div>
+            );
+          })
+        )}
+      </nav>
+
+      {/* -------- Footer (optional but 🔥) -------- */}
+      <div className="px-4 py-3 text-xs text-blue-300 border-t border-blue-800">
+        © {new Date().getFullYear()} LMX
+      </div>
+    </aside>
   );
 };
 
