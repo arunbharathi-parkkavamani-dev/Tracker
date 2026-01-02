@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const ticketSchema = new mongoose.Schema({
-  ticketId: { type: String, unique: true, required: true },
+  ticketId: { type: String, unique: true },
   title: { type: String, required: true, maxlength: 200 },
   description: { type: String, required: true },
   category: { 
@@ -9,6 +9,9 @@ const ticketSchema = new mongoose.Schema({
     enum: ['IT Support', 'HR Query', 'Facility', 'Finance', 'Development', 'General'], 
     required: true 
   },
+  projectTypeId: { type: mongoose.Schema.Types.ObjectId, ref: 'ProjectType' },
+  clientId: { type: mongoose.Schema.Types.ObjectId, ref: 'Client' },
+  taskTypeId: { type: mongoose.Schema.Types.ObjectId, ref: 'TaskType' },
   priority: { 
     type: String, 
     enum: ['Low', 'Medium', 'High', 'Critical'], 
@@ -59,6 +62,9 @@ ticketSchema.pre('save', async function(next) {
 ticketSchema.index({ ticketId: 1 });
 ticketSchema.index({ createdBy: 1, status: 1 });
 ticketSchema.index({ assignedTo: 1, status: 1 });
+ticketSchema.index({ projectTypeId: 1 });
+ticketSchema.index({ clientId: 1 });
+ticketSchema.index({ taskTypeId: 1 });
 ticketSchema.index({ category: 1, priority: 1 });
 ticketSchema.index({ status: 1, createdAt: -1 });
 ticketSchema.index({ linkedTaskId: 1 });

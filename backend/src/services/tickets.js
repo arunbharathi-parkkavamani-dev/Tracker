@@ -1,56 +1,75 @@
 import asyncNotificationService from './asyncNotificationService.js';
 
-// Convert ticket to task
-export const convertToTask = async (ticketId, convertedBy, taskData) => {
-  const { default: models } = await import('../models/Collection.js');
-  const session = await models.tickets.startSession();
-  
-  try {
-    return await session.withTransaction(async () => {
-      // Get ticket
-      const ticket = await models.tickets.findById(ticketId).session(session);
-      if (!ticket) throw new Error('Ticket not found');
-      
-      if (ticket.isConvertedToTask) {
-        throw new Error('Ticket already converted to task');
-      }
-      
-      // Create task from ticket
-      const task = await models.tasks.create([{
-        title: ticket.title,
-        userStory: ticket.description,
-        priorityLevel: ticket.priority,
-        createdBy: convertedBy,
-        assignedTo: ticket.assignedTo ? [ticket.assignedTo] : [],
-        linkedTicketId: ticket._id,
-        isFromTicket: true,
-        ...taskData
-      }], { session });
-      
-      // Update ticket
-      await models.tickets.findByIdAndUpdate(ticketId, {
-        linkedTaskId: task[0]._id,
-        isConvertedToTask: true,
-        convertedBy,
-        convertedAt: new Date(),
-        $push: {
-          comments: {
-            comment: `Ticket converted to development task: ${task[0]._id}`,
-            commentedBy: convertedBy,
-            commentedAt: new Date()
+export default function tickets() {
+  return {
+    // ---------------- Before Update ----------------
+    beforeUpdate: async ({ userId, body, docId }) => {
+      if (body.pushTaskSync === true) {
+        const { default: models } = await import('../models/Collection.js');
+        const existingDoc = await models.tickets.findById(docId);
+        
+        if (!existingDoc.isConvertedToTask) {
+          // Ensure required fields for task creation
+          if (!existingDoc.taskTypeId) {
+            // Get a default task type or throw error
+            const defaultTaskType = await models.tasktypes.findOne();
+            if (!defaultTaskType) {
+              throw new Error('No task type available. Please set a task type for this ticket first.');
+            }
+            // Update ticket with default task type
+            await models.tickets.findByIdAndUpdate(docId, { taskTypeId: defaultTaskType._id });
           }
+          
+          body.isConvertedToTask = true;
+          body.convertedBy = userId;
+          body.convertedAt = new Date();
         }
-      }, { session });
-      
-      // Notify stakeholders
-      await notifyTicketConversion(ticket, task[0], convertedBy);
-      
-      return { ticket, task: task[0] };
-    });
-  } finally {
-    await session.endSession();
-  }
-};
+      }
+    },
+    
+    // ---------------- After Update ----------------
+    afterUpdate: async ({ userId, docId, body }) => {
+      if (body.pushTaskSync === true) {
+        const { default: models } = await import('../models/Collection.js');
+        const ticketData = await models.tickets.findById(docId);
+        
+        if (!ticketData.linkedTaskId) {
+          const taskData = await models.tasks.create({
+            clientId: ticketData.clientId,
+            projectTypeId: ticketData.projectTypeId,
+            taskTypeId: ticketData.taskTypeId,
+            createdBy: ticketData.createdBy,
+            assignedTo: ticketData.assignedTo ? [ticketData.assignedTo] : [],
+            linkedTicketId: ticketData._id,
+            isFromTicket: true,
+            title: ticketData.title,
+            userStory: ticketData.description,
+            priorityLevel: ticketData.priority,
+            status: 'To Do',
+            followers: [userId]
+          });
+          
+          // Create comment thread
+          const thread = await models.commentsthreads.create({
+            taskId: taskData._id.toString(),
+            comments: [{
+              commentedBy: userId,
+              message: `Task created from ticket conversion`
+            }]
+          });
+          
+          taskData.commentsThread = thread._id;
+          await taskData.save();
+          
+          // Update ticket with task link
+          await models.tickets.findByIdAndUpdate(docId, {
+            linkedTaskId: taskData._id
+          });
+        }
+      }
+    }
+  };
+}
 
 // Check synchronization status
 export const checkSyncStatus = async (ticketId, taskId) => {

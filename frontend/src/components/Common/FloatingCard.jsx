@@ -30,7 +30,7 @@ const FloatingCard = ({ onClose, children }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* BACKDROP */}
       <div 
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
+        className="absolute inset-0 bg-white/20 backdrop-blur-sm" 
         onClick={() => onClose?.()} 
       />
 

@@ -24,7 +24,7 @@ const incrementFailedCount = async () => {
 
 const forceLogout = async () => {
   try {
-    await axios.post("http://10.167.107.208:3000/api/auth/logout", {}, {
+    await axios.post("http://192.168.1.108:3000/api/auth/logout", {}, {
       headers: {
         'x-device-uuid': await getDeviceUUID(),
         'Authorization': `Bearer ${await AsyncStorage.getItem("auth_token")}`
@@ -49,7 +49,7 @@ const forceLogout = async () => {
 };
 
 const axiosInstance = axios.create({
-  baseURL: "http://10.167.107.208:3000/api",
+  baseURL: "http://192.168.1.108:3000/api",
   timeout: 50000,
   withCredentials: true,
 });
@@ -102,7 +102,7 @@ axiosInstance.interceptors.response.use(
         if (!refreshToken) throw new Error("No refresh token");
         
         const refreshResponse = await axios.post(
-          "http://10.167.107.208:3000/api/auth/refresh",
+          "http://192.168.1.108:3000/api/auth/refresh",
           { refreshToken, platform: "mobile" },
           { headers: { 'x-device-uuid': await getDeviceUUID() } }
         );

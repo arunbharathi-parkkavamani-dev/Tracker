@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  Users, 
-  Calendar, 
-  CheckCircle, 
-  Clock, 
-  TrendingUp, 
+import {
+  Users,
+  Calendar,
+  CheckCircle,
+  Clock,
+  TrendingUp,
   AlertCircle,
   RefreshCw,
   Filter,
-  Download
+  Download,
 } from 'lucide-react';
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 import axiosInstance from "../../api/axiosInstance";
 import ThemeToggler from "../../components/Common/ThemeToggler";
 import { useAuth } from "../../context/authProvider";
@@ -49,7 +49,69 @@ export default function Dashboard() {
 
   // Calculate dashboard statistics
   const stats = useMemo(() => {
-    
+    if (userRole === 'employee') {
+      return [
+        {
+          title: "Today's Attendance",
+          value: employeeStats?.attendanceStatus === 'check-in' ? 'Checked In' :
+            employeeStats?.attendanceStatus === 'check-out' ? 'Checked Out' : 'Not Started',
+          icon: Clock,
+          color: 'blue',
+          loading: loading
+        },
+        {
+          title: 'Leave Balance',
+          value: employeeStats?.leaveBalance || 0,
+          icon: Calendar,
+          color: 'yellow',
+          subtitle: 'days remaining',
+          loading: loading
+        },
+        {
+          title: 'My Tasks',
+          value: employeeStats?.myTasks || 0,
+          icon: CheckCircle,
+          color: 'green',
+          subtitle: 'assigned to me',
+          loading: loading
+        }
+      ];
+    }
+
+    if (userRole === 'manager') {
+      return [
+        {
+          title: 'Team Members',
+          value: managerStats?.teamMembers || 0,
+          icon: Users,
+          color: 'blue',
+          loading: loading
+        },
+        {
+          title: 'Present Today',
+          value: managerStats?.presentToday || 0,
+          icon: Clock,
+          color: 'green',
+          loading: loading
+        },
+        {
+          title: 'Pending Tasks',
+          value: managerStats?.pendingTasks || 0,
+          icon: CheckCircle,
+          color: 'yellow',
+          loading: loading
+        },
+        {
+          title: 'My Tasks',
+          value: managerStats?.myTasks || 0,
+          icon: Calendar,
+          color: 'purple',
+          loading: loading
+        }
+      ];
+    }
+
+    // Default stats for HR/SuperAdmin
     return [
       {
         title: 'Active Tasks',
@@ -61,7 +123,7 @@ export default function Dashboard() {
       },
       {
         title: 'Present Today',
-        value: recentAttendance?.filter(a => a.status === 'present').length || 0,
+        value: recentAttendance?.filter(a => a.status === 'Present').length || 0,
         icon: Users,
         color: 'green',
         trend: '+5%',
@@ -84,7 +146,7 @@ export default function Dashboard() {
         loading: false
       }
     ];
-  }, [recentTasks, recentAttendance, pendingLeaves, tasksLoading, attendanceLoading, leavesLoading]);
+  }, [userRole, employeeStats, managerStats, recentTasks, recentAttendance, pendingLeaves, tasksLoading, attendanceLoading, leavesLoading, loading]);
 
   // Task table columns
   const taskColumns = [
@@ -102,11 +164,10 @@ export default function Dashboard() {
       key: 'status',
       label: 'Status',
       render: (value) => (
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-          value === 'completed' ? 'bg-green-100 text-green-800' :
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${value === 'completed' ? 'bg-green-100 text-green-800' :
           value === 'in-progress' ? 'bg-blue-100 text-blue-800' :
-          'bg-yellow-100 text-yellow-800'
-        }`}>
+            'bg-yellow-100 text-yellow-800'
+          }`}>
           {value}
         </span>
       )
@@ -115,11 +176,10 @@ export default function Dashboard() {
       key: 'priorityLevel',
       label: 'Priority',
       render: (value) => (
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-          value === 'high' ? 'bg-red-100 text-red-800' :
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${value === 'high' ? 'bg-red-100 text-red-800' :
           value === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-          'bg-gray-100 text-gray-800'
-        }`}>
+            'bg-gray-100 text-gray-800'
+          }`}>
           {value}
         </span>
       )
@@ -147,16 +207,16 @@ export default function Dashboard() {
     try {
       const populateFields = {
         'clientId': 'name',
-        'projectTypeId': 'name', 
+        'projectTypeId': 'name',
         'taskTypeId': 'name',
         'createdBy': 'basicInfo.firstName,basicInfo.lastName',
         'assignedTo': 'basicInfo.firstName,basicInfo.lastName'
       };
-      
+
       const response = await axiosInstance.get(
         `/populate/read/tasks/${taskId}?populateFields=${encodeURIComponent(JSON.stringify(populateFields))}`
       );
-      
+
       setSelectedTask(response.data.data);
     } catch (error) {
       console.error('Error fetching task details:', error);
@@ -176,7 +236,7 @@ export default function Dashboard() {
   const fetchManagerStats = async () => {
     try {
       const today = new Date().toISOString().split('T')[0];
-      
+
       const [teamResponse, attendanceResponse, tasksResponse] = await Promise.all([
         axiosInstance.get('/populate/read/employees?filter=' + encodeURIComponent(JSON.stringify({
           'professionalInfo.reportingManager': user?.id
@@ -189,29 +249,29 @@ export default function Dashboard() {
         }))),
         axiosInstance.get('/populate/read/tasks')
       ]);
-      
+
       const teamMembers = teamResponse.data?.data || [];
       const todayAttendance = attendanceResponse.data?.data || [];
       const allTasks = tasksResponse.data?.data || [];
-      
+
       const teamMemberIds = teamMembers.map(member => member._id);
-      const teamTasks = allTasks.filter(task => 
+      const teamTasks = allTasks.filter(task =>
         task.assignedTo?.some(assignee => teamMemberIds.includes(assignee._id))
       );
-      
-      const myTasks = allTasks.filter(task => 
+
+      const myTasks = allTasks.filter(task =>
         task.assignedTo?.some(assignee => assignee._id === user?.id) ||
         task.createdBy?._id === user?.id
       );
-      
-      const pendingTasks = teamTasks.filter(task => 
+
+      const pendingTasks = teamTasks.filter(task =>
         ['To Do', 'In Progress', 'In Review'].includes(task.status)
       );
-      
-      const presentToday = todayAttendance.filter(att => 
+
+      const presentToday = todayAttendance.filter(att =>
         att.status === 'Present' && teamMemberIds.includes(att.employee?._id)
       );
-      
+
       setManagerStats({
         teamMembers: teamMembers.length,
         presentToday: presentToday.length,
@@ -239,12 +299,15 @@ export default function Dashboard() {
     });
 
     try {
-      const userId = user?._id;
+      const userId = user?.id;
       const [attendanceRes, leavesRes, tasksRes] = await Promise.all([
         axiosInstance.get(`/populate/read/attendances?filter=${encodeURIComponent(filter)}`),
         axiosInstance.get(`/populate/read/leaves?filter={"employeeId":"${userId}"}`),
         axiosInstance.get(`/populate/read/tasks?filter={"assignedTo":"${userId}"}`),
       ]);
+      console.log("Employee Stats - Attendance Response:", attendanceRes.data);
+      console.log("Employee Stats - Leaves Response:", leavesRes.data);
+      console.log("Employee Stats - Tasks Response:", tasksRes.data);
 
       const todayAttendance = attendanceRes.data?.data?.[0] || null;
       const leaves = leavesRes.data?.data || [];
@@ -435,29 +498,20 @@ export default function Dashboard() {
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-lg">Here's what's happening in your organization today.</p>
         </div>
-        <div className="flex items-center space-x-4">
-          <select
-            value={selectedTimeRange}
-            onChange={(e) => setSelectedTimeRange(e.target.value)}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-black text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-600"
-          >
-            <option value="1d">Last 24 hours</option>
-            <option value="7d">Last 7 days</option>
-            <option value="30d">Last 30 days</option>
-            <option value="90d">Last 90 days</option>
-          </select>
-          <button
-            onClick={handleRefreshAll}
-            className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 bg-white dark:bg-black text-black dark:text-white"
-          >
-            <RefreshCw className="h-4 w-4" />
-          </button>
-          <ThemeToggler />
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+        <div>
+          <div className="flex gap-2">
+            <Link to="/tasks/new">
+              <button className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium shadow-sm hover:bg-blue-700 transition-colors">
+                + New Task
+              </button>
+            </Link>
+            <button className="bg-white dark:bg-black border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-md text-sm font-medium shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-black dark:text-white">
+              Clock In
+            </button>
           </div>
         </div>
       </div>
+
 
       <div className="px-2">
         {renderRoleBasedDashboard()}

@@ -1,256 +1,219 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axiosInstance from "../../api/axiosInstance";
 import { useAuth } from "../../context/authProvider";
-import toast, { Toaster } from "react-hot-toast";
-import { MdAdd, MdClose, MdAttachFile } from "react-icons/md";
+import CreateTicketModal from "./CreateTicketModal";
+import { Plus, Filter, Search, ArrowUpRight } from "lucide-react";
 
-const CreateTicket = () => {
+const TicketsPage = () => {
   const { user } = useAuth();
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    category: 'IT Support',
-    priority: 'Medium',
-    attachments: []
-  });
-  const [loading, setLoading] = useState(false);
-  const [files, setFiles] = useState([]);
+  const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const categories = [
-    'IT Support',
-    'HR Query', 
-    'Facility',
-    'Finance',
-    'Development',
-    'General'
-  ];
+  useEffect(() => {
+    fetchTickets();
+  }, []);
 
-  const priorities = [
-    'Low',
-    'Medium', 
-    'High',
-    'Critical'
-  ];
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleFileChange = (e) => {
-    const selectedFiles = Array.from(e.target.files);
-    setFiles(selectedFiles);
-  };
-
-  const removeFile = (index) => {
-    setFiles(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!formData.title.trim() || !formData.description.trim()) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
-
-    setLoading(true);
-    
+  const fetchTickets = async () => {
     try {
-      const submitData = new FormData();
-      submitData.append('title', formData.title);
-      submitData.append('description', formData.description);
-      submitData.append('category', formData.category);
-      submitData.append('priority', formData.priority);
-      submitData.append('createdBy', user.id);
-      
-      // Add files if any
-      files.forEach((file, index) => {
-        submitData.append(`attachments`, file);
-      });
-
-      const response = await axiosInstance.post('/populate/create/tickets', submitData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-
-      if (response.data.success) {
-        toast.success('Ticket created successfully!');
-        // Reset form
-        setFormData({
-          title: '',
-          description: '',
-          category: 'IT Support',
-          priority: 'Medium',
-          attachments: []
-        });
-        setFiles([]);
-      }
+      setLoading(true);
+      const response = await axiosInstance.get('/populate/read/tickets');
+      const ticketsData = response.data.data || [];
+      setTickets(ticketsData);
     } catch (error) {
-      console.error('Error creating ticket:', error);
-      toast.error(error.response?.data?.message || 'Failed to create ticket');
+      console.error('Error fetching tickets:', error);
     } finally {
       setLoading(false);
     }
   };
 
+  const handlePushToTask = async (ticketId) => {
+    try {
+      await axiosInstance.put(`/populate/update/tickets/${ticketId}`, {
+        pushTaskSync: true
+      });
+      fetchTickets(); // Refresh to show updated status
+    } catch (error) {
+      console.error('Error converting ticket to task:', error);
+    }
+  };
+
+  const getStatusBadge = (status) => {
+    const statusColors = {
+      'open': 'bg-blue-50 text-blue-700 border-blue-200',
+      'investigating': 'bg-amber-50 text-amber-700 border-amber-200',
+      'resolved': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      'closed': 'bg-gray-50 text-gray-700 border-gray-200'
+    };
+    return statusColors[status] || 'bg-gray-50 text-gray-700 border-gray-200';
+  };
+
+  const getPriorityIcon = (priority) => {
+    if (priority === 'critical') {
+      return <ArrowUpRight className="h-4 w-4 text-rose-500" />;
+    } else if (priority === 'high') {
+      return <ArrowUpRight className="h-4 w-4 text-orange-500" />;
+    }
+    return <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />;
+  };
+
+  const filteredTickets = tickets.filter(ticket =>
+    ticket.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    ticket.ticketId?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const openTickets = tickets.filter(t => t.status === 'open').length;
+  const inProgressTickets = tickets.filter(t => t.status === 'investigating').length;
+  const resolvedThisWeek = tickets.filter(t => {
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    return t.status === 'resolved' && new Date(t.updatedAt) > weekAgo;
+  }).length;
+
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="text-lg">Loading tickets...</div>
+    </div>
+  );
+
   return (
-    <div className="h-full flex flex-col p-6">
-      
+    <div className="p-6 space-y-6 dark:bg-black dark:text-white">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Create Support Ticket</h1>
-        <p className="text-gray-600 mt-1">Submit a new support request or issue</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Support Tickets</h1>
+          <p className="text-gray-600 dark:text-gray-400 text-sm">Internal help desk and issue tracking.</p>
+        </div>
+        <button 
+          onClick={() => setShowCreateModal(true)}
+          className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium shadow-sm hover:bg-blue-700 transition-colors flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          New Ticket
+        </button>
       </div>
 
-      {/* Form */}
-      <div className="flex-1 bg-white rounded-lg shadow p-6 overflow-y-auto">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          
-          {/* Title */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Title *
-            </label>
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="bg-blue-50/50 border border-blue-100 dark:bg-blue-900/10 dark:border-blue-900 rounded-lg p-4">
+          <div className="pb-2">
+            <h3 className="text-sm font-medium text-blue-600 dark:text-blue-400">Open Tickets</h3>
+          </div>
+          <div className="text-2xl font-bold">{openTickets}</div>
+        </div>
+        
+        <div className="bg-amber-50/50 border border-amber-100 dark:bg-amber-900/10 dark:border-amber-900 rounded-lg p-4">
+          <div className="pb-2">
+            <h3 className="text-sm font-medium text-amber-600 dark:text-amber-400">In Progress</h3>
+          </div>
+          <div className="text-2xl font-bold">{inProgressTickets}</div>
+        </div>
+        
+        <div className="bg-emerald-50/50 border border-emerald-100 dark:bg-emerald-900/10 dark:border-emerald-900 rounded-lg p-4">
+          <div className="pb-2">
+            <h3 className="text-sm font-medium text-emerald-600 dark:text-emerald-400">Resolved (This Week)</h3>
+          </div>
+          <div className="text-2xl font-bold">{resolvedThisWeek}</div>
+        </div>
+      </div>
+
+      {/* Search and Filter */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
             <input
               type="text"
-              name="title"
-              value={formData.title}
-              onChange={handleInputChange}
-              placeholder="Brief description of the issue"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              required
+              placeholder="Filter tickets..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 pr-3 py-2 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600"
             />
           </div>
+          <button className="border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2">
+            <Filter className="h-4 w-4" />
+            Filter
+          </button>
+        </div>
 
-          {/* Category and Priority */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Category
-              </label>
-              <select
-                name="category"
-                value={formData.category}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                {categories.map(category => (
-                  <option key={category} value={category}>{category}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Priority
-              </label>
-              <select
-                name="priority"
-                value={formData.priority}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                {priorities.map(priority => (
-                  <option key={priority} value={priority}>{priority}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description *
-            </label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              placeholder="Detailed description of the issue, steps to reproduce, expected vs actual behavior..."
-              rows={6}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              required
-            />
-          </div>
-
-          {/* File Attachments */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Attachments
-            </label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-              <input
-                type="file"
-                multiple
-                onChange={handleFileChange}
-                className="hidden"
-                id="file-upload"
-                accept="image/*,.pdf,.doc,.docx,.txt"
-              />
-              <label
-                htmlFor="file-upload"
-                className="cursor-pointer flex flex-col items-center justify-center"
-              >
-                <MdAttachFile className="w-8 h-8 text-gray-400 mb-2" />
-                <span className="text-sm text-gray-600">
-                  Click to upload files or drag and drop
-                </span>
-                <span className="text-xs text-gray-500 mt-1">
-                  PNG, JPG, PDF, DOC up to 10MB each
-                </span>
-              </label>
-            </div>
-
-            {/* Selected Files */}
-            {files.length > 0 && (
-              <div className="mt-3 space-y-2">
-                {files.map((file, index) => (
-                  <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
-                    <span className="text-sm text-gray-700 truncate">{file.name}</span>
+        {/* Tickets Table */}
+        <div className="rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-gray-200 dark:border-gray-700">
+                <th className="text-left p-4 font-medium text-gray-600 dark:text-gray-400 w-[100px]">ID</th>
+                <th className="text-left p-4 font-medium text-gray-600 dark:text-gray-400">Subject</th>
+                <th className="text-left p-4 font-medium text-gray-600 dark:text-gray-400">Requester</th>
+                <th className="text-left p-4 font-medium text-gray-600 dark:text-gray-400">Status</th>
+                <th className="text-left p-4 font-medium text-gray-600 dark:text-gray-400">Priority</th>
+                <th className="text-right p-4 font-medium text-gray-600 dark:text-gray-400">Created</th>
+                <th className="text-right p-4 font-medium text-gray-600 dark:text-gray-400">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredTickets.map((ticket) => (
+                <tr key={ticket._id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer">
+                  <td className="p-4 font-mono text-xs font-medium text-gray-500">
+                    #{ticket.ticketId?.toUpperCase() || ticket._id.slice(-6).toUpperCase()}
+                  </td>
+                  <td className="p-4 font-medium">{ticket.title}</td>
+                  <td className="p-4">{ticket.createdBy?.basicInfo?.firstName} {ticket.createdBy?.basicInfo?.lastName}</td>
+                  <td className="p-4">
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getStatusBadge(ticket.status)}`}>
+                      {ticket.status}
+                    </span>
+                  </td>
+                  <td className="p-4">
+                    <div className="flex items-center gap-2">
+                      {getPriorityIcon(ticket.priority)}
+                      <span className="text-sm capitalize text-gray-600 dark:text-gray-400">{ticket.priority}</span>
+                    </div>
+                  </td>
+                  <td className="p-4 text-right text-gray-600 dark:text-gray-400">
+                    {new Date(ticket.createdAt).toLocaleDateString()}
+                  </td>
+                  <td className="p-4 text-right">
                     <button
-                      type="button"
-                      onClick={() => removeFile(index)}
-                      className="text-red-500 hover:text-red-700"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePushToTask(ticket._id);
+                      }}
+                      disabled={ticket.isConvertedToTask || ticket.linkedTaskId}
+                      className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                        ticket.isConvertedToTask || ticket.linkedTaskId
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-blue-600 text-white hover:bg-blue-700'
+                      }`}
                     >
-                      <MdClose size={16} />
+                      {ticket.isConvertedToTask || ticket.linkedTaskId ? 'Converted' : 'Push to Task'}
                     </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Submit Button */}
-          <div className="flex justify-end pt-4">
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Creating...
-                </>
-              ) : (
-                <>
-                  <MdAdd size={20} />
-                  Create Ticket
-                </>
-              )}
-            </button>
-          </div>
-        </form>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          
+          {filteredTickets.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              No tickets found
+            </div>
+          )}
+        </div>
       </div>
-
-      <Toaster position="top-right" />
+      
+      {/* Create Ticket Modal */}
+      {showCreateModal && (
+        <CreateTicketModal
+          onClose={() => setShowCreateModal(false)}
+          onCreated={() => {
+            fetchTickets();
+            setShowCreateModal(false);
+          }}
+        />
+      )}
     </div>
   );
 };
 
-export default CreateTicket;
+export default TicketsPage;

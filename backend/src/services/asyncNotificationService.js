@@ -1,5 +1,4 @@
 import Bull from 'bull';
-import cacheService from './cacheService.js';
 
 class AsyncNotificationService {
   constructor() {
@@ -134,26 +133,18 @@ class AsyncNotificationService {
   // Process individual push notification
   async processPushNotification(userId, title, body, data) {
     try {
-      // Get user's push tokens from cache first
-      let userTokens = await cacheService.get(`push:tokens:${userId}`);
+      // Get user's push tokens from database
+      const { default: Session } = await import('../models/Session.js');
+      const sessions = await Session.find({ 
+        userId, 
+        isActive: true, 
+        pushToken: { $exists: true, $ne: null } 
+      }).select('pushToken deviceType').lean();
       
-      if (!userTokens) {
-        // Fallback to database if not in cache
-        const { default: Session } = await import('../models/Session.js');
-        const sessions = await Session.find({ 
-          userId, 
-          isActive: true, 
-          pushToken: { $exists: true, $ne: null } 
-        }).select('pushToken deviceType').lean();
-        
-        userTokens = sessions.map(s => ({ 
-          token: s.pushToken, 
-          type: s.deviceType 
-        }));
-        
-        // Cache for 10 minutes
-        await cacheService.set(`push:tokens:${userId}`, userTokens, 600);
-      }
+      const userTokens = sessions.map(s => ({ 
+        token: s.pushToken, 
+        type: s.deviceType 
+      }));
 
       if (!userTokens || userTokens.length === 0) {
         return { success: false, reason: 'No push tokens found' };

@@ -1,0 +1,19 @@
+{
+  "_id": "68d8befaf397d1d97620baa8",
+  "title": "Tickets",
+  "icon": {
+    "iconName": "MdSupport",
+    "iconPackage": "react-icons/md"
+  },
+  "route": "/tickets",
+  "roles": [
+    "Super Admin",
+    "HR",
+    "Manager",
+    "Employee"
+  ],
+  "permissions": [
+    "view_tickets",
+    "manage_tickets"
+  ]
+}

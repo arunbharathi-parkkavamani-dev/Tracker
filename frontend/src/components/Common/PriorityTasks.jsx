@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import axiosInstance from "../../../api/axiosInstance";
-import { useAuth } from "../../../context/authProvider";
+import axiosInstance from "../../api/axiosInstance";
+import { useAuth } from "../../context/authProvider";
 
 export default function PriorityTasks() {
   const { user } = useAuth();
@@ -8,7 +8,8 @@ export default function PriorityTasks() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user?._id) return;
+    console.log("User data in PriorityTasks:", user);
+    if (!user?.id) return;
 
     const fetchPriorityTasks = async () => {
       try {
@@ -20,9 +21,10 @@ export default function PriorityTasks() {
         const res = await axiosInstance.get(
           `/populate/read/tasks?filter=${encodeURIComponent(
             JSON.stringify(filter)
-          )}&limit=5&sort={"dueDate":1}`
+          )}&limit=5&sort={"createdAt":1}`
         );
 
+        console.log("Fetched priority tasks:", res.data?.data);
         setTasks(res.data?.data || []);
       } catch (err) {
         console.error("Failed to fetch priority tasks", err);

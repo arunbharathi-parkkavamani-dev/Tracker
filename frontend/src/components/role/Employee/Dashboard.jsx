@@ -13,21 +13,11 @@ export default function EmployeeDashboard({ stats }) {
   return (
     <div className="space-y-8">
 
-      {/* -------- Greeting -------- */}
-      <div>
-        <h2 className="text-2xl font-semibold">
-          Good morning 👋
-        </h2>
-        <p className="text-gray-500">
-          Here’s what’s happening in your workspace today.
-        </p>
-      </div>
-
       {/* -------- Stats Grid -------- */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
         <StatCard
-          title="Attendance"
+          title="Today's Attendance"
           value={
             stats?.attendanceStatus === "check-in"
               ? "Checked In"
@@ -46,17 +36,10 @@ export default function EmployeeDashboard({ stats }) {
         />
 
         <StatCard
-          title="Active Tasks"
+          title="My Tasks"
           value={stats?.myTasks || 0}
-          subtitle="in progress"
+          subtitle="assigned to me"
           icon={CheckSquare}
-        />
-
-        <StatCard
-          title="Completed"
-          value={stats?.completedTasks || 0}
-          subtitle="this month"
-          icon={ClipboardList}
         />
       </div>
 

@@ -5,7 +5,7 @@ let authContextLogout = null;
 let failedRequestCount = 0;
 const MAX_FAILED_REQUESTS = 5;
 
-const baseUrl = "http://192.168.1.34:3000"
+const baseUrl = "http://192.168.1.108:3000"
 
 export const setAuthLogout = (logoutFn) => {
   authContextLogout = logoutFn;
