@@ -25,10 +25,9 @@ export async function saveAuditLog({
   ip = null,
   metadata = {}
 }) {
-  const before = extractChanged(beforeDoc, afterDoc);
-  const after = extractChanged(afterDoc, beforeDoc);
-
-  if (!before || !after || Object.keys(before).length === 0) return; // avoid noise (no change)
+  // Convert to plain objects to avoid circular references
+  const before = toPlainObject(beforeDoc);
+  const after = toPlainObject(afterDoc);
 
   return AuditLog.create({
     model: modelName,
@@ -43,13 +42,14 @@ export async function saveAuditLog({
   });
 }
 
-/** compare only differing fields — avoids whole object storage */
-function extractChanged(objA, objB) {
-  const diff = {};
-  for (const key in objA) {
-    if (JSON.stringify(objA[key]) !== JSON.stringify(objB[key])) {
-      diff[key] = objA[key];
-    }
+/** Convert Mongoose document to plain object */
+function toPlainObject(doc) {
+  if (!doc) return {};
+  if (typeof doc.toObject === 'function') {
+    return doc.toObject();
   }
-  return diff;
+  if (typeof doc.toJSON === 'function') {
+    return doc.toJSON();
+  }
+  return doc;
 }

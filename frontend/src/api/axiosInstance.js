@@ -24,10 +24,6 @@ const incrementFailedCount = async () => {
 };
 
 const forceLogout = async () => {
-  // Temporarily disabled force logout
-  console.log('Force logout disabled temporarily');
-  return;
-  
   try {
     // Call logout API
     await axios.post(`${baseUrl}/api/auth/logout`, {}, {
@@ -108,12 +104,15 @@ axiosInstance.interceptors.response.use(
     const originalRequest = error.config;
     const errorData = error.response?.data;
 
+    // Handle session expired or invalid responses
+    if (error.response?.status === 403 && 
+        (errorData?.error?.includes('Session expired') || errorData?.error?.includes('Invalid token'))) {
+      await forceLogout();
+      return Promise.reject(error);
+    }
+
     // Handle any 401 response - clear cookies and redirect
     if (error.response?.status === 401) {
-      // Temporarily disabled 401 handling
-      console.log('401 handling disabled temporarily');
-      return Promise.reject(error);
-      
       // Try refresh only once if token is expired
       if (errorData?.expired && !originalRequest._retry) {
         originalRequest._retry = true;
@@ -132,7 +131,7 @@ axiosInstance.interceptors.response.use(
             Cookies.set("auth_token", refreshResponse.data.accessToken);
             localStorage.setItem('auth_token', refreshResponse.data.accessToken);
             originalRequest.headers.Authorization = `Bearer ${refreshResponse.data.accessToken}`;
-            resetFailedCount(); // Reset on successful refresh
+            resetFailedCount();
             return axiosInstance(originalRequest);
           }
         } catch (refreshError) {
@@ -146,8 +145,7 @@ axiosInstance.interceptors.response.use(
 
     // Track failed requests (4xx, 5xx errors)
     if (error.response?.status >= 400) {
-      // Temporarily disabled failed request tracking
-      // await incrementFailedCount();
+      await incrementFailedCount();
     }
 
     return Promise.reject(error);

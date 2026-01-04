@@ -613,6 +613,42 @@
     "order": 15
   },
   {
+    "title": "Project Types",
+    "icon": {
+      "iconName": "MdWork",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/master-data/project-types",
+    "parentId": "master-data",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 16
+  },
+  {
+    "title": "Milestones",
+    "icon": {
+      "iconName": "MdFlag",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/master-data/milestones",
+    "parentId": "master-data",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 17
+  },
+  {
+    "title": "Reference Types",
+    "icon": {
+      "iconName": "MdLink",
+      "iconPackage": "react-icons/md"
+    },
+    "mainRoute": "/master-data/reference-types",
+    "parentId": "master-data",
+    "isParent": false,
+    "hasChildren": false,
+    "order": 18
+  },
+  {
     "title": "Settings",
     "icon": {
       "iconName": "MdSettings",

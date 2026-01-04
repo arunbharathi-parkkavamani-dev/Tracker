@@ -24,6 +24,9 @@ export const DEFAULT_POPULATE_FIELDS = {
   },
   attendances: {
     'employee': 'basicInfo.firstName,basicInfo.lastName'
+  },
+  agents: {
+    'client': 'name'
   }
 };
 

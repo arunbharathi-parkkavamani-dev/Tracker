@@ -39,12 +39,14 @@ export async function populateHelper(req, res, next) {
     }
 
     // ------------------------ FIELDS NORMALIZATION ------------------------
+    if (fields) console.log("[populateHelper.js:39] fields before normalization:", fields);
     if (typeof fields === "string") {
       fields = fields
         .split(",")
         .map(f => f.trim())
         .filter(Boolean);
     }
+    if (fields) console.log("[populateHelper.js:46] fields after normalization:", fields);
 
     // ------------------------ SORT OPTIMIZATION ------------------------
     let sortObj = { createdAt: -1 }; // Default sort
@@ -139,40 +141,21 @@ export async function populateHelper(req, res, next) {
       }
     }
 
-    // ------------------------ OPTIMIZED QUERY EXECUTION ------------------------
+    // ------------------------ QUERY EXECUTION ------------------------
     let data;
-    let pagination;
 
-    if (action === 'read' && !id && !isAggregate) {
-      // Use optimized pagination for list queries
-      const result = await buildOptimizedQuery({
-        role: user.role,
-        userId: user.id,
-        modelName: model,
-        fields,
-        filter: queryFilter,
-        populateFields: populateFields ? JSON.parse(populateFields) : null,
-        sort: sortObj,
-        page: pageNum,
-        limit: limitNum
-      });
-      
-      data = result.data;
-      pagination = result.pagination;
-    } else {
-      // Use regular buildQuery for other operations
-      data = await buildQuery({
-        role: user.role,
-        userId: user.id,
-        action,
-        modelName: model,
-        docId: id,
-        fields,
-        filter: queryFilter,
-        populateFields: populateFields ? JSON.parse(populateFields) : null,
-        body: requestBody,
-      });
-    }
+    // Use regular buildQuery for all operations
+    data = await buildQuery({
+      role: user.role,
+      userId: user.id,
+      action,
+      modelName: model,
+      docId: id,
+      fields,
+      filter: queryFilter,
+      populateFields: populateFields ? JSON.parse(populateFields) : null,
+      body: requestBody,
+    });
 
     const statusCode = action === "create" ? 201 : 200;
 
@@ -182,11 +165,6 @@ export async function populateHelper(req, res, next) {
       data,
       type: type ? (parseInt(type) === 1 ? 'summary' : parseInt(type) === 2 ? 'detailed' : 'statistics') : undefined
     };
-
-    // Add pagination info for paginated queries
-    if (pagination) {
-      response.pagination = pagination;
-    }
 
     return res.status(statusCode).json(response);
   } catch (error) {
@@ -203,46 +181,6 @@ export async function populateHelper(req, res, next) {
     
     return res.status(statusCode).json(errorResponse);
   }
-}
-
-// Optimized query builder that uses queryOptimizer
-async function buildOptimizedQuery(options) {
-  const { buildQuery } = await import("../utils/policy/policyEngine.js");
-  const { default: models } = await import("../models/Collection.js");
-  const { modelName, ...queryOptions } = options;
-  
-  const Model = models[modelName];
-  if (!Model) {
-    throw new Error(`Model ${modelName} not found`);
-  }
-
-  // Apply policy filters first
-  let policyFilter;
-  try {
-    policyFilter = await buildQuery({
-      role: options.role,
-      userId: options.userId,
-      action: 'read',
-      modelName: modelName,
-      filter: options.filter || {},
-      returnFilter: true // Special flag to return just the filter
-    });
-  } catch (error) {
-    // console.warn(`Policy engine error for ${modelName}:`, error.message);
-    // Fallback to basic filter if policy fails
-    policyFilter = options.filter || {};
-  }
-
-  // Use optimized pagination
-  return await queryOptimizer.paginatedQuery(Model, {
-    filter: policyFilter,
-    fields: options.fields,
-    populateFields: options.populateFields,
-    sort: options.sort,
-    page: options.page,
-    limit: options.limit,
-    useAggregation: options.populateFields && options.populateFields.length > 0
-  });
 }
 
 // Optimized field selection functions

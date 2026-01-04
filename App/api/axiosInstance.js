@@ -6,6 +6,8 @@ let authContextLogout = null;
 let failedRequestCount = 0;
 const MAX_FAILED_REQUESTS = 5;
 
+const baseUrl = "http://10.55.124.208:3000";
+
 export const setAuthLogout = (logoutFn) => {
   authContextLogout = logoutFn;
 };
@@ -24,7 +26,7 @@ const incrementFailedCount = async () => {
 
 const forceLogout = async () => {
   try {
-    await axios.post("http://192.168.1.108:3000/api/auth/logout", {}, {
+    await axios.post(`${baseUrl}/api/auth/logout`, {}, {
       headers: {
         'x-device-uuid': await getDeviceUUID(),
         'Authorization': `Bearer ${await AsyncStorage.getItem("auth_token")}`
@@ -49,7 +51,7 @@ const forceLogout = async () => {
 };
 
 const axiosInstance = axios.create({
-  baseURL: "http://192.168.1.108:3000/api",
+  baseURL: baseUrl + "/api",
   timeout: 50000,
   withCredentials: true,
 });
@@ -102,7 +104,7 @@ axiosInstance.interceptors.response.use(
         if (!refreshToken) throw new Error("No refresh token");
         
         const refreshResponse = await axios.post(
-          "http://192.168.1.108:3000/api/auth/refresh",
+          `${baseUrl}/api/auth/refresh`,
           { refreshToken, platform: "mobile" },
           { headers: { 'x-device-uuid': await getDeviceUUID() } }
         );

@@ -275,6 +275,7 @@ const TasksPage = () => {
             fetchTasks();
             setShowCreateModal(false);
           }}
+          selectedClient={selectedClient}
         />
       )}
     </div>

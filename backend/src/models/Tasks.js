@@ -12,6 +12,15 @@ const TaskSchema = new mongoose.Schema({
   linkedTicketId: { type: mongoose.Schema.Types.ObjectId, ref: 'Ticket' },
   isFromTicket: { type: Boolean, default: false },
   
+  // Milestone fields
+  milestoneId: { type: mongoose.Schema.Types.ObjectId, ref: "milestones", required: true, index: true },
+  milestoneStatus: {
+    type: String,
+    enum: ["Pending", "In Progress", "Completed", "On Hold"],
+    default: "Pending",
+    index: true
+  },
+  
   title: { type: String, trim: true, required: true, index: 'text' },
   referenceUrl: { type: String },
   userStory: { type: String, index: 'text' },
@@ -64,5 +73,6 @@ TaskSchema.index({ followers: 1, updatedAt: -1 }); // Follower notifications
 TaskSchema.index({ startDate: 1, endDate: 1 }); // Date range queries
 TaskSchema.index({ linkedTicketId: 1 }); // Ticket synchronization
 TaskSchema.index({ isFromTicket: 1 }); // Ticket-derived tasks
+TaskSchema.index({ milestoneId: 1, milestoneStatus: 1 }); // Milestone tracking
 
 export default mongoose.model("tasks", TaskSchema);

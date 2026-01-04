@@ -3,6 +3,14 @@ import { Schema, model } from 'mongoose';
 
 const ClientSchema = new Schema({
   name: { type: String, trim: true, unique: true },
+  ownerName: { type: String, trim: true },
+  businessType: { type: String, trim: true },
+  contactInfo : [{
+    name: { type: String },
+    email: { type: String, trim: true, lowercase: true },
+    phone: { type: String },
+    designation: { type: String }
+  }],
   email: { type: String, trim: true, lowercase: true },
   phone: { type: String },
   address: {
@@ -12,13 +20,38 @@ const ClientSchema = new Schema({
     zip: String,
     country: String
   },
-  contactPerson: { type: String },
-  projectTypes: [{ type: Schema.Types.ObjectId, ref: 'projecttypes' }] // ✅ updated
+  gstIN: { type: String, trim: true , uppercase: true, constraints: { length: 15 } },
+  source: { type: String },
+  leadStatus: {
+    type: String,
+    enum: ['New', 'Qualified', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost'],
+    default: 'New'
+  },
+  leadType: { type: Schema.Types.ObjectId, ref: 'leadTypes' },
+  referenceType: { type: Schema.Types.ObjectId, ref: 'referenceTypes' },
+  Status : {type: String, enum: ['Active', 'Inactive'], default: 'Inactive' },
+  agent: [{ type: Schema.Types.ObjectId, ref: 'agents' }],
+  accountManager: { type: Schema.Types.ObjectId, ref: 'Employee' },
+  projectManager: { type: Schema.Types.ObjectId, ref: 'Employee' },
+  projectTypes: [{ type: Schema.Types.ObjectId, ref: 'projecttypes' }],
+  proposedProducts: [{ type: String }],
+  milestones: [{
+    milestoneId: { type: Schema.Types.ObjectId, ref: 'milestones', required: true },
+    status: {
+      type: String,
+      enum: ['Pending', 'In Progress', 'Completed', 'On Hold'],
+      default: 'Pending'
+    },
+    assignedTo: { type: Schema.Types.ObjectId, ref: 'Employee' },
+    dueDate: { type: Date },
+    completedDate: { type: Date },
+    notes: { type: String }
+  }]
 }, { timestamps: true });
 
 // Indexes for optimal filtering
 ClientSchema.index({ name: 1 });
 ClientSchema.index({ email: 1 });
-ClientSchema.index({ createdAt: -1 });
+ClientSchema.index({ accountManager: 1 });
 
 export default model('clients', ClientSchema);

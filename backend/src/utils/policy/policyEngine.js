@@ -62,6 +62,7 @@ export async function buildQuery({
   // --------------------------------------------------
   //  1️⃣ VALIDATE BEFORE CRUD (NO FAIL-OPEN ANYMORE)
   // --------------------------------------------------
+  if (fields) console.log("[policyEngine.js:58] Before validator - fields:", fields);
   const { filter: safeFilter, fields: safeFields, body: safeBody } = validator({
     action,
     modelName,
@@ -74,6 +75,7 @@ export async function buildQuery({
     policy,
     getPolicy        // <-- important for lookup protection
   });
+  if (safeFields) console.log("[policyEngine.js:72] After validator - safeFields:", safeFields);
 
   // If only filter is requested, return it
   if (returnFilter) {
@@ -96,6 +98,7 @@ export async function buildQuery({
   // --------------------------------------------------
   //  3️⃣ EXECUTE CRUD WITH SAFE DATA ONLY
   // --------------------------------------------------
+  if (safeFields) console.log("[policyEngine.js:89] Passing to buildReadQuery - safeFields:", safeFields);
   return await crudHandler({
     modelName,
     role,

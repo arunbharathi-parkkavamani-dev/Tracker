@@ -3,13 +3,17 @@ import mongoose from 'mongoose';
 const ticketSchema = new mongoose.Schema({
   ticketId: { type: String, unique: true },
   title: { type: String, required: true, maxlength: 200 },
-  description: { type: String, required: true },
-  category: { 
+  userStory: { type: String, required: true }, // This will be visible to external clients
+  description: { type: String }, // Internal description
+  product: { type: String, required: true },
+  type: { 
     type: String, 
-    enum: ['IT Support', 'HR Query', 'Facility', 'Finance', 'Development', 'General'], 
-    required: true 
+    enum: ['Bug', 'Feature', 'Enhancement', 'Support'], 
+    default: 'Bug' 
   },
-  projectTypeId: { type: mongoose.Schema.Types.ObjectId, ref: 'ProjectType' },
+  impactAnalysis: { type: String },
+  url: { type: String },
+  acceptanceCriteria: { type: String },
   clientId: { type: mongoose.Schema.Types.ObjectId, ref: 'Client' },
   taskTypeId: { type: mongoose.Schema.Types.ObjectId, ref: 'TaskType' },
   priority: { 
@@ -19,11 +23,19 @@ const ticketSchema = new mongoose.Schema({
   },
   status: { 
     type: String, 
-    enum: ['Open', 'In Progress', 'Resolved', 'Closed'], 
+    enum: ['Open', 'In Progress', 'Review', 'Testing', 'Completed', 'Closed'], 
     default: 'Open' 
   },
-  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee', required: true },
-  assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee' },
+  createdBy: { type: mongoose.Schema.Types.ObjectId, refPath: 'createdByModel', required: true },
+  createdByModel: { type: String, enum: ['Employee', 'agents'], required: true },
+  assignedTo: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Employee' }], // Multiple assignees
+  accountManager: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Employee',
+    get: function() {
+      return this.clientId?.accountManager || this.assignedTo?.[0];
+    }
+  },
   department: { type: mongoose.Schema.Types.ObjectId, ref: 'Department' },
   
   // Task synchronization fields
@@ -32,11 +44,26 @@ const ticketSchema = new mongoose.Schema({
   convertedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee' },
   convertedAt: { type: Date },
   
+  // Milestone fields
+  milestoneId: { type: mongoose.Schema.Types.ObjectId, ref: 'milestones', required: true, index: true },
+  milestoneStatus: {
+    type: String,
+    enum: ['Pending', 'In Progress', 'Completed', 'On Hold'],
+    default: 'Pending',
+    index: true
+  },
+  
   attachments: [{
     filename: String,
+    originalName: String,
     path: String,
+    mimetype: String,
+    size: Number,
     uploadedAt: { type: Date, default: Date.now }
   }],
+  dueDate: { type: Date },
+  startDate: { type: Date, default: Date.now },
+  liveHours: { type: Number, default: 0 },
   comments: [{
     comment: String,
     commentedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee' },
@@ -68,6 +95,7 @@ ticketSchema.index({ taskTypeId: 1 });
 ticketSchema.index({ category: 1, priority: 1 });
 ticketSchema.index({ status: 1, createdAt: -1 });
 ticketSchema.index({ linkedTaskId: 1 });
-ticketSchema.index({ isConvertedToTask: 1 });
+ticketSchema.index({ accountManager: 1 });
+ticketSchema.index({ milestoneId: 1, milestoneStatus: 1 });
 
 export default mongoose.model('Ticket', ticketSchema);

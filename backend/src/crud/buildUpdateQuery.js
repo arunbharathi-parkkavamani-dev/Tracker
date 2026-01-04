@@ -87,7 +87,7 @@ export default async function buildUpdateQuery({
   let updatedDoc;
 
   // Handle external agent requests
-  if (req?.agent?.isExternal) {
+  if (body?.isExternal) {
     // Skip role-based filtering for external agents
     if (docId) {
       updatedDoc = await Model.findByIdAndUpdate(docId, { $set: body }, {

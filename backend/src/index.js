@@ -4,7 +4,8 @@ import { Server } from "socket.io";
 import dotenv from "dotenv";
 import cors from "cors";
 import AuthRouter from "./routes/authRoutes.js";
-import agentAuthRouter from "./routes/agentAuth.js";
+import agentRoutes from "./routes/agentRoutes.js";
+import agentInviteRoutes from "./routes/agentInviteRoutes.js";
 import populateHelper from "./routes/populateRoutes.js";
 import fileRoutes from "./routes/fileRoutes.js";
 import locationRoutes from "./routes/locationRoutes.js";
@@ -50,27 +51,16 @@ const server = http.createServer(app);
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 
-// Debug middleware - log all requests
-app.use((req, res, next) => {
-  console.log('=== REQUEST RECEIVED ===');
-  console.log('Method:', req.method);
-  console.log('URL:', req.url);
-  console.log('Headers:', req.headers);
-  console.log('Body:', req.body);
-  console.log('========================');
-  next();
-});
 
 const allowedOrigins = [
   "https://lmx-tracker--p1hvjsjwqq.expo.app",
-  "http://10.45.192.208:4000",
+  "http://localhost:3001",
 ];
 
 const lanRegex = /^http:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+):\d+$/;
 
 app.use(cors({
   origin: (origin, callback) => {
-    console.log('CORS Origin check:', origin);
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin) || lanRegex.test(origin)) {
       return callback(null, true);
@@ -94,15 +84,9 @@ app.get('/test', (req, res) => {
 
 
 // Routes
-app.use("/api/agent", agentAuthRouter);
-app.use("/api/auth", (req, res, next) => {
-  console.log('=== AUTH ROUTER REACHED ===');
-  console.log('Auth Route - Method:', req.method);
-  console.log('Auth Route - URL:', req.url);
-  console.log('Auth Route - Body:', req.body);
-  console.log('===========================');
-  next();
-}, AuthRouter);
+app.use("/api/agent", agentRoutes);
+app.use("/api/agent-invite", agentInviteRoutes);
+app.use("/api/auth", AuthRouter);
 app.use("/api/populate", populateHelper);
 app.use("/api/files", fileRoutes);
 app.use("/api", locationRoutes);

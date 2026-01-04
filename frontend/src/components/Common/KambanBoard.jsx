@@ -103,8 +103,11 @@ const KanbanBoard = ({
   const TaskCard = ({ task }) => {
     const isActivity = task.activity !== undefined;
     const title = isActivity ? task.activity : task.title;
+    const userStory = task.userStory || task.description || '';
+    const userStoryPreview = userStory.split('\n').slice(0, 2).join('\n').substring(0, 100) + (userStory.length > 100 ? '...' : '');
     const taskType = isActivity ? task.taskType?.name : task.taskTypeId?.name;
-    const user = isActivity ? task.user : (task.assignedTo?.[0] || task.createdBy);
+    const assignees = task.assignedTo || [];
+    const createdBy = task.createdBy;
     const date = isActivity ? task.date : task.endDate || task.createdAt;
     
     return (
@@ -126,30 +129,71 @@ const KanbanBoard = ({
             </button>
           </div>
           
-          <p className="text-sm font-medium leading-tight text-black dark:text-white">
+          {/* Task Title */}
+          <h3 className="text-sm font-semibold leading-tight text-black dark:text-white">
             {title || 'Untitled Task'}
-          </p>
+          </h3>
           
+          {/* User Story Preview (first two lines) */}
+          {userStoryPreview && (
+            <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+              {userStoryPreview}
+            </p>
+          )}
+          
+          {/* Assignees and Created By */}
           <div className="flex items-center justify-between pt-2">
-            <div className="flex -space-x-2">
-              {task.assignedTo?.slice(0, 2).map((assignee, index) => (
-                assignee.basicInfo?.profileImage ? (
-                  <img
-                    key={index}
-                    src={`http://10.232.224.208:3000/api/files/render/profile/${typeof assignee.basicInfo.profileImage === 'string' ? assignee.basicInfo.profileImage.split('/').pop() : assignee.basicInfo.profileImage}`}
-                    alt={assignee.basicInfo?.firstName || 'User'}
-                    className="h-6 w-6 rounded-full border-2 border-white dark:border-black object-cover"
-                  />
-                ) : (
-                  <div 
-                    key={index}
-                    className="h-6 w-6 rounded-full bg-blue-100 border-2 border-white dark:border-black flex items-center justify-center text-xs font-medium text-blue-700"
-                  >
-                    {assignee.basicInfo?.firstName?.[0]}{assignee.basicInfo?.lastName?.[0]}
+            <div className="flex items-center space-x-2">
+              {/* Assignees */}
+              <div className="flex -space-x-2">
+                {assignees.slice(0, 3).map((assignee, index) => (
+                  assignee.basicInfo?.profileImage ? (
+                    <img
+                      key={index}
+                      src={`http://10.232.224.208:3000/api/files/render/profile/${typeof assignee.basicInfo.profileImage === 'string' ? assignee.basicInfo.profileImage.split('/').pop() : assignee.basicInfo.profileImage}`}
+                      alt={assignee.basicInfo?.firstName || 'User'}
+                      className="h-6 w-6 rounded-full border-2 border-white dark:border-black object-cover"
+                      title={`${assignee.basicInfo?.firstName} ${assignee.basicInfo?.lastName}`}
+                    />
+                  ) : (
+                    <div 
+                      key={index}
+                      className="h-6 w-6 rounded-full bg-blue-100 border-2 border-white dark:border-black flex items-center justify-center text-xs font-medium text-blue-700"
+                      title={`${assignee.basicInfo?.firstName} ${assignee.basicInfo?.lastName}`}
+                    >
+                      {assignee.basicInfo?.firstName?.[0]}{assignee.basicInfo?.lastName?.[0]}
+                    </div>
+                  )
+                ))}
+                {assignees.length > 3 && (
+                  <div className="h-6 w-6 rounded-full bg-gray-100 border-2 border-white dark:border-black flex items-center justify-center text-xs font-medium text-gray-600">
+                    +{assignees.length - 3}
                   </div>
-                )
-              ))}
+                )}
+              </div>
+              
+              {/* Created By */}
+              {createdBy && (
+                <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                  <span className="mr-1">by</span>
+                  {createdBy.basicInfo?.profileImage ? (
+                    <img
+                      src={`http://10.232.224.208:3000/api/files/render/profile/${typeof createdBy.basicInfo.profileImage === 'string' ? createdBy.basicInfo.profileImage.split('/').pop() : createdBy.basicInfo.profileImage}`}
+                      alt={createdBy.basicInfo?.firstName || 'User'}
+                      className="h-4 w-4 rounded-full object-cover mr-1"
+                    />
+                  ) : (
+                    <div className="h-4 w-4 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600 mr-1">
+                      {createdBy.basicInfo?.firstName?.[0]}
+                    </div>
+                  )}
+                  <span className="truncate max-w-[60px]">
+                    {createdBy.basicInfo?.firstName}
+                  </span>
+                </div>
+              )}
             </div>
+            
             <span className="text-xs text-gray-500 dark:text-gray-400">
               {date ? new Date(date).toLocaleDateString() : 'No due date'}
             </span>

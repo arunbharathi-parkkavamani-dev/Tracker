@@ -118,14 +118,25 @@ export const authMiddleware = async (req, res, next) => {
       req.cookies?.auth_token ||
       req.headers.authorization?.split(" ")[1];
     const deviceUUID = req.headers['x-device-uuid'] || req.headers['X-Device-UUID'] || req.headers['deviceuuid'];
+    const source = req.headers['x-source'];
 
     if (!token) return res.status(401).json({ message: "Unauthorized" });
-    if (!deviceUUID) return res.status(401).json({ message: "Device UUID required" });
+    
+    // Skip device UUID check for external sources
+    if (!deviceUUID && source !== 'external') {
+      return res.status(401).json({ message: "Device UUID required" });
+    }
 
     // Decode to get userId
     const decoded = jwt.decode(token);
     if (!decoded?.id)
       return res.status(401).json({ message: "Invalid token" });
+
+    // For external sources, skip session validation
+    if (source === 'external') {
+      req.user = decoded;
+      return next();
+    }
 
     const userSession = await session.findOne({
       userId: decoded.id,

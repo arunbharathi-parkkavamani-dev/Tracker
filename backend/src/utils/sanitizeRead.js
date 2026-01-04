@@ -12,22 +12,17 @@
  * @returns {Array} sanitized field list
  */
 export default function sanitizeRead({ fields, policy }) {
-
+  if (fields) console.log("[sanitizeRead.js:15] Inside sanitizeRead - fields:", fields);
+  
   const forbidden = policy?.forbiddenAccess?.read || [];
   const allowed   = policy?.allowAccess?.read || [];
 
-  // If no fields requested → return all allowed non-forbidden (fallback)
+  // If no fields requested but policy allows "*" → return ["*"]
   if (!fields) {
-    if (allowed.includes("*")) {
-      // return wildcard complete allow except forbidden
-      return ["*"]; // "*" informs buildReadQuery to fetch all and sanitize populate via registry
-    }
-    // no wildcard → return explicit allow list
-    return allowed.filter(f => !forbidden.includes(f));
+    return allowed.includes("*") ? ["*"] : [];
   }
 
   // Convert fields string ("a,b,c") → array
-  fields = JSON.stringify(fields);
   if (typeof fields === "string") {
     fields = fields.split(",").map(f => f.trim()).filter(Boolean);
   }
@@ -49,7 +44,7 @@ export default function sanitizeRead({ fields, policy }) {
   }
   
   /** --------------------------------------------------
-   * 2) Apply allowed list rules
+   * 2) Apply allowed list rules (only if not wildcard)
    * -------------------------------------------------- */
   if (!allowed.includes("*")) {
     sanitized = sanitized.filter(
@@ -57,18 +52,7 @@ export default function sanitizeRead({ fields, policy }) {
     );
   }
   
-  /** --------------------------------------------------
-   * 3) Final fallback (never return empty = leak-safety)
-   * If nothing remains → user asked fields not allowed
-   * Return explicit allowed (not forbidden)
-   * -------------------------------------------------- */
-  if (sanitized.length === 0) {
-    if (allowed.includes("*")) {
-      return ["*"];
-    }
-    return allowed.filter(f => !forbidden.includes(f));
-  }
-
+  // Return the sanitized requested fields (no fallback to wildcard)
   return sanitized;
 }
 

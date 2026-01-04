@@ -39,11 +39,11 @@ export default function tickets() {
             projectTypeId: ticketData.projectTypeId,
             taskTypeId: ticketData.taskTypeId,
             createdBy: ticketData.createdBy,
-            assignedTo: ticketData.assignedTo ? [ticketData.assignedTo] : [],
+            assignedTo: ticketData.assignedTo || [],
             linkedTicketId: ticketData._id,
             isFromTicket: true,
             title: ticketData.title,
-            userStory: ticketData.description,
+            userStory: ticketData.userStory, // Use userStory field
             priorityLevel: ticketData.priority,
             status: 'To Do',
             followers: [userId]
@@ -65,6 +65,9 @@ export default function tickets() {
           await models.tickets.findByIdAndUpdate(docId, {
             linkedTaskId: taskData._id
           });
+          
+          // Send notifications
+          await notifyTicketConversion(ticketData, taskData, userId);
         }
       }
     }

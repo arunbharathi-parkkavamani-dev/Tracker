@@ -1,275 +1,234 @@
-import { useState, useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Search, Filter, Download, RefreshCw } from 'lucide-react';
-import Pagination from './Pagination';
+import { useEffect, useMemo, useState } from "react";
+import {
+  ChevronUp,
+  ChevronDown,
+  ChevronsLeft,
+  ChevronsRight,
+  Pencil,
+  Trash2,
+} from "lucide-react";
+import SearchBar from "./SearchBar";
 
-const TableGenerator = ({ 
-  model,
-  title = "Data Table",
-  columns = [],
-  searchable = true,
-  sortable = true,
-  pagination = true,
-  itemsPerPage = 10,
-  onRowClick = null,
-  className = "",
-  filters = {},
-  autoRefresh = false,
-  refreshInterval = 30000,
-  showStats = false,
-  exportable = false,
-  bulkActions = false,
-  selectedRows = [],
-  onSelectionChange = null
-}) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
+/* -------------------- Helpers -------------------- */
 
-  // Use basic state management instead of optimized data fetching
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [paginationInfo, setPaginationInfo] = useState({
-    currentPage: 1,
-    totalPages: 1,
-    totalItems: 0,
-    itemsPerPage
+// camelCase → Capitalized Words
+const formatColumnName = (key) =>
+  key.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase());
+
+const normalizeData = (data) => {
+  if (Array.isArray(data)) return data;
+  if (typeof data === "object" && data !== null) return Object.values(data);
+  return [];
+};
+
+// number + string safe sorting
+const sortData = (data, key, direction) => {
+  return [...data].sort((a, b) => {
+    const A = a[key];
+    const B = b[key];
+
+    if (A == null) return 1;
+    if (B == null) return -1;
+
+    const isNumA = !isNaN(A);
+    const isNumB = !isNaN(B);
+
+    if (isNumA && isNumB) {
+      return direction === "asc" ? A - B : B - A;
+    }
+
+    return direction === "asc"
+      ? String(A).localeCompare(String(B), undefined, { numeric: true })
+      : String(B).localeCompare(String(A), undefined, { numeric: true });
   });
+};
 
-  const handlePageChange = () => {};
-  const handleItemsPerPageChange = () => {};
-  const handleFilterChange = () => {};
-  const handleSortChange = () => {};
-  const handleRefresh = () => {};
-  const handleSearch = () => {};
+const ROWS_PER_PAGE = 10;
 
-  // Auto-generate columns if not provided
-  const autoColumns = data.length > 0 && columns.length === 0 
-    ? Object.keys(data[0]).map(key => ({
-        key,
-        label: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1'),
-        render: (value) => value?.toString() || '-',
-        sortable: true,
-        searchable: true
-      }))
-    : columns;
+/* -------------------- Component -------------------- */
 
-  // Handle search with debouncing
+const TableGenerator = ({
+  data,
+  customRender = {},
+  customColumns = [],
+  hiddenColumns = [],
+  enableActions = true,
+  onEdit,
+  onDelete,
+}) => {
+  const [tableData, setTableData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
+  const [columns, setColumns] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
+
+  /* Init */
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (model && searchable) {
-        handleSearch(searchTerm);
-      }
-    }, 300);
+    const normalized = normalizeData(data);
+    setTableData(normalized);
+    setFilteredData(normalized);
+    setCurrentPage(1);
 
-    return () => clearTimeout(timeoutId);
-  }, [searchTerm, handleSearch, model, searchable]);
-
-  // Auto refresh
-  useEffect(() => {
-    if (!autoRefresh || !model) return;
-    
-    const interval = setInterval(handleRefresh, refreshInterval);
-    return () => clearInterval(interval);
-  }, [autoRefresh, refreshInterval, handleRefresh, model]);
-
-  const handleSort = (key) => {
-    if (!sortable) return;
-    
-    if (model) {
-      // For server-side sorting
-      handleSortChange({ [key]: 1 }); // Toggle logic can be added
+    if (normalized.length > 0) {
+      const keys = Object.keys(normalized[0]).filter(key => !hiddenColumns.includes(key));
+      setColumns(enableActions ? [...keys, "__actions"] : keys);
     }
+  }, [data, enableActions, hiddenColumns]);
+
+  /* Sorting */
+  const sortedData = useMemo(() => {
+    if (!sortConfig.key || sortConfig.key === "__actions")
+      return filteredData;
+    return sortData(filteredData, sortConfig.key, sortConfig.direction);
+  }, [filteredData, sortConfig]);
+
+  /* Pagination */
+  const totalPages = Math.ceil(sortedData.length / ROWS_PER_PAGE);
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * ROWS_PER_PAGE;
+    return sortedData.slice(start, start + ROWS_PER_PAGE);
+  }, [sortedData, currentPage]);
+
+  const handleSort = (col) => {
+    if (col === "__actions") return;
+    setSortConfig((prev) => ({
+      key: col,
+      direction:
+        prev.key === col && prev.direction === "asc" ? "desc" : "asc",
+    }));
   };
 
-  const handleExport = async () => {
-    try {
-      // Convert to CSV
-      const csvContent = convertToCSV(data, autoColumns);
-      downloadCSV(csvContent, `${model || 'data'}_export_${new Date().toISOString().split('T')[0]}.csv`);
-    } catch (err) {
-      console.error('Export failed:', err);
-    }
-  };
-
-  const convertToCSV = (data, columns) => {
-    const headers = columns.map(col => col.label).join(',');
-    const rows = data.map(item => 
-      columns.map(col => {
-        const value = item[col.key];
-        return `"${value?.toString().replace(/"/g, '""') || ''}"`;
-      }).join(',')
-    );
-    return [headers, ...rows].join('\n');
-  };
-
-  const downloadCSV = (content, filename) => {
-    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = filename;
-    link.click();
-  };
-
-  const renderCellValue = (item, column) => {
-    const value = item[column.key];
-    return column.render ? column.render(value, item) : (value?.toString() || '-');
-  };
+  /* -------------------- Render -------------------- */
 
   return (
-    <div className={`bg-white dark:bg-black border border-gray-200 dark:border-gray-700 rounded ${className}`}>
-      {/* Header */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex justify-between items-center mb-3">
-          <h3 className="text-lg font-semibold text-black dark:text-white">{title}</h3>
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-500 dark:text-gray-400">
-              {paginationInfo.totalItems || data.length} {(paginationInfo.totalItems || data.length) === 1 ? 'item' : 'items'}
-            </span>
-            <button
-              onClick={handleRefresh}
-              disabled={loading}
-              className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            >
-              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            </button>
-            {exportable && (
-              <button
-                onClick={handleExport}
-                className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-              >
-                <Download className="h-4 w-4" />
-              </button>
-            )}
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            >
-              <Filter className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-        
-        {searchable && (
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-black text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-600"
-            />
-          </div>
-        )}
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+      <div className="p-4 border-b border-gray-200">
+        <SearchBar
+          data={tableData}
+          searchFields={columns.filter((c) => c !== "__actions" && !hiddenColumns.includes(c))}
+          placeholder="Search records..."
+          onFilter={(d) => {
+            setFilteredData(d);
+            setCurrentPage(1);
+          }}
+        />
       </div>
 
-      {/* Loading State */}
-      {loading && (
-        <div className="flex items-center justify-center py-8">
-          <RefreshCw className="h-6 w-6 animate-spin text-blue-600" />
-          <span className="ml-2 text-gray-600 dark:text-gray-400">Loading...</span>
+      {paginatedData.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="text-gray-400 text-lg mb-2">No records found</div>
+          <div className="text-gray-500 text-sm">Try adjusting your search criteria</div>
         </div>
-      )}
-
-      {/* Error State */}
-      {error && (
-        <div className="p-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400">
-          <p className="text-red-700 dark:text-red-400">{error}</p>
-        </div>
-      )}
-
-      {/* Table */}
-      {!loading && !error && (
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-800">
-              <tr>
-                {bulkActions && (
-                  <th className="px-6 py-3 text-left">
-                    <input
-                      type="checkbox"
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          onSelectionChange?.(data.map(item => item._id));
-                        } else {
-                          onSelectionChange?.([]);
-                        }
-                      }}
-                      className="rounded border-gray-300"
-                    />
-                  </th>
-                )}
-                {autoColumns.map((column) => (
-                  <th
-                    key={column.key}
-                    onClick={() => column.sortable !== false && handleSort(column.key)}
-                    className={`px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider ${
-                      column.sortable !== false ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700' : ''
-                    }`}
-                  >
-                    <div className="flex items-center space-x-1">
-                      <span>{column.label}</span>
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="bg-white dark:bg-black divide-y divide-gray-200 dark:divide-gray-700">
-              {data.map((item, index) => (
-                <tr
-                  key={item._id || index}
-                  onClick={() => onRowClick && onRowClick(item)}
-                  className={`${onRowClick ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800' : ''}`}
-                >
-                  {bulkActions && (
-                    <td className="px-6 py-4">
-                      <input
-                        type="checkbox"
-                        checked={selectedRows.includes(item._id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            onSelectionChange?.([...selectedRows, item._id]);
-                          } else {
-                            onSelectionChange?.(selectedRows.filter(id => id !== item._id));
-                          }
-                        }}
-                        className="rounded border-gray-300"
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </td>
-                  )}
-                  {autoColumns.map((column) => (
-                    <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-black dark:text-white">
-                      {renderCellValue(item, column)}
-                    </td>
+      ) : (
+        <>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+                  {columns.map((col) => (
+                    <th
+                      key={col}
+                      onClick={() => handleSort(col)}
+                      className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider select-none cursor-pointer hover:bg-gray-200 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        {col === "__actions"
+                          ? "Actions"
+                          : formatColumnName(col)}
+                        {sortConfig.key === col &&
+                          (sortConfig.direction === "asc" ? (
+                            <ChevronUp size={14} className="text-blue-600" />
+                          ) : (
+                            <ChevronDown size={14} className="text-blue-600" />
+                          ))}
+                      </div>
+                    </th>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </thead>
 
-      {/* Empty State */}
-      {!loading && !error && data.length === 0 && (
-        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-          No data available
-        </div>
-      )}
+              <tbody className="divide-y divide-gray-200">
+                {paginatedData.map((row, i) => (
+                  <tr key={i} className="hover:bg-blue-50 transition-colors duration-150">
+                    {columns.map((col) => (
+                      <td key={col} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {col === "__actions" ? (
+                          <div className="flex items-center gap-3">
+                            {onEdit && (
+                              <button
+                                onClick={() => onEdit(row)}
+                                className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors duration-150"
+                                title="Edit"
+                              >
+                                <Pencil size={14} />
+                              </button>
+                            )}
+                            {onDelete && (
+                              <button
+                                onClick={() => onDelete(row)}
+                                className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors duration-150"
+                                title="Delete"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            )}
+                          </div>
+                        ) : customRender[col] ? (
+                          customRender[col](row)
+                        ) : (
+                          <span className="font-medium">{row[col] ?? "-"}</span>
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-      {/* Pagination */}
-      {pagination && paginationInfo.totalPages > 1 && (
-        <Pagination
-          currentPage={paginationInfo.currentPage}
-          totalPages={paginationInfo.totalPages}
-          totalItems={paginationInfo.totalItems}
-          itemsPerPage={paginationInfo.itemsPerPage}
-          onPageChange={handlePageChange}
-          onItemsPerPageChange={handleItemsPerPageChange}
-          showItemsPerPage={true}
-          showPageInfo={true}
-          showJumpToPage={paginationInfo.totalPages > 10}
-        />
+          {/* Pagination */}
+          <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+            <div className="text-sm text-gray-700">
+              Showing {((currentPage - 1) * ROWS_PER_PAGE) + 1} to {Math.min(currentPage * ROWS_PER_PAGE, sortedData.length)} of {sortedData.length} results
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => p - 1)}
+                className="inline-flex items-center justify-center w-8 h-8 rounded-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                title="Previous page"
+              >
+                <ChevronsLeft size={16} />
+              </button>
+
+              <div className="flex gap-1">
+                {[...Array(totalPages)].map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentPage(i + 1)}
+                    className={`w-8 h-8 rounded-md text-sm font-medium transition-colors ${
+                      currentPage === i + 1
+                        ? "bg-blue-600 text-white shadow-sm"
+                        : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((p) => p + 1)}
+                className="inline-flex items-center justify-center w-8 h-8 rounded-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                title="Next page"
+              >
+                <ChevronsRight size={16} />
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

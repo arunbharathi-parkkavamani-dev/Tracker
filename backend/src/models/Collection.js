@@ -26,7 +26,11 @@ import payrolls from "./Payroll.js";
 import tickets from "./Ticket.js";
 import shifts from "./Shift.js";
 import hrpolicies from "./HRPolicy.js";
+import agents from "./Agent.js";
 import milestones from "./MileStone.js";
+import emailconfigs from "./EmailConfig.js";
+import referencetypes from "./ReferenceType.js";
+import leadtypes from "./LeadType.js";
 
 const models = {
   accesspolicies,
@@ -55,7 +59,12 @@ const models = {
   payrolls,
   tickets,
   shifts,
-  hrpolicies
+  hrpolicies,
+  agents,
+  emailconfigs,
+  milestones,
+  referencetypes,
+  leadtypes
 };
 
 export default models;

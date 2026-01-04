@@ -49,6 +49,8 @@ export function conditionsValidator({ policy, action, filter, fields, body, cont
 /*     ⚡️ 2. FIELDS (select & populate)           */
 /* ─────────────────────────────────────────────── */
 export function fieldsValidator({ policy, action, modelName, fields }) {
+  if (fields) console.log("[Validator.js:47] fieldsValidator - fields:", fields);
+  // If no fields specified, let sanitizeRead handle it based on policy
   if (!fields) return fields;
 
   const blocked = policy.forbiddenAccess?.[action] || [];
@@ -179,13 +181,6 @@ export default function validator({
   policy,
   getPolicy, // needed for aggregation
 }) {
-  console.log('=== VALIDATOR DEBUG ===');
-  console.log('Action:', action);
-  console.log('Model:', modelName);
-  console.log('User Role:', role);
-  console.log('Policy Role:', policy?.role);
-  console.log('Policy exists:', !!policy);
-  console.log('=======================');
   // If no policy, allow all operations (temporary fix)
   if (!policy) {
     // console.warn(`⚠️ No policy found for ${modelName}, allowing operation`);
@@ -227,7 +222,9 @@ export default function validator({
   }));
 
   // 2️⃣ Field select access
+  if (fields) console.log("[Validator.js:207] Before fieldsValidator - fields:", fields);
   fields = fieldsValidator({ policy, action, modelName, fields });
+  if (fields) console.log("[Validator.js:209] After fieldsValidator - fields:", fields);
 
   // 3️⃣ Body access (create / update)
   if (["create", "update"].includes(action)) {

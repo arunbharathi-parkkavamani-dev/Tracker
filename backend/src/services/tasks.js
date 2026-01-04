@@ -1,9 +1,15 @@
 import ticketTaskSync from './ticketTaskSync.js';
 import asyncNotificationService from './asyncNotificationService.js';
+import { createMilestoneTask } from './milestoneService.js';
 
 export const beforeCreate = async ({ body, userId }) => {
   // Creator should always be a follower
   body.followers = Array.from(new Set([...(body.followers || []), userId]));
+  
+  // Ensure milestone is provided
+  if (!body.milestoneId) {
+    throw new Error('Milestone is required for task creation');
+  }
 };
 
 export const afterCreate = async ({ modelName, docId, userId }) => {
@@ -77,6 +83,14 @@ export const afterUpdate = async (taskData, updateData, userId) => {
         updateData.assignedTo, 
         userId
       );
+    }
+    
+    // Update tickets linked to this task
+    await updateLinkedTicketStatus(taskData._id, updateData.status);
+    
+    // Sync milestone status if changed
+    if (updateData.milestoneStatus && taskData.milestoneId) {
+      await syncMilestoneStatus(taskData.clientId, taskData.milestoneId, updateData.milestoneStatus);
     }
     
     // Get full task data
@@ -178,5 +192,64 @@ export const afterUpdate = async (taskData, updateData, userId) => {
     
   } catch (error) {
     console.error('Task afterUpdate error:', error);
+  }
+};
+
+const updateLinkedTicketStatus = async (taskId, taskStatus) => {
+  if (!taskStatus) return;
+  
+  try {
+    const { default: models } = await import('../models/Collection.js');
+    
+    const tickets = await models.tickets.find({ linkedTaskId: taskId });
+    
+    for (const ticket of tickets) {
+      let ticketStatus = ticket.status;
+      
+      // Sync level mapping
+      switch (taskStatus) {
+        case 'In Progress':
+          ticketStatus = 'In Progress';
+          break;
+        case 'Review':
+          ticketStatus = 'Review';
+          break;
+        case 'Testing':
+          ticketStatus = 'Testing';
+          break;
+        case 'Completed':
+          ticketStatus = 'Completed';
+          break;
+        case 'Closed':
+          ticketStatus = 'Closed';
+          break;
+      }
+      
+      if (ticketStatus !== ticket.status) {
+        await models.tickets.findByIdAndUpdate(ticket._id, { status: ticketStatus });
+      }
+    }
+  } catch (error) {
+    console.error('Error updating linked ticket status:', error);
+  }
+};
+
+const syncMilestoneStatus = async (clientId, milestoneId, status) => {
+  try {
+    const { default: models } = await import('../models/Collection.js');
+    
+    // Update client milestone status
+    await models.clients.updateOne(
+      { _id: clientId, 'milestones.milestoneId': milestoneId },
+      { $set: { 'milestones.$.status': status } }
+    );
+    
+    // Update all related tickets
+    await models.tickets.updateMany(
+      { clientId, milestoneId },
+      { milestoneStatus: status }
+    );
+  } catch (error) {
+    console.error('Error syncing milestone status:', error);
   }
 };

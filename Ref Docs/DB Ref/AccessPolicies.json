@@ -1,12 +1,12 @@
 [
   {
     "role": "68d8b98af397d1d97620ba97",
-    "modelName": "roles",
+    "modelName": "milestones",
     "permissions": {
       "read": true,
-      "create": false,
-      "update": false,
-      "delete": false
+      "create": true,
+      "update": true,
+      "delete": true
     },
     "forbiddenAccess": {
       "read": [],
@@ -16,9 +16,9 @@
     },
     "allowAccess": {
       "read": ["*"],
-      "create": [],
-      "update": [],
-      "delete": []
+      "create": ["*"],
+      "update": ["*"],
+      "delete": ["*"]
     },
     "registry": [],
     "conditions": {

@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "../../api/axiosInstance";
 import { useAuth } from "../../context/authProvider";
-import CreateTicketModal from "./CreateTicketModal";
+import TableGenerator from "../../components/Common/TableGenerator";
+import FormRenderer from "../../components/Common/FormRenderer";
 import { Plus, Filter, Search, ArrowUpRight } from "lucide-react";
 
 const TicketsPage = () => {
   const { user } = useAuth();
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingTicket, setEditingTicket] = useState(null);
 
   useEffect(() => {
     fetchTickets();
@@ -18,7 +19,7 @@ const TicketsPage = () => {
   const fetchTickets = async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get('/populate/read/tickets');
+      const response = await axiosInstance.get('/populate/read/tickets?fields=assignedTo,accountManager,createdBy,linkedTaskId');
       const ticketsData = response.data.data || [];
       setTickets(ticketsData);
     } catch (error) {
@@ -28,47 +29,158 @@ const TicketsPage = () => {
     }
   };
 
-  const handlePushToTask = async (ticketId) => {
+  const handlePushToTask = async (ticket) => {
     try {
-      await axiosInstance.put(`/populate/update/tickets/${ticketId}`, {
+      await axiosInstance.put(`/populate/update/tickets/${ticket._id}`, {
         pushTaskSync: true
       });
-      fetchTickets(); // Refresh to show updated status
+      fetchTickets();
     } catch (error) {
       console.error('Error converting ticket to task:', error);
     }
   };
 
-  const getStatusBadge = (status) => {
-    const statusColors = {
-      'open': 'bg-blue-50 text-blue-700 border-blue-200',
-      'investigating': 'bg-amber-50 text-amber-700 border-amber-200',
-      'resolved': 'bg-emerald-50 text-emerald-700 border-emerald-200',
-      'closed': 'bg-gray-50 text-gray-700 border-gray-200'
-    };
-    return statusColors[status] || 'bg-gray-50 text-gray-700 border-gray-200';
+  const handleEdit = (ticket) => {
+    setEditingTicket(ticket);
   };
 
-  const getPriorityIcon = (priority) => {
-    if (priority === 'critical') {
-      return <ArrowUpRight className="h-4 w-4 text-rose-500" />;
-    } else if (priority === 'high') {
-      return <ArrowUpRight className="h-4 w-4 text-orange-500" />;
+  const handleCreateTicket = async (formData) => {
+    try {
+      await axiosInstance.post('/populate/create/tickets', {
+        ...formData,
+        createdBy: user.id
+      });
+      fetchTickets();
+      setShowCreateModal(false);
+    } catch (error) {
+      console.error('Error creating ticket:', error);
+      throw error;
     }
-    return <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />;
   };
 
-  const filteredTickets = tickets.filter(ticket =>
-    ticket.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    ticket.ticketId?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleUpdateTicket = async (formData) => {
+    try {
+      await axiosInstance.put(`/populate/update/tickets/${editingTicket._id}`, formData);
+      fetchTickets();
+      setEditingTicket(null);
+    } catch (error) {
+      console.error('Error updating ticket:', error);
+      throw error;
+    }
+  };
 
-  const openTickets = tickets.filter(t => t.status === 'open').length;
-  const inProgressTickets = tickets.filter(t => t.status === 'investigating').length;
+  const ticketFormFields = [
+    { name: 'title', label: 'Title', type: 'text', placeholder: 'Brief description of the issue', gridClass: 'col-span-2' },
+    { name: 'userStory', label: 'User Story (Description)', type: 'textarea', placeholder: 'User story that will be visible to external clients...', rows: 4, gridClass: 'col-span-2' },
+    { name: 'product', label: 'Product', type: 'text', placeholder: 'Product name' },
+    { name: 'type', label: 'Type', type: 'AutoComplete', source: '', options: [
+      { _id: 'Bug', name: 'Bug' },
+      { _id: 'Feature', name: 'Feature' },
+      { _id: 'Enhancement', name: 'Enhancement' },
+      { _id: 'Support', name: 'Support' }
+    ]},
+    { name: 'priority', label: 'Priority', type: 'AutoComplete', source: '', options: [
+      { _id: 'Low', name: 'Low' },
+      { _id: 'Medium', name: 'Medium' },
+      { _id: 'High', name: 'High' },
+      { _id: 'Critical', name: 'Critical' }
+    ]},
+    { name: 'dueDate', label: 'Due Date', type: 'date' },
+    { name: 'assignedTo', label: 'Assignees', type: 'AutoComplete', multiple: true, source: '/populate/read/employees' },
+    { name: 'impactAnalysis', label: 'Impact Analysis', type: 'textarea', placeholder: 'Impact analysis of the issue...', rows: 3, gridClass: 'col-span-2' },
+    { name: 'url', label: 'URL', type: 'url', placeholder: 'Related URL', gridClass: 'col-span-2' },
+    { name: 'acceptanceCriteria', label: 'Acceptance Criteria', type: 'textarea', placeholder: 'Acceptance criteria for completion...', rows: 3, gridClass: 'col-span-2' },
+    { name: 'description', label: 'Internal Description', type: 'textarea', placeholder: 'Internal notes (not visible to external clients)...', rows: 3, gridClass: 'col-span-2' }
+  ];
+
+  const customRender = {
+    type: (ticket) => (
+      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+        {ticket.type || 'Bug'}
+      </span>
+    ),
+    accountManager: (ticket) => (
+      <span>
+        {ticket.accountManager?.basicInfo?.firstName 
+          ? `${ticket.accountManager.basicInfo.firstName} ${ticket.accountManager.basicInfo.lastName}` 
+          : ticket.assignedTo?.[0]?.basicInfo?.firstName
+          ? `${ticket.assignedTo[0].basicInfo.firstName} ${ticket.assignedTo[0].basicInfo.lastName}`
+          : '-'
+        }
+      </span>
+    ),
+    userStory: (ticket) => (
+      <span className="max-w-[250px] truncate block" title={ticket.userStory}>
+        {ticket.userStory || ticket.description || '-'}
+      </span>
+    ),
+    linkedTaskId: (ticket) => (
+      ticket.linkedTaskId ? (
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200">
+          Task Created
+        </span>
+      ) : (
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-50 text-gray-700 border border-gray-200">
+          No Task
+        </span>
+      )
+    ),
+    status: (ticket) => {
+      const colors = {
+        'Open': 'bg-blue-50 text-blue-700 border-blue-200',
+        'In Progress': 'bg-orange-50 text-orange-700 border-orange-200',
+        'Review': 'bg-purple-50 text-purple-700 border-purple-200',
+        'Testing': 'bg-cyan-50 text-cyan-700 border-cyan-200',
+        'Completed': 'bg-green-50 text-green-700 border-green-200',
+        'Closed': 'bg-gray-50 text-gray-700 border-gray-200'
+      };
+      return (
+        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${colors[ticket.status] || 'bg-gray-50 text-gray-700 border-gray-200'}`}>
+          {ticket.status}
+        </span>
+      );
+    },
+    dueDate: (ticket) => (
+      <span>{ticket.dueDate ? new Date(ticket.dueDate).toLocaleDateString() : '-'}</span>
+    ),
+    assignedTo: (ticket) => (
+      <div className="flex flex-col gap-1">
+        {ticket.assignedTo?.map((assignee, idx) => (
+          <span key={idx} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+            {assignee.basicInfo?.firstName} {assignee.basicInfo?.lastName}
+          </span>
+        )) || '-'}
+      </div>
+    ),
+    __actions: (ticket) => (
+      <div className="flex gap-2">
+        <button
+          onClick={() => handleEdit(ticket)}
+          className="px-3 py-1 text-xs font-medium rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+        >
+          Edit
+        </button>
+        <button
+          onClick={() => handlePushToTask(ticket)}
+          disabled={ticket.isConvertedToTask || ticket.linkedTaskId}
+          className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+            ticket.isConvertedToTask || ticket.linkedTaskId
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-blue-600 text-white hover:bg-blue-700'
+          }`}
+        >
+          {ticket.isConvertedToTask || ticket.linkedTaskId ? 'Converted' : 'Push to Task'}
+        </button>
+      </div>
+    )
+  };
+
+  const openTickets = tickets.filter(t => t.status === 'Open').length;
+  const inProgressTickets = tickets.filter(t => t.status === 'In Progress').length;
   const resolvedThisWeek = tickets.filter(t => {
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
-    return t.status === 'resolved' && new Date(t.updatedAt) > weekAgo;
+    return t.status === 'Completed' && new Date(t.updatedAt) > weekAgo;
   }).length;
 
   if (loading) return (
@@ -118,99 +230,56 @@ const TicketsPage = () => {
         </div>
       </div>
 
-      {/* Search and Filter */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Filter tickets..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-3 py-2 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600"
-            />
-          </div>
-          <button className="border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2">
-            <Filter className="h-4 w-4" />
-            Filter
-          </button>
-        </div>
-
-        {/* Tickets Table */}
-        <div className="rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-200 dark:border-gray-700">
-                <th className="text-left p-4 font-medium text-gray-600 dark:text-gray-400 w-[100px]">ID</th>
-                <th className="text-left p-4 font-medium text-gray-600 dark:text-gray-400">Subject</th>
-                <th className="text-left p-4 font-medium text-gray-600 dark:text-gray-400">Requester</th>
-                <th className="text-left p-4 font-medium text-gray-600 dark:text-gray-400">Status</th>
-                <th className="text-left p-4 font-medium text-gray-600 dark:text-gray-400">Priority</th>
-                <th className="text-right p-4 font-medium text-gray-600 dark:text-gray-400">Created</th>
-                <th className="text-right p-4 font-medium text-gray-600 dark:text-gray-400">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredTickets.map((ticket) => (
-                <tr key={ticket._id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer">
-                  <td className="p-4 font-mono text-xs font-medium text-gray-500">
-                    #{ticket.ticketId?.toUpperCase() || ticket._id.slice(-6).toUpperCase()}
-                  </td>
-                  <td className="p-4 font-medium">{ticket.title}</td>
-                  <td className="p-4">{ticket.createdBy?.basicInfo?.firstName} {ticket.createdBy?.basicInfo?.lastName}</td>
-                  <td className="p-4">
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getStatusBadge(ticket.status)}`}>
-                      {ticket.status}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-2">
-                      {getPriorityIcon(ticket.priority)}
-                      <span className="text-sm capitalize text-gray-600 dark:text-gray-400">{ticket.priority}</span>
-                    </div>
-                  </td>
-                  <td className="p-4 text-right text-gray-600 dark:text-gray-400">
-                    {new Date(ticket.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="p-4 text-right">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handlePushToTask(ticket._id);
-                      }}
-                      disabled={ticket.isConvertedToTask || ticket.linkedTaskId}
-                      className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
-                        ticket.isConvertedToTask || ticket.linkedTaskId
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : 'bg-blue-600 text-white hover:bg-blue-700'
-                      }`}
-                    >
-                      {ticket.isConvertedToTask || ticket.linkedTaskId ? 'Converted' : 'Push to Task'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          
-          {filteredTickets.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              No tickets found
-            </div>
-          )}
-        </div>
-      </div>
+      {/* Table */}
+      <TableGenerator
+        data={tickets}
+        customRender={customRender}
+        hiddenColumns={['_id', 'createdAt', 'updatedAt', 'ticketId', 'createdBy', 'department', 'clientId', 'taskTypeId', 'isConvertedToTask', 'convertedBy', 'convertedAt', 'attachments', 'startDate', 'liveHours', 'comments', 'resolvedAt', 'closedAt', 'resolution', 'description', 'impactAnalysis', 'url', 'acceptanceCriteria']}
+        enableActions={true}
+        onEdit={handleEdit}
+      />
       
       {/* Create Ticket Modal */}
       {showCreateModal && (
-        <CreateTicketModal
-          onClose={() => setShowCreateModal(false)}
-          onCreated={() => {
-            fetchTickets();
-            setShowCreateModal(false);
-          }}
-        />
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto m-4">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h2 className="text-xl font-semibold">Create New Ticket</h2>
+              <button onClick={() => setShowCreateModal(false)} className="text-gray-500 hover:text-gray-700">
+                ×
+              </button>
+            </div>
+            <div className="p-6">
+              <FormRenderer
+                fields={ticketFormFields}
+                onSubmit={handleCreateTicket}
+                submitButton={{ text: 'Create Ticket', color: 'blue' }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Ticket Modal */}
+      {editingTicket && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto m-4">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h2 className="text-xl font-semibold">Edit Ticket</h2>
+              <button onClick={() => setEditingTicket(null)} className="text-gray-500 hover:text-gray-700">
+                ×
+              </button>
+            </div>
+            <div className="p-6">
+              <FormRenderer
+                fields={ticketFormFields}
+                data={editingTicket}
+                onSubmit={handleUpdateTicket}
+                submitButton={{ text: 'Update Ticket', color: 'green' }}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

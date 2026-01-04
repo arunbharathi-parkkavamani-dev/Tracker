@@ -23,15 +23,6 @@ export default async function buildReadQuery({
   policy
 }) {
 
-  console.log('🔍 buildReadQuery DEBUG:', {
-    role,
-    userId,
-    modelName,
-    docId,
-    filter: JSON.stringify(filter),
-    fields
-  });
-
   const Model = models[modelName];
   if (!Model) throw new Error(`Model "${modelName}" not found`);
 
@@ -45,7 +36,9 @@ export default async function buildReadQuery({
   /** -----------------------------------------------
    * 2) Field sanitization (allowed + forbidden)
    * ----------------------------------------------- */
+  if (fields) console.log("[buildReadQuery.js:35] Before sanitizeRead - fields:", fields);
   fields = sanitizeRead({ fields, policy }); // returns an array like ["basicInfo.firstName"]
+  if (fields) console.log("[buildReadQuery.js:37] After sanitizeRead - fields:", fields);
 
   /** -----------------------------------------------
    * 3) Registry execution (populateRef, isSelf, custom)
@@ -58,13 +51,10 @@ export default async function buildReadQuery({
     policy
   });
 
-  console.log('🔍 Registry Output:', JSON.stringify(registryOutput));
-
   // registry may override direct read control
   fields = registryOutput?.fields ?? fields;
   filter = registryOutput?.filter ?? filter;
 
-  console.log('🔍 Final filter after registry:', JSON.stringify(filter));
 
   /** -----------------------------------------------
    * 4) beforeRead hook (service)
@@ -134,15 +124,16 @@ export default async function buildReadQuery({
 
 
   const mongoFilter = buildMongoFilter(filter);
-  console.log('🔍 MongoDB filter:', JSON.stringify(mongoFilter));
   
   let query = docId && docId.trim() && docId !== "" && mongoose.Types.ObjectId.isValid(docId)
     ? Model.findById(new mongoose.Types.ObjectId(docId))
     : Model.find(mongoFilter || {});
 
-  // 🔒 base document projection
+  if (fields) console.log("[buildReadQuery.js:115] Fields to select:", fields);
+
   // 🔒 base document projection + populate
-  if (Array.isArray(fields) && fields.length > 0 && fields[0] !== "*") {
+  if (Array.isArray(fields) && fields.length > 0 && !fields.includes("*")) {
+    // Populate only explicitly requested fields
     fields.forEach(f => {
       const raw = typeof f === "string" ? f : String(f);
       const path = raw.replace(/[^\w.]/g, ""); // remove quotes, brackets
@@ -155,8 +146,6 @@ export default async function buildReadQuery({
         query.populate({ path, select: selectFields });
       }
     });
-  } else {
-    // Skip auto-populate to avoid cast errors - handled manually below
   }
 
   // ❗ populate first, then lean

@@ -8,7 +8,7 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
   const [changedFields, setChangedFields] = useState({});
   const [dynamicOptions, setDynamicOptions] = useState({});
 
-  // init hidden default fields
+  // init hidden default fields and initial data
   useEffect(() => {
     const hiddenDefaults = {};
     fields.forEach((field) => {
@@ -16,8 +16,8 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
         hiddenDefaults[field.name] = field.value;
       }
     });
-    setFormData((prev) => ({ ...hiddenDefaults, ...prev }));
-  }, [fields]);
+    setFormData((prev) => ({ ...hiddenDefaults, ...data, ...prev }));
+  }, [fields, data]);
 
   // Helper function to get nested values
   const getNestedValue = (obj, path) => {
@@ -130,6 +130,11 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
         if (firstArray) data = firstArray;
       }
 
+      // Apply transform function if provided
+      if (field.transform && typeof field.transform === 'function') {
+        data = field.transform(data);
+      }
+
       setDynamicOptions((prev) => ({ ...prev, [field.name]: data }));
     } catch (err) {
       console.error("Autocomplete fetch failed:", err);
@@ -146,6 +151,84 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
           {field.external ? field.externalValue ?? "—" : value ?? "—"}
         </div>
       );
+    }
+
+    if (field.type === "SubForm") {
+      const subFormValue = field.multiple ? (value || []) : (value || {});
+      
+      if (field.multiple) {
+        return (
+          <div className="space-y-4">
+            {subFormValue.map((item, index) => (
+              <div key={index} className="border border-gray-300 rounded-lg p-4 bg-gray-50 relative">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const updated = subFormValue.filter((_, i) => i !== index);
+                    onChange(updated);
+                  }}
+                  className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+                >
+                  ×
+                </button>
+                <div className="grid grid-cols-1 gap-4 pr-8">
+                  {field.subFormFields?.map((subField) => (
+                    <div key={subField.name} className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700">
+                        {subField.label}
+                      </label>
+                      {renderField(
+                        subField,
+                        item[subField.name],
+                        (val) => {
+                          const updated = [...subFormValue];
+                          updated[index] = { ...updated[index], [subField.name]: val };
+                          onChange(updated);
+                        }
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => {
+                const newItem = {};
+                field.subFormFields?.forEach(sf => {
+                  newItem[sf.name] = "";
+                });
+                onChange([...subFormValue, newItem]);
+              }}
+              className="w-full p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-colors"
+            >
+              + Add {field.label}
+            </button>
+          </div>
+        );
+      } else {
+        return (
+          <div className="border border-gray-300 rounded-lg p-4 bg-gray-50">
+            <div className="grid grid-cols-1 gap-4">
+              {field.subFormFields?.map((subField) => (
+                <div key={subField.name} className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">
+                    {subField.label}
+                  </label>
+                  {renderField(
+                    subField,
+                    subFormValue[subField.name],
+                    (val) => {
+                      const updatedSubForm = { ...subFormValue, [subField.name]: val };
+                      onChange(updatedSubForm);
+                    }
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
     }
 
     if (field.type === "textarea") {
@@ -216,10 +299,11 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
       return (
         <Autocomplete
           fullWidth
+          multiple={field.multiple}
           onOpen={() => handlePopulate(field)}
           options={options}
           getOptionLabel={(opt) => opt.name || ""}
-          value={value || null}
+          value={field.multiple ? (value || []) : (value || null)}
           onChange={(e, newValue) => onChange(newValue)}
           renderInput={(params) => (
             <TextField 
@@ -229,11 +313,22 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
                 '& .MuiOutlinedInput-root': {
                   borderRadius: '12px',
                   backgroundColor: 'rgb(249 250 251)',
+                  minHeight: field.multiple ? '56px' : 'auto',
                   '&:hover': {
                     backgroundColor: 'white',
                   },
                   '&.Mui-focused': {
                     backgroundColor: 'white',
+                  }
+                },
+                '& .MuiChip-root': {
+                  backgroundColor: 'rgb(59 130 246)',
+                  color: 'white',
+                  '& .MuiChip-deleteIcon': {
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    '&:hover': {
+                      color: 'white'
+                    }
                   }
                 }
               }}
@@ -261,12 +356,37 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
   };
 
   const onSubmitHandler = async (e) => {
+    console.log('=== FormRenderer onSubmitHandler START ===');
     e.preventDefault();
+    console.log('Event prevented');
+    
+    console.log('formData:', formData);
+    console.log('changedFields:', changedFields);
+    console.log('data prop:', data);
+    
     try {
-      await onSubmit?.(changedFields);
+      // For editing, submit all formData; for creating, submit formData (not just changed fields)
+      let submitData = (data && Object.keys(data).length > 0) ? formData : formData;
+      console.log('submitData:', submitData);
+      
+      // Only remove the document's own _id, not _id fields in nested objects
+      const { _id, createdAt, updatedAt, __v, ...cleanData } = submitData;
+      console.log('cleanData:', cleanData);
+      
+      console.log('onSubmit function exists:', !!onSubmit);
+      if (onSubmit) {
+        console.log('Calling onSubmit...');
+        await onSubmit(cleanData);
+        console.log('onSubmit completed');
+      } else {
+        console.error('onSubmit function is not provided!');
+      }
     } catch (error) {
+      console.error('FormRenderer submit error:', error);
       toast.error(error.response?.data?.message || 'Failed to save changes');
     }
+    
+    console.log('=== FormRenderer onSubmitHandler END ===');
   };
 
   return (
