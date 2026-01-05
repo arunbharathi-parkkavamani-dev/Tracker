@@ -10,10 +10,13 @@ import { useAuth } from "../../context/authProvider";
 
 const LeaveAndRegularization = ({ onClose, onSuccess, onFailed }) => {
   const [formType, setFormType] = useState("");
+  const [showDateSelection, setShowDateSelection] = useState(false);
   const { user } = useAuth();
   const [userData, setUserData] = useState(null);
   const [liveForm, setLiveForm] = useState({});
   const [availableDays, setAvailableDays] = useState(null);
+  const [attendanceIssues, setAttendanceIssues] = useState([]);
+  const [selectedDate, setSelectedDate] = useState(null);
 
   // fetch logged-in employee full profile
   useEffect(() => {
@@ -27,6 +30,56 @@ const LeaveAndRegularization = ({ onClose, onSuccess, onFailed }) => {
     };
     fetchUserData();
   }, [user.id]);
+
+  // fetch attendance issues for regularization
+  const fetchAttendanceIssues = async () => {
+    try {
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - 30); // Last 30 days
+      
+      const res = await axiosInstance.get('/populate/read/attendances', {
+        params: {
+          filter: JSON.stringify({
+            employee: user.id,
+            date: {
+              $gte: startDate.toISOString().split('T')[0],
+              $lte: endDate.toISOString().split('T')[0]
+            }
+          })
+        }
+      });
+      
+      const issues = res.data.data?.filter(record => {
+        const hasIssue = !record.checkIn || !record.checkOut || 
+                        record.status === 'Absent' || record.status === 'Half Day';
+        return hasIssue;
+      }) || [];
+      
+      setAttendanceIssues(issues);
+    } catch (error) {
+      console.error('Error fetching attendance issues:', error);
+    }
+  };
+
+  // handle regularization flow
+  const handleRegularizationClick = () => {
+    setFormType("regularization");
+    setShowDateSelection(true);
+    fetchAttendanceIssues();
+  };
+
+  // handle date selection and prefill form
+  const handleDateSelect = (attendanceRecord) => {
+    setSelectedDate(attendanceRecord);
+    setLiveForm({
+      requestDate: attendanceRecord.date,
+      requestedCheckIn: attendanceRecord.checkIn || '09:00',
+      requestedCheckOut: attendanceRecord.checkOut || '18:00',
+      reason: ''
+    });
+    setShowDateSelection(false);
+  };
 
   // monitor values in form (FormRenderer sends updates)
   const handleFormChange = (updated) => setLiveForm(updated);
@@ -106,12 +159,28 @@ const LeaveAndRegularization = ({ onClose, onSuccess, onFailed }) => {
     }
 
     // regularization workflow
-    try {
-      await axiosInstance.post("/populate/create/regularization", data);
-      onSuccess?.();
-      onClose?.();
-    } catch (err) {
-      onFailed?.(err);
+    if (formType === "regularization") {
+      if (!selectedDate) {
+        onFailed?.("Please select a date first");
+        return;
+      }
+
+      const payload = {
+        attendanceId: selectedDate._id,
+        requestDate: data.requestDate,
+        requestedCheckIn: data.requestedCheckIn,
+        requestedCheckOut: data.requestedCheckOut,
+        reason: data.reason
+      };
+
+      try {
+        await axiosInstance.post("/populate/create/regularizations", payload);
+        onSuccess?.();
+        onClose?.();
+      } catch (err) {
+        onFailed?.(err);
+      }
+      return;
     }
   };
 
@@ -143,7 +212,7 @@ const LeaveAndRegularization = ({ onClose, onSuccess, onFailed }) => {
             </button>
             
             <button
-              onClick={() => setFormType("regularization")}
+              onClick={handleRegularizationClick}
               className="group bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 hover:from-green-100 hover:to-green-200 dark:hover:from-green-800 dark:hover:to-green-700 p-8 rounded-2xl border border-green-200 dark:border-green-700 transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
             >
               <div className="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-green-600 transition-colors">
@@ -156,11 +225,90 @@ const LeaveAndRegularization = ({ onClose, onSuccess, onFailed }) => {
             </button>
           </div>
         </div>
+      ) : showDateSelection ? (
+        <div>
+          <div className="flex items-center mb-8">
+            <button
+              onClick={() => { setShowDateSelection(false); setFormType(""); }}
+              className="mr-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
+            >
+              <svg className="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
+              Select Date for Regularization
+            </h2>
+          </div>
+          
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+            {attendanceIssues.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">No Issues Found</h3>
+                <p className="text-gray-600 dark:text-gray-300">All your attendance records for the last 30 days are complete.</p>
+              </div>
+            ) : (
+              <div>
+                <p className="text-gray-600 dark:text-gray-300 mb-6">
+                  Found {attendanceIssues.length} attendance record(s) that may need regularization:
+                </p>
+                <div className="space-y-3">
+                  {attendanceIssues.map((record, index) => {
+                    const date = new Date(record.date);
+                    const getIssueType = () => {
+                      if (!record.checkIn && !record.checkOut) return 'No Check-in/Check-out';
+                      if (!record.checkIn) return 'Missing Check-in';
+                      if (!record.checkOut) return 'Missing Check-out';
+                      if (record.status === 'Absent') return 'Marked Absent';
+                      if (record.status === 'Half Day') return 'Half Day';
+                      return 'Attendance Issue';
+                    };
+                    
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => handleDateSelect(record)}
+                        className="w-full p-4 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 transition-colors text-left"
+                      >
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <div className="font-semibold text-gray-800 dark:text-white">
+                              {date.toLocaleDateString('en-IN', { 
+                                weekday: 'long', 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric' 
+                              })}
+                            </div>
+                            <div className="text-sm text-red-600 dark:text-red-400 mt-1">
+                              {getIssueType()}
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              Check-in: {record.checkIn || 'Not recorded'} | Check-out: {record.checkOut || 'Not recorded'}
+                            </div>
+                          </div>
+                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       ) : (
         <div>
           <div className="flex items-center mb-8">
             <button
-              onClick={() => setFormType("")}
+              onClick={() => formType === "regularization" ? setShowDateSelection(true) : setFormType("")}
               className="mr-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
             >
               <svg className="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -170,6 +318,11 @@ const LeaveAndRegularization = ({ onClose, onSuccess, onFailed }) => {
             <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
               {formType === "leave" ? "Leave Application" : "Attendance Regularization"}
             </h2>
+            {formType === "regularization" && selectedDate && (
+              <div className="ml-4 px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-lg text-sm">
+                {new Date(selectedDate.date).toLocaleDateString('en-IN')}
+              </div>
+            )}
           </div>
           
           {formType === "leave" && (

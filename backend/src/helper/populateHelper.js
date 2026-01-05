@@ -17,6 +17,11 @@ export async function populateHelper(req, res, next) {
       queryOptimizer.clearCache(model);
     }
 
+    // ------------------------ SPECIAL AGENT ENDPOINTS ------------------------
+    if (action === 'read' && model === 'agents' && id && req.query.clientProducts === 'true') {
+      return await handleAgentClientProducts(req, res, id);
+    }
+
     // ------------------------ PAGINATION SETUP ------------------------
     const pageNum = Math.max(1, parseInt(page));
     const limitNum = Math.min(100, Math.max(1, parseInt(limit))); // Max 100 items per page
@@ -124,19 +129,40 @@ export async function populateHelper(req, res, next) {
     
     // Handle file upload for create/update actions
     let requestBody = req.body;
-    if ((action === 'create' || action === 'update') && req.file) {
-      const folder = req.route.path.includes('profile') || req.file.fieldname === 'profileImage' ? 'profile' : 'general';
-      const filePath = `documents/${folder}/${req.file.filename}`;
+    if ((action === 'create' || action === 'update') && (req.file || req.files)) {
+      const folder = req.route.path.includes('profile') || (req.file && req.file.fieldname === 'profileImage') ? 'profile' : 'general';
       
-      if (req.file.fieldname === 'profileImage' || req.file.fieldname === 'file') {
+      // Handle single file upload
+      if (req.file) {
+        const filePath = `documents/${folder}/${req.file.filename}`;
+        
+        if (req.file.fieldname === 'profileImage' || req.file.fieldname === 'file') {
+          requestBody = {
+            ...req.body,
+            'basicInfo.profileImage': filePath
+          };
+        } else {
+          requestBody = {
+            ...req.body,
+            filePath: filePath
+          };
+        }
+      }
+      
+      // Handle multiple attachments
+      if (req.files && req.files.attachments) {
+        const attachmentPaths = req.files.attachments.map(file => ({
+          filename: file.filename,
+          originalName: file.originalname,
+          path: `documents/${folder}/${file.filename}`,
+          mimetype: file.mimetype,
+          size: file.size,
+          uploadedAt: new Date()
+        }));
+        
         requestBody = {
-          ...req.body,
-          'basicInfo.profileImage': filePath
-        };
-      } else {
-        requestBody = {
-          ...req.body,
-          filePath: filePath
+          ...requestBody,
+          attachments: attachmentPaths
         };
       }
     }
@@ -302,3 +328,41 @@ function getDetailedPopulate(model) {
 }
 
 export default populateHelper;
+
+// Handle agent client products request
+async function handleAgentClientProducts(req, res, agentId) {
+  try {
+    const { buildQuery } = await import("../utils/policy/policyEngine.js");
+    
+    // Get agent with populated client
+    const agent = await buildQuery({
+      role: 'Super Admin', // Use admin role to bypass restrictions
+      userId: req.user.id,
+      action: 'read',
+      modelName: 'agents',
+      docId: agentId,
+      populateFields: [{ path: 'client', select: 'name proposedProducts' }]
+    });
+    
+    if (!agent || !agent.client) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Agent or client not found' 
+      });
+    }
+    
+    const products = agent.client.proposedProducts || [];
+    
+    return res.json({
+      success: true,
+      products,
+      clientName: agent.client.name
+    });
+  } catch (error) {
+    console.error('Error fetching agent client products:', error);
+    return res.status(500).json({ 
+      success: false, 
+      message: 'Internal server error' 
+    });
+  }
+}

@@ -6,10 +6,8 @@ export const beforeCreate = async ({ body, userId }) => {
   // Creator should always be a follower
   body.followers = Array.from(new Set([...(body.followers || []), userId]));
   
-  // Ensure milestone is provided
-  if (!body.milestoneId) {
-    throw new Error('Milestone is required for task creation');
-  }
+  // Milestone is optional - tasks can be general or milestone-based
+  // No validation required for milestoneId
 };
 
 export const afterCreate = async ({ modelName, docId, userId }) => {
@@ -236,6 +234,9 @@ const updateLinkedTicketStatus = async (taskId, taskStatus) => {
 
 const syncMilestoneStatus = async (clientId, milestoneId, status) => {
   try {
+    // Only sync if milestoneId exists
+    if (!milestoneId) return;
+    
     const { default: models } = await import('../models/Collection.js');
     
     // Update client milestone status

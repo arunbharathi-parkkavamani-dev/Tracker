@@ -1,15 +1,30 @@
 export const regularizationFormFields = [
   {
-    label: "Date of Regularization",
-    name: "regularizationDate",
+    label: "Request Date",
+    name: "requestDate",
     type: "date",
+    required: true,
+  },
+  {
+    label: "Check-In Time",
+    name: "requestedCheckIn",
+    type: "datetime-local",
+    required: true,
+  },
+  {
+    label: "Check-Out Time",
+    name: "requestedCheckOut",
+    type: "datetime-local",
     required: true,
   },
   {
     label: "Reason",
     name: "reason",
     type: "textarea",
-    placeholder: "Enter reason for regularization",
+    placeholder: "Please provide reason for regularization...",
+    required: true,
+    rows: 4,
+    gridClass: "col-span-2"
   },
 ];
 

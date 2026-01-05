@@ -8,6 +8,10 @@ const LogoutPage = () => {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const performLogout = async () => {
+    Cookies.remove("auth_token");
+    Cookies.remove("refresh_token");
+    localStorage.removeItem('auth_token');
+    navigate("/login");
     try {
       // Call logout API
       await axiosInstance.post("/auth/logout", {}, {
@@ -18,17 +22,13 @@ const LogoutPage = () => {
     } catch (error) {
       console.error("Logout API error:", error);
     }
-    
+
     // Clear local storage and context
     await logout();
-    Cookies.remove("auth_token");
-    Cookies.remove("refresh_token");
-    localStorage.removeItem('auth_token');
-    navigate("/login");
   };
   useEffect(() => {
     performLogout();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

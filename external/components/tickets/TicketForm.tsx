@@ -1,27 +1,63 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 export default function TicketForm({ ticket, onSuccess, onCancel }) {
+  const [attachments, setAttachments] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [clientProducts, setClientProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+  const [showAttachmentModal, setShowAttachmentModal] = useState(false);
+  const fileInputRef = useRef(null);
   const [formData, setFormData] = useState({
     title: ticket?.title || '',
     description: ticket?.description || '',
     product: ticket?.product || '',
     priority: ticket?.priority || 'Medium',
     type: ticket?.type || 'Bug',
-    dueDate: ticket?.dueDate ? new Date(ticket.dueDate).toISOString().split('T')[0] : ''
+    dueDate: ticket?.dueDate ? new Date(ticket.dueDate).toISOString().split('T')[0] : '',
+    attachments: []
   });
-  const [attachments, setAttachments] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const fileInputRef = useRef(null);
+
+  // Fetch client products on component mount
+  useEffect(() => {
+    // For testing, let's use hardcoded products first
+    const testProducts = ['Web Application', 'Mobile App', 'API Service', 'Database'];
+    console.log('Setting test products:', testProducts);
+    setClientProducts(testProducts);
+  }, []);
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleFileSelect = (e) => {
+  const handleClipboardPaste = async () => {
+    try {
+      const clipboardItems = await navigator.clipboard.read();
+      for (const clipboardItem of clipboardItems) {
+        for (const type of clipboardItem.types) {
+          if (type.startsWith('image/')) {
+            const blob = await clipboardItem.getType(type);
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const file = new File([blob], `pasted-image-${timestamp}.png`, { type: blob.type });
+            addFiles([file]);
+            setShowAttachmentModal(false);
+            return;
+          }
+        }
+      }
+      alert('No image found in clipboard');
+    } catch (error) {
+      console.error('Failed to read clipboard:', error);
+      alert('Failed to paste from clipboard. Please try browsing files instead.');
+    }
+  };
+
+  const handleModalFileSelect = (e) => {
     const files = Array.from(e.target.files);
     addFiles(files);
+    setShowAttachmentModal(false);
+    e.target.value = ''; // Reset input
   };
 
   const addFiles = (files) => {
@@ -61,6 +97,11 @@ export default function TicketForm({ ticket, onSuccess, onCancel }) {
 
     try {
       const formDataToSend = new FormData();
+      
+      // Add agentId to form data
+      const agentId = localStorage.getItem('agentId') || 'temp-agent-id';
+      formDataToSend.append('agentId', agentId);
+      
       Object.keys(formData).forEach(key => {
         formDataToSend.append(key, formData[key]);
       });
@@ -121,14 +162,34 @@ export default function TicketForm({ ticket, onSuccess, onCancel }) {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Product</label>
-            <input
-              type="text"
-              name="product"
-              value={formData.product}
-              onChange={handleInputChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            {loadingProducts ? (
+              <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50">
+                Loading products...
+              </div>
+            ) : clientProducts.length > 0 ? (
+              <select
+                name="product"
+                value={formData.product}
+                onChange={handleInputChange}
+                className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select a product</option>
+                {clientProducts.map((product, index) => (
+                  <option key={index} value={product}>
+                    {product}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type="text"
+                name="product"
+                value={formData.product}
+                onChange={handleInputChange}
+                placeholder="Enter product name"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            )}
           </div>
 
           <div>
@@ -177,26 +238,13 @@ export default function TicketForm({ ticket, onSuccess, onCancel }) {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Attachments</label>
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileSelect}
-              multiple
-              accept="image/*,audio/mp3,video/*,.pdf,.doc,.docx"
-              className="hidden"
-            />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full py-2 px-4 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-            >
-              Browse Files (Max 10MB each)
-            </button>
-            <p className="text-sm text-gray-500 mt-2">
-              Supported: Images, MP3, Videos, PDF, Word documents. You can also paste images directly.
-            </p>
-          </div>
+          <button
+            type="button"
+            onClick={() => setShowAttachmentModal(true)}
+            className="w-full py-3 px-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-gray-400 hover:bg-gray-50 transition-colors"
+          >
+            + Add Attachment
+          </button>
 
           {attachments.length > 0 && (
             <div className="mt-4 space-y-2">
@@ -233,6 +281,59 @@ export default function TicketForm({ ticket, onSuccess, onCancel }) {
           </button>
         </div>
       </form>
+
+      {/* Attachment Modal */}
+      {showAttachmentModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold mb-4">Add Attachment</h3>
+            
+            <div className="space-y-4">
+              <button
+                type="button"
+                onClick={handleClipboardPaste}
+                className="w-full py-3 px-4 bg-blue-50 border-2 border-dashed border-blue-300 rounded-lg text-blue-700 hover:bg-blue-100 transition-colors"
+              >
+                📋 Paste from Clipboard
+              </button>
+              
+              <div className="text-center text-gray-500 text-sm">or</div>
+              
+              <div>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleModalFileSelect}
+                  multiple
+                  accept="image/*,audio/mp3,video/*,.pdf,.doc,.docx"
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full py-3 px-4 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+                >
+                  📁 Browse Files
+                </button>
+              </div>
+            </div>
+            
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={() => setShowAttachmentModal(false)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              >
+                Cancel
+              </button>
+            </div>
+            
+            <p className="text-xs text-gray-500 mt-4">
+              Supported: Images, MP3, Videos, PDF, Word documents (Max 10MB each)
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

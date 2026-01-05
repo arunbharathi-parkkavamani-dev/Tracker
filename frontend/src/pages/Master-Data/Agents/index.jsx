@@ -172,12 +172,12 @@ const AgentManagement = () => {
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {clients
-              .filter(client => client.contactPerson && Array.isArray(client.contactPerson) && client.contactPerson.length > 0)
+              .filter(client => client.contactInfo && Array.isArray(client.contactInfo) && client.contactInfo.length > 0)
               .map((client) => (
                 <div key={client._id} className="border border-gray-200 rounded-lg p-4">
                   <h3 className="font-medium text-gray-900 mb-3">{client.name}</h3>
                   <div className="space-y-3">
-                    {client.contactPerson.map((contact, index) => {
+                    {client.contactInfo.map((contact, index) => {
                       const isAlreadyAgent = agents.some(agent => agent.email === contact.email);
                       return (
                         <div key={index} className="border-l-4 border-blue-200 pl-3">

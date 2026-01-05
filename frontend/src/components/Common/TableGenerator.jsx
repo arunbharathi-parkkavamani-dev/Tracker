@@ -11,6 +11,57 @@ import SearchBar from "./SearchBar";
 
 /* -------------------- Helpers -------------------- */
 
+// Indian date formatting utility
+const formatIndianDate = (dateString) => {
+  if (!dateString) return '-';
+
+  const date = new Date(dateString);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+  const inputDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+  const timeFormat = date.toLocaleTimeString('en-IN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  });
+
+  if (inputDate.getTime() === today.getTime()) {
+    // Today - show only time
+    return timeFormat;
+  } else if (inputDate.getTime() === yesterday.getTime()) {
+    // Yesterday - show "Yesterday, time"
+    return `Yesterday, ${timeFormat}`;
+  } else if (date.getFullYear() === now.getFullYear()) {
+    // Same year - show date, month, time
+    return date.toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  } else {
+    // Different year - show date, month, year, time
+    return date.toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  }
+};
+
+// Check if a value is a date string
+const isDateString = (value) => {
+  if (typeof value !== 'string') return false;
+  const date = new Date(value);
+  return !isNaN(date.getTime()) && value.includes('T');
+};
+
 // camelCase → Capitalized Words
 const formatColumnName = (key) =>
   key.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase());
@@ -153,28 +204,34 @@ const TableGenerator = ({
                     {columns.map((col) => (
                       <td key={col} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {col === "__actions" ? (
-                          <div className="flex items-center gap-3">
-                            {onEdit && (
-                              <button
-                                onClick={() => onEdit(row)}
-                                className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors duration-150"
-                                title="Edit"
-                              >
-                                <Pencil size={14} />
-                              </button>
-                            )}
-                            {onDelete && (
-                              <button
-                                onClick={() => onDelete(row)}
-                                className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors duration-150"
-                                title="Delete"
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            )}
-                          </div>
+                          customRender.__actions ? (
+                            customRender.__actions(row)
+                          ) : (
+                            <div className="flex items-center gap-3">
+                              {onEdit && (
+                                <button
+                                  onClick={() => onEdit(row)}
+                                  className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200"
+                                  title="Edit"
+                                >
+                                  <Pencil size={14} />
+                                </button>
+                              )}
+                              {onDelete && (
+                                <button
+                                  onClick={() => onDelete(row)}
+                                  className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-red-100 text-red-600 hover:bg-red-200"
+                                  title="Delete"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              )}
+                            </div>
+                          )
                         ) : customRender[col] ? (
                           customRender[col](row)
+                        ) : isDateString(row[col]) ? (
+                          <span className="font-medium">{formatIndianDate(row[col])}</span>
                         ) : (
                           <span className="font-medium">{row[col] ?? "-"}</span>
                         )}
@@ -191,7 +248,7 @@ const TableGenerator = ({
             <div className="text-sm text-gray-700">
               Showing {((currentPage - 1) * ROWS_PER_PAGE) + 1} to {Math.min(currentPage * ROWS_PER_PAGE, sortedData.length)} of {sortedData.length} results
             </div>
-            
+
             <div className="flex items-center gap-2">
               <button
                 disabled={currentPage === 1}
@@ -207,11 +264,10 @@ const TableGenerator = ({
                   <button
                     key={i}
                     onClick={() => setCurrentPage(i + 1)}
-                    className={`w-8 h-8 rounded-md text-sm font-medium transition-colors ${
-                      currentPage === i + 1
+                    className={`w-8 h-8 rounded-md text-sm font-medium transition-colors ${currentPage === i + 1
                         ? "bg-blue-600 text-white shadow-sm"
                         : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
+                      }`}
                   >
                     {i + 1}
                   </button>

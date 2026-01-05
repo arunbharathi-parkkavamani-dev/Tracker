@@ -3,9 +3,9 @@ import mongoose from 'mongoose';
 const ticketSchema = new mongoose.Schema({
   ticketId: { type: String, unique: true },
   title: { type: String, required: true, maxlength: 200 },
-  userStory: { type: String, required: true }, // This will be visible to external clients
-  description: { type: String }, // Internal description
-  product: { type: String, required: true },
+  userStory: { type: String }, // This will be visible to external clients
+  description: { type: String, required: true }, // Agent provides description, can be used as userStory
+  projectTypeId: { type: mongoose.Schema.Types.ObjectId, ref: 'projecttypes' }, // Optional, to be selected by agent
   type: { 
     type: String, 
     enum: ['Bug', 'Feature', 'Enhancement', 'Support'], 
@@ -27,11 +27,11 @@ const ticketSchema = new mongoose.Schema({
     default: 'Open' 
   },
   createdBy: { type: mongoose.Schema.Types.ObjectId, refPath: 'createdByModel', required: true },
-  createdByModel: { type: String, enum: ['Employee', 'agents'], required: true },
-  assignedTo: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Employee' }], // Multiple assignees
+  createdByModel: { type: String, enum: ['employees', 'agents'], required: true },
+  assignedTo: [{ type: mongoose.Schema.Types.ObjectId, ref: 'employees' }], // Multiple assignees
   accountManager: { 
     type: mongoose.Schema.Types.ObjectId, 
-    ref: 'Employee',
+    ref: 'employees',
     get: function() {
       return this.clientId?.accountManager || this.assignedTo?.[0];
     }
@@ -39,13 +39,13 @@ const ticketSchema = new mongoose.Schema({
   department: { type: mongoose.Schema.Types.ObjectId, ref: 'Department' },
   
   // Task synchronization fields
-  linkedTaskId: { type: mongoose.Schema.Types.ObjectId, ref: 'Task' },
+  linkedTaskId: { type: mongoose.Schema.Types.ObjectId, ref: 'tasks' },
   isConvertedToTask: { type: Boolean, default: false },
-  convertedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee' },
+  convertedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'employees' },
   convertedAt: { type: Date },
   
-  // Milestone fields
-  milestoneId: { type: mongoose.Schema.Types.ObjectId, ref: 'milestones', required: true, index: true },
+  // Milestone fields (optional)
+  milestoneId: { type: mongoose.Schema.Types.ObjectId, ref: 'milestones', index: true },
   milestoneStatus: {
     type: String,
     enum: ['Pending', 'In Progress', 'Completed', 'On Hold'],
@@ -66,7 +66,7 @@ const ticketSchema = new mongoose.Schema({
   liveHours: { type: Number, default: 0 },
   comments: [{
     comment: String,
-    commentedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee' },
+    commentedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'employees' },
     commentedAt: { type: Date, default: Date.now }
   }],
   resolvedAt: { type: Date },
@@ -76,12 +76,18 @@ const ticketSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Auto-generate ticket ID
+// Auto-generate ticket ID and handle userStory fallback
 ticketSchema.pre('save', async function(next) {
   if (!this.ticketId) {
     const count = await this.constructor.countDocuments();
     this.ticketId = `TKT${String(count + 1).padStart(6, '0')}`;
   }
+  
+  // Use description as userStory if userStory is not provided
+  if (!this.userStory && this.description) {
+    this.userStory = this.description;
+  }
+  
   next();
 });
 

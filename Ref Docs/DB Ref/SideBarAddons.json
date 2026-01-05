@@ -1,38 +1,25 @@
 [
-    {
-    "title": "Project Types",
+  {
+    "title": "Pending Approvals",
     "icon": {
-      "iconName": "MdWork",
+      "iconName": "MdPendingActions",
       "iconPackage": "react-icons/md"
     },
-    "mainRoute": "/master-data/project-types",
-    "parentId": "master-data",
+    "mainRoute": "/attendence/pending-approvals",
+    "parentId": "time-attendance",
     "isParent": false,
     "hasChildren": false,
-    "order": 16
+    "order": 6
   },
   {
-    "title": "Milestones",
+    "title": "Teams",
     "icon": {
-      "iconName": "MdFlag",
+      "iconName": "MdGroups",
       "iconPackage": "react-icons/md"
     },
-    "mainRoute": "/master-data/milestones",
-    "parentId": "master-data",
+    "mainRoute": "/teams",
     "isParent": false,
     "hasChildren": false,
-    "order": 17
-  },
-  {
-    "title": "Reference Types",
-    "icon": {
-      "iconName": "MdLink",
-      "iconPackage": "react-icons/md"
-    },
-    "mainRoute": "/master-data/reference-types",
-    "parentId": "master-data",
-    "isParent": false,
-    "hasChildren": false,
-    "order": 18
+    "order": 15
   }
 ]

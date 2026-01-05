@@ -28,6 +28,7 @@ import shifts from "./Shift.js";
 import hrpolicies from "./HRPolicy.js";
 import agents from "./Agent.js";
 import milestones from "./MileStone.js";
+import regularizations from "./Regularization.js";
 import emailconfigs from "./EmailConfig.js";
 import referencetypes from "./ReferenceType.js";
 import leadtypes from "./LeadType.js";
@@ -63,6 +64,7 @@ const models = {
   agents,
   emailconfigs,
   milestones,
+  regularizations,
   referencetypes,
   leadtypes
 };

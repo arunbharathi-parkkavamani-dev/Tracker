@@ -12,8 +12,8 @@ const TaskSchema = new mongoose.Schema({
   linkedTicketId: { type: mongoose.Schema.Types.ObjectId, ref: 'Ticket' },
   isFromTicket: { type: Boolean, default: false },
   
-  // Milestone fields
-  milestoneId: { type: mongoose.Schema.Types.ObjectId, ref: "milestones", required: true, index: true },
+  // Milestone fields (optional)
+  milestoneId: { type: mongoose.Schema.Types.ObjectId, ref: "milestones", index: true },
   milestoneStatus: {
     type: String,
     enum: ["Pending", "In Progress", "Completed", "On Hold"],

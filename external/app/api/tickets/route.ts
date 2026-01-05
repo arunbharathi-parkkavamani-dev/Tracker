@@ -33,8 +33,12 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     
-    const response = await fetch(`${BACKEND_URL}/api/tickets`, {
+    const response = await fetch(`${BACKEND_URL}/api/populate/create/tickets`, {
       method: 'POST',
+      headers: {
+        'x-source': 'external',
+        'Authorization': `Bearer temp-external-token`
+      },
       body: formData,
     });
 

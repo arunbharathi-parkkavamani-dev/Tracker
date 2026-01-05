@@ -97,17 +97,50 @@ const getDefaultTaskType = async () => {
 
 export const syncMilestoneToTasksAndTickets = async (clientId, milestoneId, status) => {
   try {
-    await Promise.all([
-      models.tasks.updateMany(
-        { clientId, milestoneId },
-        { milestoneStatus: status }
-      ),
-      models.tickets.updateMany(
-        { clientId, milestoneId },
-        { milestoneStatus: status }
-      )
-    ]);
+    // Only sync if milestoneId is provided
+    if (milestoneId) {
+      await Promise.all([
+        models.tasks.updateMany(
+          { clientId, milestoneId },
+          { milestoneStatus: status }
+        ),
+        models.tickets.updateMany(
+          { clientId, milestoneId },
+          { milestoneStatus: status }
+        )
+      ]);
+    }
   } catch (error) {
     console.error('Error syncing milestone status:', error);
   }
+};
+
+// Helper function to check if task/ticket is milestone-based
+export const isMilestoneBased = (item) => {
+  return item.milestoneId != null;
+};
+
+// Get tasks/tickets by type (general or milestone-based)
+export const getTasksByType = async (clientId, isMilestone = null) => {
+  const filter = { clientId };
+  
+  if (isMilestone === true) {
+    filter.milestoneId = { $exists: true, $ne: null };
+  } else if (isMilestone === false) {
+    filter.milestoneId = { $exists: false };
+  }
+  
+  return await models.tasks.find(filter);
+};
+
+export const getTicketsByType = async (clientId, isMilestone = null) => {
+  const filter = { clientId };
+  
+  if (isMilestone === true) {
+    filter.milestoneId = { $exists: true, $ne: null };
+  } else if (isMilestone === false) {
+    filter.milestoneId = { $exists: false };
+  }
+  
+  return await models.tickets.find(filter);
 };
