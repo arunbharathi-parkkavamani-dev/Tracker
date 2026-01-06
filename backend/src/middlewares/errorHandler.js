@@ -11,6 +11,7 @@ export const errorHandler = async (err, req, res, next) => {
       route: req.originalUrl,
       user: req.user ? req.user.id : null, // if auth attached user
       ip: req.ip,
+      requestId: req.id, // Add Request ID for tracing
     });
   } catch (logError) {
     console.error('Failed to save error log:', logError);
@@ -20,5 +21,6 @@ export const errorHandler = async (err, req, res, next) => {
   res.status(err.status || 500).json({
     success: false,
     message: err.message || 'Internal Server Error',
+    requestId: req.id, // Help frontend developers report bugs
   });
 };

@@ -27,36 +27,10 @@ export async function buildQuery({
 
   // Load model-specific policy
   const policy = getPolicy(role, modelName);
+
+  // STRICT MODE: Fail Closed
   if (!policy) {
-  console.warn(`Policy not found for role '${role}' on model '${modelName}', allowing request`);
-    // For now, allow all requests when policy is missing
-    if (returnFilter) {
-      return filter || {};
-    }
-    // Skip validation and proceed with basic CRUD
-    const crudFile = path.resolve(
-      path.dirname(fileURLToPath(import.meta.url)),
-      `../../crud/build${capitalize(action)}Query.js`
-    );
-    let crudHandler;
-    try {
-      crudHandler = (await import(pathToFileURL(crudFile).href)).default;
-    } catch (err) {
-      throw new Error(`❌ CRUD handler not found: ${crudFile}`);
-    }
-    
-    return await crudHandler({
-      modelName,
-      role,
-      userId,
-      docId,
-      fields,
-      body,
-      filter,
-      populateFields,
-      policy: null,
-      getService
-    });
+    throw new Error(`⛔ CRITICAL SECURITY: No policy defined for role '${role}' on model '${modelName}'. Request Blocked.`);
   }
 
   // --------------------------------------------------

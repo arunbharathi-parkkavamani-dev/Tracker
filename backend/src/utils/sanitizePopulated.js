@@ -9,7 +9,7 @@
  * @param {String} modelName - for debugging/logs (not used to restrict)
  */
 export default function sanitizePopulated({ results, allowedFields, modelName }) {
-  if (!Array.isArray(results) || !Array.isArray(allowedFields) || allowedFields.length === 0) {
+  if (!Array.isArray(results) || !Array.isArray(allowedFields) || allowedFields.length === 0 || allowedFields.includes("*")) {
     return results;
   }
 

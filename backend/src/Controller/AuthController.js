@@ -12,14 +12,14 @@ export const login = async (req, res, next) => {
     console.log("Login attempt:", req.body);
     console.log("Headers:", req.headers);
     console.log("Content-Type:", req.headers['content-type']);
-    
+
     const { workEmail, password, platform = "web" } = req.body;
     const deviceUUID = req.headers['x-device-uuid'] || req.headers['deviceuuid'];
-    
+
     if (!workEmail || !password) {
       return res.status(400).json({ message: "Email and password are required" });
     }
-    
+
     if (!deviceUUID) {
       return res.status(400).json({ message: "Device UUID header is required" });
     }
@@ -42,6 +42,8 @@ export const login = async (req, res, next) => {
     const payload = {
       id: employee._id,
       role: employee.professionalInfo.role,
+      department: employee.professionalInfo.department,
+      designation: employee.professionalInfo.designation,
       name: employee.basicInfo.firstName,
       managerId: employee.professionalInfo.reportingManager,
       platform,
@@ -121,7 +123,7 @@ export const authMiddleware = async (req, res, next) => {
     const source = req.headers['x-source'];
 
     if (!token) return res.status(401).json({ message: "Unauthorized" });
-    
+
     // Skip device UUID check for external sources
     if (!deviceUUID && source !== 'external') {
       return res.status(401).json({ message: "Device UUID required" });
@@ -146,7 +148,7 @@ export const authMiddleware = async (req, res, next) => {
     });
 
 
-    if (!userSession )
+    if (!userSession)
       return res.status(401).json({ message: "Session not found" });
 
     // Verify with stored secret
@@ -176,7 +178,7 @@ export const refresh = async (req, res, next) => {
     const decoded = jwt.decode(refreshToken);
     if (!decoded?.id || !decoded?.jti)
       return res.status(401).json({ message: "Invalid refresh token" });
-    
+
     const deviceUUID = req.headers['x-device-uuid'] || req.headers['X-Device-UUID'];
     if (!deviceUUID) return res.status(401).json({ message: "Device UUID required" });
 
@@ -256,20 +258,20 @@ export const logout = async (req, res) => {
   try {
     const token = req.cookies?.auth_token || req.headers.authorization?.split(" ")[1];
     const deviceUUID = req.headers['x-device-uuid'] || req.headers['X-Device-UUID'];
-    
-    
+
+
     if (!deviceUUID) return res.status(400).json({ message: "Device UUID required" });
 
     if (token) {
       const decoded = jwt.decode(token);
-      
+
       if (decoded?.id) {
         const updateResult = await session.findOneAndUpdate(
           { userId: decoded.id, platform: decoded.platform, deviceUUID },
           { status: "DeActive" },
           { new: true }
         );
-        
+
         if (!updateResult) {
           // Try without platform filter as fallback
           const fallbackResult = await session.findOneAndUpdate(
@@ -294,12 +296,12 @@ export const logout = async (req, res) => {
 
 
 export const storePushToken = async (req, res, next) => {
-  try { 
-    const {sessionId, fcmToken} = req.body;
+  try {
+    const { sessionId, fcmToken } = req.body;
 
 
-    if(!sessionId || !fcmToken) {
-      return res.status(400).json({message: "Session Id and FCM Token are required"});
+    if (!sessionId || !fcmToken) {
+      return res.status(400).json({ message: "Session Id and FCM Token are required" });
     }
 
     const updatedSession = await session.findByIdAndUpdate(sessionId, {
@@ -308,14 +310,14 @@ export const storePushToken = async (req, res, next) => {
     }, { new: true });
 
     if (!updatedSession) {
-      return res.status(404).json({message: "Session not found"});
+      return res.status(404).json({ message: "Session not found" });
     }
 
-    
+
     // Send test notification
     await sendTestNotification(fcmToken);
-    
-    return res.json({message: "FCM Token stored successfully"});
+
+    return res.json({ message: "FCM Token stored successfully" });
   } catch (err) {
     console.error("Store push token error:", err);
     res.status(500).json({ message: "Failed to store push token" });
@@ -352,7 +354,7 @@ export const sendManualTestNotification = async (req, res) => {
   try {
     const { message, title } = req.body;
     const deviceUUID = req.headers['x-device-uuid'] || req.headers['X-Device-UUID'];
-    
+
     if (!deviceUUID) {
       return res.status(400).json({ message: "Device UUID required" });
     }
@@ -386,7 +388,7 @@ export const sendManualTestNotification = async (req, res) => {
     });
 
     const result = await response.json();
-    
+
     return res.json({ message: "Test notification sent successfully", result });
   } catch (error) {
     console.error('Manual test notification error:', error);

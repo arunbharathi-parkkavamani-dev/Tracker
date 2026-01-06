@@ -1,20 +1,20 @@
 import { useState } from 'react';
 
-const baseUrl = "http://10.55.124.208:3000"
+const baseUrl = "http://192.168.1.108:3000"
 
-const ProfileImage = ({ 
-  profileImage, 
-  firstName, 
-  lastName, 
+const ProfileImage = ({
+  profileImage,
+  firstName,
+  lastName,
   size = 'md',
-  className = '' 
+  className = ''
 }) => {
   const [imageError, setImageError] = useState(false);
 
   // Size configurations
   const sizes = {
     xs: 'w-8 h-8 text-xs',
-    sm: 'w-12 h-12 text-sm', 
+    sm: 'w-12 h-12 text-sm',
     md: 'w-16 h-16 text-lg',
     lg: 'w-24 h-24 text-xl',
     xl: 'w-32 h-32 text-2xl'
@@ -34,7 +34,7 @@ const ProfileImage = ({
 
   if (profileImage && !imageError) {
     return (
-      <img 
+      <img
         src={getImageUrl(profileImage)}
         alt="Profile"
         className={`${sizes[size]} rounded-full object-cover ${className}`}

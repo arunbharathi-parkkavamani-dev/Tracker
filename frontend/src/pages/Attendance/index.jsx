@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import axiosInstance from "../../api/axiosInstance";
 import { useAuth } from "../../context/authProvider.jsx";
-import LeaveAndRegularization from "./Leave&Regularization.jsx";
+import LeaveAndRegularization from "./leave-regularization.jsx";
 import FloatingCard from "../../components/Common/FloatingCard.jsx";
 import toast, { Toaster } from "react-hot-toast";
 import { Clock, Calendar, Plus, CheckCircle, XCircle } from "lucide-react";

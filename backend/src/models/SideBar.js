@@ -9,13 +9,25 @@ const IconSchema = new mongoose.Schema({
 const SideBarSchema = new mongoose.Schema({
   title: { type: String, trim: true },
   icon: IconSchema,
-  
-  mainRoute: { 
-    type: String, 
-    trim: true, 
-    required: true, 
-    unique: true,  
+
+  mainRoute: {
+    type: String,
+    trim: true,
+    required: true,
+    unique: true,
   },
+
+  // Role-based visibility
+  allowedDepartments: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'departments',
+    default: []
+  }],
+  allowedDesignations: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'designations',
+    default: []
+  }],
 
   routes: [{
     type: String,
@@ -26,8 +38,8 @@ const SideBarSchema = new mongoose.Schema({
   hasChildren: { type: Boolean, default: false },
   isParent: { type: Boolean, default: false },
 
-  order: { type: Number, default: 0},
-  isActive: { type: Boolean, default: true},
+  order: { type: Number, default: 0 },
+  isActive: { type: Boolean, default: true },
 
 }, { timestamps: true });
 

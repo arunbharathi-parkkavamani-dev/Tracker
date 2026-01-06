@@ -1,16 +1,16 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { 
-  View, 
-  Text, 
-  FlatList, 
-  RefreshControl, 
-  ActivityIndicator, 
+import {
+  View,
+  Text,
+  FlatList,
+  RefreshControl,
+  ActivityIndicator,
   TouchableOpacity,
   TextInput,
   StyleSheet
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useOptimizedDataFetching } from '../hooks/useOptimizedDataFetching';
+import { useOptimizedDataFetching } from '../../hooks/useOptimizedDataFetching';
 
 const OptimizedList = ({
   model,
@@ -50,7 +50,7 @@ const OptimizedList = ({
   // Handle search with debouncing
   const handleSearch = useCallback((text) => {
     setSearchTerm(text);
-    
+
     const searchFilters = text ? {
       ...filters,
       $or: [
@@ -59,7 +59,7 @@ const OptimizedList = ({
         { description: { $regex: text, $options: 'i' } }
       ]
     } : filters;
-    
+
     handleFilterChange(searchFilters);
   }, [filters, handleFilterChange]);
 
@@ -73,7 +73,7 @@ const OptimizedList = ({
   // Enhanced render item with press handling
   const enhancedRenderItem = useCallback(({ item, index }) => {
     const itemComponent = renderItem({ item, index });
-    
+
     if (onItemPress) {
       return (
         <TouchableOpacity onPress={() => onItemPress(item)} activeOpacity={0.7}>
@@ -81,7 +81,7 @@ const OptimizedList = ({
         </TouchableOpacity>
       );
     }
-    
+
     return itemComponent;
   }, [renderItem, onItemPress]);
 
@@ -90,7 +90,7 @@ const OptimizedList = ({
     if (!pagination || paginationInfo.currentPage >= paginationInfo.totalPages) {
       return null;
     }
-    
+
     return (
       <View style={styles.footer}>
         {loading ? (
@@ -114,7 +114,7 @@ const OptimizedList = ({
         </View>
       );
     }
-    
+
     if (error) {
       return (
         <View style={styles.centerContainer}>
@@ -126,7 +126,7 @@ const OptimizedList = ({
         </View>
       );
     }
-    
+
     return (
       <View style={styles.centerContainer}>
         <Ionicons name="document-outline" size={48} color="#8E8E93" />
@@ -138,7 +138,7 @@ const OptimizedList = ({
   // Header component with search
   const renderHeader = useMemo(() => {
     if (!title && !searchable) return null;
-    
+
     return (
       <View style={styles.header}>
         {title && (
@@ -149,7 +149,7 @@ const OptimizedList = ({
             )}
           </View>
         )}
-        
+
         {searchable && (
           <View style={styles.searchContainer}>
             {showSearch ? (
@@ -162,7 +162,7 @@ const OptimizedList = ({
                   onChangeText={handleSearch}
                   autoFocus
                 />
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={() => {
                     setShowSearch(false);
                     setSearchTerm('');

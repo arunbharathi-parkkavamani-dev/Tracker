@@ -1,7 +1,7 @@
 import "../global.css"
 import { useEffect } from "react";
 import { Slot } from 'expo-router';
-import { AppState } from 'react-native';
+import { AppState, AppStateStatus } from 'react-native';
 import { AuthProvider } from '@/context/AuthContext';
 import { NotificationProvider } from '@/context/NotificationContext';
 import { Provider as PaperProvider } from "react-native-paper";
@@ -25,14 +25,14 @@ export default function RootLayout() {
     checkAndStoreFCMToken();
 
     // Check FCM token when app becomes active
-    const handleAppStateChange = (nextAppState) => {
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
       if (nextAppState === 'active') {
         checkAndStoreFCMToken();
       }
     };
 
     const subscription = AppState.addEventListener('change', handleAppStateChange);
-    
+
     return () => {
       subscription?.remove();
     };

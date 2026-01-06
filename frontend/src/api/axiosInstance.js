@@ -5,7 +5,7 @@ let authContextLogout = null;
 let failedRequestCount = 0;
 const MAX_FAILED_REQUESTS = 5;
 
-const baseUrl = "http://10.55.124.208:3000"
+const baseUrl = "http://192.168.1.108:3000"
 
 export const setAuthLogout = (logoutFn) => {
   authContextLogout = logoutFn;
@@ -17,7 +17,7 @@ const resetFailedCount = () => {
 
 const incrementFailedCount = async () => {
   failedRequestCount++;
-  
+
   if (failedRequestCount >= MAX_FAILED_REQUESTS) {
     await forceLogout();
   }
@@ -36,15 +36,15 @@ const forceLogout = async () => {
   } catch (error) {
     console.log("Logout API failed:", error);
   }
-  
+
   // Clear cookies and localStorage
   Cookies.remove("auth_token");
   Cookies.remove("refresh_token");
   localStorage.removeItem('auth_token');
-  
+
   // Reset counter
   failedRequestCount = 0;
-  
+
   // Call auth context logout
   if (authContextLogout) {
     authContextLogout();
@@ -80,10 +80,10 @@ axiosInstance.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
+
     // Add device UUID to all requests
     config.headers['x-device-uuid'] = getDeviceUUID();
-    
+
     // Only set Content-Type for POST/PUT/PATCH with body (but not for FormData)
     if (['post', 'put', 'patch'].includes(config.method?.toLowerCase()) && config.data && !(config.data instanceof FormData)) {
       config.headers['Content-Type'] = 'application/json';
@@ -105,8 +105,8 @@ axiosInstance.interceptors.response.use(
     const errorData = error.response?.data;
 
     // Handle session expired or invalid responses
-    if (error.response?.status === 403 && 
-        (errorData?.error?.includes('Session expired') || errorData?.error?.includes('Invalid token'))) {
+    if (error.response?.status === 403 &&
+      (errorData?.error?.includes('Session expired') || errorData?.error?.includes('Invalid token'))) {
       await forceLogout();
       return Promise.reject(error);
     }
@@ -116,17 +116,17 @@ axiosInstance.interceptors.response.use(
       // Try refresh only once if token is expired
       if (errorData?.expired && !originalRequest._retry) {
         originalRequest._retry = true;
-        
+
         try {
           const refreshResponse = await axios.post(
             `${baseUrl}/api/auth/refresh`,
             {},
-            { 
+            {
               withCredentials: true,
               headers: { 'x-device-uuid': getDeviceUUID() }
             }
           );
-          
+
           if (refreshResponse.data.accessToken) {
             Cookies.set("auth_token", refreshResponse.data.accessToken);
             localStorage.setItem('auth_token', refreshResponse.data.accessToken);
@@ -138,7 +138,7 @@ axiosInstance.interceptors.response.use(
           // Refresh failed - proceed to logout
         }
       }
-      
+
       await forceLogout();
       return Promise.reject(error);
     }

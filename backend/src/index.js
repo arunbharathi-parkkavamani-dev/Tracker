@@ -10,10 +10,13 @@ import populateHelper from "./routes/populateRoutes.js";
 import fileRoutes from "./routes/fileRoutes.js";
 import locationRoutes from "./routes/locationRoutes.js";
 import bankRoutes from "./routes/bankRoutes.js";
+import configRoutes from "./routes/configRoutes.js";
 
 import { apiHitLogger } from "./middlewares/apiHitLogger.js";
 import { agentAuthMiddleware } from "./middlewares/agentAuthMiddleware.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
+import { requestTracer } from "./middlewares/requestTracer.js";
+import { runSecurityTests } from "./utils/securityIntegrationTest.js";
 import connectDB from "./Config/ConnectDB.js";
 import cookieParser from "cookie-parser";
 import databaseIndexer from "./services/databaseIndexer.js";
@@ -36,9 +39,9 @@ setTimeout(async () => {
     // Initialize cache first
     const { setCache } = await import('./utils/cache.js');
     await setCache();
-    
+
     // Redis completely disabled - no connection attempt
-    
+
   } catch (error) {
     // Silenced
   }
@@ -46,6 +49,16 @@ setTimeout(async () => {
 
 const app = express();
 const server = http.createServer(app);
+
+// Startup Self-Check
+(async () => {
+  try {
+    await runSecurityTests();
+  } catch (error) {
+    console.error("⛔ CRITICAL WARNING: Security self-check failed. Proceeding with caution... (Server not crashing per policy)");
+    console.error(error);
+  }
+})();
 
 // Memory-efficient middleware setup
 app.use(express.json({ limit: '10mb' }));
@@ -73,6 +86,7 @@ app.use(cors({
 }));
 
 app.use(agentAuthMiddleware);
+app.use(requestTracer); // Attach request ID before logger
 app.use(apiHitLogger);
 
 // Test endpoint to verify server is working
@@ -91,6 +105,7 @@ app.use("/api/populate", populateHelper);
 app.use("/api/files", fileRoutes);
 app.use("/api", locationRoutes);
 app.use("/api", bankRoutes);
+app.use("/api/config", configRoutes); // Config/Admin routes
 
 
 app.use(errorHandler);
@@ -126,17 +141,17 @@ io.on("connection", (socket) => {
   // Join user room with cleanup
   socket.on("join", (userId) => {
     if (!userId) return;
-    
+
     const connection = activeConnections.get(socket.id);
     if (connection) {
       connection.userId = userId;
       connection.lastActivity = Date.now();
     }
-    
+
     // Leave previous rooms
     const previousRooms = userRooms.get(socket.id) || [];
     previousRooms.forEach(room => socket.leave(room));
-    
+
     // Join new room
     socket.join(userId);
     userRooms.set(socket.id, [userId]);
@@ -154,7 +169,7 @@ io.on("connection", (socket) => {
   socket.on("disconnect", (reason) => {
     activeConnections.delete(socket.id);
     userRooms.delete(socket.id);
-    
+
     // Log disconnection reason for monitoring
     if (reason === 'transport error' || reason === 'ping timeout') {
       console.warn(`Socket disconnected due to: ${reason}`);
@@ -173,7 +188,7 @@ io.on("connection", (socket) => {
 setInterval(() => {
   const now = Date.now();
   const staleThreshold = 5 * 60 * 1000; // 5 minutes
-  
+
   // Clean stale connections
   for (const [socketId, connection] of activeConnections.entries()) {
     if (now - connection.lastActivity > staleThreshold) {
@@ -185,7 +200,7 @@ setInterval(() => {
       userRooms.delete(socketId);
     }
   }
-  
+
   // Log memory usage
   const memUsage = process.memoryUsage();
   if (memUsage.heapUsed > 1024 * 1024 * 1024) { // > 1GB
@@ -199,12 +214,12 @@ setInterval(() => {
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   console.log('Gracefully shutting down...');
-  
+
   // Close services
   await Promise.all([
     new Promise(resolve => io.close(resolve))
   ]);
-  
+
   console.log('All services closed');
   process.exit(0);
 });

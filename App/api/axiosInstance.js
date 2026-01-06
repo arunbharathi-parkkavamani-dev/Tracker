@@ -6,7 +6,7 @@ let authContextLogout = null;
 let failedRequestCount = 0;
 const MAX_FAILED_REQUESTS = 5;
 
-const baseUrl = "http://10.55.124.208:3000";
+const baseUrl = "http://192.168.1.108:3000";
 
 export const setAuthLogout = (logoutFn) => {
   authContextLogout = logoutFn;
@@ -18,7 +18,7 @@ const resetFailedCount = () => {
 
 const incrementFailedCount = async () => {
   failedRequestCount++;
-  
+
   if (failedRequestCount >= MAX_FAILED_REQUESTS) {
     await forceLogout();
   }
@@ -26,6 +26,8 @@ const incrementFailedCount = async () => {
 
 const forceLogout = async () => {
   try {
+    await AsyncStorage.multiRemove(["auth_token", "refresh_token", "current_session_id", "fcm_token_stored"]);
+    failedRequestCount = 0;
     await axios.post(`${baseUrl}/api/auth/logout`, {}, {
       headers: {
         'x-device-uuid': await getDeviceUUID(),
@@ -35,14 +37,12 @@ const forceLogout = async () => {
   } catch (error) {
     console.log("Logout API failed:", error);
   }
-  
-  await AsyncStorage.multiRemove(["auth_token", "refresh_token", "current_session_id", "fcm_token_stored"]);
-  failedRequestCount = 0;
-  
+
+
   if (authContextLogout) {
     authContextLogout();
   }
-  
+
   try {
     router.replace("/(authRoute)/Login");
   } catch (routerError) {
@@ -72,16 +72,16 @@ axiosInstance.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
+
     config.headers['x-device-uuid'] = await getDeviceUUID();
-    
+
     // Handle FormData for file uploads
     if (config.data instanceof FormData) {
       config.headers['Content-Type'] = 'multipart/form-data';
     } else if (['post', 'put', 'patch'].includes(config.method?.toLowerCase()) && config.data) {
       config.headers['Content-Type'] = 'application/json';
     }
-    
+
     return config;
   },
   (error) => Promise.reject(error)
@@ -98,29 +98,29 @@ axiosInstance.interceptors.response.use(
 
     if (error.response?.status === 401 && errorData?.expired && !originalRequest._retry) {
       originalRequest._retry = true;
-      
+
       try {
         const refreshToken = await AsyncStorage.getItem("refresh_token");
         if (!refreshToken) throw new Error("No refresh token");
-        
+
         const refreshResponse = await axios.post(
           `${baseUrl}/api/auth/refresh`,
           { refreshToken, platform: "mobile" },
           { headers: { 'x-device-uuid': await getDeviceUUID() } }
         );
-        
+
         if (refreshResponse.data.accessToken) {
           await AsyncStorage.setItem("auth_token", refreshResponse.data.accessToken);
           resetFailedCount();
         }
-        
+
         return axiosInstance(originalRequest);
       } catch (refreshError) {
         await forceLogout();
         return Promise.reject(refreshError);
       }
     }
-    
+
     if (error.response?.status === 401) {
       await forceLogout();
       return Promise.reject(error);

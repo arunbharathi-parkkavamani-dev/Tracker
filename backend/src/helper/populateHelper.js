@@ -3,6 +3,7 @@
 import { buildQuery } from "../utils/policy/policyEngine.js";
 import { parseFilter } from "../utils/filterParser.js";
 import queryOptimizer from "../utils/queryOptimizer.js";
+import { DEFAULT_POPULATE_FIELDS } from "../Config/defaultPopulateFields.js";
 
 export async function populateHelper(req, res, next) {
   try {
@@ -20,6 +21,75 @@ export async function populateHelper(req, res, next) {
     // ------------------------ SPECIAL AGENT ENDPOINTS ------------------------
     if (action === 'read' && model === 'agents' && id && req.query.clientProducts === 'true') {
       return await handleAgentClientProducts(req, res, id);
+    }
+
+    // ------------------------ BULK UPSERT (ACCESS POLICIES) ------------------------
+    if (action === 'bulk-upsert') {
+      if (!Array.isArray(req.body)) {
+        return res.status(400).json({ success: false, message: "Body must be an array for bulk-upsert" });
+      }
+
+      const results = [];
+      const errors = [];
+
+      // We process sequentially or parallel. Sequential is safer for auditing order.
+      for (const item of req.body) {
+        try {
+          // Item structure: { filter: {...}, body: {...} }
+          // 1. Try to find existing doc
+          // We use standard buildQuery with 'list' (read with filter) to check existence
+          // BUT easier pattern: Try Update. If throws "not found", Try Create.
+
+          // Note: We must ensure we don't accidentally update ALL records if filter is empty.
+          if (!item.filter || Object.keys(item.filter).length === 0) {
+            throw new Error("Filter required for bulk item");
+          }
+
+          // Check existence first to decide Action
+          const existing = await buildQuery({
+            role: user.role,
+            userId: user.id,
+            action: 'read',
+            modelName: model,
+            filter: item.filter,
+            fields: ['_id'] // minimal read
+          });
+
+          let opResult;
+          if (existing && Array.isArray(existing) && existing.length > 0) {
+            // UPDATE
+            opResult = await buildQuery({
+              role: user.role,
+              userId: user.id,
+              action: 'update',
+              modelName: model,
+              docId: existing[0]._id, // Update the first match (usually unique due to indexes)
+              body: item.body
+            });
+          } else {
+            // CREATE
+            // Merge filter into body for creation if needed (e.g. role, modelName)
+            // usually item.body should have everything needed for creation
+            opResult = await buildQuery({
+              role: user.role,
+              userId: user.id,
+              action: 'create',
+              modelName: model,
+              body: { ...item.filter, ...item.body } // ensure keys from filter are in body
+            });
+          }
+          results.push(opResult);
+        } catch (err) {
+          console.error(`Bulk item failed:`, err.message);
+          errors.push({ filter: item.filter, error: err.message });
+        }
+      }
+
+      return res.json({
+        success: true,
+        count: results.length,
+        errors: errors.length > 0 ? errors : undefined
+      });
     }
 
     // ------------------------ PAGINATION SETUP ------------------------
@@ -87,7 +157,7 @@ export async function populateHelper(req, res, next) {
       // ---------- 1) JSON Mode ----------
       try {
         parsed = JSON.parse(filter);
-      } catch {}
+      } catch { }
 
       // ---------- 2) Simple Key=Value Mode ----------
       const isSimple =
@@ -118,7 +188,7 @@ export async function populateHelper(req, res, next) {
 
     // ------------------------ EXECUTE OPTIMIZED QUERY ------------------------
     let queryFilter = finalFilter;
-    
+
     // For aggregate queries, structure the filter properly
     if (isAggregate && stages) {
       queryFilter = {
@@ -126,16 +196,16 @@ export async function populateHelper(req, res, next) {
         stages: stages
       };
     }
-    
+
     // Handle file upload for create/update actions
     let requestBody = req.body;
     if ((action === 'create' || action === 'update') && (req.file || req.files)) {
       const folder = req.route.path.includes('profile') || (req.file && req.file.fieldname === 'profileImage') ? 'profile' : 'general';
-      
+
       // Handle single file upload
       if (req.file) {
         const filePath = `documents/${folder}/${req.file.filename}`;
-        
+
         if (req.file.fieldname === 'profileImage' || req.file.fieldname === 'file') {
           requestBody = {
             ...req.body,
@@ -148,7 +218,7 @@ export async function populateHelper(req, res, next) {
           };
         }
       }
-      
+
       // Handle multiple attachments
       if (req.files && req.files.attachments) {
         const attachmentPaths = req.files.attachments.map(file => ({
@@ -159,7 +229,7 @@ export async function populateHelper(req, res, next) {
           size: file.size,
           uploadedAt: new Date()
         }));
-        
+
         requestBody = {
           ...requestBody,
           attachments: attachmentPaths
@@ -170,6 +240,54 @@ export async function populateHelper(req, res, next) {
     // ------------------------ QUERY EXECUTION ------------------------
     let data;
 
+    // 1. Determine base populate options (start with server defaults)
+    let finalPopulate = { ...(DEFAULT_POPULATE_FIELDS[model] || {}) };
+
+    // 2. Parse User Overrides
+    if (populateFields) {
+      let userPopulate = {};
+      try {
+        // Attempt to parse if it's a JSON string
+        const parsed = typeof populateFields === 'string' && (populateFields.startsWith('{') || populateFields.startsWith('['))
+          ? JSON.parse(populateFields)
+          : populateFields;
+
+        if (Array.isArray(parsed)) {
+          // Case: ["path1", "path2"]
+          parsed.forEach(path => {
+            userPopulate[path] = DEFAULT_POPULATE_FIELDS[model]?.[path] || 'name';
+          });
+        } else if (typeof parsed === 'object' && parsed !== null) {
+          // Case: {"path1": "fields", "path2": true}
+          Object.entries(parsed).forEach(([path, fields]) => {
+            if (fields === true || fields === "" || fields === null) {
+              userPopulate[path] = DEFAULT_POPULATE_FIELDS[model]?.[path] || 'name';
+            } else {
+              userPopulate[path] = fields;
+            }
+          });
+        } else if (typeof parsed === 'string') {
+          // Case: "path1:fields,path2"
+          parsed.split(',').forEach(path => {
+            const cleanPath = path.trim();
+            if (cleanPath) {
+              if (cleanPath.includes(':')) {
+                const [p, f] = cleanPath.split(':');
+                userPopulate[p.trim()] = f.trim();
+              } else {
+                userPopulate[cleanPath] = DEFAULT_POPULATE_FIELDS[model]?.[cleanPath] || 'name';
+              }
+            }
+          });
+        }
+
+        // Merge user preferences (this might add new paths or change fields for existing ones)
+        finalPopulate = { ...finalPopulate, ...userPopulate };
+      } catch (e) {
+        console.warn("Error parsing populateFields:", populateFields, e.message);
+      }
+    }
+
     // Use regular buildQuery for all operations
     data = await buildQuery({
       role: user.role,
@@ -179,7 +297,7 @@ export async function populateHelper(req, res, next) {
       docId: id,
       fields,
       filter: queryFilter,
-      populateFields: populateFields ? JSON.parse(populateFields) : null,
+      populateFields: finalPopulate, // Pass the merged object
       body: requestBody,
     });
 
@@ -195,7 +313,7 @@ export async function populateHelper(req, res, next) {
     return res.status(statusCode).json(response);
   } catch (error) {
     console.error("populateHelper error:", error.message);
-    
+
     const statusCode = error.status || 500;
     const errorResponse = {
       success: false,
@@ -204,7 +322,7 @@ export async function populateHelper(req, res, next) {
       model: req.params?.model,
       ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
     };
-    
+
     return res.status(statusCode).json(errorResponse);
   }
 }
@@ -242,11 +360,11 @@ function getDetailedFields(model) {
 function getSummaryPopulate(model) {
   const summaryPopulate = {
     tasks: [
-      { path: 'assignedTo', select: 'basicInfo.firstName basicInfo.lastName basicInfo.profileImage professionalInfo.employeeId' }, 
+      { path: 'assignedTo', select: 'basicInfo.firstName basicInfo.lastName basicInfo.profileImage professionalInfo.employeeId' },
       { path: 'clientId', select: 'name email' }
     ],
     employees: [
-      { path: 'professionalInfo.designation', select: 'name' }, 
+      { path: 'professionalInfo.designation', select: 'name' },
       { path: 'professionalInfo.department', select: 'name' }
     ],
     leaves: [
@@ -283,14 +401,14 @@ function getSummaryPopulate(model) {
 function getDetailedPopulate(model) {
   const detailedPopulate = {
     tasks: [
-      { path: 'assignedTo', select: '-documents -auditLog' }, 
-      { path: 'createdBy', select: 'basicInfo professionalInfo.designation' }, 
+      { path: 'assignedTo', select: '-documents -auditLog' },
+      { path: 'createdBy', select: 'basicInfo professionalInfo.designation' },
       { path: 'clientId', select: '-documents' }
     ],
     employees: [
-      { path: 'professionalInfo.designation' }, 
-      { path: 'professionalInfo.department' }, 
-      { path: 'professionalInfo.role' }, 
+      { path: 'professionalInfo.designation' },
+      { path: 'professionalInfo.department' },
+      { path: 'professionalInfo.role' },
       { path: 'professionalInfo.reportingManager', select: 'basicInfo.firstName basicInfo.lastName' }
     ],
     leaves: [
@@ -333,7 +451,7 @@ export default populateHelper;
 async function handleAgentClientProducts(req, res, agentId) {
   try {
     const { buildQuery } = await import("../utils/policy/policyEngine.js");
-    
+
     // Get agent with populated client
     const agent = await buildQuery({
       role: 'Super Admin', // Use admin role to bypass restrictions
@@ -343,16 +461,16 @@ async function handleAgentClientProducts(req, res, agentId) {
       docId: agentId,
       populateFields: [{ path: 'client', select: 'name proposedProducts' }]
     });
-    
+
     if (!agent || !agent.client) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'Agent or client not found' 
+      return res.status(404).json({
+        success: false,
+        message: 'Agent or client not found'
       });
     }
-    
+
     const products = agent.client.proposedProducts || [];
-    
+
     return res.json({
       success: true,
       products,
@@ -360,9 +478,9 @@ async function handleAgentClientProducts(req, res, agentId) {
     });
   } catch (error) {
     console.error('Error fetching agent client products:', error);
-    return res.status(500).json({ 
-      success: false, 
-      message: 'Internal server error' 
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error'
     });
   }
 }
