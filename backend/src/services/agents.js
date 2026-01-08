@@ -8,7 +8,7 @@ export default function agentService() {
         if (data && data._id) {
           // Send invite automatically when agent is created
           await AgentInviteService.sendInvite(data._id);
-          console.log(`Invitation sent to agent: ${data.email}`);
+          // console.log(`Invitation sent to agent: ${data.email}`);
         }
       } catch (error) {
         console.error('Failed to send invite after agent creation:', error);

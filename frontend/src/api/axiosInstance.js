@@ -34,7 +34,7 @@ const forceLogout = async () => {
       withCredentials: true
     });
   } catch (error) {
-    console.log("Logout API failed:", error);
+    // console.log("Logout API failed:", error);
   }
 
   // Clear cookies and localStorage

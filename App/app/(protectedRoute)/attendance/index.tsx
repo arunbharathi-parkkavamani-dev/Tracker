@@ -76,7 +76,7 @@ export default function Attendance() {
                     setLocationLabel("Current location");
                 }
             } catch (err) {
-                console.log("Error fetching location:", err);
+                // console.log("Error fetching location:", err);
                 setLocationLabel("Unable to fetch location");
             }
         };
@@ -142,7 +142,7 @@ export default function Attendance() {
 
             setTodayRecord(record);
         } catch (err) {
-            console.log("Failed to fetch today's attendance:", err);
+            // console.log("Failed to fetch today's attendance:", err);
             setError("Failed to load today's attendance");
         } finally {
             setIsFetchingToday(false);
@@ -171,7 +171,7 @@ export default function Attendance() {
 
                 setWeeklyData(response?.data?.data || []);
             } catch (err) {
-                console.log("Failed to fetch weekly data:", err);
+                // console.log("Failed to fetch weekly data:", err);
             } finally {
                 setIsFetchingWeek(false);
             }
@@ -231,7 +231,7 @@ export default function Attendance() {
             const status = (record.status || "").toLowerCase();
 
 
-            if (status.includes("present") || status.includes("check-out")||status.includes("late entry")) summary.present += 1;
+            if (status.includes("present") || status.includes("check-out") || status.includes("late entry")) summary.present += 1;
             else if (status.includes("leave")) summary.leave += 1;
             else if (status.includes("absent")) summary.absent += 1;
             else summary.others += 1;
@@ -337,7 +337,7 @@ export default function Attendance() {
                 }),
             });
         } catch (err) {
-            console.log("Check-in failed:", err);
+            // console.log("Check-in failed:", err);
             setError("Check-in failed");
             Toast.show({
                 type: "error",
@@ -388,7 +388,7 @@ export default function Attendance() {
                 }),
             });
         } catch (err) {
-            console.log("Check-out failed:", err);
+            // console.log("Check-out failed:", err);
             setError("Check-out failed");
             Toast.show({
                 type: "error",

@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation';
 export default function AgentSetup() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
-  
+
   const [agent, setAgent] = useState(null);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -21,11 +21,11 @@ export default function AgentSetup() {
       setLoading(false);
       return;
     }
-    
+
     try {
       const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/agent-invite/verify-token/${token}`;
-      console.log('API URL:', apiUrl);
-      
+      // console.log('API URL:', apiUrl);
+
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
@@ -33,13 +33,13 @@ export default function AgentSetup() {
         },
         mode: 'cors'
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
         setAgent(data.agent);
       } else {
@@ -63,7 +63,7 @@ export default function AgentSetup() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;

@@ -91,7 +91,7 @@ app.use(apiHitLogger);
 
 // Test endpoint to verify server is working
 app.get('/test', (req, res) => {
-  console.log('TEST ENDPOINT HIT');
+  // console.log('TEST ENDPOINT HIT');
   res.json({ message: 'Server is working', timestamp: new Date().toISOString() });
 });
 
@@ -213,14 +213,14 @@ setInterval(() => {
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
-  console.log('Gracefully shutting down...');
+  // console.log('Gracefully shutting down...');
 
   // Close services
   await Promise.all([
     new Promise(resolve => io.close(resolve))
   ]);
 
-  console.log('All services closed');
+  // console.log('All services closed');
   process.exit(0);
 });
 

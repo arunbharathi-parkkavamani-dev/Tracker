@@ -34,22 +34,22 @@ export default function ClientTasks() {
   const fetchClientData = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch client's project types
       const clientResponse = await axiosInstance.get(
-        `/populate/read/clients/${id}?fields=projectTypes&populateFields={"projectTypes":"name"}`
+        `/populate/read/clients/${id}?fields=projectTypeId&populateFields={"projectTypeId":"name"}`
       );
-      
+
       // Fetch client's tasks with proper population
       const tasksResponse = await axiosInstance.get(
         `/populate/read/tasks?filter={"clientId":"${id}","status":{"$ne":"Deleted"}}&populateFields={"projectTypeId":"name","assignedTo":"basicInfo"}`
       );
-      
+
       const clientData = clientResponse.data.data;
       const tasksData = tasksResponse.data.data || [];
-      
+
       setTasks(tasksData);
-      
+
       // Create project type columns with task counts
       const colors = ['#8B5CF6', '#10B981', '#EF4444', '#6366F1', '#F59E0B', '#EC4899'];
       const projectTypeColumns = (clientData.projectTypes || []).map((projectType: any, index: number) => {
@@ -61,7 +61,7 @@ export default function ClientTasks() {
           taskCount
         };
       });
-      
+
       setProjectTypes(projectTypeColumns);
     } catch (error) {
       console.error('Error fetching client data:', error);
@@ -71,10 +71,10 @@ export default function ClientTasks() {
   };
 
   const handleProjectTypePress = (projectType: ProjectType) => {
-    const projectTasks = tasks.filter(task => task.projectTypeId?.name === projectType.id);
+    const projectTasks = tasks.filter(task => task.projectType?.name === projectType.id);
     router.push({
       pathname: '/tasks/project-tasks/[projectType]',
-      params: { 
+      params: {
         projectType: projectType.id,
         clientId: id,
         clientName: name,
@@ -96,20 +96,20 @@ export default function ClientTasks() {
     <View className="flex-1 bg-gray-50">
       {/* Header */}
       <View className="bg-white px-4 py-3 border-b border-gray-200">
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={() => router.back()}
           className="flex-row items-center mb-2"
         >
           <MaterialIcons name="arrow-back" size={24} color="#6B7280" />
           <Text className="ml-2 text-gray-600">Back to Clients</Text>
         </TouchableOpacity>
-        
+
         <View className="flex-row items-center justify-between">
           <View className="flex-1">
             <Text className="text-2xl font-bold text-gray-900">{name}</Text>
             <Text className="text-sm text-gray-500 mt-1">Select project type to view tasks</Text>
           </View>
-          
+
           {/* View Toggle */}
           <View className="flex-row bg-gray-100 rounded-lg p-1">
             <TouchableOpacity
@@ -125,10 +125,10 @@ export default function ClientTasks() {
                 elevation: viewMode === 'grid' ? 2 : 0
               }}
             >
-              <MaterialIcons 
-                name="grid-view" 
-                size={20} 
-                color={viewMode === 'grid' ? '#3B82F6' : '#6B7280'} 
+              <MaterialIcons
+                name="grid-view"
+                size={20}
+                color={viewMode === 'grid' ? '#3B82F6' : '#6B7280'}
               />
             </TouchableOpacity>
             <TouchableOpacity
@@ -145,10 +145,10 @@ export default function ClientTasks() {
                 elevation: viewMode === 'list' ? 2 : 0
               }}
             >
-              <MaterialIcons 
-                name="view-list" 
-                size={20} 
-                color={viewMode === 'list' ? '#3B82F6' : '#6B7280'} 
+              <MaterialIcons
+                name="view-list"
+                size={20}
+                color={viewMode === 'list' ? '#3B82F6' : '#6B7280'}
               />
             </TouchableOpacity>
           </View>
@@ -171,7 +171,7 @@ export default function ClientTasks() {
               style={{ width: '48%' }}
             >
               <View className="items-center">
-                <View 
+                <View
                   className="w-12 h-12 rounded-full items-center justify-center mb-3"
                   style={{ backgroundColor: item.color }}
                 >
@@ -205,7 +205,7 @@ export default function ClientTasks() {
               onPress={() => handleProjectTypePress(item)}
               className="bg-white rounded-lg p-4 mb-3 shadow-sm border border-gray-200 flex-row items-center"
             >
-              <View 
+              <View
                 className="w-10 h-10 rounded-full items-center justify-center mr-4"
                 style={{ backgroundColor: item.color }}
               >

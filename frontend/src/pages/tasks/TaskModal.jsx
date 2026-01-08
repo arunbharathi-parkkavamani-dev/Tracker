@@ -51,9 +51,9 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
       const response = await axiosInstance.get(
         `/populate/read/tasks/${task._id}?populateFields=${encodeURIComponent(JSON.stringify(populateFields))}`
       );
-      
+
       let taskData = response.data.data;
-      
+
       // If assignedTo is still array of strings, manually populate
       if (taskData.assignedTo && taskData.assignedTo.length > 0 && typeof taskData.assignedTo[0] === 'string') {
         const populatedAssignedTo = await Promise.all(
@@ -69,7 +69,7 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
         );
         taskData.assignedTo = populatedAssignedTo;
       }
-      
+
       setFormData(taskData);
     } catch (error) {
       console.error('Error fetching task with population:', error);
@@ -88,23 +88,23 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
 
   const fetchComments = async () => {
     if (!task.commentsThread) {
-      console.log('No commentsThread found');
+      // console.log('No commentsThread found');
       return;
     }
     try {
       const threadId = typeof task.commentsThread === 'object' ? task.commentsThread._id : task.commentsThread;
       if (!threadId) {
-        console.log('No valid thread ID');
+        // console.log('No valid thread ID');
         return;
       }
-      
+
       const populateFields = {
         "comments.commentedBy": "basicInfo.firstName,basicInfo.lastName"
       };
       const url = `/populate/read/commentsthreads/${threadId}?populateFields=${encodeURIComponent(JSON.stringify(populateFields))}`;
-      
+
       const response = await axiosInstance.get(url);
-      
+
       // If population didn't work, fetch user details manually
       const commentsWithUsers = await Promise.all(
         (response.data.data?.comments || []).map(async (comment) => {
@@ -123,7 +123,7 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
           return comment;
         })
       );
-      
+
       setComments(commentsWithUsers);
     } catch (error) {
       console.error("Error fetching comments:", error);
@@ -158,11 +158,11 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
       const currentAssigned = (formData.assignedTo || []).filter(Boolean);
       const updatedAssigned = currentAssigned.filter(u => u._id !== userId);
       await updateTaskById(task._id, { assignedTo: updatedAssigned.map(u => u._id) });
-      
+
       // Update local state only
-      setFormData(prev => ({ 
-        ...prev, 
-        assignedTo: updatedAssigned 
+      setFormData(prev => ({
+        ...prev,
+        assignedTo: updatedAssigned
       }));
       toast.success('User unassigned successfully');
     } catch (error) {
@@ -175,13 +175,13 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
       const currentAssigned = (formData.assignedTo || []).filter(Boolean);
       const updatedAssigned = [...currentAssigned.map(u => u._id), userId];
       await updateTaskById(task._id, { assignedTo: updatedAssigned });
-      
+
       // Fetch user details and update local state
       const userResponse = await axiosInstance.get(`/populate/read/employees/${userId}?fields=basicInfo.firstName,basicInfo.lastName,basicInfo.profileImage`);
       const newUser = userResponse.data.data;
-      
-      setFormData(prev => ({ 
-        ...prev, 
+
+      setFormData(prev => ({
+        ...prev,
         assignedTo: [...currentAssigned, newUser]
       }));
       toast.success('User assigned successfully');
@@ -270,13 +270,13 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
           <option value="Rejected">Rejected</option>
           <option value="Completed">Completed</option>
         </select>
-        
+
         <div className="flex items-center gap-2 flex-1">
           <div className="relative" ref={dropdownRef}>
             {formData.assignedTo?.filter(Boolean).length > 0 ? (
               formData.assignedTo.filter(Boolean).length === 1 ? (
                 // Single user - clickable to show dropdown
-                <div 
+                <div
                   className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -301,7 +301,7 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
                 </div>
               ) : (
                 // Multiple users - show count and dropdown toggle
-                <div 
+                <div
                   className="cursor-pointer hover:bg-gray-100 px-2 py-1 rounded"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -315,7 +315,7 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
               )
             ) : (
               // No assignee - show dropdown toggle
-              <div 
+              <div
                 className="cursor-pointer hover:bg-gray-100 px-2 py-1 rounded"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -325,7 +325,7 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
                 <span className="text-gray-500 text-sm">No assignee</span>
               </div>
             )}
-            
+
             {showAssignDropdown && (
               <div className="absolute top-full left-0 mt-1 bg-white border rounded shadow-lg py-1 z-20 min-w-48">
                 {employees.map(emp => {
@@ -355,7 +355,7 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
               </div>
             )}
           </div>
-          
+
           {formData.createdBy?._id !== user.id && !formData.followers?.includes(user.id) && (
             <button
               onClick={handleFollowTask}
@@ -365,7 +365,7 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
               Follow
             </button>
           )}
-          
+
           <div className="relative ml-auto">
             <button
               onClick={() => setShowMoreMenu(!showMoreMenu)}
@@ -373,7 +373,7 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
             >
               <MdMoreVert size={20} />
             </button>
-            
+
             {showMoreMenu && (
               <div className="absolute right-0 top-8 bg-white border rounded shadow-lg py-1 z-10">
                 <div className="px-3 py-2">
@@ -391,7 +391,7 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
           </div>
         </div>
       </div>
-      
+
       <div className="flex h-full">
         {/* Main Content */}
         <div className="w-3/4 pr-6">
@@ -464,7 +464,7 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
               <button className="px-4 py-2 bg-blue-100 text-blue-600 rounded font-medium">Activities</button>
               <button className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">Comments</button>
             </div>
-            
+
             <div className="space-y-4 mb-4">
               {comments.map((comment, index) => (
                 <div key={index} className="flex gap-3">
@@ -516,7 +516,7 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
                   <p className="text-sm font-medium">Not set yet</p>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <MdSchedule className="text-orange-500" size={16} />
                 <div>
@@ -524,7 +524,7 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
                   <p className="text-sm font-medium">Not set yet</p>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <MdSchedule className="text-orange-500" size={16} />
                 <div>
@@ -532,7 +532,7 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
                   <p className="text-sm font-medium">Not set yet *</p>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <MdFlag className="text-orange-500" size={16} />
                 <div>
@@ -540,7 +540,7 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
                   <p className="text-sm font-medium">{formData.priorityLevel || 'None'}</p>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <MdLabel className="text-blue-500" size={16} />
                 <div>

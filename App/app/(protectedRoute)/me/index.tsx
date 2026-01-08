@@ -70,7 +70,7 @@ export default function Profile() {
 
       const decoded = jwtDecode(token);
       const userId = decoded.userId || decoded.id;
-      
+
       if (!userId) {
         Alert.alert('Error', 'User ID not found');
         return;
@@ -82,9 +82,9 @@ export default function Profile() {
       );
 
       if (response.data.data.basicInfo.profileImage) {
-        const imageUrl = `http://10.30.24.208:3000/api/files/render/profile/${response.data.data.basicInfo.profileImage.split('/').pop()}`;
+        const imageUrl = `http://10.126.166.208:3000/api/files/render/profile/${response.data.data.basicInfo.profileImage.split('/').pop()}`;
       }
-      
+
       setEmployee(response.data.data);
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -146,7 +146,7 @@ export default function Profile() {
       const inputRange = [index * 100, (index + 1) * 100];
       const opacity = interpolate(scrollY.value, inputRange, [0, 1], Extrapolate.CLAMP);
       const translateY = interpolate(scrollY.value, inputRange, [50, 0], Extrapolate.CLAMP);
-      
+
       return {
         opacity,
         transform: [{ translateY }],
@@ -170,134 +170,134 @@ export default function Profile() {
 
   return (
     <View className="flex-1 bg-gray-50">
-      <Animated.ScrollView 
+      <Animated.ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: 100 }}
         keyboardShouldPersistTaps="handled"
         onScroll={scrollHandler}
         scrollEventThrottle={16}
       >
-      {/* Profile Header */}
-      <View className="relative h-80 bg-gradient-to-r from-blue-600 to-purple-600 items-center justify-center">
-        {employee.basicInfo.profileImage ? (
-          <Image 
-            source={{ uri: `https://tracker-mxp9.onrender.com/api/files/render/profile/${employee.basicInfo.profileImage.split('/').pop()}` }}
-            className="w-full h-full"
-            resizeMode="cover"
-          />
-        ) : (
-          <Text className="text-6xl font-bold text-white">
-            {employee.basicInfo.firstName?.charAt(0)}{employee.basicInfo.lastName?.charAt(0)}
-          </Text>
-        )}
-        
-        <View className="absolute inset-0 bg-black/30" />
-        
-        <View className="absolute bottom-4 left-4 right-4">
-          <Text className="text-white text-2xl font-bold shadow-lg">
-            {employee.basicInfo.firstName} {employee.basicInfo.lastName}
-          </Text>
-          <Text className="text-white/90 text-sm mt-1 shadow-lg">
-            {employee.professionalInfo.role?.name || 'Employee'}
-          </Text>
-        </View>
-        
-        {/* Edit Button */}
-        <TouchableOpacity
-          onPress={() => setShowEditModal(true)}
-          className="absolute top-4 right-4 bg-white/20 backdrop-blur-sm rounded-full p-3"
-        >
-          <MaterialIcons name="edit" size={20} color="white" />
-        </TouchableOpacity>
-      </View>
+        {/* Profile Header */}
+        <View className="relative h-80 bg-gradient-to-r from-blue-600 to-purple-600 items-center justify-center">
+          {employee.basicInfo.profileImage ? (
+            <Image
+              source={{ uri: `https://tracker-mxp9.onrender.com/api/files/render/profile/${employee.basicInfo.profileImage.split('/').pop()}` }}
+              className="w-full h-full"
+              resizeMode="cover"
+            />
+          ) : (
+            <Text className="text-6xl font-bold text-white">
+              {employee.basicInfo.firstName?.charAt(0)}{employee.basicInfo.lastName?.charAt(0)}
+            </Text>
+          )}
 
-      <View className="px-4 py-4">
-        {/* Basic Information */}
-        <StaticInfoCard title="Basic Information">
-          <InfoRow label="Employee ID" value={employee.professionalInfo.empId} />
-          <InfoRow label="Name" value={`${employee.basicInfo.firstName} ${employee.basicInfo.lastName}`} />
-          <InfoRow label="Email" value={employee.basicInfo.email} />
-          <InfoRow label="Phone" value={employee.basicInfo.phone?.toString()} />
-          <InfoRow label="Date of Birth" value={employee.basicInfo.dob ? new Date(employee.basicInfo.dob).toLocaleDateString() : ''} />
-          <InfoRow label="Date of Anniversary" value={employee.basicInfo.doa ? new Date(employee.basicInfo.doa).toLocaleDateString() : ''} />
-          <InfoRow label="Marital Status" value={employee.basicInfo.maritalStatus} />
-          <InfoRow label="Father Name" value={employee.basicInfo.fatherName} />
-          <InfoRow label="Mother Name" value={employee.basicInfo.motherName} />
-        </StaticInfoCard>
+          <View className="absolute inset-0 bg-black/30" />
 
-        {/* Address */}
-        <StaticInfoCard title="Address">
-          <InfoRow label="Street" value={employee.basicInfo.address?.street} />
-          <InfoRow label="City" value={employee.basicInfo.address?.city} />
-          <InfoRow label="State" value={employee.basicInfo.address?.state} />
-          <InfoRow label="ZIP Code" value={employee.basicInfo.address?.zip} />
-          <InfoRow label="Country" value={employee.basicInfo.address?.country} />
-        </StaticInfoCard>
+          <View className="absolute bottom-4 left-4 right-4">
+            <Text className="text-white text-2xl font-bold shadow-lg">
+              {employee.basicInfo.firstName} {employee.basicInfo.lastName}
+            </Text>
+            <Text className="text-white/90 text-sm mt-1 shadow-lg">
+              {employee.professionalInfo.role?.name || 'Employee'}
+            </Text>
+          </View>
 
-        {/* Professional Information */}
-        <StaticInfoCard title="Professional Information">
-          <InfoRow label="Work Email" value={employee.authInfo.workEmail} />
-          <InfoRow label="Department" value={employee.professionalInfo.department?.name || 'N/A'} />
-          <InfoRow label="Role" value={employee.professionalInfo.role?.name || 'N/A'} />
-          <InfoRow label="Designation" value={employee.professionalInfo.designation?.name || 'N/A'} />
-          <InfoRow label="Reporting Manager" value={employee.professionalInfo.reportingManager?.basicInfo?.firstName && employee.professionalInfo.reportingManager?.basicInfo?.lastName ? `${employee.professionalInfo.reportingManager.basicInfo.firstName} ${employee.professionalInfo.reportingManager.basicInfo.lastName}` : 'N/A'} />
-          <InfoRow label="Team Lead" value={employee.professionalInfo.teamLead?.basicInfo?.firstName && employee.professionalInfo.teamLead?.basicInfo?.lastName ? `${employee.professionalInfo.teamLead.basicInfo.firstName} ${employee.professionalInfo.teamLead.basicInfo.lastName}` : 'N/A'} />
-          <InfoRow label="Level" value={employee.professionalInfo.level} />
-          <InfoRow label="Date of Joining" value={employee.professionalInfo.doj ? new Date(employee.professionalInfo.doj).toLocaleDateString() : ''} />
-          <InfoRow label="Probation Period" value={employee.professionalInfo.probationPeriod} />
-          <InfoRow label="Confirmation Date" value={employee.professionalInfo.confirmDate ? new Date(employee.professionalInfo.confirmDate).toLocaleDateString() : ''} />
-        </StaticInfoCard>
-
-        {/* Account Details */}
-        <AnimatedInfoCard title="Account Details" index={0}>
-          <InfoRow label="Account Name" value={employee.accountDetails?.accountName} />
-          <InfoRow label="Account Number" value={employee.accountDetails?.accountNo} />
-          <InfoRow label="Bank Name" value={employee.accountDetails?.bankName} />
-          <InfoRow label="Branch" value={employee.accountDetails?.branch} />
-          <InfoRow label="IFSC Code" value={employee.accountDetails?.ifscCode} />
-        </AnimatedInfoCard>
-
-        {/* Salary Details */}
-        <AnimatedInfoCard title="Salary Details" index={1}>
-          <InfoRow label="Package" value={employee.salaryDetails?.package ? `₹${employee.salaryDetails.package.toLocaleString()}` : ''} />
-          <InfoRow label="Basic" value={employee.salaryDetails?.basic ? `₹${employee.salaryDetails.basic.toLocaleString()}` : ''} />
-          <InfoRow label="CTC" value={employee.salaryDetails?.ctc ? `₹${employee.salaryDetails.ctc.toLocaleString()}` : ''} />
-          <InfoRow label="Allowances" value={employee.salaryDetails?.allowances ? `₹${employee.salaryDetails.allowances.toLocaleString()}` : ''} />
-          <InfoRow label="Deductions" value={employee.salaryDetails?.deductions ? `₹${employee.salaryDetails.deductions.toLocaleString()}` : ''} />
-        </AnimatedInfoCard>
-
-        {/* Personal Documents */}
-        <AnimatedInfoCard title="Personal Documents" index={2}>
-          <InfoRow label="PAN" value={employee.personalDocuments?.pan} />
-          <InfoRow label="Aadhar" value={employee.personalDocuments?.aadhar} />
-          <InfoRow label="ESI" value={employee.personalDocuments?.esi} />
-          <InfoRow label="PF" value={employee.personalDocuments?.pf} />
-        </AnimatedInfoCard>
-
-        {/* Actions */}
-        <AnimatedInfoCard title="Actions" index={3}>
+          {/* Edit Button */}
           <TouchableOpacity
-            onPress={handleLogout}
-            className="bg-red-500 rounded-lg p-4 flex-row items-center justify-center"
+            onPress={() => setShowEditModal(true)}
+            className="absolute top-4 right-4 bg-white/20 backdrop-blur-sm rounded-full p-3"
           >
-            <MaterialIcons name="logout" size={20} color="white" />
-            <Text className="text-white font-semibold ml-2">Logout</Text>
+            <MaterialIcons name="edit" size={20} color="white" />
           </TouchableOpacity>
-        </AnimatedInfoCard>
-      </View>
-      
-      {/* Edit Profile Modal */}
-      <FloatingCard
-        visible={showEditModal}
-        onClose={() => setShowEditModal(false)}
-      >
-        <FormRenderer
-          fields={profileFormFields(employee)}
-          submitButton={profileSubmitButton}
-          data={employee}
-          onSubmit={handleUpdateProfile}
-        />
-      </FloatingCard>
+        </View>
+
+        <View className="px-4 py-4">
+          {/* Basic Information */}
+          <StaticInfoCard title="Basic Information">
+            <InfoRow label="Employee ID" value={employee.professionalInfo.empId} />
+            <InfoRow label="Name" value={`${employee.basicInfo.firstName} ${employee.basicInfo.lastName}`} />
+            <InfoRow label="Email" value={employee.basicInfo.email} />
+            <InfoRow label="Phone" value={employee.basicInfo.phone?.toString()} />
+            <InfoRow label="Date of Birth" value={employee.basicInfo.dob ? new Date(employee.basicInfo.dob).toLocaleDateString() : ''} />
+            <InfoRow label="Date of Anniversary" value={employee.basicInfo.doa ? new Date(employee.basicInfo.doa).toLocaleDateString() : ''} />
+            <InfoRow label="Marital Status" value={employee.basicInfo.maritalStatus} />
+            <InfoRow label="Father Name" value={employee.basicInfo.fatherName} />
+            <InfoRow label="Mother Name" value={employee.basicInfo.motherName} />
+          </StaticInfoCard>
+
+          {/* Address */}
+          <StaticInfoCard title="Address">
+            <InfoRow label="Street" value={employee.basicInfo.address?.street} />
+            <InfoRow label="City" value={employee.basicInfo.address?.city} />
+            <InfoRow label="State" value={employee.basicInfo.address?.state} />
+            <InfoRow label="ZIP Code" value={employee.basicInfo.address?.zip} />
+            <InfoRow label="Country" value={employee.basicInfo.address?.country} />
+          </StaticInfoCard>
+
+          {/* Professional Information */}
+          <StaticInfoCard title="Professional Information">
+            <InfoRow label="Work Email" value={employee.authInfo.workEmail} />
+            <InfoRow label="Department" value={employee.professionalInfo.department?.name || 'N/A'} />
+            <InfoRow label="Role" value={employee.professionalInfo.role?.name || 'N/A'} />
+            <InfoRow label="Designation" value={employee.professionalInfo.designation?.name || 'N/A'} />
+            <InfoRow label="Reporting Manager" value={employee.professionalInfo.reportingManager?.basicInfo?.firstName && employee.professionalInfo.reportingManager?.basicInfo?.lastName ? `${employee.professionalInfo.reportingManager.basicInfo.firstName} ${employee.professionalInfo.reportingManager.basicInfo.lastName}` : 'N/A'} />
+            <InfoRow label="Team Lead" value={employee.professionalInfo.teamLead?.basicInfo?.firstName && employee.professionalInfo.teamLead?.basicInfo?.lastName ? `${employee.professionalInfo.teamLead.basicInfo.firstName} ${employee.professionalInfo.teamLead.basicInfo.lastName}` : 'N/A'} />
+            <InfoRow label="Level" value={employee.professionalInfo.level} />
+            <InfoRow label="Date of Joining" value={employee.professionalInfo.doj ? new Date(employee.professionalInfo.doj).toLocaleDateString() : ''} />
+            <InfoRow label="Probation Period" value={employee.professionalInfo.probationPeriod} />
+            <InfoRow label="Confirmation Date" value={employee.professionalInfo.confirmDate ? new Date(employee.professionalInfo.confirmDate).toLocaleDateString() : ''} />
+          </StaticInfoCard>
+
+          {/* Account Details */}
+          <AnimatedInfoCard title="Account Details" index={0}>
+            <InfoRow label="Account Name" value={employee.accountDetails?.accountName} />
+            <InfoRow label="Account Number" value={employee.accountDetails?.accountNo} />
+            <InfoRow label="Bank Name" value={employee.accountDetails?.bankName} />
+            <InfoRow label="Branch" value={employee.accountDetails?.branch} />
+            <InfoRow label="IFSC Code" value={employee.accountDetails?.ifscCode} />
+          </AnimatedInfoCard>
+
+          {/* Salary Details */}
+          <AnimatedInfoCard title="Salary Details" index={1}>
+            <InfoRow label="Package" value={employee.salaryDetails?.package ? `₹${employee.salaryDetails.package.toLocaleString()}` : ''} />
+            <InfoRow label="Basic" value={employee.salaryDetails?.basic ? `₹${employee.salaryDetails.basic.toLocaleString()}` : ''} />
+            <InfoRow label="CTC" value={employee.salaryDetails?.ctc ? `₹${employee.salaryDetails.ctc.toLocaleString()}` : ''} />
+            <InfoRow label="Allowances" value={employee.salaryDetails?.allowances ? `₹${employee.salaryDetails.allowances.toLocaleString()}` : ''} />
+            <InfoRow label="Deductions" value={employee.salaryDetails?.deductions ? `₹${employee.salaryDetails.deductions.toLocaleString()}` : ''} />
+          </AnimatedInfoCard>
+
+          {/* Personal Documents */}
+          <AnimatedInfoCard title="Personal Documents" index={2}>
+            <InfoRow label="PAN" value={employee.personalDocuments?.pan} />
+            <InfoRow label="Aadhar" value={employee.personalDocuments?.aadhar} />
+            <InfoRow label="ESI" value={employee.personalDocuments?.esi} />
+            <InfoRow label="PF" value={employee.personalDocuments?.pf} />
+          </AnimatedInfoCard>
+
+          {/* Actions */}
+          <AnimatedInfoCard title="Actions" index={3}>
+            <TouchableOpacity
+              onPress={handleLogout}
+              className="bg-red-500 rounded-lg p-4 flex-row items-center justify-center"
+            >
+              <MaterialIcons name="logout" size={20} color="white" />
+              <Text className="text-white font-semibold ml-2">Logout</Text>
+            </TouchableOpacity>
+          </AnimatedInfoCard>
+        </View>
+
+        {/* Edit Profile Modal */}
+        <FloatingCard
+          visible={showEditModal}
+          onClose={() => setShowEditModal(false)}
+        >
+          <FormRenderer
+            fields={profileFormFields(employee)}
+            submitButton={profileSubmitButton}
+            data={employee}
+            onSubmit={handleUpdateProfile}
+          />
+        </FloatingCard>
       </Animated.ScrollView>
     </View>
   );
@@ -305,16 +305,16 @@ export default function Profile() {
   async function handleUpdateProfile(formData: any) {
     try {
       setUpdating(true);
-      
+
       const token = await AsyncStorage.getItem('auth_token');
       if (!token) return;
-      
+
       const decoded = jwtDecode(token);
       const userId = decoded.userId || decoded.id;
-      
+
       // Create FormData for file upload
       const updateData = new FormData();
-      
+
       // Handle profile image upload
       if (formData['basicInfo.profileImage']?.uri) {
         updateData.append('file', {
@@ -324,10 +324,10 @@ export default function Profile() {
         } as any);
         delete formData['basicInfo.profileImage'];
       }
-      
+
       // Exclude system fields that cannot be modified
       const excludeFields = ['_id', 'id', 'createdAt', 'updatedAt', '__v'];
-      
+
       // Add other form data
       Object.keys(formData).forEach(key => {
         if (!excludeFields.includes(key) && formData[key] !== null && formData[key] !== undefined) {
@@ -339,7 +339,7 @@ export default function Profile() {
           }
         }
       });
-      
+
       await axiosInstance.put(
         `/populate/update/employees/${userId}`,
         updateData,
@@ -349,16 +349,16 @@ export default function Profile() {
           }
         }
       );
-      
+
       Toast.show({
         type: 'success',
         text1: 'Success',
         text2: 'Profile updated successfully'
       });
-      
+
       setShowEditModal(false);
       fetchProfile(); // Refresh profile data
-      
+
     } catch (error) {
       console.error('Error updating profile:', error);
       Toast.show({

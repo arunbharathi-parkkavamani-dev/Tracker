@@ -16,7 +16,7 @@ router.get('/models', (req, res) => {
 
 router.post('/refresh-policy', async (req, res) => {
     try {
-        console.log(`[Config] Policy refresh requested by user: ${req.user?.id}`);
+        // console.log(`[Config] Policy refresh requested by user: ${req.user?.id}`);
 
         // In strict production, might want to check for SUPER_ADMIN role here
 

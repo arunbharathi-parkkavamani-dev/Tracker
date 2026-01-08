@@ -23,12 +23,12 @@ export const NotificationProvider = ({ children }) => {
     });
 
     socket.on("connect", () => {
-      console.log("Socket connected");
+      // console.log("Socket connected");
       socket.emit("join", user.id);
     });
 
     socket.on("connect_error", (error) => {
-      console.log("Socket connection error:", error);
+      // console.log("Socket connection error:", error);
     });
 
     // 2️⃣ Receive live notifications
@@ -48,7 +48,7 @@ export const NotificationProvider = ({ children }) => {
     const fetchNotifications = async () => {
       try {
         const filter = JSON.stringify({ recipient: user.id });
-        const res = await axiosInstance.get(`/populate/read/notifications?filter=${encodeURIComponent(filter)}&populateFields=${encodeURIComponent(JSON.stringify({"sender":"basicInfo.firstName,basicInfo.lastName"}))}`);
+        const res = await axiosInstance.get(`/populate/read/notifications?filter=${encodeURIComponent(filter)}&populateFields=${encodeURIComponent(JSON.stringify({ "sender": "basicInfo.firstName,basicInfo.lastName" }))}`);
         const data = res.data?.data || [];
         setNotifications(data);
       } catch (error) {

@@ -1,1 +1,234 @@
-import { useState, useEffect } from 'react';\nimport axiosInstance from '../../api/axiosInstance';\nimport TableGenerator from '../../components/Common/TableGenerator';\nimport { BarChart3, PieChart, Calendar, Filter, TrendingUp } from 'lucide-react';\n\nconst TaskReports = () => {\n  const [reportData, setReportData] = useState([]);\n  const [loading, setLoading] = useState(false);\n  const [reportType, setReportType] = useState('status');\n  const [dateRange, setDateRange] = useState({\n    startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],\n    endDate: new Date().toISOString().split('T')[0]\n  });\n\n  useEffect(() => {\n    fetchReport();\n  }, [reportType, dateRange]);\n\n  const fetchReport = async () => {\n    setLoading(true);\n    try {\n      const reportConfig = getReportConfig(reportType);\n      const response = await axiosInstance.post('/populate/report/tasks', {\n        ...reportConfig,\n        dateRange: {\n          ...dateRange,\n          dateField: 'createdAt'\n        }\n      });\n      setReportData(response.data || []);\n    } catch (error) {\n      console.error('Error fetching report:', error);\n      setReportData([]);\n    } finally {\n      setLoading(false);\n    }\n  };\n\n  const getReportConfig = (type) => {\n    const configs = {\n      status: {\n        type: 'summary',\n        groupBy: 'status'\n      },\n      priority: {\n        type: 'summary',\n        groupBy: 'priorityLevel'\n      },\n      client: {\n        type: 'summary',\n        groupBy: 'clientId',\n        populate: ['clientId']\n      },\n      assignee: {\n        type: 'summary',\n        groupBy: 'assignedTo',\n        populate: ['assignedTo']\n      },\n      taskType: {\n        type: 'summary',\n        groupBy: 'taskTypeId',\n        populate: ['taskTypeId']\n      },\n      projectType: {\n        type: 'summary',\n        groupBy: 'projectTypeId',\n        populate: ['projectTypeId']\n      },\n      monthly: {\n        type: 'summary',\n        groupBy: 'createdAt',\n        dateGrouping: 'month'\n      },\n      completion: {\n        type: 'summary',\n        groupBy: 'status',\n        filter: { status: { $in: ['Completed', 'Approved'] } }\n      }\n    };\n    return configs[type] || configs.status;\n  };\n\n  const customRender = {\n    _id: (row) => {\n      if (reportType === 'assignee' && row.name) {\n        return <span className=\"font-medium\">{row.name}</span>;\n      }\n      if (reportType === 'client' && row.name) {\n        return <span className=\"font-medium\">{row.name}</span>;\n      }\n      if (reportType === 'taskType' && row.name) {\n        return <span className=\"font-medium\">{row.name}</span>;\n      }\n      if (reportType === 'projectType' && row.name) {\n        return <span className=\"font-medium\">{row.name}</span>;\n      }\n      return <span className=\"font-medium\">{row._id || 'Unassigned'}</span>;\n    },\n    count: (row) => {\n      const colors = {\n        'Completed': 'bg-green-100 text-green-800',\n        'In Progress': 'bg-blue-100 text-blue-800',\n        'To Do': 'bg-orange-100 text-orange-800',\n        'High': 'bg-red-100 text-red-800',\n        'Medium': 'bg-yellow-100 text-yellow-800',\n        'Low': 'bg-green-100 text-green-800'\n      };\n      const colorClass = colors[row._id] || 'bg-blue-100 text-blue-800';\n      return (\n        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${colorClass}`}>\n          {row.count}\n        </span>\n      );\n    }\n  };\n\n  const reportOptions = [\n    { value: 'status', label: 'By Status', icon: BarChart3 },\n    { value: 'priority', label: 'By Priority', icon: TrendingUp },\n    { value: 'client', label: 'By Client', icon: PieChart },\n    { value: 'assignee', label: 'By Assignee', icon: PieChart },\n    { value: 'taskType', label: 'By Task Type', icon: Filter },\n    { value: 'projectType', label: 'By Project Type', icon: Filter },\n    { value: 'monthly', label: 'Monthly Trend', icon: Calendar },\n    { value: 'completion', label: 'Completion Rate', icon: BarChart3 }\n  ];\n\n  const totalTasks = reportData.reduce((sum, item) => sum + (item.count || 0), 0);\n  const avgTasksPerGroup = totalTasks / (reportData.length || 1);\n  const completedTasks = reportData.filter(item => \n    ['Completed', 'Approved'].includes(item._id)\n  ).reduce((sum, item) => sum + (item.count || 0), 0);\n  const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;\n\n  return (\n    <div className=\"p-6 space-y-6\">\n      {/* Header */}\n      <div className=\"flex items-center justify-between\">\n        <div>\n          <h1 className=\"text-2xl font-bold tracking-tight\">Task Reports</h1>\n          <p className=\"text-gray-600 text-sm\">Analytics and insights for task management</p>\n        </div>\n      </div>\n\n      {/* Controls */}\n      <div className=\"bg-white rounded-lg border p-4\">\n        <div className=\"grid grid-cols-1 md:grid-cols-4 gap-4\">\n          <div>\n            <label className=\"block text-sm font-medium text-gray-700 mb-2\">Report Type</label>\n            <select\n              value={reportType}\n              onChange={(e) => setReportType(e.target.value)}\n              className=\"w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500\"\n            >\n              {reportOptions.map(option => (\n                <option key={option.value} value={option.value}>{option.label}</option>\n              ))}\n            </select>\n          </div>\n          <div>\n            <label className=\"block text-sm font-medium text-gray-700 mb-2\">Start Date</label>\n            <input\n              type=\"date\"\n              value={dateRange.startDate}\n              onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}\n              className=\"w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500\"\n            />\n          </div>\n          <div>\n            <label className=\"block text-sm font-medium text-gray-700 mb-2\">End Date</label>\n            <input\n              type=\"date\"\n              value={dateRange.endDate}\n              onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}\n              className=\"w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500\"\n            />\n          </div>\n          <div className=\"flex items-end\">\n            <button\n              onClick={fetchReport}\n              disabled={loading}\n              className=\"w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors\"\n            >\n              {loading ? 'Loading...' : 'Generate Report'}\n            </button>\n          </div>\n        </div>\n      </div>\n\n      {/* Summary Stats */}\n      <div className=\"grid grid-cols-1 md:grid-cols-4 gap-4\">\n        <div className=\"bg-white rounded-lg border p-4\">\n          <div className=\"flex items-center\">\n            <BarChart3 className=\"h-8 w-8 text-blue-500\" />\n            <div className=\"ml-3\">\n              <p className=\"text-sm font-medium text-gray-500\">Total Tasks</p>\n              <p className=\"text-2xl font-bold text-gray-900\">{totalTasks}</p>\n            </div>\n          </div>\n        </div>\n        <div className=\"bg-white rounded-lg border p-4\">\n          <div className=\"flex items-center\">\n            <PieChart className=\"h-8 w-8 text-green-500\" />\n            <div className=\"ml-3\">\n              <p className=\"text-sm font-medium text-gray-500\">Categories</p>\n              <p className=\"text-2xl font-bold text-gray-900\">{reportData.length}</p>\n            </div>\n          </div>\n        </div>\n        <div className=\"bg-white rounded-lg border p-4\">\n          <div className=\"flex items-center\">\n            <Calendar className=\"h-8 w-8 text-purple-500\" />\n            <div className=\"ml-3\">\n              <p className=\"text-sm font-medium text-gray-500\">Avg per Category</p>\n              <p className=\"text-2xl font-bold text-gray-900\">{Math.round(avgTasksPerGroup)}</p>\n            </div>\n          </div>\n        </div>\n        <div className=\"bg-white rounded-lg border p-4\">\n          <div className=\"flex items-center\">\n            <TrendingUp className=\"h-8 w-8 text-orange-500\" />\n            <div className=\"ml-3\">\n              <p className=\"text-sm font-medium text-gray-500\">Completion Rate</p>\n              <p className=\"text-2xl font-bold text-gray-900\">{completionRate}%</p>\n            </div>\n          </div>\n        </div>\n      </div>\n\n      {/* Report Table */}\n      <div className=\"bg-white rounded-lg border\">\n        <div className=\"p-4 border-b\">\n          <h2 className=\"text-lg font-semibold\">Report Data - {reportOptions.find(opt => opt.value === reportType)?.label}</h2>\n        </div>\n        <TableGenerator\n          data={reportData}\n          customRender={customRender}\n          hiddenColumns={[]}\n          enableActions={false}\n        />\n      </div>\n    </div>\n  );\n};\n\nexport default TaskReports;
+import { useState, useEffect } from 'react';
+import axiosInstance from '../../api/axiosInstance';
+import TableGenerator from '../../components/Common/TableGenerator';
+import { BarChart3, PieChart, Calendar, Filter, TrendingUp } from 'lucide-react';
+const TaskReports = () => {
+    const [reportData, setReportData] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [reportType, setReportType] = useState('status');
+    const [dateRange, setDateRange] = useState({
+        startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
+        endDate: new Date().toISOString().split('T')[0]
+    });
+    useEffect(() => {
+        fetchReport();
+    }, [reportType, dateRange]);
+    const fetchReport = async () => {
+        setLoading(true);
+        try {
+            const reportConfig = getReportConfig(reportType);
+            const response = await axiosInstance.post('/populate/report/tasks', {
+                ...reportConfig,
+                dateRange: {
+                    ...dateRange,
+                    dateField: 'createdAt'
+                }
+            });
+            setReportData(response.data || []);
+        } catch (error) {
+            console.error('Error fetching report:', error);
+            setReportData([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+    const getReportConfig = (type) => {
+        const configs = {
+            status: {
+                type: 'summary',
+                groupBy: 'status'
+            },
+            priority: {
+                type: 'summary',
+                groupBy: 'priorityLevel'
+            },
+            client: {
+                type: 'summary',
+                groupBy: 'clientId',
+                populate: ['clientId']
+            },
+            assignee: {
+                type: 'summary',
+                groupBy: 'assignedTo',
+                populate: ['assignedTo']
+            },
+            taskType: {
+                type: 'summary',
+                groupBy: 'taskTypeId',
+                populate: ['taskTypeId']
+            },
+            projectType: {
+                type: 'summary',
+                groupBy: 'projectTypeId',
+                populate: ['projectTypeId']
+            },
+            monthly: {
+                type: 'summary',
+                groupBy: 'createdAt',
+                dateGrouping: 'month'
+            },
+            completion: {
+                type: 'summary',
+                groupBy: 'status',
+                filter: { status: { $in: ['Completed', 'Approved'] } }
+            }
+        };
+        return configs[type] || configs.status;
+    };
+    const customRender = {
+        _id: (row) => {
+            if (reportType === 'assignee' && row.name) {
+                return <span className="font-medium">{row.name}</span>;
+            }
+            if (reportType === 'client' && row.name) {
+                return <span className="font-medium">{row.name}</span>;
+            }
+            if (reportType === 'taskType' && row.name) {
+                return <span className="font-medium">{row.name}</span>;
+            }
+            if (reportType === 'projectType' && row.name) {
+                return <span className="font-medium">{row.name}</span>;
+            }
+            return <span className="font-medium">{row._id || 'Unassigned'}</span>;
+        },
+        count: (row) => {
+            const colors = {
+                'Completed': 'bg-green-100 text-green-800',
+                'In Progress': 'bg-blue-100 text-blue-800',
+                'To Do': 'bg-orange-100 text-orange-800',
+                'High': 'bg-red-100 text-red-800',
+                'Medium': 'bg-yellow-100 text-yellow-800',
+                'Low': 'bg-green-100 text-green-800'
+            };
+            const colorClass = colors[row._id] || 'bg-blue-100 text-blue-800';
+            return (
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${colorClass}`}>
+                    {row.count}
+                </span>
+            );
+        }
+    };
+    const reportOptions = [
+        { value: 'status', label: 'By Status', icon: BarChart3 },
+        { value: 'priority', label: 'By Priority', icon: TrendingUp },
+        { value: 'client', label: 'By Client', icon: PieChart },
+        { value: 'assignee', label: 'By Assignee', icon: PieChart },
+        { value: 'taskType', label: 'By Task Type', icon: Filter },
+        { value: 'projectType', label: 'By Project Type', icon: Filter },
+        { value: 'monthly', label: 'Monthly Trend', icon: Calendar },
+        { value: 'completion', label: 'Completion Rate', icon: BarChart3 }
+    ];
+    const totalTasks = reportData.reduce((sum, item) => sum + (item.count || 0), 0);
+    const avgTasksPerGroup = totalTasks / (reportData.length || 1);
+    const completedTasks = reportData.filter(item =>
+        ['Completed', 'Approved'].includes(item._id)
+    ).reduce((sum, item) => sum + (item.count || 0), 0);
+    const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+    return (
+        <div className="p-6 space-y-6">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-2xl font-bold tracking-tight">Task Reports</h1>
+                    <p className="text-gray-600 text-sm">Analytics and insights for task management</p>
+                </div>
+            </div>
+            {/* Controls */}
+            <div className="bg-white rounded-lg border p-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Report Type</label>
+                        <select
+                            value={reportType}
+                            onChange={(e) => setReportType(e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                            {reportOptions.map(option => (
+                                <option key={option.value} value={option.value}>{option.label}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                        <input
+                            type="date"
+                            value={dateRange.startDate}
+                            onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
+                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                        <input
+                            type="date"
+                            value={dateRange.endDate}
+                            onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
+                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                    </div>
+                    <div className="flex items-end">
+                        <button
+                            onClick={fetchReport}
+                            disabled={loading}
+                            className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                        >
+                            {loading ? 'Loading...' : 'Generate Report'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {/* Summary Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-white rounded-lg border p-4">
+                    <div className="flex items-center">
+                        <BarChart3 className="h-8 w-8 text-blue-500" />
+                        <div className="ml-3">
+                            <p className="text-sm font-medium text-gray-500">Total Tasks</p>
+                            <p className="text-2xl font-bold text-gray-900">{totalTasks}</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-white rounded-lg border p-4">
+                    <div className="flex items-center">
+                        <PieChart className="h-8 w-8 text-green-500" />
+                        <div className="ml-3">
+                            <p className="text-sm font-medium text-gray-500">Categories</p>
+                            <p className="text-2xl font-bold text-gray-900">{reportData.length}</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-white rounded-lg border p-4">
+                    <div className="flex items-center">
+                        <Calendar className="h-8 w-8 text-purple-500" />
+                        <div className="ml-3">
+                            <p className="text-sm font-medium text-gray-500">Avg per Category</p>
+                            <p className="text-2xl font-bold text-gray-900">{Math.round(avgTasksPerGroup)}</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-white rounded-lg border p-4">
+                    <div className="flex items-center">
+                        <TrendingUp className="h-8 w-8 text-orange-500" />
+                        <div className="ml-3">
+                            <p className="text-sm font-medium text-gray-500">Completion Rate</p>
+                            <p className="text-2xl font-bold text-gray-900">{completionRate}%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {/* Report Table */}
+            <div className="bg-white rounded-lg border">
+                <div className="p-4 border-b">
+                    <h2 className="text-lg font-semibold">Report Data - {reportOptions.find(opt => opt.value === reportType)?.label}</h2>
+                </div>
+                <TableGenerator
+                    data={reportData}
+                    customRender={customRender}
+                    hiddenColumns={[]}
+                    enableActions={false}
+                />
+            </div>
+        </div>
+    );
+};
+export default TaskReports;

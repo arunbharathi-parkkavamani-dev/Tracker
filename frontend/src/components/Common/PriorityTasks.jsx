@@ -8,7 +8,7 @@ export default function PriorityTasks() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log("User data in PriorityTasks:", user);
+    // console.log("User data in PriorityTasks:", user);
     if (!user?.id) return;
 
     const fetchPriorityTasks = async () => {
@@ -24,7 +24,7 @@ export default function PriorityTasks() {
           )}&limit=5&sort={"createdAt":1}`
         );
 
-        console.log("Fetched priority tasks:", res.data?.data);
+        // console.log("Fetched priority tasks:", res.data?.data);
         setTasks(res.data?.data || []);
       } catch (err) {
         console.error("Failed to fetch priority tasks", err);

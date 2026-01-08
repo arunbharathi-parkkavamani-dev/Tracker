@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState } from "react";
 import Cookies from "js-cookie";
-import {jwtDecode} from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import { setAuthLogout } from "../api/axiosInstance";
 import axiosInstance, { getDeviceUUID } from "../api/axiosInstance";
 
@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
     if (!token) {
       token = localStorage.getItem("auth_token");
     }
-    
+
     if (token) {
       try {
         const decoded = jwtDecode(token);
@@ -32,17 +32,17 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const logout = async() => {
-    try{
+  const logout = async () => {
+    try {
       await axiosInstance.post("/auth/logout", {}, {
         headers: {
           'x-device-uuid': getDeviceUUID()
         }
       });
     } catch (err) {
-      console.log("Logout API error:", err);
+      // console.log("Logout API error:", err);
     }
-    
+
     Cookies.remove("auth_token");
     Cookies.remove("refresh_token");
     localStorage.removeItem("auth_token");

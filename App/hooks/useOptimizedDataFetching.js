@@ -29,7 +29,7 @@ export const useOptimizedDataFetching = (model, options = {}) => {
 
   const [filters, setFilters] = useState(initialFilters);
   const [sort, setSort] = useState(initialSort);
-  
+
   const { readSummary } = useOptimizedAPI();
   const abortControllerRef = useRef(null);
   const backgroundRefreshRef = useRef(null);
@@ -43,23 +43,23 @@ export const useOptimizedDataFetching = (model, options = {}) => {
   // Check if cache is valid
   const isCacheValid = useCallback(async (key) => {
     if (!enableCache) return false;
-    
+
     try {
       // Check memory cache first
       const memoryData = memoryCache.get(key);
       if (memoryData && (Date.now() - memoryData.timestamp) < CACHE_DURATION) {
         return true;
       }
-      
+
       // Check AsyncStorage cache
       const cachedTimestamp = await AsyncStorage.getItem(`${key}_timestamp`);
       if (cachedTimestamp && (Date.now() - parseInt(cachedTimestamp)) < CACHE_DURATION) {
         return true;
       }
-      
+
       return false;
     } catch (error) {
-      console.log('Cache validation error:', error);
+      // console.log('Cache validation error:', error);
       return false;
     }
   }, [enableCache]);
@@ -67,28 +67,28 @@ export const useOptimizedDataFetching = (model, options = {}) => {
   // Get data from cache
   const getFromCache = useCallback(async (key) => {
     if (!enableCache) return null;
-    
+
     try {
       // Try memory cache first
       const memoryData = memoryCache.get(key);
       if (memoryData && (Date.now() - memoryData.timestamp) < CACHE_DURATION) {
         return memoryData.data;
       }
-      
+
       // Try AsyncStorage cache
       const cachedData = await AsyncStorage.getItem(key);
       const cachedTimestamp = await AsyncStorage.getItem(`${key}_timestamp`);
-      
+
       if (cachedData && cachedTimestamp && (Date.now() - parseInt(cachedTimestamp)) < CACHE_DURATION) {
         const parsedData = JSON.parse(cachedData);
         // Update memory cache
         memoryCache.set(key, { data: parsedData, timestamp: parseInt(cachedTimestamp) });
         return parsedData;
       }
-      
+
       return null;
     } catch (error) {
-      console.log('Cache retrieval error:', error);
+      // console.log('Cache retrieval error:', error);
       return null;
     }
   }, [enableCache]);
@@ -96,27 +96,27 @@ export const useOptimizedDataFetching = (model, options = {}) => {
   // Set data to cache
   const setToCache = useCallback(async (key, data) => {
     if (!enableCache) return;
-    
+
     try {
       const timestamp = Date.now();
-      
+
       // Set memory cache
       memoryCache.set(key, { data, timestamp });
-      
+
       // Set AsyncStorage cache
       await AsyncStorage.multiSet([
         [key, JSON.stringify(data)],
         [`${key}_timestamp`, timestamp.toString()]
       ]);
     } catch (error) {
-      console.log('Cache storage error:', error);
+      // console.log('Cache storage error:', error);
     }
   }, [enableCache]);
 
   // Fetch data function
   const fetchData = useCallback(async (page, limit, currentFilters, currentSort, useCache = true) => {
     const cacheKey = getCacheKey(page, limit, currentFilters, currentSort);
-    
+
     // Try to get from cache first
     if (useCache) {
       const cachedData = await getFromCache(cacheKey);
@@ -177,7 +177,7 @@ export const useOptimizedDataFetching = (model, options = {}) => {
     backgroundRefreshRef.current = setInterval(() => {
       // Only refresh if data is older than half the cache duration
       const cacheKey = getCacheKey(pagination.currentPage, pagination.itemsPerPage, filters, sort);
-      
+
       isCacheValid(cacheKey).then(isValid => {
         if (!isValid) {
           fetchData(pagination.currentPage, pagination.itemsPerPage, filters, sort, false);
@@ -220,13 +220,13 @@ export const useOptimizedDataFetching = (model, options = {}) => {
     // Clear cache for current query
     const cacheKey = getCacheKey(pagination.currentPage, pagination.itemsPerPage, filters, sort);
     memoryCache.delete(cacheKey);
-    
+
     try {
       await AsyncStorage.multiRemove([cacheKey, `${cacheKey}_timestamp`]);
     } catch (error) {
-      console.log('Cache clear error:', error);
+      // console.log('Cache clear error:', error);
     }
-    
+
     fetchData(pagination.currentPage, pagination.itemsPerPage, filters, sort, false);
   }, [fetchData, pagination.currentPage, pagination.itemsPerPage, filters, sort, getCacheKey]);
 
@@ -241,7 +241,7 @@ export const useOptimizedDataFetching = (model, options = {}) => {
         }
       }
       keysToDelete.forEach(key => memoryCache.delete(key));
-      
+
       // Clear AsyncStorage cache
       const allKeys = await AsyncStorage.getAllKeys();
       const modelKeys = allKeys.filter(key => key.startsWith(model));
@@ -249,7 +249,7 @@ export const useOptimizedDataFetching = (model, options = {}) => {
         await AsyncStorage.multiRemove(modelKeys);
       }
     } catch (error) {
-      console.log('Cache clear error:', error);
+      // console.log('Cache clear error:', error);
     }
   }, [model]);
 
@@ -261,14 +261,14 @@ export const useOptimizedDataFetching = (model, options = {}) => {
     pagination,
     filters,
     sort,
-    
+
     // Handlers
     handlePageChange,
     handleItemsPerPageChange,
     handleFilterChange,
     handleSortChange,
     handleRefresh,
-    
+
     // Utilities
     clearCache
   };

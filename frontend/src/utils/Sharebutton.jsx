@@ -8,11 +8,11 @@ const ShareButton = ({ model, id, className = "", variant = "button" }) => {
   const handleShare = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     try {
       const url = `${window.location.origin}/${model}/${id}`;
-      console.log('Copying URL:', url); // Debug log
-      
+      // console.log('Copying URL:', url); // Debug log
+
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(url);
       } else {
@@ -24,7 +24,7 @@ const ShareButton = ({ model, id, className = "", variant = "button" }) => {
         document.execCommand('copy');
         document.body.removeChild(textArea);
       }
-      
+
       setIsCopied(true);
       toast.success("Link copied to clipboard!");
       setTimeout(() => setIsCopied(false), 2000);
@@ -36,8 +36,8 @@ const ShareButton = ({ model, id, className = "", variant = "button" }) => {
 
   if (variant === "icon") {
     return (
-      <button 
-        onClick={handleShare} 
+      <button
+        onClick={handleShare}
         className={`p-1 text-gray-400 hover:text-gray-600 transition-colors ${className}`}
         title="Copy link"
         type="button"
@@ -48,8 +48,8 @@ const ShareButton = ({ model, id, className = "", variant = "button" }) => {
   }
 
   return (
-    <button 
-      onClick={handleShare} 
+    <button
+      onClick={handleShare}
       className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex items-center gap-2 ${className}`}
       type="button"
     >

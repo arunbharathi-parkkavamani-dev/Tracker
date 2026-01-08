@@ -5,12 +5,12 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "node --max-old-space-size=4096 --expose-gc server.js",
+    "dev": "nodemon --max-old-space-size=4096 --expose-gc server.js",
     "start": "node --max-old-space-size=4096 server.js",
     "dev:monitor": "nodemon --max-old-space-size=4096 --expose-gc server.js",
     "backup": "node -e \"import('./src/services/backupService.js').then(s => s.default.createFullBackup())\"",
-    "cron:stats": "node -e \"import('./src/cron/AttendanceCron.js').then(m => console.log(m.monitor.getStats()))\"",
-    "queue:health": "node -e \"import('./src/services/attendanceService.js').then(s => console.log(s.default.getQueueStats()))\"",
+    "cron:stats": "node -e \"import('./src/cron/AttendanceCron.js').then(m => // console.log(m.monitor.getStats()))\"",
+    "queue:health": "node -e \"import('./src/services/attendanceService.js').then(s => // console.log(s.default.getQueueStats()))\"",
     "db:analyze": "node -e \"import('./src/services/databaseIndexer.js').then(s => s.default.analyzeQueryPerformance())\"",
     "db:reindex": "node -e \"import('./src/services/databaseIndexer.js').then(s => s.default.createOptimalIndexes())\"",
     "test:security": "node testSecurity.js"

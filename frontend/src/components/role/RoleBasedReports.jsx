@@ -27,7 +27,7 @@ const ManagerReports = () => (
         </div>
       </div>
     </div>
-    
+
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="bg-white p-6 rounded-lg shadow">
         <h4 className="font-medium mb-3">Available Reports</h4>
@@ -46,7 +46,7 @@ const ManagerReports = () => (
           </button>
         </div>
       </div>
-      
+
       <div className="bg-white p-6 rounded-lg shadow">
         <h4 className="font-medium mb-3">Quick Actions</h4>
         <div className="space-y-2">
@@ -93,7 +93,7 @@ const HRReports = () => (
         </div>
       </div>
     </div>
-    
+
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div className="bg-white p-6 rounded-lg shadow">
         <h4 className="font-medium mb-3">Attendance Reports</h4>
@@ -112,7 +112,7 @@ const HRReports = () => (
           </button>
         </div>
       </div>
-      
+
       <div className="bg-white p-6 rounded-lg shadow">
         <h4 className="font-medium mb-3">Performance Reports</h4>
         <div className="space-y-2">
@@ -130,7 +130,7 @@ const HRReports = () => (
           </button>
         </div>
       </div>
-      
+
       <div className="bg-white p-6 rounded-lg shadow">
         <h4 className="font-medium mb-3">Financial Reports</h4>
         <div className="space-y-2">
@@ -149,7 +149,7 @@ const HRReports = () => (
         </div>
       </div>
     </div>
-    
+
     <div className="bg-white p-6 rounded-lg shadow">
       <h4 className="font-medium mb-3">Advanced Analytics</h4>
       <div className="flex gap-2 flex-wrap">
@@ -208,7 +208,7 @@ const SuperAdminReports = () => (
         </div>
       </div>
     </div>
-    
+
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       <div className="bg-white p-6 rounded-lg shadow">
         <h4 className="font-medium mb-3">System Reports</h4>
@@ -227,7 +227,7 @@ const SuperAdminReports = () => (
           </button>
         </div>
       </div>
-      
+
       <div className="bg-white p-6 rounded-lg shadow">
         <h4 className="font-medium mb-3">Business Intelligence</h4>
         <div className="space-y-2">
@@ -245,7 +245,7 @@ const SuperAdminReports = () => (
           </button>
         </div>
       </div>
-      
+
       <div className="bg-white p-6 rounded-lg shadow">
         <h4 className="font-medium mb-3">Compliance Reports</h4>
         <div className="space-y-2">
@@ -263,7 +263,7 @@ const SuperAdminReports = () => (
           </button>
         </div>
       </div>
-      
+
       <div className="bg-white p-6 rounded-lg shadow">
         <h4 className="font-medium mb-3">Advanced Analytics</h4>
         <div className="space-y-2">
@@ -282,7 +282,7 @@ const SuperAdminReports = () => (
         </div>
       </div>
     </div>
-    
+
     <div className="bg-white p-6 rounded-lg shadow">
       <h4 className="font-medium mb-3">Super Admin Tools</h4>
       <div className="flex gap-2 flex-wrap">
@@ -325,28 +325,28 @@ const EmployeeReports = ({ userId }) => {
   useEffect(() => {
     const fetchData = async () => {
       if (!userId) return;
-      
+
       try {
-        console.log('Fetching reports for user:', userId);
-        
+        // console.log('Fetching reports for user:', userId);
+
         const [attendanceRes, tasksRes, leavesRes] = await Promise.all([
           axiosInstance.get('/populate/read/attendances'),
           axiosInstance.get('/populate/read/tasks'),
           axiosInstance.get('/populate/read/leaves')
         ]);
 
-        console.log('API responses:', { attendanceRes, tasksRes, leavesRes });
+        // console.log('API responses:', { attendanceRes, tasksRes, leavesRes });
 
         const attendance = attendanceRes.data?.data?.filter(a => a.employee === userId) || [];
         const tasks = tasksRes.data?.data?.filter(t => t.assignedTo === userId) || [];
         const leaves = leavesRes.data?.data?.filter(l => l.employee === userId) || [];
 
-        const attendanceRate = attendance.length > 0 ? 
+        const attendanceRate = attendance.length > 0 ?
           Math.round((attendance.filter(a => a.status === 'present').length / attendance.length) * 100) : 0;
-        
+
         const completedTasks = tasks.filter(t => t.status === 'completed').length;
         const approvedLeaves = leaves.filter(l => l.status === 'approved').length;
-        
+
         setData({
           attendance: { rate: attendanceRate, total: attendance.length },
           tasks: { completed: completedTasks, total: tasks.length },
@@ -391,7 +391,7 @@ const EmployeeReports = ({ userId }) => {
           </div>
         </div>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-white p-6 rounded-lg shadow">
           <h4 className="font-medium mb-3">My Reports</h4>
@@ -410,7 +410,7 @@ const EmployeeReports = ({ userId }) => {
             </button>
           </div>
         </div>
-        
+
         <div className="bg-white p-6 rounded-lg shadow">
           <h4 className="font-medium mb-3">Quick Actions</h4>
           <div className="space-y-2">

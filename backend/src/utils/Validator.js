@@ -49,9 +49,9 @@ export function conditionsValidator({ policy, action, filter, fields, body, cont
 /*     ⚡️ 2. FIELDS (select & populate)           */
 /* ─────────────────────────────────────────────── */
 export function fieldsValidator({ policy, action, modelName, fields }) {
-  if (fields) console.log("[Validator.js:47] fieldsValidator - fields:", fields);
-  // If no fields specified, let sanitizeRead handle it based on policy
-  if (!fields) return fields;
+  if (fields) // console.log("[Validator.js:47] fieldsValidator - fields:", fields);
+    // If no fields specified, let sanitizeRead handle it based on policy
+    if (!fields) return fields;
 
   const blocked = policy.forbiddenAccess?.[action] || [];
   const allowed = policy.allowAccess?.[action] || [];
@@ -186,12 +186,12 @@ export default function validator({
     // console.warn(`⚠️ No policy found for ${modelName}, allowing operation`);
     return { filter: filter || {}, fields, body };
   }
-  
+
   if (String(policy.role) !== String(role)) {
-    console.log('Role mismatch debug:');
-    console.log('Policy role:', policy.role);
-    console.log('User role:', role);
-    console.log('Policy:', JSON.stringify(policy, null, 2));
+    // console.log('Role mismatch debug:');
+    // console.log('Policy role:', policy.role);
+    // console.log('User role:', role);
+    // console.log('Policy:', JSON.stringify(policy, null, 2));
     throw new Error(`⛔ Role mismatch`);
   }
   if (policy.permissions?.[action] === false) {
@@ -222,14 +222,14 @@ export default function validator({
   }));
 
   // 2️⃣ Field select access
-  if (fields) console.log("[Validator.js:207] Before fieldsValidator - fields:", fields);
-  fields = fieldsValidator({ policy, action, modelName, fields });
-  if (fields) console.log("[Validator.js:209] After fieldsValidator - fields:", fields);
+  if (fields) // console.log("[Validator.js:207] Before fieldsValidator - fields:", fields);
+    fields = fieldsValidator({ policy, action, modelName, fields });
+  if (fields) // console.log("[Validator.js:209] After fieldsValidator - fields:", fields);
 
-  // 3️⃣ Body access (create / update)
-  if (["create", "update"].includes(action)) {
-    body = bodyValidator({ policy, action, modelName, body });
-  }
+    // 3️⃣ Body access (create / update)
+    if (["create", "update"].includes(action)) {
+      body = bodyValidator({ policy, action, modelName, body });
+    }
 
   // 4️⃣ Filter (query) field access
   filter = filterValidator({ policy, action, modelName, filter });

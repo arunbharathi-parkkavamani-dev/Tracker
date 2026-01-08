@@ -73,25 +73,26 @@ export default function DailyTracker() {
       }
       const token = await AsyncStorage.getItem('auth_token');
       if (!token) return;
-      
+
       const decoded = jwtDecode(token);
       const userId = decoded.userId || decoded.id;
-      
+
       // Fetch clients with project types
       const clientsResponse = await axiosInstance.get('/populate/read/clients?populateFields={"projectTypes":"name"}');
       const clientsData = clientsResponse.data.data || [];
+      // console.log('DailyTracker: Clients fetched:', clientsData.length);
       setClients(clientsData);
-      
+
       // Fetch task types
       const taskTypesRes = await axiosInstance.get('/populate/read/tasktypes');
       setTaskTypes(taskTypesRes.data.data || []);
-      
+
       // Fetch activities for selected date with user filter
       const startOfDay = new Date(selectedDate);
       startOfDay.setHours(0, 0, 0, 0);
       const endOfDay = new Date(selectedDate);
       endOfDay.setHours(23, 59, 59, 999);
-      
+
       const dateFilter = {
         user: userId,
         date: {
@@ -99,24 +100,24 @@ export default function DailyTracker() {
           $lte: endOfDay.toISOString()
         }
       };
-      
+
       const activitiesResponse = await axiosInstance.get(
         `/populate/read/dailyactivities?filter=${encodeURIComponent(JSON.stringify(dateFilter))}&populateFields={"client":"name","projectType":"name","taskType":"name"}&sort={"createdAt":-1}`
       );
       const activitiesData = activitiesResponse.data.data || [];
-      
+
       // Since backend filter is not working, filter on frontend
       const filteredActivities = activitiesData.filter(activity => {
         // Check user match
         const userMatch = activity.user?._id === userId;
-        
+
         // Check date match - using activity.date (when activity was assigned to)
         const activityDate = new Date(activity.date).toISOString().split('T')[0];
         const dateMatch = activityDate === selectedDate;
-        
+
         return userMatch && dateMatch;
       });
-      
+
       setActivities(filteredActivities);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -145,10 +146,10 @@ export default function DailyTracker() {
       setSubmitting(true);
       const token = await AsyncStorage.getItem('auth_token');
       if (!token) return;
-      
+
       const decoded = jwtDecode(token);
       const userId = decoded.userId || decoded.id;
-      
+
       await axiosInstance.post('/populate/create/dailyactivities', {
         user: userId,
         client: selectedClient._id,
@@ -194,7 +195,7 @@ export default function DailyTracker() {
   const filteredProjectTypes = selectedClient?.projectTypes?.filter((pt: ProjectType) =>
     pt?.name?.toLowerCase().includes(projectTypeSearch.toLowerCase())
   ) || [];
-  
+
 
 
   const filteredTaskTypes = taskTypes.filter(tt =>
@@ -206,7 +207,7 @@ export default function DailyTracker() {
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-    
+
     if (dateStr === today.toISOString().split('T')[0]) return 'Today';
     if (dateStr === yesterday.toISOString().split('T')[0]) return 'Yesterday';
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -230,7 +231,7 @@ export default function DailyTracker() {
     <ScrollView className="flex-1 bg-gray-50">
       {/* Header with Date Selector */}
       <View className="bg-white px-4 py-4 border-b border-gray-200">
-        
+
         {/* Date Navigation */}
         <View className="flex-row items-center justify-between mt-3">
           <TouchableOpacity
@@ -243,13 +244,13 @@ export default function DailyTracker() {
           >
             <MaterialIcons name="chevron-left" size={24} color="#3B82F6" />
           </TouchableOpacity>
-          
+
           <Text className="text-lg font-semibold text-gray-900">
-            {formatDate(selectedDate)} - {new Date(selectedDate).toLocaleDateString('en-US', { 
-              weekday: 'long', month: 'short', day: 'numeric' 
+            {formatDate(selectedDate)} - {new Date(selectedDate).toLocaleDateString('en-US', {
+              weekday: 'long', month: 'short', day: 'numeric'
             })}
           </Text>
-          
+
           <TouchableOpacity
             onPress={() => {
               const nextDate = new Date(selectedDate);
@@ -261,10 +262,10 @@ export default function DailyTracker() {
             className="p-2"
             disabled={selectedDate >= new Date().toISOString().split('T')[0]}
           >
-            <MaterialIcons 
-              name="chevron-right" 
-              size={24} 
-              color={selectedDate >= new Date().toISOString().split('T')[0] ? "#D1D5DB" : "#3B82F6"} 
+            <MaterialIcons
+              name="chevron-right"
+              size={24}
+              color={selectedDate >= new Date().toISOString().split('T')[0] ? "#D1D5DB" : "#3B82F6"}
             />
           </TouchableOpacity>
         </View>
@@ -274,7 +275,7 @@ export default function DailyTracker() {
         {/* Add Activity Form */}
         <View className="bg-white rounded-lg p-4 mb-6 shadow-sm border border-gray-200">
           <Text className="text-lg font-semibold text-gray-900 mb-4">Add New Activity</Text>
-          
+
           {/* Client Selection with Autocomplete */}
           <Text className="text-sm font-medium text-gray-700 mb-2">Select Client</Text>
           <TouchableOpacity
@@ -328,11 +329,10 @@ export default function DailyTracker() {
           <TouchableOpacity
             onPress={handleSubmitActivity}
             disabled={submitting || !selectedClient || !selectedProjectType || !selectedTaskType || !activityText.trim()}
-            className={`rounded-lg p-3 flex-row items-center justify-center ${
-              submitting || !selectedClient || !selectedProjectType || !selectedTaskType || !activityText.trim()
-                ? 'bg-gray-300' 
-                : 'bg-blue-500'
-            }`}
+            className={`rounded-lg p-3 flex-row items-center justify-center ${submitting || !selectedClient || !selectedProjectType || !selectedTaskType || !activityText.trim()
+              ? 'bg-gray-300'
+              : 'bg-blue-500'
+              }`}
           >
             {submitting ? (
               <ActivityIndicator size="small" color="white" />
@@ -355,7 +355,7 @@ export default function DailyTracker() {
               <ActivityIndicator size="small" color="#3B82F6" />
             )}
           </View>
-          
+
           {activities.length === 0 ? (
             <View className="items-center py-8">
               <MaterialIcons name="assignment" size={48} color="#D1D5DB" />
@@ -363,8 +363,8 @@ export default function DailyTracker() {
             </View>
           ) : (
             activities.map((activity, index) => (
-              <TouchableOpacity 
-                key={activity._id} 
+              <TouchableOpacity
+                key={activity._id}
                 className="mb-4 last:mb-0"
                 onPress={() => {
                   setSelectedActivity(activity);
@@ -426,7 +426,7 @@ export default function DailyTracker() {
                   <MaterialIcons name="close" size={24} color="#6B7280" />
                 </TouchableOpacity>
               </View>
-              
+
               <TextInput
                 className="border border-gray-300 rounded-lg p-3"
                 placeholder="Search clients..."
@@ -434,7 +434,7 @@ export default function DailyTracker() {
                 onChangeText={setClientSearch}
               />
             </View>
-            
+
             <FlatList
               data={filteredClients}
               keyExtractor={(item) => item._id}
@@ -443,20 +443,25 @@ export default function DailyTracker() {
                   onPress={async () => {
                     // Fetch project types using the correct endpoint format
                     try {
-                      const projectTypesResponse = await axiosInstance.get(`/populate/read/clients/${item._id}?fields=projectTypes`);
+                      // console.log('DailyTracker: Fetching project types for client:', item._id);
+                      const projectTypesResponse = await axiosInstance.get(`/populate/read/clients/${item._id}?populateFields={"projectTypes":"name"}`);
+                      // console.log('DailyTracker: Project types response status:', projectTypesResponse.status);
+                      // console.log('DailyTracker: Project types data structure:', JSON.stringify(projectTypesResponse.data, null, 2));
                       const projectTypesData = projectTypesResponse.data.data?.projectTypes || [];
-                      
+                      // console.log('DailyTracker: Project types extracted:', projectTypesData);
+
                       // Update the selected client with the fetched project types
                       const updatedClient = {
                         ...item,
                         projectTypes: projectTypesData
                       };
                       setSelectedClient(updatedClient);
-                    } catch (error) {
-                      console.error('Error fetching client project types:', error);
+                    } catch (error: any) {
+                      console.error('DailyTracker: Error fetching client project types:', error);
+                      console.error('DailyTracker: Error response:', error.response?.data);
                       setSelectedClient(item);
                     }
-                    
+
                     setSelectedProjectType(null); // Reset project type when client changes
                     setClientSearch('');
                     setShowClientDropdown(false);
@@ -492,7 +497,7 @@ export default function DailyTracker() {
                   <MaterialIcons name="close" size={24} color="#6B7280" />
                 </TouchableOpacity>
               </View>
-              
+
               <TextInput
                 className="border border-gray-300 rounded-lg p-3"
                 placeholder="Search project types..."
@@ -500,7 +505,7 @@ export default function DailyTracker() {
                 onChangeText={setProjectTypeSearch}
               />
             </View>
-            
+
             <FlatList
               data={filteredProjectTypes}
               keyExtractor={(item) => item._id}
@@ -542,7 +547,7 @@ export default function DailyTracker() {
                   <MaterialIcons name="close" size={24} color="#6B7280" />
                 </TouchableOpacity>
               </View>
-              
+
               <TextInput
                 className="border border-gray-300 rounded-lg p-3"
                 placeholder="Search task types..."
@@ -550,7 +555,7 @@ export default function DailyTracker() {
                 onChangeText={setTaskTypeSearch}
               />
             </View>
-            
+
             <FlatList
               data={filteredTaskTypes}
               keyExtractor={(item) => item._id}
@@ -591,7 +596,7 @@ export default function DailyTracker() {
                 <MaterialIcons name="close" size={24} color="#6B7280" />
               </TouchableOpacity>
             </View>
-            
+
             {selectedActivity && (
               <ScrollView className="max-h-96">
                 <View className="mb-4">
@@ -600,7 +605,7 @@ export default function DailyTracker() {
                     {selectedActivity.client?.name || 'Unknown Client'}
                   </Text>
                 </View>
-                
+
                 {selectedActivity.projectType && (
                   <View className="mb-4">
                     <Text className="text-sm font-medium text-gray-500 mb-1">Project Type</Text>
@@ -609,7 +614,7 @@ export default function DailyTracker() {
                     </Text>
                   </View>
                 )}
-                
+
                 {selectedActivity.taskType && (
                   <View className="mb-4">
                     <Text className="text-sm font-medium text-gray-500 mb-1">Task Type</Text>
@@ -618,25 +623,25 @@ export default function DailyTracker() {
                     </Text>
                   </View>
                 )}
-                
+
                 <View className="mb-4">
                   <Text className="text-sm font-medium text-gray-500 mb-1">Activity Date</Text>
                   <Text className="text-base text-gray-900">
-                    {new Date(selectedActivity.date).toLocaleDateString('en-US', { 
-                      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+                    {new Date(selectedActivity.date).toLocaleDateString('en-US', {
+                      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
                     })}
                   </Text>
                 </View>
-                
+
                 <View className="mb-4">
                   <Text className="text-sm font-medium text-gray-500 mb-1">Created On</Text>
                   <Text className="text-base text-gray-900">
-                    {new Date(selectedActivity.createdAt).toLocaleDateString('en-US', { 
-                      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+                    {new Date(selectedActivity.createdAt).toLocaleDateString('en-US', {
+                      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
                     })} at {formatTime(selectedActivity.createdAt)}
                   </Text>
                 </View>
-                
+
                 <View className="mb-4">
                   <Text className="text-sm font-medium text-gray-500 mb-2">Activity Description</Text>
                   <Text className="text-base text-gray-900 leading-6">

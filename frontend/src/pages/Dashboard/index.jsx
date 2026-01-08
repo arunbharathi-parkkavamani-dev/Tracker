@@ -305,9 +305,9 @@ export default function Dashboard() {
         axiosInstance.get(`/populate/read/leaves?filter={"employeeId":"${userId}"}`),
         axiosInstance.get(`/populate/read/tasks?filter={"assignedTo":"${userId}"}`),
       ]);
-      console.log("Employee Stats - Attendance Response:", attendanceRes.data);
-      console.log("Employee Stats - Leaves Response:", leavesRes.data);
-      console.log("Employee Stats - Tasks Response:", tasksRes.data);
+      // console.log("Employee Stats - Attendance Response:", attendanceRes.data);
+      // console.log("Employee Stats - Leaves Response:", leavesRes.data);
+      // console.log("Employee Stats - Tasks Response:", tasksRes.data);
 
       const todayAttendance = attendanceRes.data?.data?.[0] || null;
       const leaves = leavesRes.data?.data || [];

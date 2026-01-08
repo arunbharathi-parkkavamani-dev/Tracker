@@ -23,7 +23,7 @@ export default function TicketForm({ ticket, onSuccess, onCancel }) {
   useEffect(() => {
     // For testing, let's use hardcoded products first
     const testProducts = ['Web Application', 'Mobile App', 'API Service', 'Database'];
-    console.log('Setting test products:', testProducts);
+    // console.log('Setting test products:', testProducts);
     setClientProducts(testProducts);
   }, []);
 
@@ -74,14 +74,14 @@ export default function TicketForm({ ticket, onSuccess, onCancel }) {
   const handlePaste = (e) => {
     const items = e.clipboardData.items;
     const files = [];
-    
+
     for (let item of items) {
       if (item.type.indexOf('image') !== -1) {
         const file = item.getAsFile();
         if (file) files.push(file);
       }
     }
-    
+
     if (files.length > 0) {
       addFiles(files);
     }
@@ -97,15 +97,15 @@ export default function TicketForm({ ticket, onSuccess, onCancel }) {
 
     try {
       const formDataToSend = new FormData();
-      
+
       // Add agentId to form data
       const agentId = localStorage.getItem('agentId') || 'temp-agent-id';
       formDataToSend.append('agentId', agentId);
-      
+
       Object.keys(formData).forEach(key => {
         formDataToSend.append(key, formData[key]);
       });
-      
+
       attachments.forEach(file => {
         formDataToSend.append('attachments', file);
       });
@@ -131,7 +131,7 @@ export default function TicketForm({ ticket, onSuccess, onCancel }) {
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <h2 className="text-2xl font-bold mb-6">{ticket ? 'Edit Ticket' : 'Create New Ticket'}</h2>
-      
+
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
@@ -287,7 +287,7 @@ export default function TicketForm({ ticket, onSuccess, onCancel }) {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
             <h3 className="text-lg font-semibold mb-4">Add Attachment</h3>
-            
+
             <div className="space-y-4">
               <button
                 type="button"
@@ -296,9 +296,9 @@ export default function TicketForm({ ticket, onSuccess, onCancel }) {
               >
                 📋 Paste from Clipboard
               </button>
-              
+
               <div className="text-center text-gray-500 text-sm">or</div>
-              
+
               <div>
                 <input
                   type="file"
@@ -317,7 +317,7 @@ export default function TicketForm({ ticket, onSuccess, onCancel }) {
                 </button>
               </div>
             </div>
-            
+
             <div className="mt-6 flex justify-end space-x-3">
               <button
                 type="button"
@@ -327,7 +327,7 @@ export default function TicketForm({ ticket, onSuccess, onCancel }) {
                 Cancel
               </button>
             </div>
-            
+
             <p className="text-xs text-gray-500 mt-4">
               Supported: Images, MP3, Videos, PDF, Word documents (Max 10MB each)
             </p>

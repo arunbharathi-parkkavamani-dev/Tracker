@@ -9,9 +9,9 @@ import { getDeviceInfo } from "../utils/deviceInfo.js";
 
 export const login = async (req, res, next) => {
   try {
-    console.log("Login attempt:", req.body);
-    console.log("Headers:", req.headers);
-    console.log("Content-Type:", req.headers['content-type']);
+    // console.log("Login attempt:", req.body);
+    // console.log("Headers:", req.headers);
+    // console.log("Content-Type:", req.headers['content-type']);
 
     const { workEmail, password, platform = "web" } = req.body;
     const deviceUUID = req.headers['x-device-uuid'] || req.headers['deviceuuid'];

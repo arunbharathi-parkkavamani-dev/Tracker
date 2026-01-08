@@ -43,7 +43,7 @@ class ComputationService {
 
   setupEventHandlers() {
     this.computeQueue.on('completed', (job, result) => {
-      console.log(`Computation job ${job.id} completed`);
+      // console.log(`Computation job ${job.id} completed`);
       // Cache the result
       this.cacheComputationResult(job, result);
     });
@@ -57,7 +57,7 @@ class ComputationService {
   async queueMonthlyReport(employeeId, month, year, priority = 'normal') {
     try {
       const cacheKey = `report:monthly:${employeeId}:${year}-${month}`;
-      
+
       // Check if already cached
       const cached = await cacheService.get(cacheKey);
       if (cached) {
@@ -88,7 +88,7 @@ class ComputationService {
   async queueDashboardStats(userId, role, filters = {}) {
     try {
       const cacheKey = `stats:dashboard:${userId}:${JSON.stringify(filters)}`;
-      
+
       // Check cache first
       const cached = await cacheService.get(cacheKey);
       if (cached && Date.now() - cached.timestamp < 300000) { // 5 minutes
@@ -150,7 +150,7 @@ class ComputationService {
       const presentDays = attendances.filter(a => a.status === 'Present').length;
       const lateDays = attendances.filter(a => a.status === 'Late Entry').length;
       const leaveDays = leaves.reduce((sum, leave) => sum + leave.totalDays, 0);
-      
+
       const totalTasks = tasks.length;
       const completedTasks = tasks.filter(t => t.status === 'Completed').length;
       const pendingTasks = totalTasks - completedTasks;
@@ -216,44 +216,52 @@ class ComputationService {
       const [taskStats, attendanceStats, leaveStats, employeeStats] = await Promise.all([
         Task.aggregate([
           { $match: { ...baseFilter, createdAt: { $gte: startOfMonth } } },
-          { $group: {
-            _id: null,
-            total: { $sum: 1 },
-            completed: { $sum: { $cond: [{ $eq: ['$status', 'Completed'] }, 1, 0] } },
-            inProgress: { $sum: { $cond: [{ $eq: ['$status', 'In Progress'] }, 1, 0] } },
-            pending: { $sum: { $cond: [{ $eq: ['$status', 'To Do'] }, 1, 0] } },
-            highPriority: { $sum: { $cond: [{ $eq: ['$priorityLevel', 'High'] }, 1, 0] } }
-          }}
+          {
+            $group: {
+              _id: null,
+              total: { $sum: 1 },
+              completed: { $sum: { $cond: [{ $eq: ['$status', 'Completed'] }, 1, 0] } },
+              inProgress: { $sum: { $cond: [{ $eq: ['$status', 'In Progress'] }, 1, 0] } },
+              pending: { $sum: { $cond: [{ $eq: ['$status', 'To Do'] }, 1, 0] } },
+              highPriority: { $sum: { $cond: [{ $eq: ['$priorityLevel', 'High'] }, 1, 0] } }
+            }
+          }
         ]),
 
         Attendance.aggregate([
           { $match: { date: { $gte: startOfMonth } } },
-          { $group: {
-            _id: null,
-            total: { $sum: 1 },
-            present: { $sum: { $cond: [{ $eq: ['$status', 'Present'] }, 1, 0] } },
-            absent: { $sum: { $cond: [{ $eq: ['$status', 'Absent'] }, 1, 0] } },
-            late: { $sum: { $cond: [{ $eq: ['$status', 'Late Entry'] }, 1, 0] } }
-          }}
+          {
+            $group: {
+              _id: null,
+              total: { $sum: 1 },
+              present: { $sum: { $cond: [{ $eq: ['$status', 'Present'] }, 1, 0] } },
+              absent: { $sum: { $cond: [{ $eq: ['$status', 'Absent'] }, 1, 0] } },
+              late: { $sum: { $cond: [{ $eq: ['$status', 'Late Entry'] }, 1, 0] } }
+            }
+          }
         ]),
 
         Leave.aggregate([
           { $match: { createdAt: { $gte: startOfMonth } } },
-          { $group: {
-            _id: null,
-            total: { $sum: 1 },
-            pending: { $sum: { $cond: [{ $eq: ['$status', 'Pending'] }, 1, 0] } },
-            approved: { $sum: { $cond: [{ $eq: ['$status', 'Approved'] }, 1, 0] } },
-            rejected: { $sum: { $cond: [{ $eq: ['$status', 'Rejected'] }, 1, 0] } }
-          }}
+          {
+            $group: {
+              _id: null,
+              total: { $sum: 1 },
+              pending: { $sum: { $cond: [{ $eq: ['$status', 'Pending'] }, 1, 0] } },
+              approved: { $sum: { $cond: [{ $eq: ['$status', 'Approved'] }, 1, 0] } },
+              rejected: { $sum: { $cond: [{ $eq: ['$status', 'Rejected'] }, 1, 0] } }
+            }
+          }
         ]),
 
         role === 'HR' ? Employee.aggregate([
-          { $group: {
-            _id: null,
-            total: { $sum: 1 },
-            active: { $sum: { $cond: [{ $eq: ['$professionalInfo.status', 'Active'] }, 1, 0] } }
-          }}
+          {
+            $group: {
+              _id: null,
+              total: { $sum: 1 },
+              active: { $sum: { $cond: [{ $eq: ['$professionalInfo.status', 'Active'] }, 1, 0] } }
+            }
+          }
         ]) : Promise.resolve([])
       ]);
 
@@ -277,7 +285,7 @@ class ComputationService {
   async computeAttendanceSummary(startDate, endDate, departmentId) {
     try {
       const { default: Attendance } = await import('../models/Attendance.js');
-      
+
       let matchFilter = {
         date: { $gte: new Date(startDate), $lte: new Date(endDate) }
       };
@@ -285,21 +293,27 @@ class ComputationService {
       if (departmentId) {
         // Add department filter through employee lookup
         const pipeline = [
-          { $lookup: {
-            from: 'employees',
-            localField: 'employee',
-            foreignField: '_id',
-            as: 'employeeData'
-          }},
-          { $match: {
-            ...matchFilter,
-            'employeeData.professionalInfo.department': departmentId
-          }},
-          { $group: {
-            _id: '$status',
-            count: { $sum: 1 },
-            employees: { $addToSet: '$employee' }
-          }}
+          {
+            $lookup: {
+              from: 'employees',
+              localField: 'employee',
+              foreignField: '_id',
+              as: 'employeeData'
+            }
+          },
+          {
+            $match: {
+              ...matchFilter,
+              'employeeData.professionalInfo.department': departmentId
+            }
+          },
+          {
+            $group: {
+              _id: '$status',
+              count: { $sum: 1 },
+              employees: { $addToSet: '$employee' }
+            }
+          }
         ];
 
         const results = await Attendance.aggregate(pipeline);
@@ -307,11 +321,13 @@ class ComputationService {
       } else {
         const results = await Attendance.aggregate([
           { $match: matchFilter },
-          { $group: {
-            _id: '$status',
-            count: { $sum: 1 },
-            employees: { $addToSet: '$employee' }
-          }}
+          {
+            $group: {
+              _id: '$status',
+              count: { $sum: 1 },
+              employees: { $addToSet: '$employee' }
+            }
+          }
         ]);
 
         return this.formatAttendanceSummary(results);
@@ -404,7 +420,7 @@ class ComputationService {
     try {
       await this.computeQueue.clean(24 * 60 * 60 * 1000, 'completed'); // 24 hours
       await this.computeQueue.clean(24 * 60 * 60 * 1000, 'failed');
-      console.log('✅ Old computation jobs cleaned');
+      // console.log('✅ Old computation jobs cleaned');
     } catch (error) {
       console.error('Error cleaning old computation jobs:', error);
     }
@@ -414,7 +430,7 @@ class ComputationService {
   async shutdown() {
     try {
       await this.computeQueue.close();
-      console.log('✅ Computation queue closed');
+      // console.log('✅ Computation queue closed');
     } catch (error) {
       console.error('Error closing computation queue:', error);
     }

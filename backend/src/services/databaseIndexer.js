@@ -6,8 +6,8 @@ class DatabaseIndexer {
   }
 
   async createOptimalIndexes() {
-    console.log('🔍 Creating optimal database indexes...');
-    
+    // console.log('🔍 Creating optimal database indexes...');
+
     try {
       // Employee indexes
       await this.indexModel('employees', [
@@ -110,8 +110,8 @@ class DatabaseIndexer {
       // TTL indexes for cleanup
       await this.createTTLIndexes();
 
-      console.log('✅ Database indexes created successfully');
-      
+      // console.log('✅ Database indexes created successfully');
+
     } catch (error) {
       console.error('❌ Error creating database indexes:', error);
       throw error;
@@ -121,41 +121,41 @@ class DatabaseIndexer {
   async indexModel(modelName, indexes) {
     try {
       const collection = mongoose.connection.db.collection(modelName);
-      
+
       for (const index of indexes) {
         const indexName = Object.keys(index).join('_');
-        
+
         // Check if index already exists
         const existingIndexes = await collection.indexes();
-        const indexExists = existingIndexes.some(existing => 
-          existing.name === indexName || 
+        const indexExists = existingIndexes.some(existing =>
+          existing.name === indexName ||
           JSON.stringify(existing.key) === JSON.stringify(index)
         );
-        
+
         if (!indexExists) {
-          await collection.createIndex(index, { 
+          await collection.createIndex(index, {
             background: true,
             name: indexName
           });
-          console.log(`  ✓ Created index on ${modelName}: ${indexName}`);
+          // console.log(`  ✓ Created index on ${modelName}: ${indexName}`);
         }
       }
-      
+
       this.indexedModels.add(modelName);
-      
+
     } catch (error) {
       console.error(`Error indexing ${modelName}:`, error);
     }
   }
 
   async createTTLIndexes() {
-    console.log('🕒 Creating TTL indexes for automatic cleanup...');
-    
+    // console.log('🕒 Creating TTL indexes for automatic cleanup...');
+
     try {
       // Sessions - expire after 30 days of inactivity
       await mongoose.connection.db.collection('sessions').createIndex(
         { 'lastActivity': 1 },
-        { 
+        {
           expireAfterSeconds: 30 * 24 * 60 * 60, // 30 days
           background: true,
           name: 'session_ttl'
@@ -165,7 +165,7 @@ class DatabaseIndexer {
       // API Hit Logs - expire after 90 days
       await mongoose.connection.db.collection('apihitlogs').createIndex(
         { 'timestamp': 1 },
-        { 
+        {
           expireAfterSeconds: 90 * 24 * 60 * 60, // 90 days
           background: true,
           name: 'apihitlog_ttl'
@@ -175,7 +175,7 @@ class DatabaseIndexer {
       // Notifications - expire read notifications after 6 months
       await mongoose.connection.db.collection('notifications').createIndex(
         { 'createdAt': 1 },
-        { 
+        {
           expireAfterSeconds: 180 * 24 * 60 * 60, // 180 days
           partialFilterExpression: { 'read': true },
           background: true,
@@ -183,31 +183,31 @@ class DatabaseIndexer {
         }
       );
 
-      console.log('  ✓ TTL indexes created for automatic cleanup');
-      
+      // console.log('  ✓ TTL indexes created for automatic cleanup');
+
     } catch (error) {
       console.error('Error creating TTL indexes:', error);
     }
   }
 
   async analyzeQueryPerformance() {
-    console.log('📊 Analyzing query performance...');
-    
+    // console.log('📊 Analyzing query performance...');
+
     try {
       const collections = ['employees', 'tasks', 'attendances', 'leaves', 'notifications'];
       const analysis = {};
-      
+
       for (const collectionName of collections) {
         const collection = mongoose.connection.db.collection(collectionName);
-        
+
         // Get collection stats
         const stats = await collection.stats();
-        
+
         // Get index usage stats
         const indexStats = await collection.aggregate([
           { $indexStats: {} }
         ]).toArray();
-        
+
         analysis[collectionName] = {
           documentCount: stats.count,
           avgDocumentSize: Math.round(stats.avgObjSize),
@@ -219,10 +219,10 @@ class DatabaseIndexer {
           }))
         };
       }
-      
-      console.log('Query Performance Analysis:', JSON.stringify(analysis, null, 2));
+
+      // console.log('Query Performance Analysis:', JSON.stringify(analysis, null, 2));
       return analysis;
-      
+
     } catch (error) {
       console.error('Error analyzing query performance:', error);
       return {};
@@ -230,31 +230,31 @@ class DatabaseIndexer {
   }
 
   async dropUnusedIndexes() {
-    console.log('🧹 Checking for unused indexes...');
-    
+    // console.log('🧹 Checking for unused indexes...');
+
     try {
       const collections = await mongoose.connection.db.listCollections().toArray();
-      
+
       for (const collectionInfo of collections) {
         const collection = mongoose.connection.db.collection(collectionInfo.name);
-        
+
         try {
           const indexStats = await collection.aggregate([
             { $indexStats: {} }
           ]).toArray();
-          
+
           for (const indexStat of indexStats) {
             // Skip default _id index
             if (indexStat.name === '_id_') continue;
-            
+
             // Check if index has been used
             const usageCount = indexStat.accesses?.ops || 0;
-            
+
             if (usageCount === 0) {
-              console.log(`  ⚠️  Unused index found: ${collectionInfo.name}.${indexStat.name}`);
+              // console.log(`  ⚠️  Unused index found: ${collectionInfo.name}.${indexStat.name}`);
               // Uncomment to actually drop unused indexes
               // await collection.dropIndex(indexStat.name);
-              // console.log(`  🗑️  Dropped unused index: ${indexStat.name}`);
+              // // console.log(`  🗑️  Dropped unused index: ${indexStat.name}`);
             }
           }
         } catch (error) {
@@ -262,7 +262,7 @@ class DatabaseIndexer {
           continue;
         }
       }
-      
+
     } catch (error) {
       console.error('Error checking unused indexes:', error);
     }

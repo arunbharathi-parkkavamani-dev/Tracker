@@ -26,6 +26,7 @@ export async function buildQuery({
   if (!Model) throw new Error(`Model "${modelName}" not found`);
 
   // Load model-specific policy
+  // console.log(`[policyEngine] buildQuery started for ${modelName}. populateFields received:`, JSON.stringify(populateFields));
   const policy = getPolicy(role, modelName);
 
   // STRICT MODE: Fail Closed
@@ -73,6 +74,7 @@ export async function buildQuery({
   //  3️⃣ EXECUTE CRUD WITH SAFE DATA ONLY
   // --------------------------------------------------
   if (safeFields) console.log("[policyEngine.js:89] Passing to buildReadQuery - safeFields:", safeFields);
+  // console.log(`[policyEngine] Final call to crudHandler with populateFields:`, JSON.stringify(populateFields));
   return await crudHandler({
     modelName,
     role,

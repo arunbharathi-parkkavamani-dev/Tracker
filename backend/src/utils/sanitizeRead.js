@@ -12,10 +12,10 @@
  * @returns {Array} sanitized field list
  */
 export default function sanitizeRead({ fields, policy }) {
-  if (fields) console.log("[sanitizeRead.js:15] Inside sanitizeRead - fields:", fields);
-  
-  const forbidden = policy?.forbiddenAccess?.read || [];
-  const allowed   = policy?.allowAccess?.read || [];
+  if (fields) // console.log("[sanitizeRead.js:15] Inside sanitizeRead - fields:", fields);
+
+    const forbidden = policy?.forbiddenAccess?.read || [];
+  const allowed = policy?.allowAccess?.read || [];
 
   // If no fields requested but policy allows "*" → return ["*"]
   if (!fields) {
@@ -33,7 +33,7 @@ export default function sanitizeRead({ fields, policy }) {
   }
 
   let sanitized = [...fields];
-  
+
   /** --------------------------------------------------
    * 1) Remove forbidden fields
    * -------------------------------------------------- */
@@ -42,7 +42,7 @@ export default function sanitizeRead({ fields, policy }) {
       (f) => !forbidden.some((deny) => matchField(f, deny))
     );
   }
-  
+
   /** --------------------------------------------------
    * 2) Apply allowed list rules (only if not wildcard)
    * -------------------------------------------------- */
@@ -51,7 +51,7 @@ export default function sanitizeRead({ fields, policy }) {
       (f) => allowed.some((allow) => matchField(f, allow))
     );
   }
-  
+
   // Return the sanitized requested fields (no fallback to wildcard)
   return sanitized;
 }

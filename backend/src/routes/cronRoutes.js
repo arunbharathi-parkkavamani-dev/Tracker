@@ -10,9 +10,9 @@ router.get('/cron/stats', authenticateToken, async (req, res) => {
   try {
     // Check if user has HR permissions
     if (req.user.role !== 'HR') {
-      return res.status(403).json({ 
-        success: false, 
-        message: 'Access denied. HR role required.' 
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. HR role required.'
       });
     }
 
@@ -57,9 +57,9 @@ router.get('/cron/stats', authenticateToken, async (req, res) => {
 router.post('/cron/trigger', authenticateToken, async (req, res) => {
   try {
     if (req.user.role !== 'HR') {
-      return res.status(403).json({ 
-        success: false, 
-        message: 'Access denied. HR role required.' 
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. HR role required.'
       });
     }
 
@@ -76,7 +76,7 @@ router.post('/cron/trigger', authenticateToken, async (req, res) => {
     // Trigger processing asynchronously
     attendanceService.processDailyAttendance()
       .then(() => {
-        console.log('Manual attendance processing completed');
+        // console.log('Manual attendance processing completed');
       })
       .catch(error => {
         console.error('Manual attendance processing failed:', error);
@@ -102,26 +102,26 @@ router.get('/cron/health', authenticateToken, async (req, res) => {
   try {
     const queueStats = attendanceService.getQueueStats();
     const cronStats = monitor.getStats();
-    
+
     // Determine health status
     let status = 'healthy';
     const issues = [];
-    
+
     if (queueStats.queued > 100) {
       status = 'warning';
       issues.push('Queue backed up with ' + queueStats.queued + ' pending jobs');
     }
-    
+
     if (queueStats.failed > 50) {
       status = 'warning';
       issues.push('High failure rate: ' + queueStats.failed + ' failed jobs');
     }
-    
+
     if (cronStats.duration > 300000) { // > 5 minutes
       status = 'warning';
-      issues.push('Last run took ' + Math.round(cronStats.duration/1000) + ' seconds');
+      issues.push('Last run took ' + Math.round(cronStats.duration / 1000) + ' seconds');
     }
-    
+
     if (cronStats.errors > 10) {
       status = 'critical';
       issues.push('High error count: ' + cronStats.errors + ' errors in last run');

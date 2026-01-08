@@ -38,7 +38,7 @@ export default function Login() {
         // 2️⃣ Save auth token and session ID
         await login(accessToken);
         await AsyncStorage.setItem("current_session_id", sessionId);
-        
+
         // Clear previous FCM token storage flag
         await AsyncStorage.removeItem("fcm_token_stored");
 
@@ -53,7 +53,7 @@ export default function Login() {
         setError("Login failed");
       }
     } catch (err) {
-      console.log("Login failed:", err);
+      // console.log("Login failed:", err);
       setError("Invalid email or password");
     } finally {
       setLoading(false);
@@ -104,9 +104,8 @@ export default function Login() {
         <TouchableOpacity
           onPress={handleLogin}
           disabled={loading}
-          className={`w-full bg-blue-600 rounded-lg py-3 items-center ${
-            loading ? "opacity-50" : "opacity-100"
-          }`}
+          className={`w-full bg-blue-600 rounded-lg py-3 items-center ${loading ? "opacity-50" : "opacity-100"
+            }`}
         >
           <Text className="text-white font-semibold">
             {loading ? "Logging in..." : "Login"}

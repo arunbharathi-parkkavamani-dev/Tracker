@@ -9,19 +9,19 @@ const PORT = process.env.PORT || 3000;
 
 // Add basic request logging at server level
 app.use((req, res, next) => {
-  console.log('=== SERVER LEVEL REQUEST ===');
-  console.log('Time:', new Date().toISOString());
-  console.log('Method:', req.method);
-  console.log('URL:', req.url);
-  console.log('IP:', req.ip);
-  console.log('Headers:', JSON.stringify(req.headers, null, 2));
-  console.log('============================');
+  // console.log('=== SERVER LEVEL REQUEST ===');
+  // console.log('Time:', new Date().toISOString());
+  // console.log('Method:', req.method);
+  // console.log('URL:', req.url);
+  // console.log('IP:', req.ip);
+  // console.log('Headers:', JSON.stringify(req.headers, null, 2));
+  // console.log('============================');
   next();
 });
 
 // Test endpoint to verify server is working
 app.get('/test', (req, res) => {
-  console.log('TEST ENDPOINT HIT');
+  // console.log('TEST ENDPOINT HIT');
   res.json({ message: 'Server is working', timestamp: new Date().toISOString() });
 });
 
@@ -52,47 +52,47 @@ const getPublicIP = () =>
 
 // Start server with memory monitoring
 server.listen(PORT, "0.0.0.0", async () => {
-  console.log('=== SERVER STARTING ===');
+  // console.log('=== SERVER STARTING ===');
   const localIP = getLocalIP();
-  console.log(`✅ Server running on port ${PORT}`);
-  console.log(`📡 Local Access:  http://localhost:${PORT}`);
-  if (localIP) console.log(`💻 LAN Access:    http://${localIP}:${PORT}`);
+  // console.log(`✅ Server running on port ${PORT}`);
+  // console.log(`📡 Local Access:  http://localhost:${PORT}`);
+  if (localIP) // console.log(`💻 LAN Access:    http://${localIP}:${PORT}`);
 
-  try {
-    const publicIP = await getPublicIP();
-    console.log(`🌍 Public Access: http://${publicIP}:${PORT}`);
-  } catch (err) {
-    console.log("⚠️ Could not fetch public IP:", err.message);
-  }
+    try {
+      const publicIP = await getPublicIP();
+      // console.log(`🌍 Public Access: http://${publicIP}:${PORT}`);
+    } catch (err) {
+      // console.log("⚠️ Could not fetch public IP:", err.message);
+    }
 
   // Start memory monitoring
   memoryMonitor.startMonitoring(30000); // Every 30 seconds
-  console.log('🔍 Memory monitoring started');
-  
+  // console.log('🔍 Memory monitoring started');
+
   // Log initial memory stats
   const initialStats = memoryMonitor.getMemoryStats();
-  console.log('=== SERVER READY ===');
-  // console.log('📊 Initial memory:', initialStats);
+  // console.log('=== SERVER READY ===');
+  // // console.log('📊 Initial memory:', initialStats);
 });
 
 // Graceful shutdown with cleanup
 process.on('SIGTERM', () => {
-  console.log('🔄 Graceful shutdown initiated...');
-  
+  // console.log('🔄 Graceful shutdown initiated...');
+
   server.close(() => {
-    console.log('✅ Server closed');
-    
+    // console.log('✅ Server closed');
+
     // Final memory cleanup
     if (global.gc) {
       global.gc();
-      console.log('🗑️ Final garbage collection completed');
+      // console.log('🗑️ Final garbage collection completed');
     }
-    
+
     process.exit(0);
   });
 });
 
 process.on('SIGINT', () => {
-  console.log('\n🔄 Received SIGINT, shutting down gracefully...');
+  // console.log('\n🔄 Received SIGINT, shutting down gracefully...');
   process.emit('SIGTERM');
 });

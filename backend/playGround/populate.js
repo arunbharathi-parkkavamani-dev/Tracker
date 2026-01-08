@@ -17,6 +17,6 @@ app.get('/populate', (req, res) => {
 const PORT = 3001;
 
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`Populate service running on port ${PORT}`);
+  // console.log(`Populate service running on port ${PORT}`);
 });
 

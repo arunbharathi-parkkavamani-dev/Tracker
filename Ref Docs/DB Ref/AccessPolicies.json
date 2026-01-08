@@ -1,7 +1,7 @@
 [
   {
     "role": "68d8b98af397d1d97620ba97",
-    "modelName": "milestones",
+    "modelName": "regularizations",
     "permissions": {
       "read": true,
       "create": true,
@@ -15,17 +15,25 @@
       "delete": []
     },
     "allowAccess": {
-      "read": ["*"],
-      "create": ["*"],
-      "update": ["*"],
-      "delete": ["*"]
+      "read": [
+        "*"
+      ],
+      "create": [
+        "*"
+      ],
+      "update": [
+        "*"
+      ],
+      "delete": [
+        "*"
+      ]
     },
     "registry": [],
     "conditions": {
       "read": [],
       "update": [],
-      "create" : [],
-      "delete" : []
+      "create": [],
+      "delete": []
     }
   }
 ]

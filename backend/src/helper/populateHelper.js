@@ -11,7 +11,11 @@ export async function populateHelper(req, res, next) {
     const { type, page = 1, limit = 20, useCache = 'true' } = req.query;
     const user = req.user;
 
-    let { fields, filter, populateFields, sort, ...params } = req.query;
+    // console.log(`[PopulateHelper] Request: ${action} ${model} ${id || ''}`);
+    // console.log(`[PopulateHelper] Raw query params:`, req.query);
+
+    let { fields, filter, populateFields: rawPopulateFields, sort, ...params } = req.query;
+    // console.log(`[PopulateHelper] rawPopulateFields:`, rawPopulateFields);
 
     // Clear cache if requested
     if (useCache === 'false') {
@@ -114,13 +118,13 @@ export async function populateHelper(req, res, next) {
     }
 
     // ------------------------ FIELDS NORMALIZATION ------------------------
-    if (fields) console.log("[populateHelper.js:39] fields before normalization:", fields);
-    if (typeof fields === "string") {
-      fields = fields
-        .split(",")
-        .map(f => f.trim())
-        .filter(Boolean);
-    }
+    if (fields) // console.log("[populateHelper.js:39] fields before normalization:", fields);
+      if (typeof fields === "string") {
+        fields = fields
+          .split(",")
+          .map(f => f.trim())
+          .filter(Boolean);
+      }
     if (fields) console.log("[populateHelper.js:46] fields after normalization:", fields);
 
     // ------------------------ SORT OPTIMIZATION ------------------------
@@ -244,13 +248,16 @@ export async function populateHelper(req, res, next) {
     let finalPopulate = { ...(DEFAULT_POPULATE_FIELDS[model] || {}) };
 
     // 2. Parse User Overrides
-    if (populateFields) {
+    if (rawPopulateFields) {
+      // console.log(`[PopulateHelper] Entering rawPopulateFields block`);
       let userPopulate = {};
       try {
         // Attempt to parse if it's a JSON string
-        const parsed = typeof populateFields === 'string' && (populateFields.startsWith('{') || populateFields.startsWith('['))
-          ? JSON.parse(populateFields)
-          : populateFields;
+        const parsed = typeof rawPopulateFields === 'string' && (rawPopulateFields.startsWith('{') || rawPopulateFields.startsWith('['))
+          ? JSON.parse(rawPopulateFields)
+          : rawPopulateFields;
+
+        // console.log(`[PopulateHelper] parsed userPopulate:`, parsed);
 
         if (Array.isArray(parsed)) {
           // Case: ["path1", "path2"]
@@ -283,11 +290,13 @@ export async function populateHelper(req, res, next) {
 
         // Merge user preferences (this might add new paths or change fields for existing ones)
         finalPopulate = { ...finalPopulate, ...userPopulate };
+        // console.log(`[PopulateHelper] Merge complete. finalPopulate:`, finalPopulate);
       } catch (e) {
-        console.warn("Error parsing populateFields:", populateFields, e.message);
+        console.warn("Error parsing populateFields:", rawPopulateFields, e.message);
       }
     }
 
+    // console.log(`[PopulateHelper] Calling buildQuery for model "${model}" with finalPopulate:`, JSON.stringify(finalPopulate));
     // Use regular buildQuery for all operations
     data = await buildQuery({
       role: user.role,

@@ -11,7 +11,7 @@ const router = express.Router();
 router.post('/create-agent/:clientId', async (req, res) => {
   try {
     const { clientId } = req.params;
-    
+
     // Get client details
     const client = await Client.findById(clientId);
     if (!client) {
@@ -19,18 +19,18 @@ router.post('/create-agent/:clientId', async (req, res) => {
     }
 
     if (!client.email || !client.contactPerson) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Client must have email and contact person' 
+      return res.status(400).json({
+        success: false,
+        message: 'Client must have email and contact person'
       });
     }
 
     // Check if agent already exists
     const existingAgent = await Agent.findOne({ email: client.email });
     if (existingAgent) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Agent already exists for this email' 
+      return res.status(400).json({
+        success: false,
+        message: 'Agent already exists for this email'
       });
     }
 
@@ -71,36 +71,36 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    console.log('=== AGENT LOGIN ATTEMPT (agentRoutes.js) ===');
-    console.log('Email:', email);
-    console.log('Password length:', password ? password.length : 'undefined');
-    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    // console.log('=== AGENT LOGIN ATTEMPT (agentRoutes.js) ===');
+    // console.log('Email:', email);
+    // console.log('Password length:', password ? password.length : 'undefined');
+    // console.log('Request body:', JSON.stringify(req.body, null, 2));
 
     // Find agent
-    console.log('Searching for agent with email:', email);
+    // console.log('Searching for agent with email:', email);
     const agent = await Agent.findOne({ email, isActive: true }).populate('client');
-    console.log('Agent found:', agent ? 'YES' : 'NO');
-    
+    // console.log('Agent found:', agent ? 'YES' : 'NO');
+
     if (agent) {
-      console.log('Agent details:');
-      console.log('- ID:', agent._id);
-      console.log('- Email:', agent.email);
-      console.log('- Name:', agent.name);
-      console.log('- IsActive:', agent.isActive);
-      console.log('- HasPassword:', agent.password ? 'YES' : 'NO');
-      console.log('- Client:', agent.client ? agent.client.name : 'NO CLIENT');
+      // console.log('Agent details:');
+      // console.log('- ID:', agent._id);
+      // console.log('- Email:', agent.email);
+      // console.log('- Name:', agent.name);
+      // console.log('- IsActive:', agent.isActive);
+      // console.log('- HasPassword:', agent.password ? 'YES' : 'NO');
+      // console.log('- Client:', agent.client ? agent.client.name : 'NO CLIENT');
     }
-    
+
     if (!agent) {
-      console.log('Agent not found - returning invalid credentials');
+      // console.log('Agent not found - returning invalid credentials');
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
     // Check password
-    console.log('Comparing passwords...');
-    console.log('Input password:', password);
-    console.log('Stored password:', agent.password);
-    
+    // console.log('Comparing passwords...');
+    // console.log('Input password:', password);
+    // console.log('Stored password:', agent.password);
+
     let isMatch;
     // Check if password is already hashed (starts with $2b$ or $2a$)
     if (agent.password.startsWith('$2b$') || agent.password.startsWith('$2a$')) {
@@ -109,18 +109,18 @@ router.post('/login', async (req, res) => {
     } else {
       // Password is plain text, do direct comparison
       isMatch = password === agent.password;
-      console.log('Plain text password comparison');
+      // console.log('Plain text password comparison');
     }
-    
-    console.log('Password comparison result:', isMatch);
-    
+
+    // console.log('Password comparison result:', isMatch);
+
     if (!isMatch) {
-      console.log('Password mismatch - returning invalid credentials');
+      // console.log('Password mismatch - returning invalid credentials');
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
-    console.log('Password valid - updating last login and generating token');
-    
+    // console.log('Password valid - updating last login and generating token');
+
     // Update last login
     agent.lastLogin = new Date();
     await agent.save();
@@ -132,8 +132,8 @@ router.post('/login', async (req, res) => {
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
 
-    console.log('Login successful for agent:', agent.email);
-    console.log('=== LOGIN COMPLETE ===');
+    // console.log('Login successful for agent:', agent.email);
+    // console.log('=== LOGIN COMPLETE ===');
 
     res.json({
       success: true,

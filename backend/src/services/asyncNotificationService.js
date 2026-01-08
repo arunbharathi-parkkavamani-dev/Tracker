@@ -45,7 +45,7 @@ class AsyncNotificationService {
 
   setupEventHandlers() {
     this.pushQueue.on('completed', (job) => {
-      console.log(`Push notification job ${job.id} completed`);
+      // console.log(`Push notification job ${job.id} completed`);
     });
 
     this.pushQueue.on('failed', (job, err) => {
@@ -53,7 +53,7 @@ class AsyncNotificationService {
     });
 
     this.emailQueue.on('completed', (job) => {
-      console.log(`Email job ${job.id} completed`);
+      // console.log(`Email job ${job.id} completed`);
     });
 
     this.emailQueue.on('failed', (job, err) => {
@@ -135,15 +135,15 @@ class AsyncNotificationService {
     try {
       // Get user's push tokens from database
       const { default: Session } = await import('../models/Session.js');
-      const sessions = await Session.find({ 
-        userId, 
-        isActive: true, 
-        pushToken: { $exists: true, $ne: null } 
+      const sessions = await Session.find({
+        userId,
+        isActive: true,
+        pushToken: { $exists: true, $ne: null }
       }).select('pushToken deviceType').lean();
-      
-      const userTokens = sessions.map(s => ({ 
-        token: s.pushToken, 
-        type: s.deviceType 
+
+      const userTokens = sessions.map(s => ({
+        token: s.pushToken,
+        type: s.deviceType
       }));
 
       if (!userTokens || userTokens.length === 0) {
@@ -152,7 +152,7 @@ class AsyncNotificationService {
 
       // Send to external push service (mock implementation)
       const results = await Promise.allSettled(
-        userTokens.map(({ token, type }) => 
+        userTokens.map(({ token, type }) =>
           this.sendPushToProvider(token, title, body, data, type)
         )
       );
@@ -160,11 +160,11 @@ class AsyncNotificationService {
       const successful = results.filter(r => r.status === 'fulfilled').length;
       const failed = results.filter(r => r.status === 'rejected').length;
 
-      return { 
-        success: successful > 0, 
-        sent: successful, 
+      return {
+        success: successful > 0,
+        sent: successful,
         failed,
-        total: userTokens.length 
+        total: userTokens.length
       };
 
     } catch (error) {
@@ -177,7 +177,7 @@ class AsyncNotificationService {
   async sendPushToProvider(token, title, body, data, deviceType) {
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 100));
-    
+
     // Mock success/failure (90% success rate)
     if (Math.random() < 0.9) {
       return { success: true, token, messageId: Date.now() };
@@ -190,11 +190,11 @@ class AsyncNotificationService {
   async processBatchPush(notifications) {
     try {
       const results = await Promise.allSettled(
-        notifications.map(notif => 
+        notifications.map(notif =>
           this.processPushNotification(
-            notif.userId, 
-            notif.title, 
-            notif.body, 
+            notif.userId,
+            notif.title,
+            notif.body,
             notif.data
           )
         )
@@ -203,11 +203,11 @@ class AsyncNotificationService {
       const successful = results.filter(r => r.status === 'fulfilled').length;
       const failed = results.filter(r => r.status === 'rejected').length;
 
-      return { 
-        success: true, 
+      return {
+        success: true,
         processed: notifications.length,
         successful,
-        failed 
+        failed
       };
 
     } catch (error) {
@@ -221,14 +221,14 @@ class AsyncNotificationService {
     try {
       // Mock email service call
       await new Promise(resolve => setTimeout(resolve, 200));
-      
+
       // Mock success (95% success rate)
       if (Math.random() < 0.95) {
-        return { 
-          success: true, 
+        return {
+          success: true,
           messageId: `email_${Date.now()}`,
           to,
-          subject 
+          subject
         };
       } else {
         throw new Error('Email service unavailable');
@@ -288,7 +288,7 @@ class AsyncNotificationService {
         this.emailQueue.clean(24 * 60 * 60 * 1000, 'failed')
       ]);
 
-      console.log('✅ Old notification jobs cleaned');
+      // console.log('✅ Old notification jobs cleaned');
     } catch (error) {
       console.error('Error cleaning old jobs:', error);
     }
@@ -301,7 +301,7 @@ class AsyncNotificationService {
         this.pushQueue.close(),
         this.emailQueue.close()
       ]);
-      console.log('✅ Notification queues closed');
+      // console.log('✅ Notification queues closed');
     } catch (error) {
       console.error('Error closing notification queues:', error);
     }

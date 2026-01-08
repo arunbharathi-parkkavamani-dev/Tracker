@@ -1,6 +1,6 @@
-import React, { createContext, useState, useEffect, Children} from "react";
+import React, { createContext, useState, useEffect, Children } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import {jwtDecode} from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import { setAuthLogout } from "@/api/axiosInstance";
 
 
@@ -12,22 +12,22 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const loadToken = async () => {
-        try {
-            const token = await AsyncStorage.getItem("auth_token");
-
-            if (token) {
             try {
-                const decoded = jwtDecode(token);
-                setUser(decoded);
-            } catch (error) {
-                console.log("JWT decode error:", error);
-                setUser(null);
-                await AsyncStorage.removeItem("auth_token");
+                const token = await AsyncStorage.getItem("auth_token");
+
+                if (token) {
+                    try {
+                        const decoded = jwtDecode(token);
+                        setUser(decoded);
+                    } catch (error) {
+                        // console.log("JWT decode error:", error);
+                        setUser(null);
+                        await AsyncStorage.removeItem("auth_token");
+                    }
+                }
+            } finally {
+                setLoading(false);
             }
-            }
-        } finally {
-            setLoading(false);
-        }
         };
 
         loadToken();
@@ -46,9 +46,9 @@ export const AuthProvider = ({ children }) => {
 
     const logout = async () => {
         await AsyncStorage.multiRemove([
-            "auth_token", 
-            "refresh_token", 
-            "current_session_id", 
+            "auth_token",
+            "refresh_token",
+            "current_session_id",
             "fcm_token_stored",
             "last_fcm_token"
         ]);
@@ -60,8 +60,8 @@ export const AuthProvider = ({ children }) => {
         setAuthLogout(logout);
     }, []);
 
-    return(
-        <AuthContext.Provider value={{user, loading, login, logout}}>
+    return (
+        <AuthContext.Provider value={{ user, loading, login, logout }}>
             {children}
         </AuthContext.Provider>
     )

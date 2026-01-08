@@ -4,14 +4,20 @@ import { Drawer } from "expo-router/drawer";
 import { DrawerContentScrollView, DrawerItem } from "@react-navigation/drawer";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router, useSegments } from "expo-router";
-import { ActivityIndicator, View, Text, Animated } from "react-native";
+import { ActivityIndicator, View, Text, Animated, TouchableOpacity } from "react-native";
 import { AuthContext } from "@/context/AuthContext";
 import AppHeader from "@/components/AppHeader";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import NotificationDrawer from '@/components/NotificationDrawer';
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { LayoutDashboard, Calendar, CalendarCheck, User, Users, DollarSign, Plane, LogOut, ChevronDown, ChevronRight, HelpCircle } from 'lucide-react-native';
+import {
+  LayoutDashboard, Calendar, CalendarCheck, User, Users, DollarSign,
+  Plane, LogOut, ChevronDown, ChevronRight, HelpCircle, Ticket,
+  Rss, Clock, ClipboardList, History, Target, CreditCard,
+  ShieldCheck, Landmark, FileText, Receipt, Briefcase, Bell
+} from 'lucide-react-native';
 
 // ... existing imports ...
 
@@ -33,6 +39,7 @@ function CustomDrawerContent() {
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const { logout } = useContext(AuthContext);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const fetchNavBar = async () => {
@@ -45,16 +52,25 @@ function CustomDrawerContent() {
         const children = items.filter((item: SidebarItem) => item.parentId);
 
         const hierarchical = parents.map((parent: SidebarItem) => {
-          const itemChildren = children.filter((child: SidebarItem) => child.parentId === parent._id);
+          // Normalize parent route for comparison (remove leading slash)
+          const parentRouteId = parent.mainRoute?.replace(/^\//, '');
+
+          const itemChildren = children.filter((child: SidebarItem) => {
+            const childParentId = String(child.parentId);
+            return childParentId === String(parent._id) || childParentId === parentRouteId;
+          });
+
           return {
             ...parent,
             children: itemChildren,
-            hasChildren: itemChildren.length > 0
+            // Only set hasChildren if it's not already true or if we found children
+            hasChildren: parent.hasChildren || itemChildren.length > 0 || parent.isParent
           };
         });
 
         setNavItems(hierarchical);
       } catch (err: any) {
+        // ... defaultRoutes ...
         const defaultRoutes = [
           { _id: '1', title: 'Dashboard', mainRoute: '/dashboard', icon: { iconName: 'MdDashboard' } },
           { _id: '2', title: 'Daily Tracker', mainRoute: '/daily-tracker', icon: { iconName: 'MdToday' } },
@@ -68,7 +84,7 @@ function CustomDrawerContent() {
 
         if (err?.response?.status === 401) {
           await AsyncStorage.multiRemove(["auth_token", "refresh_token"]);
-          return router.replace("/(authRoute)/Login");
+          return router.replace("/Login");
         }
       } finally {
         setLoading(false);
@@ -89,31 +105,40 @@ function CustomDrawerContent() {
   };
 
   const handleNavigation = (item: SidebarItem) => {
-    if ((item.children && item.children.length > 0) || item.hasChildren) {
+    const isParent = item.isParent || item.hasChildren || (item.children && item.children.length > 0);
+    if (isParent) {
       toggleExpanded(item._id);
     } else {
-      const route = item.mainRoute.replace(/^\//, '');
-      router.push(`/(protectedRoute)/${route}`);
+      // Ensure the route is valid for router.push
+      const route = item.mainRoute.startsWith('/') ? item.mainRoute : `/${item.mainRoute}`;
+      router.push(route as any);
     }
   };
 
-  const getIcon = (iconName: string, size = 20, color = "#9CA3AF") => {
-    // Map Material icon names (from DB) to Lucide equivalents
-    // or use route logic if iconName is sparse
+  // ... getIcon and getIconByRoute ...
+
+  const getIcon = (iconName: string, size = 20, color = "#4B5563") => {
     const lowerName = iconName?.toLowerCase() || '';
-
     if (lowerName.includes('dashboard')) return <LayoutDashboard size={size} color={color} />;
+    if (lowerName.includes('rss') || lowerName.includes('feed')) return <Rss size={size} color={color} />;
+    if (lowerName.includes('time') || lowerName.includes('clock') || lowerName.includes('schedule')) return <Clock size={size} color={color} />;
     if (lowerName.includes('task')) return <CalendarCheck size={size} color={color} />;
-    if (lowerName.includes('attendance') || lowerName.includes('schedule')) return <Calendar size={size} color={color} />;
-    if (lowerName.includes('person') || lowerName.includes('profile')) return <User size={size} color={color} />;
-    if (lowerName.includes('money') || lowerName.includes('salary')) return <DollarSign size={size} color={color} />;
-    if (lowerName.includes('travel') || lowerName.includes('flight')) return <Plane size={size} color={color} />;
-    if (lowerName.includes('people') || lowerName.includes('team')) return <Users size={size} color={color} />;
-
+    if (lowerName.includes('attendance') || lowerName.includes('calendar')) return <Calendar size={size} color={color} />;
+    if (lowerName.includes('person') || lowerName.includes('profile') || lowerName.includes('user')) return <User size={size} color={color} />;
+    if (lowerName.includes('money') || lowerName.includes('salary') || lowerName.includes('pay')) return <DollarSign size={size} color={color} />;
+    if (lowerName.includes('travel') || lowerName.includes('flight') || lowerName.includes('plane')) return <Plane size={size} color={color} />;
+    if (lowerName.includes('people') || lowerName.includes('team') || lowerName.includes('crm')) return <Users size={size} color={color} />;
+    if (lowerName.includes('ticket') || lowerName.includes('confirmation')) return <Ticket size={size} color={color} />;
+    if (lowerName.includes('assessment') || lowerName.includes('report') || lowerName.includes('list')) return <ClipboardList size={size} color={color} />;
+    if (lowerName.includes('history') || lowerName.includes('log')) return <History size={size} color={color} />;
+    if (lowerName.includes('track') || lowerName.includes('activity')) return <Target size={size} color={color} />;
+    if (lowerName.includes('policy') || lowerName.includes('security')) return <ShieldCheck size={size} color={color} />;
+    if (lowerName.includes('account') || lowerName.includes('bank') || lowerName.includes('balance')) return <Landmark size={size} color={color} />;
+    if (lowerName.includes('description') || lowerName.includes('file')) return <FileText size={size} color={color} />;
+    if (lowerName.includes('receipt') || lowerName.includes('expense')) return <Receipt size={size} color={color} />;
     return <HelpCircle size={size} color={color} />;
   };
 
-  // Fallback icon based on route if DB icon name isn't perfect
   const getIconByRoute = (route: string, size = 20, color = "#9CA3AF") => {
     const r = route.toLowerCase();
     if (r.includes('dashboard')) return <LayoutDashboard size={size} color={color} />;
@@ -127,36 +152,43 @@ function CustomDrawerContent() {
 
   const renderNavItem = (item: SidebarItem, isChild = false) => {
     const isExpanded = expandedItems.has(item._id);
-    const hasChildren = item.children && item.children.length > 0;
-    const isActive = false; // logic for active route highlighting could be added here similar to frontend
+    const hasChildren = (item.children && item.children.length > 0) || item.hasChildren;
+    const isActive = false;
 
     return (
       <View key={item._id} className="mb-1">
-        <DrawerItem
-          label={({ focused, color }) => (
-            <Text className={`${isChild ? 'text-sm' : 'text-base font-medium'} text-gray-700 dark:text-gray-200`}>
-              {item.title}
-            </Text>
+        <View className="relative">
+          <DrawerItem
+            label={({ focused, color }) => (
+              <Text className={`${isChild ? 'text-sm' : 'text-base font-medium'} text-gray-700 dark:text-gray-200`}>
+                {item.title}
+              </Text>
+            )}
+            style={{
+              backgroundColor: isActive ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+              borderRadius: 8,
+              marginLeft: isChild ? 16 : 0,
+              paddingRight: hasChildren ? 40 : 0, // Make room for chevron
+            }}
+            icon={({ size, color }) => (
+              <View style={{ flexDirection: 'row', alignItems: 'center', width: 24 }}>
+                {item.icon?.iconName
+                  ? getIcon(item.icon.iconName, 20, '#4B5563')
+                  : getIconByRoute(item.mainRoute, 20, '#4B5563')}
+              </View>
+            )}
+            onPress={() => handleNavigation(item)}
+          />
+          {hasChildren && (
+            <TouchableOpacity
+              activeOpacity={0.7}
+              className="absolute right-0 w-12 h-full justify-center items-center"
+              onPress={() => toggleExpanded(item._id)}
+            >
+              {isExpanded ? <ChevronDown size={18} color="#4B5563" /> : <ChevronRight size={18} color="#4B5563" />}
+            </TouchableOpacity>
           )}
-          style={{
-            backgroundColor: isActive ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
-            borderRadius: 8,
-            marginLeft: isChild ? 16 : 0
-          }}
-          icon={({ size, color }) => (
-            <View style={{ flexDirection: 'row', alignItems: 'center', width: 24 }}>
-              {getIconByRoute(item.mainRoute, 20, '#4B5563')}
-            </View>
-          )}
-          onPress={() => handleNavigation(item)}
-
-        // Custom right accessory for expand icon
-        />
-        {hasChildren && (
-          <View className="absolute right-4 top-4 pointer-events-none">
-            {isExpanded ? <ChevronDown size={16} color="#9CA3AF" /> : <ChevronRight size={16} color="#9CA3AF" />}
-          </View>
-        )}
+        </View>
 
         {hasChildren && isExpanded && (
           <View className="ml-2 border-l-2 border-gray-100 dark:border-gray-800">
@@ -176,8 +208,8 @@ function CustomDrawerContent() {
   }
 
   return (
-    <View className="flex-1 bg-white dark:bg-gray-950">
-      <DrawerContentScrollView contentContainerStyle={{ paddingTop: 20, paddingHorizontal: 12 }}>
+    <View className="flex-1 bg-white dark:bg-gray-950" style={{ paddingTop: insets.top }}>
+      <DrawerContentScrollView contentContainerStyle={{ paddingTop: 0, paddingHorizontal: 12 }}>
 
         {/* Header/Brand */}
         <View className="px-4 py-4 mb-2 border-b border-gray-100 dark:border-gray-800">
@@ -200,7 +232,7 @@ function CustomDrawerContent() {
           )}
           onPress={async () => {
             await logout();
-            router.replace("/(authRoute)/Login");
+            router.replace("/Login");
           }}
         />
       </DrawerContentScrollView>

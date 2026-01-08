@@ -3,7 +3,7 @@ import Session from '../models/Session.js';
 export const cleanupStaleSessions = async () => {
   try {
     const staleThreshold = new Date(Date.now() - 24 * 60 * 60 * 1000); // 24 hours ago
-    
+
     const result = await Session.updateMany(
       {
         status: 'Active',
@@ -16,9 +16,9 @@ export const cleanupStaleSessions = async () => {
     );
 
     if (result.modifiedCount > 0) {
-      console.log(`Auto-deactivated ${result.modifiedCount} stale sessions`);
+      // console.log(`Auto-deactivated ${result.modifiedCount} stale sessions`);
     }
-    
+
     return result;
   } catch (error) {
     console.error('Session cleanup error:', error);

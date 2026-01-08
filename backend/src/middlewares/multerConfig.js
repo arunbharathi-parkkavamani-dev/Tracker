@@ -17,7 +17,7 @@ const createDirectories = () => {
   const today = new Date();
   const year = today.getFullYear();
   const month = String(today.getMonth() + 1).padStart(2, '0');
-  
+
   const dirs = [
     UPLOAD_PATH,
     path.join(UPLOAD_PATH, 'profile'),
@@ -28,7 +28,7 @@ const createDirectories = () => {
     path.join(UPLOAD_PATH, 'profile', year.toString(), month),
     path.join(UPLOAD_PATH, 'documents', year.toString(), month)
   ];
-  
+
   dirs.forEach(dir => {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
@@ -60,18 +60,18 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const datePath = getDatePath();
     let uploadDir;
-    
+
     if (req.route.path.includes('profile') || file.fieldname === 'profileImage') {
       uploadDir = path.join(UPLOAD_PATH, 'profile', datePath);
     } else {
       uploadDir = path.join(UPLOAD_PATH, 'documents', datePath);
     }
-    
+
     // Ensure directory exists
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
-    
+
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
@@ -90,25 +90,25 @@ const fileFilter = (req, file, cb) => {
     'image/png': { maxSize: 10 * 1024 * 1024, category: 'image' },
     'image/gif': { maxSize: 5 * 1024 * 1024, category: 'image' }, // 5MB
     'image/webp': { maxSize: 10 * 1024 * 1024, category: 'image' },
-    
+
     // Documents
     'application/pdf': { maxSize: 50 * 1024 * 1024, category: 'document' }, // 50MB
     'application/msword': { maxSize: 25 * 1024 * 1024, category: 'document' },
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document': { maxSize: 25 * 1024 * 1024, category: 'document' },
     'application/vnd.ms-excel': { maxSize: 25 * 1024 * 1024, category: 'document' },
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': { maxSize: 25 * 1024 * 1024, category: 'document' },
-    
+
     // Archives
     'application/zip': { maxSize: 100 * 1024 * 1024, category: 'archive' }, // 100MB
     'application/x-rar-compressed': { maxSize: 100 * 1024 * 1024, category: 'archive' }
   };
-  
+
   const fileConfig = allowedMimes[file.mimetype];
-  
+
   if (!fileConfig) {
     return cb(new Error(`File type ${file.mimetype} not allowed`), false);
   }
-  
+
   // Store file config for later size validation
   req.fileConfig = fileConfig;
   cb(null, true);
@@ -130,7 +130,7 @@ const handleFileUpload = (req, res, next) => {
   if (req.file) {
     const datePath = getDatePath();
     const folder = req.route.path.includes('profile') || req.file.fieldname === 'profileImage' ? 'profile' : 'documents';
-    
+
     // Generate file metadata
     req.fileMetadata = {
       originalName: req.file.originalname,
@@ -142,7 +142,7 @@ const handleFileUpload = (req, res, next) => {
       uploadedAt: new Date(),
       hash: crypto.createHash('md5').update(fs.readFileSync(req.file.path)).digest('hex')
     };
-    
+
     // Store in request for database saving
     req.filePath = req.fileMetadata.path;
   }
@@ -153,16 +153,16 @@ const handleFileUpload = (req, res, next) => {
 const cleanupTempFiles = () => {
   const tempDir = path.join(UPLOAD_PATH, 'temp');
   const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
-  
+
   if (fs.existsSync(tempDir)) {
     fs.readdir(tempDir, (err, files) => {
       if (err) return;
-      
+
       files.forEach(file => {
         const filePath = path.join(tempDir, file);
         fs.stat(filePath, (err, stats) => {
           if (err) return;
-          
+
           if (stats.mtime.getTime() < oneDayAgo) {
             fs.unlink(filePath, (err) => {
               if (!err) console.log(`Cleaned up temp file: ${file}`);

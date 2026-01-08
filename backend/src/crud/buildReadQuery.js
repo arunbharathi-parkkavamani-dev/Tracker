@@ -36,20 +36,20 @@ export default async function buildReadQuery({
   /** -----------------------------------------------
    * 2) Field sanitization (allowed + forbidden)
    * ----------------------------------------------- */
-  if (fields) console.log("[buildReadQuery.js:35] Before sanitizeRead - fields:", fields);
-  fields = sanitizeRead({ fields, policy }); // returns an array like ["basicInfo.firstName"]
-  if (fields) console.log("[buildReadQuery.js:37] After sanitizeRead - fields:", fields);
+  if (fields) // console.log("[buildReadQuery.js:35] Before sanitizeRead - fields:", fields);
+    fields = sanitizeRead({ fields, policy }); // returns an array like ["basicInfo.firstName"]
+  if (fields) // console.log("[buildReadQuery.js:37] After sanitizeRead - fields:", fields);
 
-  /** -----------------------------------------------
-   * 3) Registry execution (populateRef, isSelf, custom)
-   * ----------------------------------------------- */
-  const registryOutput = await runRegistry({
-    role,
-    userId,
-    modelName,
-    action: "read",
-    policy
-  });
+    /** -----------------------------------------------
+     * 3) Registry execution (populateRef, isSelf, custom)
+     * ----------------------------------------------- */
+    const registryOutput = await runRegistry({
+      role,
+      userId,
+      modelName,
+      action: "read",
+      policy
+    });
 
   // registry may override direct read control
   fields = registryOutput?.fields ?? fields;
@@ -129,24 +129,43 @@ export default async function buildReadQuery({
     ? Model.findById(new mongoose.Types.ObjectId(docId))
     : Model.find(mongoFilter || {});
 
-  if (fields) console.log("[buildReadQuery.js:115] Fields to select:", fields);
+  if (fields) // console.log("[buildReadQuery.js:115] Fields to select:", fields);
+    // console.log(`[buildReadQuery] populateFields received in buildReadQuery:`, JSON.stringify(populateFields));
 
-  // 🛡️ UNIVERSAL POPULATE: Populate everything in populateFields (defaults + overrides)
-  if (populateFields && typeof populateFields === 'object') {
-    Object.entries(populateFields).forEach(([path, selectFields]) => {
-      if (!selectFields) return;
+    // 🛡️ UNIVERSAL POPULATE: Populate everything in populateFields (defaults + overrides)
+    if (populateFields && typeof populateFields === 'object') {
+      Object.entries(populateFields).forEach(([path, selectFields]) => {
+        if (!selectFields) return;
 
-      // Check if path exists in schema (handles both direct and nested paths)
-      const schemaPath = Model.schema.path(path) || Model.schema.path(`${path}.$`);
+        // Check if path exists in schema (handles both direct and nested paths)
+        const schemaPath = Model.schema.path(path) || Model.schema.path(`${path}.$`);
 
-      if (schemaPath?.options?.ref) {
-        query.populate({
-          path,
-          select: String(selectFields).replace(/,/g, ' ')
-        });
-      }
-    });
-  }
+        // console.log(`[buildReadQuery] Population request for path: "${path}"`);
+        if (schemaPath) {
+          // console.log(`[buildReadQuery] schemaPath instance: ${schemaPath.instance}`);
+          if (schemaPath.options?.ref) // console.log(`[buildReadQuery] schemaPath direct ref: ${schemaPath.options.ref}`);
+            if (schemaPath.caster?.options?.ref) // console.log(`[buildReadQuery] schemaPath caster ref: ${schemaPath.caster.options.ref}`);
+      } else {
+          // console.log(`[buildReadQuery] WARNING: Path "${path}" not explicitly found in schema for ${modelName}`);
+        }
+
+        // Check if it's a direct ref OR an array of refs
+        const isRef = schemaPath?.options?.ref ||
+          (schemaPath?.instance === 'Array' && schemaPath?.caster?.options?.ref) ||
+          (schemaPath?.instance === 'ObjectID') || // Some schemas might use this
+          (!schemaPath && !path.includes('.')); // Fallback for top-level fields even if path detection fails
+
+        if (isRef) {
+          // console.log(`[buildReadQuery] SUCCESS: Triggering population for: ${path}`);
+          query.populate({
+            path,
+            select: String(selectFields).replace(/,/g, ' ')
+          });
+        } else {
+          // console.log(`[buildReadQuery] SKIPPING population for: ${path} (not identified as a ref)`);
+        }
+      });
+    }
 
   // ❗ populate first, then lean
   let result = await query.lean();

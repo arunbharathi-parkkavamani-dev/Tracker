@@ -16,18 +16,18 @@ router.use(cors({
 router.get('/verify-token/:token', async (req, res) => {
   try {
     const { token } = req.params;
-    console.log('Verifying token:', token);
-    
+    // console.log('Verifying token:', token);
+
     const agent = await AgentInviteService.verifyInviteToken(token);
-    console.log('Agent found:', agent ? agent.email : 'null');
-    
-    res.json({ 
-      success: true, 
-      agent: { 
-        name: agent.name, 
+    // console.log('Agent found:', agent ? agent.email : 'null');
+
+    res.json({
+      success: true,
+      agent: {
+        name: agent.name,
         email: agent.email,
-        client: agent.client 
-      } 
+        client: agent.client
+      }
     });
   } catch (error) {
     console.error('Token verification error:', error.message);

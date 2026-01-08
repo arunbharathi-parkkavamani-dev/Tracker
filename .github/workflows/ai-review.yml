@@ -49,13 +49,13 @@ jobs:
           let content = '';
 
           if (branch.includes('review')) {
-            console.log('📦 Performing full project review...');
+            // console.log('📦 Performing full project review...');
             // Get all project files except node_modules
             const files = execSync('find . -type f ! -path "./node_modules/*" ! -path "./.git/*" -name "*.js" -o -name "*.jsx" -o -name "*.ts" -o -name "*.tsx"', { encoding: 'utf8' });
             const limitedFiles = files.split('\n').slice(0, 20).join('\n'); // Limit for large projects
             content = execSync(`cat ${limitedFiles}`, { encoding: 'utf8', maxBuffer: 1024 * 1000 });
           } else {
-            console.log('🧩 Performing diff-based review...');
+            // console.log('🧩 Performing diff-based review...');
             content = execSync('git diff HEAD~1 HEAD', { encoding: 'utf8' });
           }
 
@@ -84,7 +84,7 @@ jobs:
             const output = `\n\n---\n### 🧠 AI Review (${date})\n${review}\n`;
 
             fs.appendFileSync('./text.md', output);
-            console.log('✅ Review added to text.md');
+            // console.log('✅ Review added to text.md');
           };
 
           await runReview();

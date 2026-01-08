@@ -19,42 +19,42 @@ const TasksPage = () => {
   const [clientProjectTypes, setClientProjectTypes] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [taskTypes, setTaskTypes] = useState([]);
-  
+
   useEffect(() => {
     const fetchTasks = async () => {
       try {
         const response = await axiosInstance.get(`/populate/read/tasks`);
         const tasksData = response.data.data || [];
-        
+
         // Manually populate the required fields
         const populatedTasks = await Promise.all(tasksData.map(async (task) => {
           const populatedTask = { ...task };
-          
+
           // Populate clientId
-          if (task.clientId ) {
+          if (task.clientId) {
             try {
               const clientRes = await axiosInstance.get(`/populate/read/clients/${task.clientId}`);
               populatedTask.clientId = clientRes.data.data;
-              // console.log('Populated clientId for task:', populatedTask.title, populatedTask.clientId);
+              // // console.log('Populated clientId for task:', populatedTask.title, populatedTask.clientId);
             } catch (e) {
               console.warn('Failed to populate clientId:', e);
             }
           }
-          
+
           // Populate projectTypeId
-          if (task.projectTypeId ) {
+          if (task.projectTypeId) {
             try {
               const projectTypeRes = await axiosInstance.get(`/populate/read/projecttypes/${task.projectTypeId}`);
               populatedTask.projectTypeId = projectTypeRes.data.data;
-              // console.log('Populated projectTypeId for task:', populatedTask.title, populatedTask.projectTypeId);
+              // // console.log('Populated projectTypeId for task:', populatedTask.title, populatedTask.projectTypeId);
             } catch (e) {
               console.warn('Failed to populate projectTypeId:', e);
             }
           }
-          
+
           return populatedTask;
         }));
-        console.log('Fetched and populated tasks:', populatedTasks);
+        // console.log('Fetched and populated tasks:', populatedTasks);
         setTasks(populatedTasks);
         setLoading(false);
       } catch (error) {
@@ -62,7 +62,7 @@ const TasksPage = () => {
         setLoading(false);
       }
     };
-    
+
     fetchTasks();
   }, []);
 
@@ -111,11 +111,11 @@ const TasksPage = () => {
         'createdBy': 'basicInfo.firstName,basicInfo.lastName',
         'assignedTo': 'basicInfo.firstName,basicInfo.lastName'
       };
-      
+
       const response = await axiosInstance.get(
         `/populate/read/tasks/${taskId}?populateFields=${encodeURIComponent(JSON.stringify(populateFields))}`
       );
-      
+
       return response.data.data;
     } catch (error) {
       console.error('Error fetching task details:', error);
@@ -147,7 +147,7 @@ const TasksPage = () => {
         title: projectType.name,
         color: colors[index % colors.length]
       })) || [];
-      console.log('Client project types columns:', clientColumns);
+      // console.log('Client project types columns:', clientColumns);
       setClientProjectTypes(clientColumns);
     } catch (error) {
       console.error('Error fetching client project types:', error);
@@ -175,29 +175,27 @@ const TasksPage = () => {
 
       {/* Main Content */}
       <div className="flex-1 flex gap-6 p-6 overflow-hidden">
-        
+
         {/* Client Selection */}
         <div className="w-80 bg-white rounded-lg shadow p-4 overflow-y-auto dark:bg-gray-800">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold">Clients ({clients.length})</h3>
             <div className="flex gap-1">
-              <button 
+              <button
                 onClick={() => setKanbanView('status')}
-                className={`px-2 py-1 text-xs rounded ${
-                  kanbanView === 'status' 
-                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' 
+                className={`px-2 py-1 text-xs rounded ${kanbanView === 'status'
+                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
                     : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
-                }`}
+                  }`}
               >
                 Status
               </button>
-              <button 
+              <button
                 onClick={() => setKanbanView('category')}
-                className={`px-2 py-1 text-xs rounded ${
-                  kanbanView === 'category' 
-                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' 
+                className={`px-2 py-1 text-xs rounded ${kanbanView === 'category'
+                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
                     : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
-                }`}
+                  }`}
               >
                 Category
               </button>
@@ -208,11 +206,10 @@ const TasksPage = () => {
               <div
                 key={client._id}
                 onClick={() => handleClientSelect(client)}
-                className={`p-3 rounded-lg cursor-pointer transition-all duration-200 ${
-                  selectedClient?._id === client._id 
-                    ? 'bg-blue-100 border-l-4 border-blue-500 shadow-md dark:bg-blue-900' 
+                className={`p-3 rounded-lg cursor-pointer transition-all duration-200 ${selectedClient?._id === client._id
+                    ? 'bg-blue-100 border-l-4 border-blue-500 shadow-md dark:bg-blue-900'
                     : 'hover:bg-gray-50 border-l-4 border-transparent dark:hover:bg-gray-700'
-                }`}
+                  }`}
               >
                 <div className="font-medium text-gray-800 dark:text-white truncate">
                   {client.name || 'Unnamed Client'}
@@ -224,7 +221,7 @@ const TasksPage = () => {
             ))}
           </div>
         </div>
-        
+
         {/* Task Board */}
         <div className="flex-1 overflow-hidden">
           {selectedClient ? (
@@ -238,7 +235,7 @@ const TasksPage = () => {
               currentUserId={user?.id}
               onCardClick={handleTaskClick}
               onCardMove={(task, fromStatus, toStatus) => {
-                console.log('Move task:', task.title, 'from', fromStatus, 'to', toStatus);
+                // console.log('Move task:', task.title, 'from', fromStatus, 'to', toStatus);
               }}
               title={`Tasks - ${selectedClient.name}`}
               subtitle="Manage projects and track progress."

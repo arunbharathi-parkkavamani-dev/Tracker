@@ -1,1 +1,116 @@
-import React, { useState, useEffect } from 'react';\nimport { useParams } from 'react-router-dom';\nimport axiosInstance from '../../api/axiosInstance';\n\nconst ExternalTicketView = () => {\n  const { ticketId } = useParams();\n  const [ticket, setTicket] = useState(null);\n  const [loading, setLoading] = useState(true);\n\n  useEffect(() => {\n    fetchTicket();\n  }, [ticketId]);\n\n  const fetchTicket = async () => {\n    try {\n      const response = await axiosInstance.get(`/populate/read/tickets/${ticketId}`);\n      setTicket(response.data.data);\n    } catch (error) {\n      console.error('Error fetching ticket:', error);\n    } finally {\n      setLoading(false);\n    }\n  };\n\n  const getStatusColor = (status) => {\n    const colors = {\n      'Open': 'bg-blue-50 text-blue-700 border-blue-200',\n      'In Progress': 'bg-orange-50 text-orange-700 border-orange-200',\n      'Review': 'bg-purple-50 text-purple-700 border-purple-200',\n      'Testing': 'bg-cyan-50 text-cyan-700 border-cyan-200',\n      'Completed': 'bg-green-50 text-green-700 border-green-200',\n      'Closed': 'bg-gray-50 text-gray-700 border-gray-200'\n    };\n    return colors[status] || 'bg-gray-50 text-gray-700 border-gray-200';\n  };\n\n  if (loading) {\n    return (\n      <div className=\"flex items-center justify-center h-64\">\n        <div className=\"text-lg\">Loading ticket...</div>\n      </div>\n    );\n  }\n\n  if (!ticket) {\n    return (\n      <div className=\"flex items-center justify-center h-64\">\n        <div className=\"text-lg text-red-600\">Ticket not found</div>\n      </div>\n    );\n  }\n\n  return (\n    <div className=\"max-w-4xl mx-auto p-6 space-y-6\">\n      {/* Header */}\n      <div className=\"bg-white rounded-lg shadow-sm border p-6\">\n        <div className=\"flex items-start justify-between\">\n          <div>\n            <h1 className=\"text-2xl font-bold text-gray-900\">{ticket.title}</h1>\n            <p className=\"text-sm text-gray-500 mt-1\">Ticket #{ticket.ticketId}</p>\n          </div>\n          <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(ticket.status)}`}>\n            {ticket.status}\n          </span>\n        </div>\n      </div>\n\n      {/* Description - Only User Story is visible to external clients */}\n      <div className=\"bg-white rounded-lg shadow-sm border p-6\">\n        <h2 className=\"text-lg font-semibold text-gray-900 mb-4\">Description</h2>\n        <div className=\"prose max-w-none\">\n          <p className=\"text-gray-700 whitespace-pre-wrap\">\n            {ticket.userStory || 'No description available'}\n          </p>\n        </div>\n      </div>\n\n      {/* Basic Info */}\n      <div className=\"bg-white rounded-lg shadow-sm border p-6\">\n        <h2 className=\"text-lg font-semibold text-gray-900 mb-4\">Ticket Information</h2>\n        <div className=\"grid grid-cols-2 gap-4\">\n          <div>\n            <label className=\"block text-sm font-medium text-gray-500\">Created Date</label>\n            <p className=\"text-gray-900\">{new Date(ticket.createdAt).toLocaleDateString()}</p>\n          </div>\n          <div>\n            <label className=\"block text-sm font-medium text-gray-500\">Last Updated</label>\n            <p className=\"text-gray-900\">{new Date(ticket.updatedAt).toLocaleDateString()}</p>\n          </div>\n          {ticket.accountManager && (\n            <div>\n              <label className=\"block text-sm font-medium text-gray-500\">Account Manager</label>\n              <p className=\"text-gray-900\">\n                {ticket.accountManager.basicInfo?.firstName} {ticket.accountManager.basicInfo?.lastName}\n              </p>\n            </div>\n          )}\n        </div>\n      </div>\n\n      {/* Status Updates */}\n      <div className=\"bg-white rounded-lg shadow-sm border p-6\">\n        <h2 className=\"text-lg font-semibold text-gray-900 mb-4\">Status Updates</h2>\n        <div className=\"space-y-3\">\n          <div className=\"flex items-center space-x-3\">\n            <div className=\"w-2 h-2 bg-blue-500 rounded-full\"></div>\n            <div>\n              <p className=\"text-sm font-medium text-gray-900\">Ticket Created</p>\n              <p className=\"text-xs text-gray-500\">{new Date(ticket.createdAt).toLocaleString()}</p>\n            </div>\n          </div>\n          {ticket.updatedAt !== ticket.createdAt && (\n            <div className=\"flex items-center space-x-3\">\n              <div className=\"w-2 h-2 bg-orange-500 rounded-full\"></div>\n              <div>\n                <p className=\"text-sm font-medium text-gray-900\">Status Updated</p>\n                <p className=\"text-xs text-gray-500\">{new Date(ticket.updatedAt).toLocaleString()}</p>\n              </div>\n            </div>\n          )}\n        </div>\n      </div>\n    </div>\n  );\n};\n\nexport default ExternalTicketView;
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import axiosInstance from '../../api/axiosInstance';
+const ExternalTicketView = () => {
+    const { ticketId } = useParams();
+    const [ticket, setTicket] = useState(null);
+    const [loading, setLoading] = useState(true);
+    useEffect(() => {
+        fetchTicket();
+    }, [ticketId]);
+    const fetchTicket = async () => {
+        try {
+            const response = await axiosInstance.get(`/populate/read/tickets/${ticketId}`);
+            setTicket(response.data.data);
+        } catch (error) {
+            console.error('Error fetching ticket:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+    const getStatusColor = (status) => {
+        const colors = {
+            'Open': 'bg-blue-50 text-blue-700 border-blue-200',
+            'In Progress': 'bg-orange-50 text-orange-700 border-orange-200',
+            'Review': 'bg-purple-50 text-purple-700 border-purple-200',
+            'Testing': 'bg-cyan-50 text-cyan-700 border-cyan-200',
+            'Completed': 'bg-green-50 text-green-700 border-green-200',
+            'Closed': 'bg-gray-50 text-gray-700 border-gray-200'
+        };
+        return colors[status] || 'bg-gray-50 text-gray-700 border-gray-200';
+    };
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <div className="text-lg">Loading ticket...</div>
+            </div>
+        );
+    }
+    if (!ticket) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <div className="text-lg text-red-600">Ticket not found</div>
+            </div>
+        );
+    }
+    return (
+        <div className="max-w-4xl mx-auto p-6 space-y-6">
+            {/* Header */}
+            <div className="bg-white rounded-lg shadow-sm border p-6">
+                <div className="flex items-start justify-between">
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-900">{ticket.title}</h1>
+                        <p className="text-sm text-gray-500 mt-1">Ticket #{ticket.ticketId}</p>
+                    </div>
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(ticket.status)}`}>
+                        {ticket.status}
+                    </span>
+                </div>
+            </div>
+            {/* Description - Only User Story is visible to external clients */}
+            <div className="bg-white rounded-lg shadow-sm border p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Description</h2>
+                <div className="prose max-w-none">
+                    <p className="text-gray-700 whitespace-pre-wrap">
+                        {ticket.userStory || 'No description available'}
+                    </p>
+                </div>
+            </div>
+            {/* Basic Info */}
+            <div className="bg-white rounded-lg shadow-sm border p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Ticket Information</h2>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-500">Created Date</label>
+                        <p className="text-gray-900">{new Date(ticket.createdAt).toLocaleDateString()}</p>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-500">Last Updated</label>
+                        <p className="text-gray-900">{new Date(ticket.updatedAt).toLocaleDateString()}</p>
+                    </div>
+                    {ticket.accountManager && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-500">Account Manager</label>
+                            <p className="text-gray-900">
+                                {ticket.accountManager.basicInfo?.firstName} {ticket.accountManager.basicInfo?.lastName}
+                            </p>
+                        </div>
+                    )}
+                </div>
+            </div>
+            {/* Status Updates */}
+            <div className="bg-white rounded-lg shadow-sm border p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Status Updates</h2>
+                <div className="space-y-3">
+                    <div className="flex items-center space-x-3">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <div>
+                            <p className="text-sm font-medium text-gray-900">Ticket Created</p>
+                            <p className="text-xs text-gray-500">{new Date(ticket.createdAt).toLocaleString()}</p>
+                        </div>
+                    </div>
+                    {ticket.updatedAt !== ticket.createdAt && (
+                        <div className="flex items-center space-x-3">
+                            <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                            <div>
+                                <p className="text-sm font-medium text-gray-900">Status Updated</p>
+                                <p className="text-xs text-gray-500">{new Date(ticket.updatedAt).toLocaleString()}</p>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+export default ExternalTicketView;

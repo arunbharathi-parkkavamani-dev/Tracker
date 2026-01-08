@@ -5,28 +5,63 @@ import axiosInstance from "../../api/axiosInstance";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as ImagePicker from "expo-image-picker";
 
+interface FormField {
+    name: string;
+    label?: string;
+    type?: string;
+    placeholder?: string;
+    required?: boolean;
+    hidden?: boolean;
+    value?: any;
+    source?: string;
+    options?: any[];
+    dynamicOptions?: {
+        params?: {
+            aggregate?: boolean;
+            stages?: any[];
+            [key: string]: any;
+        };
+    };
+    external?: boolean;
+    externalValue?: any;
+    accept?: string[];
+    gridClass?: string;
+    orderKey?: number;
+}
+
+interface FormRendererProps {
+    fields: FormField[];
+    submitButton?: {
+        text?: string;
+        color?: string;
+    };
+    onSubmit?: (data: any) => void;
+    onChange?: (data: any) => void;
+    data?: any;
+}
+
 const FormRenderer = ({
     fields = [],
     submitButton,
     onSubmit,
     onChange,
     data = {},
-}) => {
-    const [formData, setFormData] = useState(data);
-    const [dynamicOptions, setDynamicOptions] = useState({});
-    const [dropdownOpen, setDropdownOpen] = useState({});
-    const [showDate, setShowDate] = useState({});
+}: FormRendererProps) => {
+    const [formData, setFormData] = useState<any>(data);
+    const [dynamicOptions, setDynamicOptions] = useState<Record<string, any[]>>({});
+    const [dropdownOpen, setDropdownOpen] = useState<Record<string, boolean>>({});
+    const [showDate, setShowDate] = useState<Record<string, boolean>>({});
     const [loadingFile, setLoadingFile] = useState(false);
 
     // init hidden default values
     useEffect(() => {
-        const hiddenDefaults = {};
+        const hiddenDefaults: Record<string, any> = {};
         fields.forEach((field) => {
             if (field.hidden && field.value !== undefined) {
                 hiddenDefaults[field.name] = field.value;
             }
         });
-        setFormData((prev) => ({ ...hiddenDefaults, ...prev }));
+        setFormData((prev: any) => ({ ...hiddenDefaults, ...prev }));
     }, [fields]);
 
     // Separate effect for populating AutoComplete options
@@ -39,8 +74,8 @@ const FormRenderer = ({
     }, [fields]);
 
     // 🔥 detect when user changed something
-    const update = (name, value) => {
-        setFormData((prev) => {
+    const update = (name: string, value: any) => {
+        setFormData((prev: any) => {
             const updated = { ...prev, [name]: value };
             // only call onChange here
             onChange?.(updated);
@@ -48,32 +83,32 @@ const FormRenderer = ({
         });
     };
 
-    const handlePopulate = async (field) => {
+    const handlePopulate = async (field: FormField) => {
         try {
             let res;
             if (field.dynamicOptions?.params?.aggregate) {
                 // For aggregate queries, send the full params object
-                res = await axiosInstance.post(field.source, field.dynamicOptions.params);
+                res = await axiosInstance.post(field.source!, field.dynamicOptions.params);
             } else {
-                res = await axiosInstance.get(field.source);
+                res = await axiosInstance.get(field.source!);
             }
-            
-            let data = res?.data?.data || res?.data || [];
-            
+
+            let dataArr = res?.data?.data || res?.data || [];
+
             // Handle case where data is a single object instead of array
-            if (!Array.isArray(data)) {
-                data = [data];
+            if (!Array.isArray(dataArr)) {
+                dataArr = [dataArr];
             }
-            
-            
-            setDynamicOptions((prev) => ({ ...prev, [field.name]: data }));
+
+
+            setDynamicOptions((prev) => ({ ...prev, [field.name]: dataArr }));
         } catch (e) {
-            console.log(`Failed to populate ${field.name}:`, e);
+            // console.log(`Failed to populate ${field.name}:`, e);
         }
     };
 
     /* 📌 Pick image/file */
-    const pickFile = async (field) => {
+    const pickFile = async (field: FormField) => {
         setLoadingFile(true);
         try {
             const result = await ImagePicker.launchImageLibraryAsync({
@@ -95,9 +130,39 @@ const FormRenderer = ({
         }
     };
 
-    const renderField = (field) => {
+    const renderField = (field: FormField) => {
         const value = formData[field.name];
         const options = dynamicOptions[field.name] || field.options || [];
+
+        const formatValue = (val: any, type?: string) => {
+            if (!val) return null;
+
+            // If it's a simple time format (HH:mm) and the type is time, return as is
+            if (type === "time" && typeof val === 'string' && /^([01]\d|2[0-3]):([0-5]\d)$/.test(val)) {
+                return val;
+            }
+
+            try {
+                const date = new Date(val);
+                if (isNaN(date.getTime())) return val;
+
+                if (type === "date") {
+                    return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+                }
+                if (type === "time") {
+                    return date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+                }
+                if (type === "datetime-local") {
+                    return date.toLocaleString('en-IN', {
+                        day: '2-digit', month: 'short', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit', hour12: true
+                    });
+                }
+                return val;
+            } catch {
+                return val;
+            }
+        };
 
         /** Label Field */
         if (field.type === "label") {
@@ -111,25 +176,39 @@ const FormRenderer = ({
         }
 
         /** Date Picker */
-        if (field.type === "date") {
+        if (field.type === "date" || field.type === "time" || field.type === "datetime-local") {
+            const mode = field.type === "time" ? "time" : "date";
+            const isDateTime = field.type === "datetime-local";
+
             return (
                 <>
                     <TouchableOpacity
                         className="border border-gray-300 p-3 rounded-md"
                         onPress={() => setShowDate((p) => ({ ...p, [field.name]: true }))}
                     >
-                        <Text>{value || field.placeholder || "Select date"}</Text>
+                        <Text className="text-gray-700">
+                            {formatValue(value, field.type) || field.placeholder || `Select ${field.type}`}
+                        </Text>
                     </TouchableOpacity>
 
                     {showDate[field.name] && (
                         <DateTimePicker
                             value={value ? new Date(value) : new Date()}
-                            mode="date"
-                            display="calendar"
+                            mode={mode}
+                            display="default"
                             onChange={(e, selected) => {
                                 setShowDate((p) => ({ ...p, [field.name]: false }));
                                 if (selected) {
-                                    update(field.name, selected.toISOString().substring(0, 10));
+                                    if (field.type === "date") {
+                                        update(field.name, selected.toISOString().substring(0, 10));
+                                    } else if (field.type === "time") {
+                                        // Format as HH:mm
+                                        const hh = String(selected.getHours()).padStart(2, '0');
+                                        const mm = String(selected.getMinutes()).padStart(2, '0');
+                                        update(field.name, `${hh}:${mm}`);
+                                    } else if (field.type === "datetime-local") {
+                                        update(field.name, selected.toISOString());
+                                    }
                                 }
                             }}
                         />
@@ -156,7 +235,7 @@ const FormRenderer = ({
                             )}
                         </View>
                     )}
-                    
+
                     <TouchableOpacity
                         onPress={() => pickFile(field)}
                         className="items-center py-4"

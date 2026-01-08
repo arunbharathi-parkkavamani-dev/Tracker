@@ -38,15 +38,15 @@ export default async function buildReportQuery({
 
     // Add population lookups BEFORE grouping
     if (body.populate && Array.isArray(body.populate)) {
-      console.log('Adding populate lookups for:', body.populate);
+      // console.log('Adding populate lookups for:', body.populate);
       body.populate.forEach(field => {
         const lookupModel = getModelForField(field);
-        console.log(`Field: ${field}, LookupModel: ${lookupModel}`);
+        // console.log(`Field: ${field}, LookupModel: ${lookupModel}`);
         if (lookupModel) {
           // Get default fields for this populate
           const selectFields = getDefaultPopulateFields('tasks', field) || 'name';
-          console.log(`SelectFields for ${field}:`, selectFields);
-          
+          // console.log(`SelectFields for ${field}:`, selectFields);
+
           const lookupStage = {
             $lookup: {
               from: lookupModel,
@@ -63,9 +63,9 @@ export default async function buildReportQuery({
               ]
             }
           };
-          console.log(`Lookup stage for ${field}:`, JSON.stringify(lookupStage, null, 2));
+          // console.log(`Lookup stage for ${field}:`, JSON.stringify(lookupStage, null, 2));
           pipeline.push(lookupStage);
-          
+
           // Unwind array fields like assignedTo to create separate documents for each assignee
           if (field === 'assignedTo') {
             pipeline.push({ $unwind: { path: `$${field}`, preserveNullAndEmptyArrays: true } });
@@ -73,7 +73,7 @@ export default async function buildReportQuery({
           }
         }
       });
-      console.log('Pipeline after populate:', JSON.stringify(pipeline, null, 2));
+      // console.log('Pipeline after populate:', JSON.stringify(pipeline, null, 2));
     }
 
     // Handle type-based responses
@@ -93,7 +93,7 @@ export default async function buildReportQuery({
             groupByField = `$${body.groupBy}Data.name`;
           }
         }
-        
+
         let subGroupByField = `$${body.subGroupBy}`;
         if (body.populate && body.populate.includes(body.subGroupBy)) {
           if (body.subGroupBy === 'assignedTo') {
@@ -104,7 +104,7 @@ export default async function buildReportQuery({
             subGroupByField = `$${body.subGroupBy}Data.name`;
           }
         }
-          
+
         // First group by main field and subfield
         pipeline.push({
           $group: {
@@ -116,14 +116,14 @@ export default async function buildReportQuery({
             count: { $sum: 1 }
           }
         });
-        
+
         // Add the original task ID to the next stage
         pipeline.push({
           $addFields: {
             originalTaskId: '$_id.originalTaskId'
           }
         });
-        
+
         // Regroup to get proper structure
         pipeline.push({
           $group: {
@@ -135,7 +135,7 @@ export default async function buildReportQuery({
             originalTaskId: { $first: '$originalTaskId' }
           }
         });
-        console.log('Pipeline after first group:', JSON.stringify(pipeline, null, 2));  
+        // console.log('Pipeline after first group:', JSON.stringify(pipeline, null, 2));  
 
         // Then group by main field and create sub counts
         const groupStage = {
@@ -173,7 +173,7 @@ export default async function buildReportQuery({
                   input: '$subGroups',
                   as: 'item',
                   in: {
-                    k: { 
+                    k: {
                       $cond: {
                         if: { $eq: ['$$item.key', null] },
                         then: 'Unknown',
@@ -264,7 +264,7 @@ export default async function buildReportQuery({
           if (lookupModel) {
             // Get default fields for this populate
             const selectFields = getDefaultPopulateFields(lookupModel.replace('s', ''), field) || 'name';
-            
+
             pipeline.push({
               $lookup: {
                 from: lookupModel,
@@ -322,7 +322,7 @@ export default async function buildReportQuery({
 function getModelForField(field) {
   const fieldModelMap = {
     'employee': 'employees',
-    'user': 'employees', 
+    'user': 'employees',
     'assignedTo': 'employees',
     'createdBy': 'employees',
     'client': 'clients',

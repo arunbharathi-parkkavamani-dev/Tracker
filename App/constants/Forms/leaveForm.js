@@ -3,20 +3,62 @@ export const leaveFormFields = (userData) => [
   { name: "employeeId", hidden: true, value: userData._id },
   { name: "departmentId", hidden: true, value: userData.professionalInfo?.department },
 
-  // Leave Type (simplified - get all leave types)
+  // Leave Type (using the same complex aggregate as the frontend)
   {
     name: "leaveTypeId",
     label: "Leave Type",
-    placeholder: "Select Leave Type",
     type: "AutoComplete",
-    source: `/populate/read/leavetypes`,
+    source: `/populate/read/employees/${userData._id}`,
+    dynamicOptions: {
+      params: {
+        aggregate: true,
+        stages: [
+          {
+            $lookup: {
+              from: "departments",
+              localField: "professionalInfo.department",
+              foreignField: "_id",
+              as: "departmentDetails",
+            },
+          },
+          { $unwind: "$departmentDetails" },
+          {
+            $lookup: {
+              from: "leavepolicies",
+              localField: "departmentDetails.leavePolicy",
+              foreignField: "_id",
+              as: "leavePolicyDetails",
+            },
+          },
+          { $unwind: "$leavePolicyDetails" },
+          { $unwind: "$leavePolicyDetails.leaves" },
+          {
+            $lookup: {
+              from: "leavetypes",
+              localField: "leavePolicyDetails.leaves.leaveType",
+              foreignField: "_id",
+              as: "leaveTypeInfo",
+            },
+          },
+          { $unwind: "$leaveTypeInfo" },
+          {
+            $project: {
+              _id: "$leaveTypeInfo._id",
+              leaveTypeId: "$leaveTypeInfo._id",
+              name: "$leaveTypeInfo.name",
+              departmentId: "$departmentDetails._id",
+            },
+          },
+        ],
+      },
+    },
     required: true,
     orderKey: 2,
   },
 
   // Calendar fields
   {
-    name: "fromDate",
+    name: "startDate",
     label: "From Date",
     type: "date",
     placeholder: "YYYY-MM-DD",
@@ -24,7 +66,7 @@ export const leaveFormFields = (userData) => [
     orderKey: 0,
   },
   {
-    name: "toDate",
+    name: "endDate",
     label: "To Date",
     type: "date",
     placeholder: "YYYY-MM-DD",

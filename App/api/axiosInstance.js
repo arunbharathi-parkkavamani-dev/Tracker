@@ -6,7 +6,7 @@ let authContextLogout = null;
 let failedRequestCount = 0;
 const MAX_FAILED_REQUESTS = 5;
 
-const baseUrl = "http://192.168.1.108:3000";
+const baseUrl = "http://10.126.166.208:3000";
 
 export const setAuthLogout = (logoutFn) => {
   authContextLogout = logoutFn;
@@ -35,7 +35,7 @@ const forceLogout = async () => {
       }
     });
   } catch (error) {
-    console.log("Logout API failed:", error);
+    // console.log("Logout API failed:", error);
   }
 
 
@@ -44,9 +44,9 @@ const forceLogout = async () => {
   }
 
   try {
-    router.replace("/(authRoute)/Login");
+    router.replace("/Login");
   } catch (routerError) {
-    console.log("Router error:", routerError);
+    // console.log("Router error:", routerError);
   }
 };
 

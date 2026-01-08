@@ -46,7 +46,7 @@ class MemoryMonitor {
       global.gc();
       const after = process.memoryUsage().heapUsed;
       const freed = Math.round((before - after) / 1024 / 1024);
-      console.log(`🗑️ Garbage collection freed ${freed}MB`);
+      // console.log(`🗑️ Garbage collection freed ${freed}MB`);
       this.lastGC = Date.now();
       return freed;
     }
@@ -56,11 +56,11 @@ class MemoryMonitor {
   startMonitoring(intervalMs = 60000) {
     setInterval(() => {
       const { stats, warnings } = this.checkMemoryHealth();
-      
+
       if (warnings.length > 0) {
         // console.warn('⚠️ Memory warnings:', warnings);
-        // console.log('📊 Memory stats:', stats);
-        
+        // // console.log('📊 Memory stats:', stats);
+
         // Auto garbage collection if heap usage is high
         if (stats.heapUsed > 512 && Date.now() - this.lastGC > 300000) { // 5 minutes
           this.forceGarbageCollection();

@@ -24,12 +24,12 @@ class CronMonitor {
 
   endRun(runData) {
     const duration = Date.now() - runData.startTime;
-    
+
     this.stats.lastRun = new Date();
     this.stats.duration = duration;
     this.stats.employeesProcessed = runData.employeesProcessed;
     this.stats.errors = runData.errors;
-    
+
     // Keep last 30 runs for averaging
     this.stats.runs.push({
       date: new Date(),
@@ -37,13 +37,13 @@ class CronMonitor {
       employeesProcessed: runData.employeesProcessed,
       errors: runData.errors
     });
-    
+
     if (this.stats.runs.length > 30) {
       this.stats.runs.shift();
     }
-    
+
     // Calculate average processing time
-    this.stats.avgProcessingTime = this.stats.runs.reduce((sum, run) => 
+    this.stats.avgProcessingTime = this.stats.runs.reduce((sum, run) =>
       sum + run.duration, 0) / this.stats.runs.length;
 
     // Log performance metrics
@@ -57,7 +57,7 @@ class CronMonitor {
 
     // Alert if performance degrades
     if (duration > 300000) { // > 5 minutes
-      console.warn(`⚠️  Attendance cron took ${Math.round(duration/1000)}s - consider optimization`);
+      console.warn(`⚠️  Attendance cron took ${Math.round(duration / 1000)}s - consider optimization`);
     }
   }
 
@@ -71,27 +71,27 @@ const monitor = new CronMonitor();
 // Main attendance cron - runs at 1:22 AM daily
 cron.schedule("22 01 * * *", async () => {
   const runData = monitor.startRun();
-  
+
   try {
-    console.log('🕐 Starting daily attendance cron...');
-    
+    // console.log('🕐 Starting daily attendance cron...');
+
     // Process attendance with job queue
     await attendanceService.processDailyAttendance();
-    
+
     // Get final stats
     const queueStats = attendanceService.getQueueStats();
     runData.employeesProcessed = queueStats.completed;
     runData.errors = queueStats.failed;
-    
-    console.log('✅ Daily attendance cron completed successfully');
-    
+
+    // console.log('✅ Daily attendance cron completed successfully');
+
   } catch (error) {
     runData.errors++;
     console.error('❌ Daily attendance cron failed:', error);
-    
+
     // Could integrate with notification service here
     // notificationService.sendAlert('Attendance cron failed', error.message);
-    
+
   } finally {
     monitor.endRun(runData);
   }
@@ -103,9 +103,9 @@ cron.schedule("22 01 * * *", async () => {
 // Weekend processing cron - runs at 2:00 AM on weekends
 cron.schedule("0 02 * * 0,6", async () => {
   try {
-    console.log('🕐 Starting weekend attendance processing...');
+    // console.log('🕐 Starting weekend attendance processing...');
     await attendanceService.processWeekendAttendance();
-    console.log('✅ Weekend attendance processing completed');
+    // console.log('✅ Weekend attendance processing completed');
   } catch (error) {
     console.error('❌ Weekend attendance processing failed:', error);
   }
@@ -118,17 +118,17 @@ cron.schedule("0 02 * * 0,6", async () => {
 cron.schedule("0 * * * *", () => {
   const queueStats = attendanceService.getQueueStats();
   const cronStats = monitor.getStats();
-  
+
   // Log if queue is backed up
   if (queueStats.queued > 100) {
     console.warn(`⚠️  Attendance queue backed up: ${queueStats.queued} jobs pending`);
   }
-  
+
   // Log if too many failures
   if (queueStats.failed > 50) {
     console.warn(`⚠️  High failure rate in attendance processing: ${queueStats.failed} failed jobs`);
   }
-  
+
   // Periodic stats logging (every 6 hours)
   const hour = new Date().getHours();
   if (hour % 6 === 0) {
@@ -149,9 +149,9 @@ cron.schedule("0 * * * *", () => {
 // Memory cleanup cron - runs at 3:00 AM daily
 cron.schedule("0 03 * * *", () => {
   if (global.gc) {
-    console.log('🧹 Running garbage collection...');
+    // console.log('🧹 Running garbage collection...');
     global.gc();
-    
+
     const memUsage = process.memoryUsage();
     console.log('Memory after GC:', {
       heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024) + 'MB',
@@ -167,4 +167,4 @@ cron.schedule("0 03 * * *", () => {
 // Export monitor for API access
 export { monitor };
 
-console.log('📅 Attendance cron jobs initialized with performance monitoring');
+// console.log('📅 Attendance cron jobs initialized with performance monitoring');

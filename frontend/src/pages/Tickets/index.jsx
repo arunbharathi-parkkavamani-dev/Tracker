@@ -63,7 +63,7 @@ const TicketsPage = () => {
   };
 
   const handleUpdateTicket = async (formData) => {
-    console.log('Updating ticket with data:', formData);
+    // console.log('Updating ticket with data:', formData);
     const { createdBy, ...updateData } = formData;
     try {
       await axiosInstance.put(`/populate/update/tickets/${editingTicket._id}`, updateData);
@@ -191,8 +191,8 @@ const TicketsPage = () => {
             onClick={() => !isConverted && handlePushToTask(ticket)}
             disabled={isConverted}
             className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${isConverted
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-blue-600 text-white hover:bg-blue-700'
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-blue-600 text-white hover:bg-blue-700'
               }`}
           >
             {isConverted ? 'Converted' : 'Push to Task'}

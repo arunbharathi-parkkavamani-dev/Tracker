@@ -11,7 +11,7 @@ export const useUserProfile = () => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (!user?.id) {
-        console.log('No user ID available');
+        // console.log('No user ID available');
         setLoading(false);
         return;
       }
@@ -20,21 +20,21 @@ export const useUserProfile = () => {
         const populateFields = {
           'professionalInfo.role': 'name'
         };
-        
+
         const response = await axiosInstance.get(
           `/populate/read/employees/${user.id}?populateFields=${encodeURIComponent(JSON.stringify(populateFields))}`
         );
         const employee = response.data.data;
-        
+
         // Set profile image
         if (employee?.basicInfo?.profileImage) {
-          const imagePath = typeof employee.basicInfo.profileImage === 'string' 
-            ? employee.basicInfo.profileImage.split('/').pop() 
+          const imagePath = typeof employee.basicInfo.profileImage === 'string'
+            ? employee.basicInfo.profileImage.split('/').pop()
             : employee.basicInfo.profileImage;
           const imageUrl = `http://10.243.60.208:3000/api/files/render/profile/${imagePath}`;
           setProfileImage(imageUrl);
         }
-        
+
         // Set role name
         if (employee?.professionalInfo?.role?.name) {
           setRoleName(employee.professionalInfo.role.name);

@@ -40,7 +40,7 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
     setFormData((prev) => {
       const updated = { ...prev };
       setNestedValue(updated, name, value);
-      
+
       // Track changed fields
       setChangedFields(prevChanged => {
         return {
@@ -48,7 +48,7 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
           [name]: value
         };
       });
-      
+
       // Clear dependent fields when parent changes
       if (name.includes('country')) {
         setNestedValue(updated, name.replace('country', 'state'), null);
@@ -56,7 +56,7 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
       } else if (name.includes('state')) {
         setNestedValue(updated, name.replace('state', 'city'), null);
       }
-      
+
       onChange?.(updated);
       return updated;
     });
@@ -70,7 +70,7 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
       if (response.ok) {
         const data = await response.json();
         const bankName = data.BANK;
-        
+
         if (bankName && field.autoFetch.target) {
           setFormData(prev => {
             const updated = { ...prev };
@@ -81,7 +81,7 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
         }
       }
     } catch (error) {
-      console.log('IFSC lookup failed:', error.message);
+      // console.log('IFSC lookup failed:', error.message);
     }
   };
 
@@ -100,7 +100,7 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
 
         // ⬇ Replace ANY ":something" placeholder with parentValue._id automatically
         url = url.replace(/:\w+/g, parentValue._id);
-        
+
         // Add country code for cities endpoint
         if (field.name.includes('city') && field.dependsOn.includes('state')) {
           const countryValue = getNestedValue(formData, field.dependsOn.replace('state', 'country'));
@@ -155,7 +155,7 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
 
     if (field.type === "SubForm") {
       const subFormValue = field.multiple ? (value || []) : (value || {});
-      
+
       if (field.multiple) {
         return (
           <div className="space-y-4">
@@ -249,9 +249,9 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
           {value && (
             <div className="mb-4">
               {(field.accept?.includes('image') || field.type === 'image') ? (
-                <img 
-                  src={typeof value === 'string' ? value : URL.createObjectURL(value)} 
-                  alt="Preview" 
+                <img
+                  src={typeof value === 'string' ? value : URL.createObjectURL(value)}
+                  alt="Preview"
                   className="w-24 h-24 object-cover rounded-lg shadow-md"
                 />
               ) : (
@@ -275,7 +275,7 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
             className="hidden"
             id={`file-${field.name.replace(/\./g, '-')}`}
           />
-          <label 
+          <label
             htmlFor={`file-${field.name.replace(/\./g, '-')}`}
             className="flex flex-col items-center justify-center cursor-pointer group"
           >
@@ -306,8 +306,8 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
           value={field.multiple ? (value || []) : (value || null)}
           onChange={(e, newValue) => onChange(newValue)}
           renderInput={(params) => (
-            <TextField 
-              {...params} 
+            <TextField
+              {...params}
               label={field.label}
               sx={{
                 '& .MuiOutlinedInput-root': {
@@ -356,28 +356,28 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
   };
 
   const onSubmitHandler = async (e) => {
-    console.log('=== FormRenderer onSubmitHandler START ===');
+    // console.log('=== FormRenderer onSubmitHandler START ===');
     e.preventDefault();
-    console.log('Event prevented');
-    
-    console.log('formData:', formData);
-    console.log('changedFields:', changedFields);
-    console.log('data prop:', data);
-    
+    // console.log('Event prevented');
+
+    // console.log('formData:', formData);
+    // console.log('changedFields:', changedFields);
+    // console.log('data prop:', data);
+
     try {
       // For editing, submit all formData; for creating, submit formData (not just changed fields)
       let submitData = (data && Object.keys(data).length > 0) ? formData : formData;
-      console.log('submitData:', submitData);
-      
+      // console.log('submitData:', submitData);
+
       // Only remove the document's own _id, not _id fields in nested objects
       const { _id, createdAt, updatedAt, __v, ...cleanData } = submitData;
-      console.log('cleanData:', cleanData);
-      
-      console.log('onSubmit function exists:', !!onSubmit);
+      // console.log('cleanData:', cleanData);
+
+      // console.log('onSubmit function exists:', !!onSubmit);
       if (onSubmit) {
-        console.log('Calling onSubmit...');
+        // console.log('Calling onSubmit...');
         await onSubmit(cleanData);
-        console.log('onSubmit completed');
+        // console.log('onSubmit completed');
       } else {
         console.error('onSubmit function is not provided!');
       }
@@ -385,8 +385,8 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
       console.error('FormRenderer submit error:', error);
       toast.error(error.response?.data?.message || 'Failed to save changes');
     }
-    
-    console.log('=== FormRenderer onSubmitHandler END ===');
+
+    // console.log('=== FormRenderer onSubmitHandler END ===');
   };
 
   return (
@@ -427,11 +427,10 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
 
         <button
           type="submit"
-          className={`w-full px-6 py-4 rounded-xl text-white font-semibold transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl ${
-            submitButton?.color === "green"
+          className={`w-full px-6 py-4 rounded-xl text-white font-semibold transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl ${submitButton?.color === "green"
               ? "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
               : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
-          }`}
+            }`}
         >
           {submitButton?.text || "Submit"}
         </button>

@@ -18,17 +18,17 @@ class AttendanceService {
     });
 
     this.jobQueue.on('completed', (stats) => {
-      console.log(`Attendance cron completed:`, stats);
+      // console.log(`Attendance cron completed:`, stats);
     });
   }
 
   async processDailyAttendance() {
     const startTime = Date.now();
-    console.log('Starting daily attendance processing...');
+    // console.log('Starting daily attendance processing...');
 
     try {
       const today = dayjs().startOf("day").toDate();
-      
+
       // Get all employees in batches to avoid memory issues
       const totalEmployees = await Employee.countDocuments();
       const batchSize = 500;
@@ -48,8 +48,8 @@ class AttendanceService {
 
         this.jobQueue.addBatch(jobs);
         processed += employees.length;
-        
-        console.log(`Queued ${processed}/${totalEmployees} employees`);
+
+        // console.log(`Queued ${processed}/${totalEmployees} employees`);
       }
 
       // Wait for all jobs to complete
@@ -58,7 +58,7 @@ class AttendanceService {
       });
 
       const duration = Date.now() - startTime;
-      console.log(`Daily attendance processing completed in ${duration}ms`);
+      // console.log(`Daily attendance processing completed in ${duration}ms`);
 
     } catch (error) {
       console.error('Error in daily attendance processing:', error);
@@ -68,7 +68,7 @@ class AttendanceService {
 
   async processEmployeeAttendance({ employeeId, date }) {
     const session = await Attendance.startSession();
-    
+
     try {
       await session.withTransaction(async () => {
         // Check if record exists with session for consistency
@@ -88,7 +88,7 @@ class AttendanceService {
 
         // Determine status for new record
         const status = await this.determineAttendanceStatus(employeeId, date, session);
-        
+
         // Create new attendance record
         await Attendance.create([{
           employee: employeeId,
@@ -106,16 +106,16 @@ class AttendanceService {
 
   async determineAttendanceStatus(employeeId, date, session) {
     const dayOfWeek = dayjs(date).day(); // 0 = Sunday, 6 = Saturday
-    
+
     // Sunday is always week off
     if (dayOfWeek === 0) {
       return "Week Off";
     }
-    
+
     // Saturday - check alternate week off pattern
     if (dayOfWeek === 6) {
       const lastSaturday = dayjs(date).subtract(7, "day").startOf("day").toDate();
-      
+
       const lastWeekRecord = await Attendance.findOne({
         employee: employeeId,
         date: lastSaturday,
@@ -148,7 +148,7 @@ class AttendanceService {
         writeConcern: { w: 1, j: true } // Ensure write to journal
       });
 
-      console.log(`Bulk update completed: ${result.modifiedCount} modified, ${result.upsertedCount} created`);
+      // console.log(`Bulk update completed: ${result.modifiedCount} modified, ${result.upsertedCount} created`);
       return result;
     } catch (error) {
       console.error('Bulk update failed:', error);
@@ -160,11 +160,11 @@ class AttendanceService {
   async processWeekendAttendance() {
     const today = dayjs().startOf("day");
     const isWeekend = today.day() === 0 || today.day() === 6;
-    
+
     if (!isWeekend) return;
 
-    console.log('Processing weekend attendance...');
-    
+    // console.log('Processing weekend attendance...');
+
     try {
       const employees = await Employee.find({}, '_id').lean();
       const updates = [];
