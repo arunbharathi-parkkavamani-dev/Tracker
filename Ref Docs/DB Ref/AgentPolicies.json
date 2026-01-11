@@ -1,6 +1,6 @@
 [
   {
-    "role": "agent",
+    "role": "admin",
     "modelName": "tickets",
     "permissions": {
       "read": true,

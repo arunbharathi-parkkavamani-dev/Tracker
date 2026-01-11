@@ -17,7 +17,8 @@ const AgentSchema = new Schema({
   inviteToken: { type: String, unique: true, sparse: true },
   inviteExpires: { type: Date },
   isInvited: { type: Boolean, default: false },
-  hasSetPassword: { type: Boolean, default: false }
+  hasSetPassword: { type: Boolean, default: false }, 
+  level: { type: Number, default: 1 }
 }, { timestamps: true });
 
 // Hash password before saving

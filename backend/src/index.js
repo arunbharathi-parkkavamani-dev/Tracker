@@ -68,6 +68,7 @@ app.use(cookieParser());
 const allowedOrigins = [
   "https://lmx-tracker--p1hvjsjwqq.expo.app",
   "http://localhost:3001",
+  "http://localhost:54979",
 ];
 
 const lanRegex = /^http:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+):\d+$/;

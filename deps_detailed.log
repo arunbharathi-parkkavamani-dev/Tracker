@@ -1,0 +1,24 @@
+Testing import of: ../models/Collection.js (URL: file:///C:/Users/Arunbharathi%20Logimax/Documents/GitHub/Tracker/backend/src/models/Collection.js)
+✅ Success: ../models/Collection.js
+---
+Testing import of: ../utils/servicesCache.js (URL: file:///C:/Users/Arunbharathi%20Logimax/Documents/GitHub/Tracker/backend/src/utils/servicesCache.js)
+✅ Success: ../utils/servicesCache.js
+---
+Testing import of: ../utils/cache.js (URL: file:///C:/Users/Arunbharathi%20Logimax/Documents/GitHub/Tracker/backend/src/utils/cache.js)
+✅ Success: ../utils/cache.js
+---
+Testing import of: ../utils/mongoFilterCompiler.js (URL: file:///C:/Users/Arunbharathi%20Logimax/Documents/GitHub/Tracker/backend/src/utils/mongoFilterCompiler.js)
+✅ Success: ../utils/mongoFilterCompiler.js
+---
+Testing import of: ../utils/registryExecutor.js (URL: file:///C:/Users/Arunbharathi%20Logimax/Documents/GitHub/Tracker/backend/src/utils/registryExecutor.js)
+✅ Success: ../utils/registryExecutor.js
+---
+Testing import of: ../utils/sanitizeRead.js (URL: file:///C:/Users/Arunbharathi%20Logimax/Documents/GitHub/Tracker/backend/src/utils/sanitizeRead.js)
+✅ Success: ../utils/sanitizeRead.js
+---
+Testing import of: ../utils/sanitizePopulated.js (URL: file:///C:/Users/Arunbharathi%20Logimax/Documents/GitHub/Tracker/backend/src/utils/sanitizePopulated.js)
+✅ Success: ../utils/sanitizePopulated.js
+---
+Testing import of: ../utils/safeAggregator.js (URL: file:///C:/Users/Arunbharathi%20Logimax/Documents/GitHub/Tracker/backend/src/utils/safeAggregator.js)
+✅ Success: ../utils/safeAggregator.js
+---

@@ -67,6 +67,7 @@ export async function buildQuery({
   try {
     crudHandler = (await import(pathToFileURL(crudFile).href)).default;
   } catch (err) {
+    console.error(`[policyEngine] Failed to import CRUD handler from ${crudFile}:`, err);
     throw new Error(`❌ CRUD handler not found: ${crudFile}`);
   }
 

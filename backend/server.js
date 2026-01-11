@@ -7,17 +7,6 @@ import memoryMonitor from "./src/utils/memoryMonitor.js";
 dotenv.config();
 const PORT = process.env.PORT || 3000;
 
-// Add basic request logging at server level
-app.use((req, res, next) => {
-  // console.log('=== SERVER LEVEL REQUEST ===');
-  // console.log('Time:', new Date().toISOString());
-  // console.log('Method:', req.method);
-  // console.log('URL:', req.url);
-  // console.log('IP:', req.ip);
-  // console.log('Headers:', JSON.stringify(req.headers, null, 2));
-  // console.log('============================');
-  next();
-});
 
 // Test endpoint to verify server is working
 app.get('/test', (req, res) => {
@@ -54,9 +43,9 @@ const getPublicIP = () =>
 server.listen(PORT, "0.0.0.0", async () => {
   // console.log('=== SERVER STARTING ===');
   const localIP = getLocalIP();
-  // console.log(`✅ Server running on port ${PORT}`);
-  // console.log(`📡 Local Access:  http://localhost:${PORT}`);
-  if (localIP) // console.log(`💻 LAN Access:    http://${localIP}:${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`📡 Local Access:  http://localhost:${PORT}`);
+  if (localIP) console.log(`💻 LAN Access:    http://${localIP}:${PORT}`);
 
     try {
       const publicIP = await getPublicIP();

@@ -12,9 +12,9 @@
  * @returns {Array} sanitized field list
  */
 export default function sanitizeRead({ fields, policy }) {
-  if (fields) // console.log("[sanitizeRead.js:15] Inside sanitizeRead - fields:", fields);
+  // console.log("[sanitizeRead.js:15] Inside sanitizeRead - fields:", fields);
 
-    const forbidden = policy?.forbiddenAccess?.read || [];
+  const forbidden = policy?.forbiddenAccess?.read || [];
   const allowed = policy?.allowAccess?.read || [];
 
   // If no fields requested but policy allows "*" → return ["*"]
