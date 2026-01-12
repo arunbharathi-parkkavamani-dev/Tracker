@@ -1,1054 +1,1343 @@
-# Tracker Backend Technical Architecture Documentation
+# Backend Platform Architecture Documentation
+
+## 1. Executive Summary: Architectural Intent
+
+### The Problem Traditional Backends Fail to Solve
+
+Traditional backend architectures enforce a rigid coupling between business logic and deployment cycles. Every new feature, workflow modification, or policy change requires code changes, testing, and redeployment. This creates several systemic failures at scale:
+
+1. **Deployment Friction**: Business rule changes require engineering intervention, release cycles, and production deployments.
+2. **Controller Proliferation**: Each entity spawns dedicated controllers, routes, and service files, creating exponential code growth.
+3. **Policy Fragmentation**: Access control logic becomes scattered across middleware, controllers, and database queries.
+4. **Lifecycle Rigidity**: Hardcoded hooks prevent runtime modification of approval chains, notifications, and state transitions.
+5. **Multi-Tenant Impossibility**: Per-tenant customization requires code branching or complex conditional logic.
+
+### Why Controller-Based Systems Break at Scale
+
+Controller-per-model architectures assume static business requirements. In enterprise reality:
+
+- A `LeaveController` handling three approval levels today must handle five tomorrow.
+- A `TicketController` with status transitions must accommodate client-specific workflows.
+- A `TaskController` optimized for one team's process becomes a bottleneck for others.
+
+Each modification risks regression across the entire model surface area.
+
+### Why This Platform Intentionally Removes Static Controllers
+
+This backend operates on a fundamentally different principle: **the database IS the configuration layer**. Instead of encoding business logic in controllers, the system:
+
+- Stores access policies as database documents (`AccessPolicies` model)
+- Resolves CRUD operations dynamically via `populateHelper`
+- Applies lifecycle hooks through auto-discovered services
+- Enforces field-level permissions through the policy engine
+- Enables workflow evolution without code changes
+
+### What Makes This Backend Fundamentally Different
+
+| Traditional Architecture | This Platform |
+|--------------------------|---------------|
+| Controllers define behavior | Policies define behavior |
+| Routes per entity | Single unified route |
+| Hardcoded validations | Policy-driven sanitization |
+| Static lifecycle hooks | Service-based optional hooks |
+| Code deploys for changes | Data updates for changes |
+| Role checks in code | Role enforcement in engine |
 
 ---
 
-**Document Version**: 1.0  
-**Generated**: 2026-01-11  
-**Platform**: Tracker HR & Project Management System  
-**Audience**: Developers, API Consumers, Technical Architects, Platform Engineers
+## 2. Current System Reality: As-Built Architecture
 
----
+### System Entry Point
 
-## Table of Contents
-
-1. [Module Overview](#1-module-overview)
-2. [End-to-End System Flow](#2-end-to-end-system-flow)
-3. [Sub-Module Technical Documentation](#3-sub-module-technical-documentation)
-   - 3.1 [Authentication Sub-Module](#31-authentication-sub-module)
-   - 3.2 [Employee Management Sub-Module](#32-employee-management-sub-module)
-   - 3.3 [Attendance & Time Tracking Sub-Module](#33-attendance--time-tracking-sub-module)
-   - 3.4 [Leave Management Sub-Module](#34-leave-management-sub-module)
-   - 3.5 [Regularization Sub-Module](#35-regularization-sub-module)
-   - 3.6 [Task Management Sub-Module](#36-task-management-sub-module)
-   - 3.7 [Ticket Management Sub-Module](#37-ticket-management-sub-module)
-   - 3.8 [Client Management Sub-Module](#38-client-management-sub-module)
-   - 3.9 [Daily Activity Sub-Module](#39-daily-activity-sub-module)
-   - 3.10 [Payroll Sub-Module](#310-payroll-sub-module)
-   - 3.11 [Notification Sub-Module](#311-notification-sub-module)
-   - 3.12 [Access Control (ABAC) Sub-Module](#312-access-control-abac-sub-module)
-4. [Inter Sub-Module Dependency Flow](#4-inter-sub-module-dependency-flow)
-5. [Workflow Diagrams](#5-workflow-diagrams)
-6. [Common System Scenarios](#6-common-system-scenarios)
-7. [Operational Notes](#7-operational-notes)
-
----
-
-## 1. Module Overview
-
-### 1.1 Technical Purpose
-
-The **Tracker** backend is a hybrid monolithic API server designed for enterprise HR management and project tracking. It provides:
-
-- **Employee Lifecycle Management**: Onboarding, professional data, leave balances
-- **Time & Attendance Tracking**: Check-in/check-out, work hours calculation
-- **Project & Task Management**: Multi-client task boards with milestone tracking
-- **Ticket System**: External agent ticket submission with task synchronization
-- **Payroll Processing**: Salary computation, allowances, deductions
-
-### 1.2 Architectural Role in Platform
+The backend initializes through `src/index.js`:
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        CLIENT LAYER                              │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │
-│  │  React Web  │  │ React Native│  │ External    │              │
-│  │  Frontend   │  │    App      │  │ Agents      │              │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘              │
-└─────────┼────────────────┼────────────────┼─────────────────────┘
-          │                │                │
-          ▼                ▼                ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      BACKEND LAYER (This System)                 │
-│  ┌────────────────────────────────────────────────────────────┐ │
-│  │                    Express.js Server                        │ │
-│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌─────────────┐ │ │
-│  │  │Middleware│→ │ Routes   │→ │ Policy   │→ │ CRUD        │ │ │
-│  │  │Chain     │  │ Dispatch │  │ Engine   │  │ Handlers    │ │ │
-│  │  └──────────┘  └──────────┘  └──────────┘  └─────────────┘ │ │
-│  │                                              ↓              │ │
-│  │  ┌──────────┐  ┌──────────┐  ┌──────────────────────────┐  │ │
-│  │  │Socket.IO │  │ Services │← │ Mongoose Models (35+)    │  │ │
-│  │  │Real-time │  │ (Hooks)  │  │ MongoDB Collections      │  │ │
-│  │  └──────────┘  └──────────┘  └──────────────────────────┘  │ │
-│  └────────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
+src/index.js
+├── Express application setup
+├── Middleware chain:
+│   ├── express.json (body parsing)
+│   ├── cookieParser (session cookies)
+│   ├── cors (origin validation)
+│   ├── agentAuthMiddleware (external agent JWT)
+│   ├── requestTracer (request ID injection)
+│   └── apiHitLogger (request logging)
+├── Route registration:
+│   ├── /api/agent → agentRoutes
+│   ├── /api/agent-invite → agentInviteRoutes
+│   ├── /api/auth → AuthRouter
+│   ├── /api/populate → populateHelper  [PRIMARY]
+│   ├── /api/files → fileRoutes
+│   ├── /api → locationRoutes, bankRoutes
+│   └── /api/config → configRoutes
+├── Socket.io initialization
+├── Memory management intervals
+└── Graceful shutdown handlers
 ```
 
-### 1.3 Developer Personas (System Users)
-
-| Persona | System Interaction | Primary Modules |
-|---------|-------------------|-----------------|
-| **API Consumer** | REST endpoints via `/api/populate/:action/:model` | All models |
-| **Frontend Developer** | Socket.IO events, JWT authentication | Auth, Notifications |
-| **External Agent** | Agent-specific auth, ticket submission | Tickets, Clients |
-| **Platform Engineer** | Configuration routes, policy management | AccessPolicies, Config |
-
-### 1.4 Runtime Environment
-
-| Component | Technology | Purpose |
-|-----------|------------|---------|
-| Runtime | Node.js (ES Modules) | Server execution |
-| Framework | Express.js | HTTP routing, middleware |
-| Database | MongoDB + Mongoose | Data persistence, ODM |
-| Real-time | Socket.IO | Push notifications, live updates |
-| Caching | In-Memory (Policy Cache) | AccessPolicy lookup acceleration |
-| Queue | Bull (Redis) + Memory Queue | Async jobs, notification batching |
-
-### 1.5 Integration Footprint
-
-| External System | Integration Method | Purpose |
-|-----------------|-------------------|---------|
-| Expo Push Service | HTTP POST to `exp.host` | Mobile push notifications |
-| Client CORS Origins | Dynamic regex matching | Web/Mobile app access |
-| Device UUID Tracking | HTTP Header `x-device-uuid` | Session binding, multi-device |
-
----
-
-## 2. End-to-End System Flow
-
-### 2.1 Request Lifecycle Overview
-
-Every API request flows through the following technical stages:
+### Directory Structure
 
 ```
-┌──────────────────────────────────────────────────────────────────────────┐
-│                         REQUEST LIFECYCLE                                 │
-├──────────────────────────────────────────────────────────────────────────┤
-│                                                                           │
-│  1. ENTRY POINT                                                           │
-│     server.js → src/index.js                                              │
-│     ↓                                                                     │
-│  2. MIDDLEWARE CHAIN (Sequential)                                         │
-│     ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  │
-│     │agentAuth    │→ │requestTracer│→ │apiHitLogger │→ │authMiddleware│ │
-│     │Middleware   │  │(UUID assign)│  │(Log start)  │  │(JWT verify) │  │
-│     └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘  │
-│     ↓                                                                     │
-│  3. ROUTE DISPATCH                                                        │
-│     ┌─────────────────────────────────────────────────────────────────┐  │
-│     │ /api/auth/*        → AuthController (static)                     │  │
-│     │ /api/agent/*       → agentRoutes (agent-specific)                │  │
-│     │ /api/populate/*    → populateHelper (dynamic CRUD)               │  │
-│     │ /api/config/*      → configRoutes (admin)                        │  │
-│     │ /api/files/*       → fileRoutes (upload/download)                │  │
-│     └─────────────────────────────────────────────────────────────────┘  │
-│     ↓                                                                     │
-│  4. POLICY ENGINE (For /api/populate)                                     │
-│     ┌─────────────────────────────────────────────────────────────────┐  │
-│     │ a. Load cached AccessPolicy for (role, modelName)                │  │
-│     │ b. STRICT MODE: Fail if no policy found                          │  │
-│     │ c. Validator sanitizes filter, fields, body                      │  │
-│     │ d. Registry executor applies row-level filters                   │  │
-│     └─────────────────────────────────────────────────────────────────┘  │
-│     ↓                                                                     │
-│  5. CRUD HANDLER EXECUTION                                                │
-│     ┌─────────────────────────────────────────────────────────────────┐  │
-│     │ a. Load model service (if exists)                                │  │
-│     │ b. Execute beforeCreate/beforeRead/beforeUpdate/beforeDelete     │  │
-│     │ c. Execute Mongoose operation                                    │  │
-│     │ d. Execute afterCreate/afterRead/afterUpdate/afterDelete         │  │
-│     └─────────────────────────────────────────────────────────────────┘  │
-│     ↓                                                                     │
-│  6. RESPONSE                                                              │
-│     { success: true, count: N, data: [...] }                             │
-│                                                                           │
-└──────────────────────────────────────────────────────────────────────────┘
+src/
+├── Config/
+│   ├── ConnectDB.js           # MongoDB connection
+│   └── defaultPopulateFields.js # Per-model populate defaults
+├── Controller/
+│   └── AuthController.js      # Authentication logic
+├── crud/
+│   ├── buildCreateQuery.js    # Create operation handler
+│   ├── buildReadQuery.js      # Read/List operation handler
+│   ├── buildUpdateQuery.js    # Update operation handler
+│   ├── buildDeleteQuery.js    # Soft-delete operation handler
+│   └── buildReportQuery.js    # Aggregation/report handler
+├── helper/
+│   └── populateHelper.js      # Central execution engine
+├── middlewares/
+│   ├── agentAuthMiddleware.js # External agent JWT validation
+│   ├── apiHitLogger.js        # Request logging
+│   ├── auth.js                # Internal auth middleware
+│   ├── errorHandler.js        # Global error handler
+│   ├── multerConfig.js        # File upload configuration
+│   ├── notificationMessagePrasher.js # Notification templates
+│   ├── performanceMiddleware.js # Query performance monitoring
+│   └── requestTracer.js       # Request ID injection
+├── models/
+│   ├── Collection.js          # Model registry (29+ models)
+│   ├── AccessPolicies.js      # Policy schema
+│   ├── Employee.js            # User entity
+│   ├── Session.js             # Session management
+│   ├── AuditLog.js            # Audit trail
+│   └── [26+ domain models]
+├── routes/
+│   └── populateRoutes.js      # Unified API routing
+├── services/
+│   ├── [model-name].js        # Lifecycle hook implementations
+│   └── [19 service files]
+└── utils/
+    ├── policy/
+    │   ├── policyEngine.js    # Core policy enforcement
+    │   └── registry/
+    │       ├── index.js       # Registry function map
+    │       ├── isSelf.js      # Self-ownership check
+    │       ├── isManager.js   # Hierarchy check
+    │       ├── isAssigned.js  # Assignment check
+    │       └── [9 registry functions]
+    ├── cache.js               # Policy cache layer
+    ├── servicesCache.js       # Service file discovery
+    ├── Validator.js           # Input validation engine
+    ├── sanitizeRead.js        # Read field sanitization
+    ├── sanitizeWrite.js       # Write field sanitization
+    ├── sanitizeUpdate.js      # Update field sanitization
+    ├── auditLogger.js         # Audit log persistence
+    ├── registryExecutor.js    # ABAC rule execution
+    ├── filterParser.js        # Query filter parsing
+    ├── mongoFilterCompiler.js # MongoDB filter building
+    ├── safeAggregator.js      # Aggregation safety limits
+    └── queryOptimizer.js      # Query performance optimization
 ```
 
-### 2.2 Data Flow Stages
+### Model Registry
 
-#### Stage 1: Data Creation
-- Request body parsed via `express.json({ limit: '10mb' })`
-- File uploads handled by `multerConfig.js`
-- Body sanitized by `Validator.js` against policy's `allowAccess.create`
-
-#### Stage 2: Validation
-- Schema validation via Mongoose validators (regex, enum, min/max)
-- Policy validation via `forbiddenAccess` field lists
-- Custom validation in service `beforeCreate` hooks
-
-#### Stage 3: Authorization
-- JWT verification extracts `{id, role, department, designation}`
-- PolicyEngine checks `permissions.{action}` boolean
-- Registry conditions apply row-level security (e.g., `isSelf`)
-
-#### Stage 4: Approval Orchestration
-- Leave/Regularization use `status` enum: `Pending → Approved/Rejected`
-- Manager approval triggers service hooks
-- Status transitions update related records (Attendance, Employee.leaveStatus)
-
-#### Stage 5: Persistence
-- Mongoose `.save()` or `.findOneAndUpdate()` with atomic operations
-- Indexes ensure unique constraints (`employeeId + date` for Attendance)
-- Timestamps auto-managed via `{ timestamps: true }`
-
-#### Stage 6: Finalization
-- Service `afterCreate`/`afterUpdate` hooks execute
-- Notifications queued via `asyncNotificationService`
-- Socket.IO emits to user rooms
-
-#### Stage 7: Downstream Propagation
-- Task status changes sync to linked Tickets (`ticketTaskSync.js`)
-- Leave approval creates Attendance records
-- Milestone status updates propagate to Client.milestones
-
----
-
-## 3. Sub-Module Technical Documentation
-
----
-
-### 3.1 Authentication Sub-Module
-
-#### a. Sub-Module Purpose
-
-Provides secure session-based authentication with per-device token isolation. Designed to support multiple concurrent platforms (web, mobile) with independent session lifecycles.
-
-**Architectural Concerns Addressed**:
-- Security: Per-session secrets prevent token replay across devices
-- Scalability: Session documents scale horizontally with MongoDB
-- Reliability: Refresh token rotation with JTI tracking
-- Maintainability: Centralized `AuthController.js` with clear method separation
-
-#### b. Technical Superheroes (System Roles)
-
-| Actor | Responsibility | Boundary | Failure Impact |
-|-------|---------------|----------|----------------|
-| **AuthController** | Login, refresh, logout logic | Credential validation, token generation | Full auth outage |
-| **authMiddleware** | JWT verification per request | Token validation, session lookup | 401 on all protected routes |
-| **Session Model** | Token storage, device tracking | MongoDB persistence | Login state lost |
-| **Employee Model** | Credential storage (workEmail, password) | BCrypt hash verification | Cannot authenticate |
-
-#### c. Technical Workflow (Step-by-Step)
-
-**Login Flow**:
-1. **Request received**: `POST /api/auth/login` with `{workEmail, password, platform}`
-2. **Device UUID extraction**: `x-device-uuid` header required
-3. **Employee lookup**: Query `Employee.findOne({ "authInfo.workEmail": workEmail })`
-4. **Password verification**: `bcrypt.compare(password, employee.authInfo.password)`
-5. **Payload construction**: Extract `{id, role, department, designation, name, managerId}`
-6. **Secret generation**: `crypto.randomBytes(64).toString('hex')` per session
-7. **Token creation**:
-   - Access token: 1h (web) / 30d (mobile)
-   - Refresh token: 7d (web) / 90d (mobile)
-8. **Session persistence**: Create Session document with tokens, secrets, device info
-9. **Cookie setting** (web only): `auth_token`, `refresh_token` with appropriate expiry
-10. **Response**: `{accessToken, refreshToken, sessionId, platform}`
-
-**Authentication Middleware Flow**:
-1. Extract token from `cookies.auth_token` or `Authorization: Bearer`
-2. Decode token (without verification) to get `userId`
-3. Lookup active session by `{userId, platform, deviceUUID}`
-4. Verify token signature using session's stored secret
-5. Update `session.lastUsedAt`
-6. Attach `req.user = decoded`
-
-#### d. Preceding System Flow
-
-- Employee must exist with `authInfo.workEmail` and hashed password
-- Client must provide device UUID header
-- CORS origin must be whitelisted
-
-#### e. Subsequent System Flow
-
-- All protected routes receive `req.user` with decoded JWT payload
-- Logout invalidates session (`status: 'DeActive'`)
-- Refresh creates new token pair with rotated secrets
-
-#### f. System Rules and Validations
-
-| Rule | Implementation |
-|------|----------------|
-| Email format | Mongoose validator: `/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/` |
-| Device UUID required | 400 error if missing header |
-| Session uniqueness | One active session per (userId, platform, deviceUUID) |
-| Token rotation | Refresh always generates new accessSecret, refreshSecret, jti |
-
-#### g. Exception and Edge Scenarios
-
-| Scenario | System Behavior |
-|----------|-----------------|
-| Invalid credentials | 401 with "Invalid credentials" |
-| Missing device UUID | 400 with "Device UUID header is required" |
-| Session not found | 401 with "Session not found" |
-| Token replay (wrong jti) | Session deactivated, 403 "Refresh token reuse detected" |
-| Expired token | 403 "Invalid or expired token" |
-
----
-
-### 3.2 Employee Management Sub-Module
-
-#### a. Sub-Module Purpose
-
-Central entity model representing all system users. Contains nested subdocuments for personal data, professional info, authentication, banking, and documents.
-
-**Architectural Concerns Addressed**:
-- Scalability: Compound indexes on frequently queried paths
-- Performance: Selective population via `populateFields` parameter
-- Maintainability: Clear subdocument separation (basicInfo, professionalInfo, etc.)
-
-#### b. Technical Superheroes
-
-| Actor | Responsibility | Failure Impact |
-|-------|---------------|----------------|
-| **Employee Model** | Schema definition, validation | Core data integrity |
-| **employee.js service** | Business logic hooks | N/A (minimal service) |
-| **buildReadQuery** | Population handling | Missing related data |
-
-#### c. Technical Workflow
-
-**Employee Creation**:
-1. Request via `POST /api/populate/create/employees`
-2. PolicyEngine validates role has `create` permission
-3. Validator sanitizes body against `allowAccess.create`
-4. Mongoose validates:
-   - Email formats (basicInfo.email, authInfo.workEmail)
-   - Phone format (10 digits)
-   - IFSC code format
-   - PAN/Aadhar formats
-5. Password hashed before save (if authInfo.password provided)
-6. Document created with auto-timestamps
-
-**Employee Read (with Population)**:
-1. Request: `POST /api/populate/read/employees` with `populateFields`
-2. Default populations loaded from `DEFAULT_POPULATE_FIELDS.employees`
-3. User overrides merged with defaults
-4. Query built with `.populate()` for each ref field:
-   - `professionalInfo.designation` → Designation
-   - `professionalInfo.department` → Department
-   - `professionalInfo.role` → Role
-   - `professionalInfo.reportingManager` → Employee (self-ref)
-
-#### d. Data Model Schema
+The `Collection.js` file exports all 29 Mongoose models:
 
 ```javascript
-Employee {
-  basicInfo: {
-    firstName, lastName, dob, doa, maritalStatus,
-    phone, email, fatherName, motherName,
-    address: { street, city, state, zip, country },
-    profileImage
+const models = {
+  accesspolicies,    // Policy definitions
+  employees,         // User/Employee entity
+  departments,       // Organizational units
+  designations,      // Job titles
+  roles,             // Role definitions
+  leavetypes,        // Leave type master
+  leavepolicy,       // Leave policy rules
+  leaves,            // Leave requests
+  attendances,       // Attendance records
+  regularizations,   // Attendance corrections
+  shifts,            // Work shift definitions
+  tasks,             // Task management
+  tasktypes,         // Task categorization
+  tickets,           // Support tickets
+  clients,           // Client entities
+  dailyactivities,   // Time tracking
+  projecttypes,      // Project categorization
+  commentsthreads,   // Discussion threads
+  notifications,     // Push notifications
+  todos,             // Personal tasks
+  expenses,          // Expense tracking
+  payrolls,          // Payroll records
+  hrpolicies,        // HR policy documents
+  agents,            // External agent users
+  milestones,        // Project milestones
+  session,           // Active sessions
+  auditlog,          // Audit trail
+  errorlog,          // Error tracking
+  apihitlogs,        // API usage tracking
+  sidebars,          // Menu configuration
+  emailconfigs,      // Email settings
+  referencetypes,    // Reference data
+  leadtypes          // Lead categorization
+};
+```
+
+### Middleware Chain
+
+Requests flow through a defined middleware sequence:
+
+1. **`express.json`**: Parses JSON body with 10MB limit
+2. **`cookieParser`**: Extracts cookies for session tokens
+3. **`cors`**: Validates origin against whitelist and LAN regex
+4. **`agentAuthMiddleware`**: Validates external agent JWTs before auth
+5. **`requestTracer`**: Attaches unique request ID for tracing
+6. **`apiHitLogger`**: Logs request metadata to ApiHitLog model
+7. **Route handlers**: Process business logic
+8. **`errorHandler`**: Catches and formats errors
+
+### Authentication System
+
+The `AuthController.js` implements:
+
+- **Login**: Validates credentials, creates JWT with rotating secrets, establishes session
+- **Session Management**: Device-bound sessions with unique secrets per session
+- **Token Refresh**: JTI-based replay protection with full secret rotation
+- **Logout**: Deactivates sessions, clears cookies
+- **Push Token Storage**: Associates FCM tokens with sessions
+
+Session schema stores:
+- `generatedToken`: Access token, secret, and expiry
+- `refreshToken`: Refresh token, secret, JTI, and expiry
+- `deviceUUID`: Device binding
+- `platform`: Web/mobile differentiation
+- `fcmToken`: Push notification token
+
+---
+
+## 3. Core Execution Engine: Populate as the Spine
+
+### populateHelper as Execution Engine
+
+The `populateHelper.js` file (495 lines) serves as the central API resolver:
+
+```javascript
+router.all("/:action/:model", authMiddleware, upload.fields([...]), populateHelper);
+router.all("/:action/:model/:id", authMiddleware, upload.fields([...]), populateHelper);
+```
+
+Every CRUD request flows through this single handler:
+
+```
+POST /api/populate/create/employees     → Create employee
+GET  /api/populate/read/employees       → List employees
+GET  /api/populate/read/employees/:id   → Get single employee
+PUT  /api/populate/update/employees/:id → Update employee
+DELETE /api/populate/delete/employees/:id → Soft-delete employee
+```
+
+### Request Processing Pipeline
+
+```
+HTTP Request
+    │
+    ▼
+┌─────────────────────────────────────────────────────────────┐
+│ 1. NORMALIZE INPUTS                                         │
+│    ├─ Extract action, model, id from params                 │
+│    ├─ Parse fields, filter, populateFields from query       │
+│    ├─ Handle type-based field selection (summary/detailed)  │
+│    └─ Normalize filter (JSON/expression/key-value)          │
+├─────────────────────────────────────────────────────────────┤
+│ 2. SPECIAL CASE HANDLERS                                    │
+│    ├─ Agent client products query                           │
+│    └─ Bulk upsert for access policies                       │
+├─────────────────────────────────────────────────────────────┤
+│ 3. POPULATE FIELD RESOLUTION                                │
+│    ├─ Load DEFAULT_POPULATE_FIELDS for model                │
+│    ├─ Parse user overrides (array/object/string formats)    │
+│    └─ Merge into finalPopulate object                       │
+├─────────────────────────────────────────────────────────────┤
+│ 4. FILE UPLOAD HANDLING                                     │
+│    ├─ Process single file (req.file)                        │
+│    └─ Process multiple attachments (req.files.attachments)  │
+├─────────────────────────────────────────────────────────────┤
+│ 5. INVOKE POLICY ENGINE                                     │
+│    └─ buildQuery({role, userId, action, modelName, ...})    │
+├─────────────────────────────────────────────────────────────┤
+│ 6. RETURN RESPONSE                                          │
+│    ├─ 201 for create, 200 for others                        │
+│    └─ { success, count, data, type }                        │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### policyEngine.buildQuery: The Core Function
+
+```javascript
+export async function buildQuery({
+  role,
+  userId,
+  action,
+  modelName,
+  docId,
+  fields,
+  body,
+  filter,
+  populateFields,
+  returnFilter
+}) {
+  // 1. Validate model exists
+  const Model = models[modelName];
+  if (!Model) throw new Error(`Model "${modelName}" not found`);
+
+  // 2. Load policy from cache
+  const policy = getPolicy(role, modelName);
+
+  // 3. FAIL-CLOSED: No policy = blocked
+  if (!policy) {
+    throw new Error(`⛔ CRITICAL SECURITY: No policy defined for role '${role}' on model '${modelName}'`);
+  }
+
+  // 4. Validate inputs against policy
+  const { filter: safeFilter, fields: safeFields, body: safeBody } = validator({
+    action, modelName, role, userId, docId, filter, fields, body, policy, getPolicy
+  });
+
+  // 5. Import correct CRUD handler dynamically
+  const crudFile = path.resolve(..., `../../crud/build${capitalize(action)}Query.js`);
+  const crudHandler = (await import(pathToFileURL(crudFile).href)).default;
+
+  // 6. Execute with sanitized data
+  return await crudHandler({
+    modelName, role, userId, docId,
+    fields: safeFields, body: safeBody, filter: safeFilter,
+    populateFields, policy, getService
+  });
+}
+```
+
+### CRUD Handler Structure
+
+Each handler follows a consistent pattern:
+
+```javascript
+export default async function buildXQuery({
+  role, userId, modelName, docId, filter, fields, body, populateFields, policy
+}) {
+  // 1. PERMISSION CHECK
+  if (!policy?.permissions?.[action]) {
+    throw new Error(`⛔ Role "${role}" has no ${ACTION} permission on "${modelName}"`);
+  }
+
+  // 2. SANITIZATION
+  body = sanitizeWrite({ body, policy, action });
+
+  // 3. REGISTRY EXECUTION (ABAC)
+  const registryOutput = await runRegistry({ role, userId, modelName, action, policy });
+  if (registryOutput?.filter) filter = registryOutput.filter;
+
+  // 4. SERVICE LIFECYCLE HOOKS
+  const serviceInstance = loadService(modelName);
+  if (typeof serviceInstance?.beforeX === "function") {
+    body = await serviceInstance.beforeX({ role, userId, body, ... });
+  }
+
+  // 5. DATABASE OPERATION
+  const result = await Model.findByIdAndUpdate(docId, { $set: body }, ...);
+
+  // 6. AFTER HOOKS + AUDIT
+  if (typeof serviceInstance?.afterX === "function") {
+    await serviceInstance.afterX({ role, userId, docId, data: result });
+  }
+  await saveAuditLog({ action, modelName, userId, role, docId, beforeDoc, afterDoc });
+
+  return result;
+}
+```
+
+### Populate: Not a Shortcut, The System Contract
+
+Population is the mechanism by which:
+
+1. **References are resolved**: ObjectID fields become full documents
+2. **Field projections are enforced**: Only policy-allowed fields are returned
+3. **Cross-model access is validated**: Lookups require read permission on target model
+4. **Nested data is protected**: Populated documents respect target model's policy
+
+The `DEFAULT_POPULATE_FIELDS` configuration defines server-side defaults:
+
+```javascript
+export const DEFAULT_POPULATE_FIELDS = {
+  employees: {
+    'professionalInfo.designation': 'title',
+    'professionalInfo.department': 'name',
+    'professionalInfo.role': 'name',
+    'professionalInfo.reportingManager': 'basicInfo.firstName,basicInfo.lastName'
   },
-  professionalInfo: {
-    empId (unique), designation (ref), department (ref),
-    role (ref), reportingManager (ref), teamLead (ref),
-    level (L1-L4), doj, probationPeriod, confirmDate
+  leaves: {
+    'employee': 'basicInfo.firstName,basicInfo.lastName',
+    'leaveType': 'name',
+    'approvedBy': 'basicInfo.firstName,basicInfo.lastName'
+  }
+  // ... per-model configurations
+};
+```
+
+Frontend overrides merge with defaults:
+
+```javascript
+// Request with custom populate
+GET /api/populate/read/leaves?populateFields={"employee":"basicInfo.firstName,basicInfo.email"}
+
+// populateHelper merges:
+finalPopulate = {
+  ...DEFAULT_POPULATE_FIELDS['leaves'],  // Server defaults
+  ...userPopulateOverrides                // Frontend overrides win
+};
+```
+
+---
+
+## 4. Backend Philosophy: Why We Do This
+
+### Why Backend Code Must Remain Boring and Stable
+
+The backend exists to enforce invariants, not implement features. Feature logic belongs in data; invariant enforcement belongs in code.
+
+**Invariants (coded)**:
+- Authentication must validate credentials
+- Authorization must check policies
+- Audit logs must be written
+- Field sanitization must occur
+
+**Features (data-driven)**:
+- Which roles can read which fields
+- What fields are required for a model
+- Which approvals are needed for status transitions
+- Who receives notifications for events
+
+### Why Business Logic Must Move to Data
+
+When business logic lives in code:
+
+```javascript
+// Hardcoded approval logic
+if (leave.status === 'Pending' && user.role === 'Manager') {
+  await approve(leave);
+}
+```
+
+Changing "Manager" to "HR Manager" requires:
+1. Code change
+2. Code review
+3. Testing
+4. Deployment
+5. Verification
+
+When business logic lives in data:
+
+```javascript
+// Policy-driven
+const canApprove = policy.conditions?.update?.some(
+  c => c.registry === 'isManager' && c.fields?.includes('status')
+);
+```
+
+Changing approval logic requires:
+1. Update AccessPolicies document
+2. Cache refresh (automatic or triggered)
+
+### Why Frontend Should Never Require Backend Redeploys
+
+The frontend communicates intent, not implementation:
+
+```javascript
+// Frontend request
+POST /api/populate/create/leaves
+{
+  "employeeId": "...",
+  "leaveType": "...",
+  "startDate": "...",
+  "endDate": "..."
+}
+```
+
+The backend:
+1. Validates user has `create` permission on `leaves`
+2. Sanitizes body to remove forbidden fields
+3. Runs lifecycle hooks for notifications
+4. Returns created document
+
+Adding a new field to leaves:
+1. Update Mongoose schema
+2. Update AccessPolicies to allow field
+3. Frontend can immediately use field
+
+No controller changes. No route changes. No service modifications for basic CRUD.
+
+### Why Enterprise Systems Evolve via Documents, Not Code
+
+Enterprise software requirements change constantly:
+- New approval workflows
+- Role-based visibility rules
+- Client-specific customizations
+- Compliance-driven access restrictions
+
+Document-driven evolution enables:
+- **Non-technical configuration**: Admins modify policies without developers
+- **Audit trails**: Policy changes are database records
+- **Rollback capability**: Restore previous policy versions
+- **Multi-tenant isolation**: Per-organization policies without code branches
+
+---
+
+## 5. Frontend Responsibility and Power Boundary
+
+### What Frontend Can Define
+
+The frontend has authority over:
+
+1. **Entity Creation** (within policy bounds)
+   - Any model registered in `Collection.js`
+   - Any fields allowed by `allowAccess.create`
+   - Any relationships defined in schema
+
+2. **Field Selection**
+   - Which fields to retrieve via `fields` parameter
+   - Which references to populate via `populateFields`
+   - Type-based presets via `type=1|2|3`
+
+3. **Filter Expressions**
+   - Query conditions via `filter` parameter
+   - Aggregation pipelines via `aggregate=true&stages=[...]`
+   - Sort ordering via `sort` parameter
+
+4. **Pagination Control**
+   - Page number via `page` parameter
+   - Results per page via `limit` parameter (max 100)
+
+### What Frontend Cannot Control
+
+The frontend has no authority over:
+
+1. **Permission Grants**
+   - Cannot bypass `permissions.create/read/update/delete`
+   - Cannot access models without policy
+   - Cannot expand allowed fields beyond policy
+
+2. **Field Restrictions**
+   - Cannot read `forbiddenAccess.read` fields
+   - Cannot write `forbiddenAccess.create/update` fields
+   - Cannot filter by forbidden fields
+
+3. **Audit Suppression**
+   - Cannot disable audit logging
+   - Cannot modify audit records
+   - Cannot access audit bypasses
+
+4. **Service Execution**
+   - Lifecycle hooks always execute
+   - Cannot skip beforeCreate/afterUpdate hooks
+   - Cannot bypass validation
+
+5. **Cross-Model Access**
+   - Aggregation `$lookup` requires read permission on target
+   - Population requires accessible populate fields
+   - No implicit cross-tenant access
+
+### How Frontend Safely Creates Entities
+
+```javascript
+// SAFE REQUEST: Fields validated against policy
+POST /api/populate/create/employees
+{
+  "basicInfo": { "firstName": "John", "lastName": "Doe" },
+  "professionalInfo": { "employeeId": "EMP001" }
+}
+
+// BLOCKED: authInfo not in allowAccess.create
+POST /api/populate/create/employees
+{
+  "authInfo": { "password": "malicious" }  // ← Stripped by sanitizeWrite
+}
+
+// BLOCKED: Model without policy
+POST /api/populate/create/nonexistent
+→ Error: "⛔ CRITICAL SECURITY: No policy defined for role 'X' on model 'nonexistent'"
+```
+
+### Why Backend Remains Final Authority
+
+All frontend requests are:
+
+1. **Authenticated**: JWT validated through authMiddleware
+2. **Policy-Checked**: Role must have model permission
+3. **Field-Sanitized**: Forbidden fields removed
+4. **Registry-Evaluated**: ABAC rules applied
+5. **Hook-Processed**: Business logic executed
+6. **Audit-Logged**: Changes recorded
+
+The frontend proposes; the backend disposes.
+
+---
+
+## 6. Dynamic Workflow and Lifecycle Evolution
+
+### Hardcoded Lifecycle Hooks Become Data-Driven
+
+Current service files implement lifecycle hooks:
+
+```javascript
+// src/services/leaves.js
+export default function leaves() {
+  return {
+    afterCreate: async ({ modelName, docId, userId }) => {
+      // Send notification to manager
+    },
+    beforeUpdate: async ({ body, docId }) => {
+      body._oldStatus = (await Leave.findById(docId)).status;
+    },
+    afterUpdate: async ({ modelName, userId, docId, body }) => {
+      // Handle status transitions
+      if (prevStatus !== 'Approved' && newStatus === 'Approved') {
+        // Deduct leave balance
+        // Create attendance records
+      }
+    }
+  };
+}
+```
+
+These hooks are currently code-defined but the pattern enables transition to data-driven workflows:
+
+```javascript
+// Future: Workflow defined in database
+{
+  "model": "leaves",
+  "trigger": "update",
+  "condition": { "oldStatus": "Pending", "newStatus": "Approved" },
+  "actions": [
+    { "type": "updateField", "target": "employee.leaveStatus", "operation": "deduct" },
+    { "type": "createRecord", "model": "attendances", "template": "leaveAttendance" },
+    { "type": "sendNotification", "recipient": "employeeId", "template": "leaveApproved" }
+  ]
+}
+```
+
+### Approval Chain Structures
+
+The current registry supports approval patterns:
+
+**Single Approval**:
+```javascript
+// Policy conditions
+{
+  "conditions": {
+    "update": [
+      { "registry": "isManager", "effect": "allow", "fields": ["status"] }
+    ]
+  }
+}
+// Only reporting manager can change status
+```
+
+**Multi-Layer Approval**:
+```javascript
+// Future: Chained approvals
+{
+  "approvers": ["reportingManager", "hrManager", "director"],
+  "mode": "sequential",  // Must approve in order
+  "requiredCount": "ALL" // All must approve
+}
+```
+
+**ANY vs ALL**:
+```javascript
+// ANY: First available approver
+{ "requiredCount": 1, "mode": "ANY" }
+
+// ALL: Every approver must approve
+{ "requiredCount": "ALL", "mode": "ALL" }
+
+// MINIMUM: At least N approvers
+{ "requiredCount": 2, "mode": "MINIMUM" }
+```
+
+### Workflow State Transitions
+
+Status transitions can be governed by data:
+
+```javascript
+// Ticket status workflow
+{
+  "model": "tickets",
+  "transitions": {
+    "Open": { "allowed": ["In Progress", "Cancelled"], "roles": ["agent", "admin"] },
+    "In Progress": { "allowed": ["Resolved", "Open"], "roles": ["agent"] },
+    "Resolved": { "allowed": ["Closed", "Open"], "roles": ["manager"] },
+    "Closed": { "allowed": [], "roles": [] }  // Terminal state
+  }
+}
+```
+
+The `validateFieldUpdateRules.js` utility can enforce these:
+
+```javascript
+validateFieldUpdateRules({ body, modelName, role, userId });
+// Throws if status transition is invalid for role
+```
+
+---
+
+## 7. Failure Modes
+
+### Misconfigured Policies
+
+**Scenario**: AccessPolicy created with wrong role ObjectID
+- **Impact**: Role has no access to any models
+- **Detection**: Users report "No policy defined" errors
+- **Recovery**: Correct role reference in AccessPolicies
+
+**Scenario**: `allowAccess.read` missing required fields
+- **Impact**: Frontend receives empty objects
+- **Detection**: Incomplete data in responses
+- **Recovery**: Add fields to allowAccess list
+
+**Scenario**: `forbiddenAccess` blocks critical operational fields
+- **Impact**: Operations fail silently (fields stripped)
+- **Detection**: Updates don't persist expected values
+- **Recovery**: Remove fields from forbiddenAccess
+
+### Broken Workflows
+
+**Scenario**: Service file has syntax error
+- **Impact**: CRUD operation throws on import
+- **Detection**: HTTP 500 with "Failed to import" error
+- **Recovery**: Fix syntax error, restart server
+
+**Scenario**: Lifecycle hook throws unhandled exception
+- **Impact**: Operation may partially complete
+- **Detection**: Audit log shows beforeDoc but not afterDoc
+- **Recovery**: Add try-catch, implement compensating transactions
+
+**Scenario**: Circular notification loop
+- **Impact**: Infinite notifications, resource exhaustion
+- **Detection**: Memory/CPU spike, notification flood
+- **Recovery**: Add cycle detection in notification service
+
+### Unsafe Filters
+
+**Scenario**: Frontend sends unindexed filter
+- **Impact**: Collection scans, slow queries
+- **Detection**: Query timeout, high CPU
+- **Recovery**: Add index, implement query optimizer limits
+
+**Scenario**: Frontend exploits aggregation for data exfiltration
+- **Impact**: Unauthorized data access via $lookup
+- **Detection**: Aggregation attempts on forbidden models
+- **Prevention**: `buildReadQuery` validates $lookup targets
+
+**Scenario**: Regex injection via filter
+- **Impact**: ReDoS (Regular Expression Denial of Service)
+- **Detection**: Hung queries, timeout errors
+- **Prevention**: Sanitize regex patterns, set maxTimeMS
+
+### Frontend Misuse
+
+**Scenario**: Frontend requests all fields without pagination
+- **Impact**: Memory exhaustion, timeout
+- **Prevention**: Limit enforced at 100 items per page
+
+**Scenario**: Frontend creates malformed populateFields
+- **Impact**: Invalid population, missing data
+- **Detection**: Parse warnings in logs
+- **Recovery**: Frontend validation, graceful fallback
+
+**Scenario**: Frontend sends body with forbidden fields
+- **Impact**: None (sanitized), but indicates misunderstanding
+- **Detection**: Repeated sanitization warnings
+- **Recovery**: Frontend code review, API documentation
+
+### Version Drift
+
+**Scenario**: Policy cache stale after database update
+- **Impact**: Old permissions enforced
+- **Detection**: Expected changes don't take effect
+- **Recovery**: Cache refresh via `/api/config/refresh-cache`
+
+**Scenario**: Model schema updated, policy not updated
+- **Impact**: New fields inaccessible
+- **Detection**: "Field not allowed" errors
+- **Recovery**: Update AccessPolicies for new fields
+
+### Audit Gaps
+
+**Scenario**: Audit write fails silently
+- **Impact**: Missing audit trail
+- **Detection**: Gap in audit log sequence
+- **Recovery**: Queue audit writes, implement retry
+
+**Scenario**: Before/after document capture fails
+- **Impact**: Incomplete change history
+- **Detection**: Audit log has empty before/after
+- **Recovery**: Defensive null checks, log failures
+
+### Performance Degradation
+
+**Scenario**: Unbounded aggregation pipeline
+- **Impact**: Memory exhaustion
+- **Prevention**: `safeAggregator.js` limits: max 9 lookups, 25 total stages
+
+**Scenario**: Population of large arrays
+- **Impact**: Document size explosion
+- **Detection**: Slow responses, memory warnings
+- **Prevention**: Select specific populate fields
+
+**Scenario**: Unindexed policy lookups
+- **Impact**: Slow authentication
+- **Prevention**: Compound index on `{role: 1, modelName: 1}`
+
+### Security Loopholes
+
+**Scenario**: Policy with `allowAccess: ["*"]` on sensitive model
+- **Impact**: Full field exposure
+- **Detection**: Security audit
+- **Prevention**: No wildcard on authInfo, salary, etc.
+
+**Scenario**: Registry function returns overly permissive filter
+- **Impact**: Data leakage beyond intended scope
+- **Detection**: Authorization audit
+- **Prevention**: Registry code review, test coverage
+
+**Scenario**: JWT secret exposure
+- **Impact**: Token forgery
+- **Prevention**: Session-bound secrets, secret rotation
+
+---
+
+## 8. Prevention and Guardrails
+
+### Validation Layers
+
+1. **Input Validation (Validator.js)**
+   - Conditional rule evaluation
+   - Field access validation
+   - Body field validation
+   - Filter field validation
+   - Aggregation lookup validation
+
+2. **Sanitization (sanitize*.js)**
+   - `sanitizeRead`: Removes forbidden read fields
+   - `sanitizeWrite`: Removes forbidden create fields
+   - `sanitizeUpdate`: Removes forbidden update fields
+   - `sanitizePopulated`: Filters populated document fields
+
+3. **Schema Validation (Mongoose)**
+   - Type enforcement
+   - Required field validation
+   - Enum constraints
+   - Reference validation
+
+### Strict Defaults
+
+```javascript
+// policyEngine.js - FAIL-CLOSED
+if (!policy) {
+  throw new Error(`⛔ CRITICAL SECURITY: No policy defined...`);
+}
+
+// AccessPolicies.js - Default deny
+permissions: {
+  read: { type: Boolean, default: false },
+  create: { type: Boolean, default: false },
+  update: { type: Boolean, default: false },
+  delete: { type: Boolean, default: false }
+}
+```
+
+### Fail-Closed Behavior
+
+| Scenario | Behavior |
+|----------|----------|
+| No policy for role+model | Request blocked |
+| Field not in allowAccess | Field stripped |
+| Field in forbiddenAccess | Field stripped |
+| Lookup on forbidden model | Aggregation blocked |
+| Invalid registry function | Rule skipped (lenient) |
+| CRUD handler not found | Request blocked |
+
+### Review Requirements
+
+1. **AccessPolicy Changes**
+   - Require audit trail (automatic via collection timestamps)
+   - Cache refresh after changes
+   - Tested with representative queries
+
+2. **Service File Changes**
+   - Code review required
+   - Lifecycle hook testing
+   - Error handling verification
+
+3. **Schema Changes**
+   - Corresponding policy updates
+   - Migration testing
+   - Index verification
+
+### Version Locking
+
+1. **Policy Cache**
+   - Loaded at startup
+   - Manual refresh via API
+   - Automatic refresh interval (configurable)
+
+2. **Service Cache**
+   - Loaded at startup
+   - Auto-refresh every 20 minutes
+   - Manual refresh available
+
+---
+
+## 9. Scaling and Future Evolution
+
+### Multi-Organization Scaling
+
+The architecture supports multi-tenant deployment through:
+
+1. **Policy Isolation**
+   - `AccessPolicies` documents can include `organizationId`
+   - Cache partitioned by organization
+   - Filter injection includes organization context
+
+2. **Data Isolation**
+   - Models include `organizationId` where applicable
+   - Registry functions inject organization filter
+   - Cross-organization access explicitly blocked
+
+3. **Configuration Isolation**
+   - `DEFAULT_POPULATE_FIELDS` extendable per organization
+   - Lifecycle hooks can be organization-aware
+   - Notification templates per organization
+
+### Multi-Domain Scaling
+
+New business domains require:
+
+1. **Schema Definition**: Add Mongoose model
+2. **Model Registration**: Export from `Collection.js`
+3. **Policy Creation**: Create AccessPolicy documents
+4. **Service (Optional)**: Add lifecycle hooks
+
+No route changes. No controller creation. No middleware modification.
+
+### Why No Backend Rewrite Required
+
+The abstraction layers ensure stability:
+
+| Change Type | Required Modification |
+|-------------|----------------------|
+| New entity | Model + Policy (data) |
+| New field | Schema + Policy (data) |
+| New role | Role document + Policies (data) |
+| New workflow | Service file (code) or Workflow document (future, data) |
+| New approval chain | Policy conditions (data) |
+| New validation | Schema constraints (code) |
+
+Only validation invariants require code changes.
+
+### Revision-Based Evolution
+
+Future enhancements:
+
+1. **Policy Versioning**: Audit trail of policy changes
+2. **Schema Versioning**: Migration tracking
+3. **Workflow Versioning**: Transition rule history
+4. **Configuration Snapshots**: Point-in-time recovery
+
+### Commercialization Enablement
+
+This architecture supports:
+
+1. **White-Label Deployment**: Configuration-only customization
+2. **Feature Flags**: Policy-driven feature access
+3. **Usage Metering**: apiHitLogs enable billing
+4. **Tenant Onboarding**: Policy template application
+
+---
+
+## 10. Known Drawbacks and Trade-Offs
+
+### Cognitive Complexity
+
+**Challenge**: Understanding the execution flow requires tracing through multiple layers:
+- populateHelper → buildQuery → crud handler → service hooks
+
+**Mitigation**: 
+- Comprehensive documentation (this document)
+- Consistent patterns across handlers
+- Explicit logging at key decision points
+
+### Debugging Challenges
+
+**Challenge**: When a field doesn't appear in response:
+- Is it forbidden by policy?
+- Is it not in allowAccess?
+- Was it stripped by sanitization?
+- Did population fail?
+
+**Mitigation**:
+- Console logging at sanitization points
+- Policy inspection endpoints
+- Request tracing with IDs
+
+### Onboarding Cost
+
+**Challenge**: New developers must understand:
+- Policy engine mechanics
+- Cache behavior
+- Registry function contracts
+- Service hook patterns
+
+**Mitigation**:
+- Structured training program
+- Example-driven documentation
+- Paired programming for first contributions
+
+### Governance Requirements
+
+**Challenge**: Policy changes require understanding of:
+- Security implications
+- Field exposure risks
+- Performance impacts
+
+**Mitigation**:
+- Policy change review process
+- Impact analysis tooling
+- Automated policy validation
+
+### When NOT to Use This System
+
+This architecture is inappropriate for:
+
+1. **Simple CRUD Applications**: Overhead exceeds benefit for < 5 entities
+2. **Read-Heavy Analytics**: Aggregation limits may constrain
+3. **Real-Time Systems**: Policy lookup adds latency
+4. **Static Requirements**: If business rules never change, why abstract?
+
+---
+
+## 11. Architectural Law
+
+### Non-Negotiable Rules
+
+1. **No Bypass of Policy Engine**
+   - All CRUD operations MUST flow through `buildQuery`
+   - Direct model access outside policy engine is FORBIDDEN
+   - Exception: Internal system operations (cron, migrations)
+
+2. **No Fail-Open Policies**
+   - Missing policy MUST block access
+   - Missing permission MUST deny operation
+   - Ambiguous rules MUST deny
+
+3. **Audit Everything Mutable**
+   - Create operations: logged in service hooks
+   - Update operations: logged in buildUpdateQuery
+   - Delete operations: logged in buildDeleteQuery
+
+4. **Sanitize All User Input**
+   - Body: sanitizeWrite before create/update
+   - Filter: filterValidator before query
+   - Fields: sanitizeRead before projection
+
+### What Must Never Be Dynamic
+
+1. **Authentication Flow**
+   - JWT validation
+   - Session verification
+   - Secret rotation
+
+2. **Core Security Checks**
+   - Policy existence validation
+   - Permission boolean checks
+   - Role matching
+
+3. **Audit Persistence**
+   - Audit log creation
+   - Before/after capture
+   - User attribution
+
+### What Must Always Be Reviewed
+
+1. **AccessPolicy Changes**
+   - Any modification to permissions
+   - Any expansion of allowAccess
+   - Any reduction of forbiddenAccess
+
+2. **Registry Function Changes**
+   - Filter generation logic
+   - Boolean evaluation logic
+   - Context usage
+
+3. **Service Hook Changes**
+   - Database operations in hooks
+   - External integrations
+   - State mutations
+
+### What Future Developers Are Forbidden From Doing
+
+1. **Adding Routes That Bypass populateHelper**
+   - Exception: Authentication routes
+   - Exception: File serving routes
+   - Exception: Health checks
+
+2. **Hardcoding Role IDs**
+   - Use role references, not ObjectID strings
+   - Query roles by name when needed
+   - Never assume role ID stability
+
+3. **Implementing Business Logic in Controllers**
+   - Controllers are route handlers only
+   - Business logic belongs in services
+   - Workflow rules belong in data
+
+4. **Modifying Policy Engine Without Security Review**
+   - buildQuery is security-critical
+   - Validator is security-critical
+   - Registry is security-critical
+
+5. **Disabling Audit Logging**
+   - Even in development
+   - Even for performance
+   - Even temporarily
+
+---
+
+## Appendix A: AccessPolicy Schema Reference
+
+```javascript
+{
+  role: ObjectId,           // Reference to roles collection
+  modelName: String,        // Collection name (lowercase)
+  permissions: {
+    read: Boolean,          // Can list/view
+    create: Boolean,        // Can add new
+    update: Boolean,        // Can modify
+    delete: Boolean         // Can soft-delete
   },
-  authInfo: { workEmail (unique), password },
-  accountDetails: { accountName, accountNo, bankName, branch, ifscCode },
-  salaryDetails: { package, basic, ctc, allowances, deductions },
-  personalDocuments: { pan, aadhar, esi, pf, documentFiles[] },
-  professionalDocuments: { offerLetter, appraisalLetter, otherDocuments[] },
-  leaveStatus: [{ leaveType (ref), usedThisMonth, usedThisYear, carriedForward, available }],
-  status: enum['Active', 'Inactive', 'Terminated'],
-  isActive: Boolean
-}
-```
-
-#### e. Key Indexes
-
-| Index | Purpose |
-|-------|---------|
-| `professionalInfo.reportingManager + status` | Team member lookup |
-| `professionalInfo.department + status` | Department filtering |
-| `authInfo.workEmail` | Login queries |
-| `basicInfo.firstName + basicInfo.lastName` | Name search |
-
----
-
-### 3.3 Attendance & Time Tracking Sub-Module
-
-#### a. Sub-Module Purpose
-
-Tracks daily attendance records with check-in/check-out times, location data, and computed work hours. Supports multiple attendance states and integrates with Leave approval workflow.
-
-#### b. Technical Superheroes
-
-| Actor | Responsibility | Failure Impact |
-|-------|---------------|----------------|
-| **Attendance Model** | Daily record storage | Missing time data |
-| **attendanceService.js** | High-frequency batching | Performance degradation |
-| **attendances.js** | CRUD hooks | Calculation errors |
-| **AttendanceCron.js** | Scheduled tasks | Stale attendance states |
-
-#### c. Technical Workflow
-
-**Check-In Flow**:
-1. Request: `POST /api/populate/create/attendances`
-2. Body: `{employee, date, checkIn, location, status: 'Present'}`
-3. Unique constraint: One record per (employee, date)
-4. Location captured: `{latitude, longitude}`
-5. Document created
-
-**Check-Out Flow**:
-1. Request: `POST /api/populate/update/attendances/:id`
-2. Body: `{checkOut}`
-3. Pre-save hook calculates `workHours`:
-   ```javascript
-   workHours = (checkOut - checkIn) / (1000 * 60 * 60)
-   ```
-4. Status may update to `Check-Out` or `Early check-out`
-
-**Status Values**:
-```javascript
-enum: [
-  'Present', 'Absent', 'Leave', 'Half Day', 'Work From Home',
-  'Early check-out', 'Check-Out', 'Unchecked', 'LOP',
-  'Holiday', 'Week Off', 'Pending', 'Late Entry'
-]
-```
-
-#### d. Data Model Schema
-
-```javascript
-Attendance {
-  employee (ref: employees, required, indexed),
-  date (Date, required, indexed),
-  status (enum, default: 'Present'),
-  leaveType (ref: leavetypes),
-  checkIn (Date),
-  checkOut (Date),
-  location: { latitude, longitude },
-  request (String),
-  managerId (ref: employees),
-  employeeName (String),
-  workHours (Number, 0-24, calculated)
-}
-```
-
-#### e. Key Indexes
-
-| Index | Purpose |
-|-------|---------|
-| `employee + date` (unique) | Prevent duplicate entries |
-| `employee + status + date` | Employee attendance history |
-| `managerId + status + date` | Manager view of team |
-| `date + status` | Daily attendance report |
-
----
-
-### 3.4 Leave Management Sub-Module
-
-#### a. Sub-Module Purpose
-
-Manages the complete leave request lifecycle from submission through approval/rejection. Automatically updates employee leave balances and creates corresponding attendance records upon approval.
-
-#### b. Technical Superheroes
-
-| Actor | Responsibility | Failure Impact |
-|-------|---------------|----------------|
-| **Leave Model** | Request storage | Lost leave data |
-| **leaves.js service** | Balance updates, attendance creation | Incorrect balances |
-| **notificationService** | Manager notifications | Delayed approvals |
-| **Employee.leaveStatus** | Balance tracking | Inaccurate availability |
-
-#### c. Technical Workflow
-
-**Leave Request Submission**:
-1. Request: `POST /api/populate/create/leaves`
-2. Required fields: `employeeId, startDate, endDate, totalDays, reason`
-3. `afterCreate` hook triggers:
-   - Generate notification message
-   - Send notification to `managerId`
-
-**Leave Approval Flow**:
-1. Manager updates: `POST /api/populate/update/leaves/:id`
-2. Body: `{status: 'Approved'}`
-3. `beforeUpdate` stores `_oldStatus`
-4. `afterUpdate` detects state transition:
-   - If `Pending → Approved`:
-     a. Find employee's leave bucket for `leaveTypeId`
-     b. Calculate total days: `(endDate - startDate) / oneDay + 1`
-     c. Update bucket: `usedThisMonth += totalDays`, `usedThisYear += totalDays`, `available -= totalDays`
-     d. Create Attendance records for each day with `status: 'Leave'`
-   - If `Approved → Rejected` (rollback):
-     a. Reverse balance deductions
-     b. Delete Attendance records for the leave period
-
-#### d. State Machine
-
-```
-              ┌─────────────┐
-              │   Pending   │
-              └──────┬──────┘
-                     │
-         ┌───────────┴───────────┐
-         ▼                       ▼
-┌─────────────┐          ┌─────────────┐
-│  Approved   │◄────────►│  Rejected   │
-└─────────────┘          └─────────────┘
-       │                       │
-       │                       │
-       ▼                       ▼
- [Creates Attendance]   [No side effects
-  Updates Balance]       or Rollback]
-```
-
-#### e. Data Model Schema
-
-```javascript
-Leave {
-  employeeId (ref, required, indexed),
-  employeeName (indexed),
-  departmentId (ref, indexed),
-  leaveTypeId (ref, indexed),
-  leaveName (String),
-  startDate (required, indexed),
-  endDate (required, indexed),
-  totalDays (Number, min: 0.5),
-  reason (String, 5-500 chars),
-  status: enum['Pending', 'Approved', 'Rejected'],
-  managerId (ref, indexed),
-  managerComments (String),
-  approvedAt, rejectedAt,
-  document (String),
-  isEmergency (Boolean)
+  forbiddenAccess: {
+    read: [String],         // Blocked read fields
+    create: [String],       // Blocked create fields
+    update: [String],       // Blocked update fields
+    delete: [String]        // Blocked delete fields
+  },
+  allowAccess: {
+    read: [String],         // Allowed read fields ("*" = all)
+    create: [String],       // Allowed create fields
+    update: [String],       // Allowed update fields
+    delete: [String]        // Allowed delete fields
+  },
+  registry: [String],       // Registry function names
+  conditions: {
+    [action]: [{            // Per-action condition rules
+      registry: String,     // Registry function to evaluate
+      effect: "allow"|"deny",
+      fields: [String]      // Fields affected by this rule
+    }]
+  }
 }
 ```
 
 ---
 
-### 3.5 Regularization Sub-Module
-
-#### a. Sub-Module Purpose
-
-Handles attendance correction requests when employees miss check-in/check-out or have incorrect times. Links directly to Attendance records for modification upon approval.
-
-#### b. Technical Workflow
-
-1. Employee identifies attendance issue
-2. Creates regularization request with original and requested times
-3. Manager reviews and approves/rejects
-4. Upon approval, linked Attendance record updated with new times
-
-#### c. Data Model Schema
+## Appendix B: Registry Function Contract
 
 ```javascript
-Regularization {
-  employeeId (ref, required, indexed),
-  employeeName, departmentId,
-  requestType: 'Regularization',
-  requestDate (required, indexed),
-  originalCheckIn, originalCheckOut,
-  requestedCheckIn (required), requestedCheckOut (required),
-  reason (5-500 chars),
-  status: enum['Pending', 'Approved', 'Rejected'],
-  managerId, approvedBy, approvedAt, rejectedBy, rejectedAt,
-  approverComment,
-  attendanceId (ref, required, unique per attendance)
+// Function Signature
+function registryFunction(user, record, context) {
+  // user: { id: ObjectId, role: ObjectId }
+  // record: { ...documentFields } (when available)
+  // context: { role, userId, modelName, fields, effect, action }
+
+  // Return types:
+  // Boolean: true = allow, false = deny (single record checks)
+  // Object: MongoDB filter (list/find queries)
 }
-```
 
-#### d. Key Constraint
-
-| Index | Purpose |
-|-------|---------|
-| `attendanceId` (unique) | One regularization per attendance |
-
----
-
-### 3.6 Task Management Sub-Module
-
-#### a. Sub-Module Purpose
-
-Core project management entity. Tasks belong to Clients, can be linked to Tickets (bidirectional sync), support milestone tracking, and feature a comprehensive comment thread system.
-
-#### b. Technical Superheroes
-
-| Actor | Responsibility | Failure Impact |
-|-------|---------------|----------------|
-| **Tasks Model** | Task storage with rich metadata | Lost project work |
-| **tasks.js service** | Creation hooks, sync, notifications | Broken ticket sync |
-| **ticketTaskSync.js** | Bidirectional status sync | Inconsistent states |
-| **milestoneService.js** | Milestone status propagation | Milestone tracking errors |
-| **CommentsThreads Model** | Comment storage | Lost discussions |
-| **asyncNotificationService** | Assignment/comment notifications | Missed updates |
-
-#### c. Technical Workflow
-
-**Task Creation**:
-1. Request: `POST /api/populate/create/tasks`
-2. `beforeCreate`:
-   - Add creator to `followers` array
-3. Document created with defaults:
-   - `status: 'Backlogs'`
-   - `priorityLevel: 'Low'`
-   - `progress: 0`
-4. `afterCreate`:
-   - Create CommentsThreads document
-   - Link thread to task
-   - Queue notifications to all assignees
-
-**Task Update (Status Change)**:
-1. `beforeUpdate` stores `_oldStatus` and `_oldAssignedTo`
-2. Update executed
-3. `afterUpdate`:
-   - If linked to Ticket, sync status via `ticketTaskSync`
-   - If milestone status changed, propagate to Client.milestones
-   - Notify assignees and followers of status change
-
-**Comment Addition**:
-1. Update with `{_isComment: true, _commentText: '...', _mentionedUserIds: [...]}`
-2. `afterUpdate`:
-   - Push comment to CommentsThreads
-   - Notify assignees, followers, and mentioned users
-
-#### d. State Machine
-
-```
-Backlogs → To Do → In Progress → In Review → Approved → Completed
-                         ↓            ↓
-                    Rejected ←────────┘
-                         ↓
-                      Deleted
-```
-
-#### e. Data Model Schema
-
-```javascript
-Tasks {
-  clientId (ref: clients, required, indexed),
-  projectTypeId (ref: projecttypes, required, indexed),
-  taskTypeId (ref: tasktypes, required),
-  createdBy (ref: employees, indexed),
-  assignedTo [ref: employees, indexed],
-  linkedTicketId (ref: Ticket),
-  isFromTicket (Boolean, default: false),
-  milestoneId (ref: milestones, indexed),
-  milestoneStatus: enum['Pending', 'In Progress', 'Completed', 'On Hold'],
-  title (required, text indexed),
-  referenceUrl, userStory (text indexed), observation, impacts, acceptanceCreteria,
-  attachments [String],
-  commentsThread (ref: commentsthreads),
-  startDate, endDate (indexed),
-  priorityLevel: enum['Low', 'Medium', 'High', 'Weekly Priority'],
-  tags [String],
-  status: enum['Backlogs', 'To Do', 'In Progress', 'In Review', 'Approved', 'Rejected', 'Completed', 'Deleted'],
-  followers [ref: employees],
-  estimatedHours, actualHours, progress (0-100)
+// Example: isSelf
+function isSelf(user, record, context) {
+  if (!user) return false;
+  if (record) {
+    return record._id.toString() === user.id;
+  }
+  return { $or: [{ _id: user.id }, { userId: user.id }] };
 }
 ```
 
 ---
 
-### 3.7 Ticket Management Sub-Module
-
-#### a. Sub-Module Purpose
-
-External-facing ticket system allowing agents (external users) to submit support requests. Tickets can be converted to development Tasks with full bidirectional synchronization.
-
-#### b. Technical Superheroes
-
-| Actor | Responsibility | Failure Impact |
-|-------|---------------|----------------|
-| **Ticket Model** | Ticket storage, auto-ID generation | Lost requests |
-| **tickets.js service** | Agent handling, task conversion | Broken conversion |
-| **ticketTaskSync.js** | Status/assignment sync | State inconsistency |
-| **Agent Model** | External user auth | Agent access failure |
-
-#### c. Technical Workflow
-
-**Ticket Creation (by Agent)**:
-1. Request: `POST /api/populate/create/tickets`
-2. Body includes `agentId`
-3. `beforeCreate`:
-   - Lookup agent and populate client
-   - Set `clientId`, `createdBy`, `createdByModel: 'agents'`
-   - Remove `agentId` from body
-4. Pre-save hook generates `ticketId`: `TKT000001`
-5. If no `userStory`, copy from `description`
-
-**Ticket-to-Task Conversion**:
-1. Update with `{pushTaskSync: true}`
-2. `beforeUpdate`:
-   - If not already converted:
-     - Ensure `taskTypeId` exists (or assign default)
-     - Ensure `projectTypeId` exists (or assign default)
-     - Set `isConvertedToTask: true`, `convertedBy`, `convertedAt`
-3. `afterUpdate`:
-   - Create Task document with ticket data
-   - Create CommentsThreads for task
-   - Link ticket to task (`linkedTaskId`)
-   - Send notifications to creator and assignees
-
-**Bidirectional Sync**:
-- Task status changes → Update linked Ticket status
-- Task assignment changes → Sync to Ticket
-
-#### d. Status Mapping (Task → Ticket)
-
-| Task Status | Ticket Status |
-|-------------|---------------|
-| In Progress | In Progress |
-| Review | Review |
-| Testing | Testing |
-| Completed | Completed |
-| Closed | Closed |
-
-#### e. Data Model Schema
+## Appendix C: Service Hook Contract
 
 ```javascript
-Ticket {
-  ticketId (String, unique, auto-generated),
-  title (required, max 200),
-  userStory, description (required),
-  projectTypeId, type: enum['Bug', 'Feature', 'Enhancement', 'Support'],
-  impactAnalysis, url, acceptanceCriteria,
-  clientId (ref), taskTypeId (ref),
-  priority: enum['Low', 'Medium', 'High', 'Critical'],
-  status: enum['Open', 'In Progress', 'Review', 'Testing', 'Completed', 'Closed'],
-  createdBy (refPath: createdByModel), createdByModel: enum['employees', 'agents'],
-  assignedTo [ref: employees], accountManager (ref), department (ref),
-  linkedTaskId (ref: tasks), isConvertedToTask, convertedBy, convertedAt,
-  milestoneId, milestoneStatus,
-  attachments [{filename, originalName, path, mimetype, size, uploadedAt}],
-  dueDate, startDate, liveHours,
-  comments [{comment, commentedBy, commentedAt}],
-  resolvedAt, closedAt, resolution
+// Service file structure
+export default function modelName() {
+  return {
+    // Before create - can modify body, return modified body
+    beforeCreate: async ({ body, userId, role }) => body,
+
+    // After create - side effects only
+    afterCreate: async ({ modelName, docId, userId, role }) => void,
+
+    // Before read - can modify filter/fields
+    beforeRead: async ({ role, userId, docId, filter, fields }) => ({ filter, fields }),
+
+    // After read - can transform result
+    afterRead: async ({ role, userId, docId, data }) => data,
+
+    // Before update - can modify body
+    beforeUpdate: async ({ role, userId, docId, body, filter, existingDoc }) => body,
+
+    // After update - side effects
+    afterUpdate: async ({ role, userId, docId, data, body }) => void,
+
+    // Before delete - validation/side effects
+    beforeDelete: async ({ role, userId, docId, filter, modelName }) => void,
+
+    // After delete - cleanup
+    afterDelete: async ({ role, userId, docId, modelName, deletedDoc }) => void
+  };
 }
 ```
 
 ---
 
-### 3.8 Client Management Sub-Module
+## Appendix D: Execution Flow Diagram
 
-#### a. Sub-Module Purpose
-
-Represents external organizations (customers). Clients own project types, milestones, and can have external agents for ticket submission.
-
-#### b. Data Model Schema
-
-```javascript
-Client {
-  name (unique), ownerName, businessType,
-  contactInfo [{name, email, phone, designation}],
-  email, phone,
-  address: {street, city, state, zip, country},
-  gstIN (uppercase, 15 chars), source,
-  leadStatus: enum['New', 'Qualified', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost'],
-  leadType (ref), referenceType (ref),
-  Status: enum['Active', 'Inactive'],
-  agent [ref: agents],
-  accountManager (ref: Employee), projectManager (ref: Employee),
-  projectTypes [ref: projecttypes],
-  proposedProducts [String],
-  milestones [{
-    milestoneId (ref, required),
-    status: enum['Pending', 'In Progress', 'Completed', 'On Hold'],
-    assignedTo, dueDate, completedDate, notes
-  }]
-}
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           HTTP REQUEST                                       │
+│  POST /api/populate/update/leaves/507f1f77bcf86cd799439011                   │
+│  Body: { "status": "Approved" }                                              │
+│  Headers: Authorization: Bearer <jwt>, x-device-uuid: <uuid>                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  MIDDLEWARE CHAIN                                                            │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────────────┐  │
+│  │ cookieParser    │→ │ cors validation │→ │ agentAuthMiddleware         │  │
+│  └─────────────────┘  └─────────────────┘  └─────────────────────────────┘  │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────────────┐  │
+│  │ requestTracer   │→ │ apiHitLogger    │→ │ authMiddleware (JWT verify) │  │
+│  └─────────────────┘  └─────────────────┘  └─────────────────────────────┘  │
+│                                                                              │
+│  req.user = { id, role, department, designation, name, managerId }           │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  populateHelper.js                                                           │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │ Extract: action='update', model='leaves', id='507f1f77bcf86cd799...'│    │
+│  │ Parse: fields, filter, populateFields from query                    │    │
+│  │ Normalize: filter to MongoDB format                                 │    │
+│  │ Merge: populateFields with DEFAULT_POPULATE_FIELDS['leaves']        │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                                    │                                         │
+│                                    ▼                                         │
+│  buildQuery({ role, userId, action: 'update', modelName: 'leaves', ... })    │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  policyEngine.buildQuery                                                     │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │ 1. Validate model: models['leaves'] exists ✓                        │    │
+│  │ 2. Load policy: getPolicy(role, 'leaves') from cache                │    │
+│  │ 3. FAIL-CLOSED: policy exists ✓                                     │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                                    │                                         │
+│                                    ▼                                         │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │ validator({ action, modelName, role, userId, body, policy, ... })   │    │
+│  │ ├─ conditionsValidator: Check conditional rules                     │    │
+│  │ ├─ bodyValidator: Remove forbidden fields from body                 │    │
+│  │ ├─ filterValidator: Validate filter fields                          │    │
+│  │ └─ aggregateValidator: Check $lookup permissions                    │    │
+│  │                                                                     │    │
+│  │ Returns: { filter: {}, fields: null, body: { status: 'Approved' } } │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                                    │                                         │
+│                                    ▼                                         │
+│  Import: crud/buildUpdateQuery.js                                            │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  buildUpdateQuery.js                                                         │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │ 1. Permission check: policy.permissions.update === true ✓           │    │
+│  │ 2. Sanitize: body = sanitizeUpdate({ body, policy })                 │    │
+│  │ 3. Field rules: validateFieldUpdateRules({ body, modelName, ... })  │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                                    │                                         │
+│                                    ▼                                         │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │ Registry execution: runRegistry({ role, userId, action, policy })   │    │
+│  │ ├─ Evaluate conditions[update] rules                                │    │
+│  │ ├─ Execute registry functions (isSelf, isManager, etc.)             │    │
+│  │ └─ Merge filter overrides                                           │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                                    │                                         │
+│                                    ▼                                         │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │ Load service: services/leaves.js                                    │    │
+│  │                                                                     │    │
+│  │ beforeUpdate hook:                                                  │    │
+│  │ ├─ Fetch existing document                                          │    │
+│  │ └─ Store: body._oldStatus = existingDoc.status                      │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                                    │                                         │
+│                                    ▼                                         │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │ Snapshot: beforeDoc = await Leave.findById(docId).lean()            │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                                    │                                         │
+│                                    ▼                                         │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │ DATABASE OPERATION:                                                 │    │
+│  │ updatedDoc = await Leave.findByIdAndUpdate(docId, { $set: body },   │    │
+│  │   { new: true, runValidators: true })                               │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                                    │                                         │
+│                                    ▼                                         │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │ afterUpdate hook:                                                   │    │
+│  │ ├─ Check status transition (Pending → Approved)                     │    │
+│  │ ├─ Deduct leave balance from employee.leaveStatus                   │    │
+│  │ ├─ Create attendance records for leave dates                        │    │
+│  │ └─ Send notification to employee                                    │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                                    │                                         │
+│                                    ▼                                         │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │ Audit log:                                                          │    │
+│  │ await saveAuditLog({                                                │    │
+│  │   action: 'update', modelName: 'leaves', userId, role, docId,       │    │
+│  │   beforeDoc: { status: 'Pending', ... },                            │    │
+│  │   afterDoc: { status: 'Approved', ... }                             │    │
+│  │ })                                                                  │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                                    │                                         │
+│  Return: updatedDoc                                                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  HTTP RESPONSE                                                               │
+│  Status: 200                                                                 │
+│  Body: {                                                                     │
+│    "success": true,                                                          │
+│    "data": { "_id": "507f1f77...", "status": "Approved", ... }              │
+│  }                                                                           │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-### 3.9 Daily Activity Sub-Module
-
-#### a. Sub-Module Purpose
-
-Tracks daily work activities per employee. Links to clients, project types, and task types for categorization.
-
-#### b. Data Model Schema
-
-```javascript
-DailyActivity {
-  client (ref: clients),
-  projectType (ref: projecttypes),
-  user (ref: employees),
-  date (default: now),
-  taskType (ref: tasktypes),
-  activity (String),
-  assignedTo (ref: employees),
-  status: enum['Pending', 'Completed', 'In Progress']
-}
-```
-
----
-
-### 3.10 Payroll Sub-Module
-
-#### a. Sub-Module Purpose
-
-Manages monthly salary processing including allowances, deductions, overtime, and payment status tracking.
-
-#### b. Data Model Schema
-
-```javascript
-Payroll {
-  employeeId (ref, required),
-  month (1-12, required), year (required),
-  basicSalary (required),
-  allowances: {hra, transport, medical, other},
-  deductions: {pf, esi, tax, other},
-  workingDays, presentDays (required),
-  overtimeHours, overtimeRate,
-  grossSalary, netSalary (required),
-  status: enum['Draft', 'Processed', 'Paid'],
-  processedBy, processedAt, paidAt
-}
-
-// Unique constraint: one payroll per employee per month
-Index: {employeeId, month, year} unique
-```
-
----
-
-### 3.11 Notification Sub-Module
-
-#### a. Sub-Module Purpose
-
-Real-time and push notification delivery system. Combines Socket.IO for immediate delivery with Expo Push for mobile notifications.
-
-#### b. Technical Superheroes
-
-| Actor | Responsibility |
-|-------|---------------|
-| **asyncNotificationService** | Queue and send push notifications |
-| **notificationService** | Create notification records |
-| **Socket.IO** | Real-time delivery |
-| **notificationMessagePrasher** | Generate notification text |
-
-#### c. Technical Workflow
-
-**Push Notification Flow**:
-1. Service calls `asyncNotificationService.queuePushNotification(userId, title, body, data)`
-2. Lookup user's active session with FCM token
-3. POST to `https://exp.host/--/api/v2/push/send`
-4. Create notification record in database
-
-**Real-time Notification Flow**:
-1. `io.to(userId).emit('notification', data)`
-2. Client receives via Socket.IO connection
-
----
-
-### 3.12 Access Control (ABAC) Sub-Module
-
-#### a. Sub-Module Purpose
-
-Implements Attribute-Based Access Control with strict mode (fail-closed). Policies are cached on startup and can be refreshed dynamically.
-
-#### b. Technical Superheroes
-
-| Actor | Responsibility |
-|-------|---------------|
-| **AccessPolicies Model** | Policy storage |
-| **policyEngine.js** | Policy enforcement |
-| **cache.js** | Policy caching |
-| **Validator.js** | Field-level access control |
-| **registryExecutor.js** | Row-level security |
-
-#### c. Policy Structure
-
-```javascript
-AccessPolicy {
-  role (ref: roles, required),
-  modelName (String, required),
-  permissions: {read, create, update, delete} // Booleans,
-  forbiddenAccess: {read[], create[], update[], delete[]} // Field blacklists,
-  allowAccess: {read[], create[], update[], delete[]} // Field whitelists,
-  registry: [String] // Custom condition names,
-  conditions: Map<String, Mixed> // Custom condition config
-}
-
-// Unique: one policy per (role, modelName)
-```
-
-#### d. Policy Evaluation Flow
-
-1. Load policy from cache by `(role, modelName)`
-2. **STRICT MODE**: If no policy, throw `CRITICAL SECURITY` error
-3. Check `permissions[action]` boolean
-4. Sanitize fields via `allowAccess` / `forbiddenAccess`
-5. Execute registry conditions for row-level filters
-
----
-
-## 4. Inter Sub-Module Dependency Flow
-
-### 4.1 Core Dependencies
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                     INTER-MODULE DEPENDENCIES                        │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│  Employee ─────────────────────────────────────────────────────────┐│
-│      ↓                                                              ││
-│  ┌───┴───┐  ┌───────┐  ┌──────────────┐  ┌─────────┐  ┌─────────┐ ││
-│  │Attend.│  │ Leave │  │Regularization│  │ Payroll │  │DailyAct.│ ││
-│  └───────┘  └───┬───┘  └──────┬───────┘  └─────────┘  └─────────┘ ││
-│                 │             │                                     ││
-│                 └─────────────┘                                     ││
-│                        ↓                                            ││
-│              Attendance Updated                                     ││
-│                                                                      ││
-└──────────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────────┐
-│                                                                      │
-│  Client ────────────────────────────────────────────────────────────┐
-│      ↓                                                              │
-│  ┌───┴────┐  ┌─────────┐                                           │
-│  │ Tasks  │←→│ Tickets │ (bidirectional sync)                      │
-│  └────────┘  └─────────┘                                           │
-│       ↓           ↓                                                 │
-│  Milestones   Milestones                                           │
-│                                                                      │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-### 4.2 Shared Services
-
-| Service | Consumers |
-|---------|-----------|
-| `asyncNotificationService` | Tasks, Tickets, Leaves |
-| `ticketTaskSync` | Tasks, Tickets |
-| `milestoneService` | Tasks, Clients |
-
-### 4.3 Failure Scenarios
-
-| Scenario | System Behavior |
-|----------|-----------------|
-| Step fails (Leave approval) | Transaction not atomic; manual rollback may be needed |
-| Step skipped (no notification service) | Silent failure, logged to console |
-| Dependency unavailable (MongoDB) | 500 error, request fails |
-| Ticket-Task sync fails | Logged, states may diverge |
-
----
-
-## 5. Workflow Diagrams
-
-### 5.1 Request Lifecycle Flowchart
-
-![Request Lifecycle](diagrams/request_lifecycle.png)
-
-### 5.2 Authentication Flow
-
-![Authentication Flow](diagrams/auth_flow.png)
-
-### 5.3 Leave Approval Workflow
-
-![Leave Approval](diagrams/leave_approval.png)
-
-### 5.4 Ticket-to-Task Conversion
-
-![Ticket Task Conversion](diagrams/ticket_task_conversion.png)
-
-### 5.5 ABAC Policy Evaluation
-
-![ABAC Flow](diagrams/abac_policy_flow.png)
-
----
-
-## 6. Common System Scenarios
-
-### 6.1 Happy Path: Task Creation with Notification
-
-1. **Request**: `POST /api/populate/create/tasks` with title, client, assignees
-2. **Middleware**: Auth verified, request logged
-3. **Policy**: Role has `create` permission on `tasks`
-4. **Validation**: Required fields present, enums valid
-5. **Creation**: Document saved with `status: 'Backlogs'`
-6. **Post-Hook**:
-   - Creator added to followers
-   - CommentsThreads created
-   - Notifications queued to all assignees
-7. **Response**: `{success: true, data: {...}}`
-
-### 6.2 Approval Delay: Leave Request Pending
-
-1. Employee submits leave request (status: `Pending`)
-2. Notification sent to manager
-3. Manager may not act immediately
-4. System state: Leave remains `Pending`, no balance deducted
-5. No Attendance records created
-6. Manager eventually approves → full flow executes
-
-### 6.3 Rework/Correction Flow: Regularization
-
-1. Employee notices incorrect attendance
-2. Creates Regularization request with corrected times
-3. Links to existing Attendance record
-4. Manager reviews original vs. requested
-5. If approved: Attendance record updated
-6. If rejected: Original times remain
-
-### 6.4 Exception Handling: Policy Denied
-
-1. Request: `POST /api/populate/delete/employees/:id`
-2. Role lacks `delete` permission
-3. PolicyEngine throws: `⛔ CRITICAL SECURITY: No policy defined for role...`
-4. Response: `{success: false, message: '...'}`, status 500
-5. No database modification occurs
-
----
-
-## 7. Operational Notes
-
-### 7.1 Support Focus
-
-#### What to Verify First in Production Incidents
-
-| Symptom | Check |
-|---------|-------|
-| 401 Unauthorized everywhere | Verify session exists and is Active |
-| 500 on all CRUD | Check AccessPolicies cache populated |
-| Notifications not sending | Check FCM token in Session |
-| Leave balance incorrect | Verify afterUpdate hook executed |
-
-#### Common System Misconfigurations
-
-| Issue | Resolution |
-|-------|------------|
-| No policy for role-model pair | Create AccessPolicy document |
-| Missing default task/project type | Ensure at least one exists for ticket conversion |
-| stale policy cache | POST `/api/config/refresh-policy` |
-
-#### Typical Data-State Issues
-
-| Issue | Query to Diagnose |
-|-------|-------------------|
-| Orphaned attendance | `Attendance.find({ leaveType: { $exists: true }, status: { $ne: 'Leave' }})` |
-| Duplicate sessions | `Session.aggregate([{$group: {_id: {userId:1, deviceUUID:1}, count: {$sum:1}}}]).match({count:{$gt:1}})` |
-
-### 7.2 Implementation Focus
-
-#### Configuration Checkpoints
-
-- [ ] Environment variables loaded (`.env`)
-- [ ] MongoDB connection string valid
-- [ ] CORS origins configured
-- [ ] AccessPolicies seeded for all roles
-
-#### Environment Readiness
-
-- [ ] Node.js 18+ installed
-- [ ] MongoDB 5+ running
-- [ ] Redis (optional, for Bull queues)
-
-#### UAT Validation Criteria
-
-- [ ] All CRUD operations work for each role
-- [ ] Leave approval updates balances correctly
-- [ ] Ticket-to-Task conversion creates linked task
-- [ ] Notifications delivered to mobile devices
-
-#### Go-Live Technical Readiness
-
-- [ ] Security integration tests pass (`runSecurityTests`)
-- [ ] Database indexes created (`databaseIndexer`)
-- [ ] Policy cache populated on startup
-- [ ] Socket.IO connections stable
-
----
-
-## Document Control
-
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | 2026-01-11 | System | Initial generation |
-
----
-
-*End of Document*
+*Document Version: 1.0*
+*Last Updated: 2026-01-11*
+*Author: Platform Architecture Team*

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Autocomplete, TextField } from "@mui/material";
+import { Autocomplete, TextField, MenuItem } from "@mui/material";
 import axiosInstance from "../../api/axiosInstance";
 import toast from "react-hot-toast";
 
@@ -8,15 +8,18 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
   const [changedFields, setChangedFields] = useState({});
   const [dynamicOptions, setDynamicOptions] = useState({});
 
-  // init hidden default fields and initial data
+  // init default fields and initial data
   useEffect(() => {
-    const hiddenDefaults = {};
+    const defaults = {};
     fields.forEach((field) => {
+      if (field.default !== undefined) {
+        defaults[field.name] = field.default;
+      }
       if (field.hidden && field.value !== undefined) {
-        hiddenDefaults[field.name] = field.value;
+        defaults[field.name] = field.value;
       }
     });
-    setFormData((prev) => ({ ...hiddenDefaults, ...data, ...prev }));
+    setFormData((prev) => ({ ...defaults, ...data, ...prev }));
   }, [fields, data]);
 
   // Helper function to get nested values
@@ -150,6 +153,32 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
         <div className="p-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 font-semibold rounded-xl border border-gray-200 dark:border-gray-600 text-gray-800 dark:text-white">
           {field.external ? field.externalValue ?? "—" : value ?? "—"}
         </div>
+      );
+    }
+
+    if (field.type === "select") {
+      return (
+        <TextField
+          select
+          fullWidth
+          label={field.label}
+          value={value !== undefined && value !== null ? value : ""}
+          onChange={(e) => onChange(e.target.value)}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              borderRadius: '12px',
+              backgroundColor: 'rgb(249 250 251)',
+              '&:hover': { backgroundColor: 'white' },
+              '&.Mui-focused': { backgroundColor: 'white' }
+            }
+          }}
+        >
+          {field.options?.map((opt) => (
+            <MenuItem key={opt._id?.toString() ?? opt.value ?? opt.name} value={opt._id ?? opt.value}>
+              {opt.name || opt.label}
+            </MenuItem>
+          ))}
+        </TextField>
       );
     }
 
@@ -302,7 +331,10 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
           multiple={field.multiple}
           onOpen={() => handlePopulate(field)}
           options={options}
-          getOptionLabel={(opt) => opt.name || ""}
+          getOptionLabel={(opt) => {
+            if (typeof opt === 'string') return opt;
+            return opt[field.labelField] || opt[field.fieldName] || opt.name || "";
+          }}
           value={field.multiple ? (value || []) : (value || null)}
           onChange={(e, newValue) => onChange(newValue)}
           renderInput={(params) => (
@@ -428,8 +460,8 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
         <button
           type="submit"
           className={`w-full px-6 py-4 rounded-xl text-white font-semibold transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl ${submitButton?.color === "green"
-              ? "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
-              : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+            ? "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+            : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
             }`}
         >
           {submitButton?.text || "Submit"}

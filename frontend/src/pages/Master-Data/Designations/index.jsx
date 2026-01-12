@@ -7,14 +7,17 @@ import {
   designationFormFields,
   designationSubmitButton
 } from "../../../constants/DesignationForm";
+import toast from "react-hot-toast";
 
 const Designations = () => {
   const [data, setData] = useState([]);
   const [modelOpen, setModelOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const fetchData = async () => {
     try {
+      setLoading(true);
       const res = await axiosInstance.get("/populate/read/designations?limit=1000");
       const cleanData = (res.data?.data || []).map(item => {
         const { professionalInfo, ...cleanItem } = item;
@@ -23,6 +26,9 @@ const Designations = () => {
       setData(cleanData);
     } catch (err) {
       console.error("Error fetching designations:", err);
+      toast.error("Failed to fetch designations");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -36,21 +42,14 @@ const Designations = () => {
   };
 
   const handleDelete = async (row) => {
+    if (!window.confirm(`Are you sure you want to delete "${row.title}"?`)) return;
     try {
       await axiosInstance.delete(`/populate/delete/designations/${row._id}`);
+      toast.success("Designation deleted successfully");
       fetchData();
     } catch (err) {
       console.error("Delete error:", err);
-    }
-  };
-
-  const toggleStatus = async (row) => {
-    try {
-      const newStatus = row.Status === "Active" ? "Inactive" : "Active";
-      await axiosInstance.put(`/populate/update/designations/${row._id}`, { Status: newStatus });
-      fetchData();
-    } catch (err) {
-      console.error("Status update error:", err);
+      toast.error("Failed to delete designation");
     }
   };
 
@@ -58,43 +57,59 @@ const Designations = () => {
     try {
       if (editingItem) {
         await axiosInstance.put(`/populate/update/designations/${editingItem._id}`, formData);
+        toast.success("Designation updated successfully");
       } else {
         await axiosInstance.post("/populate/create/designations", formData);
+        toast.success("Designation created successfully");
       }
       setModelOpen(false);
       setEditingItem(null);
       fetchData();
     } catch (err) {
       console.error("Submit error:", err);
+      toast.error(err.response?.data?.message || "Operation failed");
     }
   };
 
+  const customRender = {
+    title: (row) => <span className="font-semibold text-gray-800">{row.title}</span>,
+    description: (row) => <span className="text-gray-600">{row.description || '-'}</span>
+  };
+
   return (
-    <div className="p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-2xl">Designations</h3>
+    <div className="p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Designations</h1>
+          <p className="text-gray-500">Manage employee designations</p>
+        </div>
         <button
           onClick={() => {
             setEditingItem(null);
             setModelOpen(true);
           }}
-          className="px-4 py-2 bg-blue-600 text-white rounded"
+          className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
         >
           Add Designation
         </button>
       </div>
 
-      <TableGenerator
-        data={data}
-        hiddenColumns={["_id", "createdAt", "updatedAt", "__v", "professionalInfo"]}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <TableGenerator
+          data={data}
+          customColumns={['title', 'description']}
+          hiddenColumns={["_id", "createdAt", "updatedAt", "__v", "professionalInfo", "Status"]}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          customRender={customRender}
+          loading={loading}
+        />
+      </div>
 
       {modelOpen && (
         <FloatingCard
           title={editingItem ? "Edit Designation" : "Add Designation"}
-          onClose={() => {
+          close={() => {
             setModelOpen(false);
             setEditingItem(null);
           }}
@@ -103,7 +118,7 @@ const Designations = () => {
             fields={designationFormFields}
             submitButton={designationSubmitButton}
             onSubmit={handleSubmit}
-            data={editingItem}
+            initialValues={editingItem}
           />
         </FloatingCard>
       )}

@@ -20,7 +20,7 @@ const RoleAccessPolicy = () => {
         const fetchData = async () => {
             try {
                 const [rolesRes, modelsRes] = await Promise.all([
-                    axiosInstance.get('/populate/list/roles'),
+                    axiosInstance.get('/populate/read/roles'),
                     axiosInstance.get('/config/models')
                 ]);
                 setRoles(rolesRes.data.data || []);
@@ -39,7 +39,7 @@ const RoleAccessPolicy = () => {
         const fetchPolicies = async () => {
             setLoading(true);
             try {
-                const res = await axiosInstance.get(`/populate/list/accesspolicies`, {
+                const res = await axiosInstance.get(`/populate/read/accesspolicies`, {
                     params: {
                         filter: JSON.stringify({ role: selectedRole }),
                         limit: 1000

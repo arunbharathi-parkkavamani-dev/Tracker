@@ -120,7 +120,9 @@ const TableGenerator = ({
     setFilteredData(normalized);
     setCurrentPage(1);
 
-    if (normalized.length > 0) {
+    if (customColumns.length > 0) {
+      setColumns(enableActions ? [...customColumns, "__actions"] : customColumns);
+    } else if (normalized.length > 0) {
       const keys = Object.keys(normalized[0]).filter(key => !hiddenColumns.includes(key));
       setColumns(enableActions ? [...keys, "__actions"] : keys);
     }
@@ -265,8 +267,8 @@ const TableGenerator = ({
                     key={i}
                     onClick={() => setCurrentPage(i + 1)}
                     className={`w-8 h-8 rounded-md text-sm font-medium transition-colors ${currentPage === i + 1
-                        ? "bg-blue-600 text-white shadow-sm"
-                        : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                      ? "bg-blue-600 text-white shadow-sm"
+                      : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
                       }`}
                   >
                     {i + 1}
