@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { server, app } from "./src/index.js";
+import { server, app, initApp } from "./src/index.js"; // 👈 initApp replaces connectDB
 import os from "os";
 import https from "https";
 import memoryMonitor from "./src/utils/memoryMonitor.js";
@@ -7,17 +7,10 @@ import memoryMonitor from "./src/utils/memoryMonitor.js";
 dotenv.config();
 const PORT = process.env.PORT || 3000;
 
-
-// Test endpoint to verify server is working
-app.get('/test', (req, res) => {
-  // console.log('TEST ENDPOINT HIT');
-  res.json({ message: 'Server is working', timestamp: new Date().toISOString() });
-});
-
-// Memory optimization flags
+// Memory optimization flags (must be set before app loads, but noted here for clarity)
 process.env.NODE_OPTIONS = '--max-old-space-size=4096 --expose-gc';
 
-// Helper: get local IP
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 const getLocalIP = () => {
   const nets = os.networkInterfaces();
   for (const name of Object.keys(nets)) {
@@ -27,7 +20,6 @@ const getLocalIP = () => {
   }
 };
 
-// Helper: get public IP
 const getPublicIP = () =>
   new Promise((resolve, reject) => {
     https
@@ -39,49 +31,44 @@ const getPublicIP = () =>
       .on("error", reject);
   });
 
-// Start server with memory monitoring
-server.listen(PORT, "0.0.0.0", async () => {
-  // console.log('=== SERVER STARTING ===');
-  const localIP = getLocalIP();
-  console.log(`✅ Server running on port ${PORT}`);
-  console.log(`📡 Local Access:  http://localhost:${PORT}`);
-  if (localIP) console.log(`💻 LAN Access:    http://${localIP}:${PORT}`);
+// ─── Startup ──────────────────────────────────────────────────────────────────
+async function startServer() {
+  try {
+    // ✅ DB connects + cache loads + security check kicks off — all before listen()
+    await initApp();
+    console.log("✅ MongoDB connected");
 
-    try {
-      const publicIP = await getPublicIP();
-      // console.log(`🌍 Public Access: http://${publicIP}:${PORT}`);
-    } catch (err) {
-      // console.log("⚠️ Could not fetch public IP:", err.message);
-    }
+    server.listen(PORT, "0.0.0.0", async () => {
+      const localIP = getLocalIP();
+      console.log(`✅ Server running on port ${PORT}`);
+      console.log(`📡 Local Access:  http://localhost:${PORT}`);
+      if (localIP) console.log(`💻 LAN Access:    http://${localIP}:${PORT}`);
 
-  // Start memory monitoring
-  memoryMonitor.startMonitoring(30000); // Every 30 seconds
-  // console.log('🔍 Memory monitoring started');
+      try {
+        await getPublicIP();
+      } catch (_) {}
 
-  // Log initial memory stats
-  const initialStats = memoryMonitor.getMemoryStats();
-  // console.log('=== SERVER READY ===');
-  // // console.log('📊 Initial memory:', initialStats);
-});
+      memoryMonitor.startMonitoring(30000);
+    });
 
-// Graceful shutdown with cleanup
+  } catch (err) {
+    console.error("❌ Failed to start server:", err);
+    process.exit(1);
+  }
+}
+
+startServer();
+
+// ─── Graceful Shutdown ────────────────────────────────────────────────────────
 process.on('SIGTERM', () => {
-  // console.log('🔄 Graceful shutdown initiated...');
-
   server.close(() => {
-    // console.log('✅ Server closed');
-
-    // Final memory cleanup
-    if (global.gc) {
-      global.gc();
-      // console.log('🗑️ Final garbage collection completed');
-    }
-
+    if (global.gc) global.gc();
     process.exit(0);
   });
 });
 
-process.on('SIGINT', () => {
-  // console.log('\n🔄 Received SIGINT, shutting down gracefully...');
-  process.emit('SIGTERM');
-});
+process.on('SIGINT', () => process.emit('SIGTERM'));
+
+// ─── Error Guards ─────────────────────────────────────────────────────────────
+process.on("uncaughtException", (err) => console.error("UNCAUGHT EXCEPTION:", err));
+process.on("unhandledRejection", (reason) => console.error("UNHANDLED REJECTION:", reason));

@@ -87,8 +87,6 @@ EmployeeSchema.index({ 'professionalInfo.reportingManager': 1, 'status': 1 });
 EmployeeSchema.index({ 'professionalInfo.teamLead': 1, 'status': 1 });
 EmployeeSchema.index({ 'professionalInfo.department': 1, 'status': 1 });
 EmployeeSchema.index({ 'professionalInfo.role': 1, 'status': 1 });
-EmployeeSchema.index({ 'authInfo.workEmail': 1 }); // Login queries
-EmployeeSchema.index({ 'professionalInfo.empId': 1 }); // Employee ID lookup
 EmployeeSchema.index({ 'basicInfo.firstName': 1, 'basicInfo.lastName': 1 }); // Name search
 EmployeeSchema.index({ 'isActive': 1, 'status': 1 }); // Active employee queries
 

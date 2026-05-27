@@ -1,0 +1,1737 @@
+{
+  "E:\\Loigmax\\Tracker\\.vscode\\settings.json": {
+    "mtime": 1779815716.4949317,
+    "ast_hash": "9f617d60262f794c5aeb5c03c6a30897",
+    "semantic_hash": "9f617d60262f794c5aeb5c03c6a30897"
+  },
+  "E:\\Loigmax\\Tracker\\App\\app.json": {
+    "mtime": 1779815716.5164633,
+    "ast_hash": "d8bb1f74ab80d3a88e849a3e1dfefd99",
+    "semantic_hash": "d8bb1f74ab80d3a88e849a3e1dfefd99"
+  },
+  "E:\\Loigmax\\Tracker\\App\\babel.config.js": {
+    "mtime": 1779815716.5425036,
+    "ast_hash": "257c222ca0a2215b06d7664746d966da",
+    "semantic_hash": "257c222ca0a2215b06d7664746d966da"
+  },
+  "E:\\Loigmax\\Tracker\\App\\eas.json": {
+    "mtime": 1779815716.5584178,
+    "ast_hash": "e48cee1a1318eb9e4470b88412857e9c",
+    "semantic_hash": "e48cee1a1318eb9e4470b88412857e9c"
+  },
+  "E:\\Loigmax\\Tracker\\App\\eslint.config.js": {
+    "mtime": 1779815716.5584178,
+    "ast_hash": "863383b08e7ec37e0b09ebacf6c03216",
+    "semantic_hash": "863383b08e7ec37e0b09ebacf6c03216"
+  },
+  "E:\\Loigmax\\Tracker\\App\\metro.config.js": {
+    "mtime": 1779815716.560639,
+    "ast_hash": "8e78a7d2977f96fed75f80a28d0d94e2",
+    "semantic_hash": "8e78a7d2977f96fed75f80a28d0d94e2"
+  },
+  "E:\\Loigmax\\Tracker\\App\\nativewind-env.d.ts": {
+    "mtime": 1779815716.560639,
+    "ast_hash": "3314844d0689145a0a8cf34dd5ada0d8",
+    "semantic_hash": "3314844d0689145a0a8cf34dd5ada0d8"
+  },
+  "E:\\Loigmax\\Tracker\\App\\package.json": {
+    "mtime": 1779815716.560639,
+    "ast_hash": "ce6ff921b12b807669aec62a44b527e0",
+    "semantic_hash": "ce6ff921b12b807669aec62a44b527e0"
+  },
+  "E:\\Loigmax\\Tracker\\App\\tailwind.config.js": {
+    "mtime": 1779815716.560639,
+    "ast_hash": "beba7f653802e1c6ffac999f8d1f4753",
+    "semantic_hash": "beba7f653802e1c6ffac999f8d1f4753"
+  },
+  "E:\\Loigmax\\Tracker\\App\\tsconfig.json": {
+    "mtime": 1779815716.560639,
+    "ast_hash": "17e416ec4086fa8d55b04b64be895a87",
+    "semantic_hash": "17e416ec4086fa8d55b04b64be895a87"
+  },
+  "E:\\Loigmax\\Tracker\\App\\.vscode\\extensions.json": {
+    "mtime": 1779815716.5138,
+    "ast_hash": "6cbfc878ae3854f2fc8f9f35813fde5b",
+    "semantic_hash": "6cbfc878ae3854f2fc8f9f35813fde5b"
+  },
+  "E:\\Loigmax\\Tracker\\App\\.vscode\\settings.json": {
+    "mtime": 1779815716.5138,
+    "ast_hash": "5812a780e2bb6913d6200435c8860dae",
+    "semantic_hash": "5812a780e2bb6913d6200435c8860dae"
+  },
+  "E:\\Loigmax\\Tracker\\App\\api\\axiosInstance.js": {
+    "mtime": 1779815716.5159574,
+    "ast_hash": "ea7398c985e5119fbdcd4370ae0f2f1e",
+    "semantic_hash": "ea7398c985e5119fbdcd4370ae0f2f1e"
+  },
+  "E:\\Loigmax\\Tracker\\App\\app\\modal.tsx": {
+    "mtime": 1779815716.529893,
+    "ast_hash": "fad0f04d3d9a6b3d30b7487a7633332d",
+    "semantic_hash": "fad0f04d3d9a6b3d30b7487a7633332d"
+  },
+  "E:\\Loigmax\\Tracker\\App\\app\\_layout.tsx": {
+    "mtime": 1779815716.529893,
+    "ast_hash": "1586ea1990851d841c9fce7ac515a5ba",
+    "semantic_hash": "1586ea1990851d841c9fce7ac515a5ba"
+  },
+  "E:\\Loigmax\\Tracker\\App\\app\\(authRoute)\\Login.tsx": {
+    "mtime": 1779815716.5164633,
+    "ast_hash": "171803872056ce7a422809374b123238",
+    "semantic_hash": "171803872056ce7a422809374b123238"
+  },
+  "E:\\Loigmax\\Tracker\\App\\app\\(authRoute)\\_layout.tsx": {
+    "mtime": 1779815716.518468,
+    "ast_hash": "4fb50647a29e3843cbb6deb57e98cfe1",
+    "semantic_hash": "4fb50647a29e3843cbb6deb57e98cfe1"
+  },
+  "E:\\Loigmax\\Tracker\\App\\app\\(protectedRoute)\\index.tsx": {
+    "mtime": 1779815716.5250793,
+    "ast_hash": "c8d07cb7d6da3367f4eee0c082147656",
+    "semantic_hash": "c8d07cb7d6da3367f4eee0c082147656"
+  },
+  "E:\\Loigmax\\Tracker\\App\\app\\(protectedRoute)\\Logout.tsx": {
+    "mtime": 1779815716.518468,
+    "ast_hash": "bfa59138bde0100eda21ffcea47253a0",
+    "semantic_hash": "bfa59138bde0100eda21ffcea47253a0"
+  },
+  "E:\\Loigmax\\Tracker\\App\\app\\(protectedRoute)\\_layout.tsx": {
+    "mtime": 1779815716.518468,
+    "ast_hash": "2138ab30354f20b6023836e589b81b63",
+    "semantic_hash": "2138ab30354f20b6023836e589b81b63"
+  },
+  "E:\\Loigmax\\Tracker\\App\\app\\(protectedRoute)\\attendance\\index.tsx": {
+    "mtime": 1779815716.5202227,
+    "ast_hash": "75211b2565648601ff756c7c1bacd226",
+    "semantic_hash": "75211b2565648601ff756c7c1bacd226"
+  },
+  "E:\\Loigmax\\Tracker\\App\\app\\(protectedRoute)\\attendance\\leave-and-regularization.tsx": {
+    "mtime": 1779815716.5202227,
+    "ast_hash": "d2a0a10aa7393cb441fa7ca825a59e6f",
+    "semantic_hash": "d2a0a10aa7393cb441fa7ca825a59e6f"
+  },
+  "E:\\Loigmax\\Tracker\\App\\app\\(protectedRoute)\\attendance\\_layout.tsx": {
+    "mtime": 1779815716.5202227,
+    "ast_hash": "d3b11042bdac3a3f7fffd49958faff11",
+    "semantic_hash": "d3b11042bdac3a3f7fffd49958faff11"
+  },
+  "E:\\Loigmax\\Tracker\\App\\app\\(protectedRoute)\\daily-tracker\\index.tsx": {
+    "mtime": 1779815716.5202227,
+    "ast_hash": "fc24e4751031c5092ec9f0eadfc25859",
+    "semantic_hash": "fc24e4751031c5092ec9f0eadfc25859"
+  },
+  "E:\\Loigmax\\Tracker\\App\\app\\(protectedRoute)\\dashboard\\index.tsx": {
+    "mtime": 1779815716.5202227,
+    "ast_hash": "36056423afd421e8499d4546a77d85a0",
+    "semantic_hash": "36056423afd421e8499d4546a77d85a0"
+  },
+  "E:\\Loigmax\\Tracker\\App\\app\\(protectedRoute)\\me\\index.tsx": {
+    "mtime": 1779815716.5268257,
+    "ast_hash": "682293698ad40af7941ac080cc54f971",
+    "semantic_hash": "682293698ad40af7941ac080cc54f971"
+  },
+  "E:\\Loigmax\\Tracker\\App\\app\\(protectedRoute)\\me\\_layout.tsx": {
+    "mtime": 1779815716.5250793,
+    "ast_hash": "24395ef7d6ede50ba15b48929d4ff7af",
+    "semantic_hash": "24395ef7d6ede50ba15b48929d4ff7af"
+  },
+  "E:\\Loigmax\\Tracker\\App\\app\\(protectedRoute)\\salary-expense\\index.tsx": {
+    "mtime": 1779815716.5268257,
+    "ast_hash": "e78c861daaee2eb07d348f331d97a183",
+    "semantic_hash": "e78c861daaee2eb07d348f331d97a183"
+  },
+  "E:\\Loigmax\\Tracker\\App\\app\\(protectedRoute)\\tasks\\add-task.tsx": {
+    "mtime": 1779815716.5278318,
+    "ast_hash": "2059952eaf5e51bb60e1c2678c77f68c",
+    "semantic_hash": "2059952eaf5e51bb60e1c2678c77f68c"
+  },
+  "E:\\Loigmax\\Tracker\\App\\app\\(protectedRoute)\\tasks\\index.tsx": {
+    "mtime": 1779815716.529893,
+    "ast_hash": "31777ae1c60a98a1974910660f20997a",
+    "semantic_hash": "31777ae1c60a98a1974910660f20997a"
+  },
+  "E:\\Loigmax\\Tracker\\App\\app\\(protectedRoute)\\tasks\\_layout.tsx": {
+    "mtime": 1779815716.5278318,
+    "ast_hash": "6305095623d8ec3e42f1aec3334f5b3f",
+    "semantic_hash": "6305095623d8ec3e42f1aec3334f5b3f"
+  },
+  "E:\\Loigmax\\Tracker\\App\\app\\(protectedRoute)\\tasks\\client\\[id].tsx": {
+    "mtime": 1779815716.5278318,
+    "ast_hash": "f9532ef0519ba3045539062c21fa69db",
+    "semantic_hash": "f9532ef0519ba3045539062c21fa69db"
+  },
+  "E:\\Loigmax\\Tracker\\App\\app\\(protectedRoute)\\tasks\\project-tasks\\[projectType].tsx": {
+    "mtime": 1779815716.529893,
+    "ast_hash": "df4f7121ff4aa4318ceaa6f87db26228",
+    "semantic_hash": "df4f7121ff4aa4318ceaa6f87db26228"
+  },
+  "E:\\Loigmax\\Tracker\\App\\app\\(protectedRoute)\\tasks\\task-detail\\[taskId].tsx": {
+    "mtime": 1779815716.529893,
+    "ast_hash": "dc2c44afd5af51601bd475773aa3c78d",
+    "semantic_hash": "dc2c44afd5af51601bd475773aa3c78d"
+  },
+  "E:\\Loigmax\\Tracker\\App\\app\\(protectedRoute)\\travel-expenses\\index.tsx": {
+    "mtime": 1779815716.529893,
+    "ast_hash": "d3017c1c9ef570632352ee659653ec25",
+    "semantic_hash": "d3017c1c9ef570632352ee659653ec25"
+  },
+  "E:\\Loigmax\\Tracker\\App\\components\\AppHeader.tsx": {
+    "mtime": 1779815716.5425036,
+    "ast_hash": "d942d4b0bda99a24cfbbe7dceb7f7e79",
+    "semantic_hash": "d942d4b0bda99a24cfbbe7dceb7f7e79"
+  },
+  "E:\\Loigmax\\Tracker\\App\\components\\external-link.tsx": {
+    "mtime": 1779815716.5425036,
+    "ast_hash": "f4681f52a20edd637d810e6f853e0be7",
+    "semantic_hash": "f4681f52a20edd637d810e6f853e0be7"
+  },
+  "E:\\Loigmax\\Tracker\\App\\components\\haptic-tab.tsx": {
+    "mtime": 1779815716.5425036,
+    "ast_hash": "0794528a2e4a1d38e4b561471776013a",
+    "semantic_hash": "0794528a2e4a1d38e4b561471776013a"
+  },
+  "E:\\Loigmax\\Tracker\\App\\components\\hello-wave.tsx": {
+    "mtime": 1779815716.5425036,
+    "ast_hash": "ca15c5ac88908bd7163f0a1492676561",
+    "semantic_hash": "ca15c5ac88908bd7163f0a1492676561"
+  },
+  "E:\\Loigmax\\Tracker\\App\\components\\InlineEdit.tsx": {
+    "mtime": 1779815716.5425036,
+    "ast_hash": "92c5bbb0dcb5dad0859cf57e0e1a3df7",
+    "semantic_hash": "92c5bbb0dcb5dad0859cf57e0e1a3df7"
+  },
+  "E:\\Loigmax\\Tracker\\App\\components\\NotificationDrawer.tsx": {
+    "mtime": 1779815716.5425036,
+    "ast_hash": "18a14d37cb9cdb30554bb5c9860824bf",
+    "semantic_hash": "18a14d37cb9cdb30554bb5c9860824bf"
+  },
+  "E:\\Loigmax\\Tracker\\App\\components\\parallax-scroll-view.tsx": {
+    "mtime": 1779815716.5425036,
+    "ast_hash": "4c4adfceb5d55af4bca61e8e2ded3fc6",
+    "semantic_hash": "4c4adfceb5d55af4bca61e8e2ded3fc6"
+  },
+  "E:\\Loigmax\\Tracker\\App\\components\\StatCard.tsx": {
+    "mtime": 1779815716.5425036,
+    "ast_hash": "2a3e306ecbb0ac4fa53dd587f1334c43",
+    "semantic_hash": "2a3e306ecbb0ac4fa53dd587f1334c43"
+  },
+  "E:\\Loigmax\\Tracker\\App\\components\\themed-text.tsx": {
+    "mtime": 1779815716.5508041,
+    "ast_hash": "6f0eeac63495340c7c48cbf00518f1f7",
+    "semantic_hash": "6f0eeac63495340c7c48cbf00518f1f7"
+  },
+  "E:\\Loigmax\\Tracker\\App\\components\\themed-view.tsx": {
+    "mtime": 1779815716.5508041,
+    "ast_hash": "e8563a5d89c7c7c8fd8df95c2c2f1225",
+    "semantic_hash": "e8563a5d89c7c7c8fd8df95c2c2f1225"
+  },
+  "E:\\Loigmax\\Tracker\\App\\components\\roles\\employee\\EmployeeDashboard.tsx": {
+    "mtime": 1779815716.5425036,
+    "ast_hash": "26352b63d73ad9eaebe4351609ee1434",
+    "semantic_hash": "26352b63d73ad9eaebe4351609ee1434"
+  },
+  "E:\\Loigmax\\Tracker\\App\\components\\roles\\hr\\HRDashboard.tsx": {
+    "mtime": 1779815716.5425036,
+    "ast_hash": "22aae3acaef41fd671250ae88d54e899",
+    "semantic_hash": "22aae3acaef41fd671250ae88d54e899"
+  },
+  "E:\\Loigmax\\Tracker\\App\\components\\roles\\manager\\ManagerDashboard.tsx": {
+    "mtime": 1779815716.5425036,
+    "ast_hash": "ff71014227fd210e0d00689d4ff0788f",
+    "semantic_hash": "ff71014227fd210e0d00689d4ff0788f"
+  },
+  "E:\\Loigmax\\Tracker\\App\\components\\roles\\superadmin\\SuperAdminDashboard.tsx": {
+    "mtime": 1779815716.5425036,
+    "ast_hash": "0f5ef72bb366718656b5adbc88fc78f5",
+    "semantic_hash": "0f5ef72bb366718656b5adbc88fc78f5"
+  },
+  "E:\\Loigmax\\Tracker\\App\\components\\ui\\collapsible.tsx": {
+    "mtime": 1779815716.5529704,
+    "ast_hash": "2ccf0e87114665844c3f2e5ec4f101cc",
+    "semantic_hash": "2ccf0e87114665844c3f2e5ec4f101cc"
+  },
+  "E:\\Loigmax\\Tracker\\App\\components\\ui\\FloatingCard.tsx": {
+    "mtime": 1779815716.5508041,
+    "ast_hash": "ccb491123ca13d39ce2468f381a61e29",
+    "semantic_hash": "ccb491123ca13d39ce2468f381a61e29"
+  },
+  "E:\\Loigmax\\Tracker\\App\\components\\ui\\FormRenderer.tsx": {
+    "mtime": 1779815716.5519612,
+    "ast_hash": "145fe5c3a7ca23461fd287e9829cacd7",
+    "semantic_hash": "145fe5c3a7ca23461fd287e9829cacd7"
+  },
+  "E:\\Loigmax\\Tracker\\App\\components\\ui\\icon-symbol.ios.tsx": {
+    "mtime": 1779815716.5529704,
+    "ast_hash": "089d11181cc7542fa42b05fade85fe36",
+    "semantic_hash": "089d11181cc7542fa42b05fade85fe36"
+  },
+  "E:\\Loigmax\\Tracker\\App\\components\\ui\\icon-symbol.tsx": {
+    "mtime": 1779815716.5529704,
+    "ast_hash": "a6877730a934d347343a08a439c42604",
+    "semantic_hash": "a6877730a934d347343a08a439c42604"
+  },
+  "E:\\Loigmax\\Tracker\\App\\components\\ui\\OptimizedList.tsx": {
+    "mtime": 1779815716.5519612,
+    "ast_hash": "28e9c05bf15071ded93d05a4ff0c3c43",
+    "semantic_hash": "28e9c05bf15071ded93d05a4ff0c3c43"
+  },
+  "E:\\Loigmax\\Tracker\\App\\components\\ui\\SwipeableProfileImage.tsx": {
+    "mtime": 1779815716.5519612,
+    "ast_hash": "3d98c84ff5be7e45d1deead7d72a723e",
+    "semantic_hash": "3d98c84ff5be7e45d1deead7d72a723e"
+  },
+  "E:\\Loigmax\\Tracker\\App\\constants\\theme.ts": {
+    "mtime": 1779815716.5529704,
+    "ast_hash": "e1108bb2e985a756e9ed009018501ad5",
+    "semantic_hash": "e1108bb2e985a756e9ed009018501ad5"
+  },
+  "E:\\Loigmax\\Tracker\\App\\constants\\Forms\\leaveForm.js": {
+    "mtime": 1779815716.5529704,
+    "ast_hash": "63ca8f643dd49689fac82ad91180cf60",
+    "semantic_hash": "63ca8f643dd49689fac82ad91180cf60"
+  },
+  "E:\\Loigmax\\Tracker\\App\\constants\\Forms\\profileForm.js": {
+    "mtime": 1779815716.5529704,
+    "ast_hash": "acaf429d1eacc6d1341936b4af2aafc6",
+    "semantic_hash": "acaf429d1eacc6d1341936b4af2aafc6"
+  },
+  "E:\\Loigmax\\Tracker\\App\\constants\\Forms\\regularizationForm.js": {
+    "mtime": 1779815716.5529704,
+    "ast_hash": "8538e99831860fc5f122321ba64299c6",
+    "semantic_hash": "8538e99831860fc5f122321ba64299c6"
+  },
+  "E:\\Loigmax\\Tracker\\App\\context\\AuthContext.js": {
+    "mtime": 1779815716.5529704,
+    "ast_hash": "aed81644876535e477402f082b50c9dd",
+    "semantic_hash": "aed81644876535e477402f082b50c9dd"
+  },
+  "E:\\Loigmax\\Tracker\\App\\context\\NotificationContext.tsx": {
+    "mtime": 1779815716.5529704,
+    "ast_hash": "653d46a80db113e0971a8b9ab86ef3e7",
+    "semantic_hash": "653d46a80db113e0971a8b9ab86ef3e7"
+  },
+  "E:\\Loigmax\\Tracker\\App\\firebase\\google-services.json": {
+    "mtime": 1779815716.5584178,
+    "ast_hash": "cca6ac4204314b40c7f853fa7c5b7b76",
+    "semantic_hash": "cca6ac4204314b40c7f853fa7c5b7b76"
+  },
+  "E:\\Loigmax\\Tracker\\App\\hooks\\use-color-scheme.ts": {
+    "mtime": 1779815716.5584178,
+    "ast_hash": "5e75b3d5ace0289cfc1bab951ca625bb",
+    "semantic_hash": "5e75b3d5ace0289cfc1bab951ca625bb"
+  },
+  "E:\\Loigmax\\Tracker\\App\\hooks\\use-color-scheme.web.ts": {
+    "mtime": 1779815716.5584178,
+    "ast_hash": "bcd7b96a68e8a00dd1de95aac4953eb6",
+    "semantic_hash": "bcd7b96a68e8a00dd1de95aac4953eb6"
+  },
+  "E:\\Loigmax\\Tracker\\App\\hooks\\use-theme-color.ts": {
+    "mtime": 1779815716.560639,
+    "ast_hash": "1c4852743a2fe0529f96ab4ef1f61026",
+    "semantic_hash": "1c4852743a2fe0529f96ab4ef1f61026"
+  },
+  "E:\\Loigmax\\Tracker\\App\\hooks\\useOptimizedAPI.js": {
+    "mtime": 1779815716.560639,
+    "ast_hash": "9a56cf23133121e5470f6076d92db053",
+    "semantic_hash": "9a56cf23133121e5470f6076d92db053"
+  },
+  "E:\\Loigmax\\Tracker\\App\\hooks\\useOptimizedDataFetching.js": {
+    "mtime": 1779815716.560639,
+    "ast_hash": "61f81d22258f06038fe82f396023ce27",
+    "semantic_hash": "61f81d22258f06038fe82f396023ce27"
+  },
+  "E:\\Loigmax\\Tracker\\App\\hooks\\useUserRole.ts": {
+    "mtime": 1779815716.560639,
+    "ast_hash": "08e6d4cd0ed46bb1f1502ebb8a371d80",
+    "semantic_hash": "08e6d4cd0ed46bb1f1502ebb8a371d80"
+  },
+  "E:\\Loigmax\\Tracker\\App\\utils\\fcmTokenManager.js": {
+    "mtime": 1779815716.560639,
+    "ast_hash": "c05dd57c50a4164c8ceddaeb4bec6f75",
+    "semantic_hash": "c05dd57c50a4164c8ceddaeb4bec6f75"
+  },
+  "E:\\Loigmax\\Tracker\\App\\utils\\registerPushToken.js": {
+    "mtime": 1779815716.560639,
+    "ast_hash": "121a2f7a7ab44403ac4f0a58d4d577f6",
+    "semantic_hash": "121a2f7a7ab44403ac4f0a58d4d577f6"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\package.json": {
+    "mtime": 1779815716.6062686,
+    "ast_hash": "c65c1b0bd39c43ff1d77078ff5d7809d",
+    "semantic_hash": "c65c1b0bd39c43ff1d77078ff5d7809d"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\server.js": {
+    "mtime": 1779815716.6062686,
+    "ast_hash": "3d3800f2c395558809c80755408339fd",
+    "semantic_hash": "3d3800f2c395558809c80755408339fd"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\test_deps.js": {
+    "mtime": 1779815716.6628575,
+    "ast_hash": "906bbdcdf94126fa28e8e38c6b8c2b90",
+    "semantic_hash": "906bbdcdf94126fa28e8e38c6b8c2b90"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\test_deps_v2.js": {
+    "mtime": 1779815716.6628575,
+    "ast_hash": "1d865eec602640db304c87aa075c71f4",
+    "semantic_hash": "1d865eec602640db304c87aa075c71f4"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\test_import.js": {
+    "mtime": 1779815716.6666565,
+    "ast_hash": "973272632fd7e792731a55dec0c2da41",
+    "semantic_hash": "973272632fd7e792731a55dec0c2da41"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\data\\ticketsSidebar.json": {
+    "mtime": 1779815716.5777125,
+    "ast_hash": "99d3113b79d84fd2d409a14f730aba28",
+    "semantic_hash": "99d3113b79d84fd2d409a14f730aba28"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\playGround\\populate.js": {
+    "mtime": 1779815716.6062686,
+    "ast_hash": "95c2eccb8ed696876178f2857873fab4",
+    "semantic_hash": "95c2eccb8ed696876178f2857873fab4"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\index.js": {
+    "mtime": 1779815716.6127589,
+    "ast_hash": "f0ae414c42659d47f470dec6d4409304",
+    "semantic_hash": "f0ae414c42659d47f470dec6d4409304"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\Config\\ConnectDB.js": {
+    "mtime": 1779815716.6062686,
+    "ast_hash": "b8759625bb0cee23f3ded13987235be6",
+    "semantic_hash": "b8759625bb0cee23f3ded13987235be6"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\Config\\defaultPopulateFields.js": {
+    "mtime": 1779815716.6062686,
+    "ast_hash": "a891a968d55fbe965e3423202946280f",
+    "semantic_hash": "a891a968d55fbe965e3423202946280f"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\Controller\\AgentAuthController.js": {
+    "mtime": 1779815716.6127589,
+    "ast_hash": "a3582919bca81cde3dc64866275bf513",
+    "semantic_hash": "a3582919bca81cde3dc64866275bf513"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\Controller\\AuthController.js": {
+    "mtime": 1779815716.6127589,
+    "ast_hash": "aeb0ca9a89744f97c27fd042a839c9dd",
+    "semantic_hash": "aeb0ca9a89744f97c27fd042a839c9dd"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\Controller\\index.js": {
+    "mtime": 1779815716.6127589,
+    "ast_hash": "7f4105093b897567d86e68455ab0ead8",
+    "semantic_hash": "7f4105093b897567d86e68455ab0ead8"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\cron\\AttendanceCron.js": {
+    "mtime": 1779815716.6127589,
+    "ast_hash": "821105c690f64dfdd85a11deccd39ed0",
+    "semantic_hash": "821105c690f64dfdd85a11deccd39ed0"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\crud\\buildCreateQuery.js": {
+    "mtime": 1779815716.6127589,
+    "ast_hash": "7cd4040abf364ff24f8a7635ec542c1b",
+    "semantic_hash": "7cd4040abf364ff24f8a7635ec542c1b"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\crud\\buildDeleteQuery.js": {
+    "mtime": 1779815716.6127589,
+    "ast_hash": "1992b976e0549b209dc208beda8a3c1e",
+    "semantic_hash": "1992b976e0549b209dc208beda8a3c1e"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\crud\\buildReadQuery.js": {
+    "mtime": 1779815716.6127589,
+    "ast_hash": "c028e6b676522e0b4744e5e5fcbab59a",
+    "semantic_hash": "c028e6b676522e0b4744e5e5fcbab59a"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\crud\\buildReportQuery.js": {
+    "mtime": 1779815716.6127589,
+    "ast_hash": "4b33820dbf14d6fe9eb20bf5647dccef",
+    "semantic_hash": "4b33820dbf14d6fe9eb20bf5647dccef"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\crud\\buildUpdateQuery.js": {
+    "mtime": 1779815716.6127589,
+    "ast_hash": "163a038d3e4736da558bc6e1df71376b",
+    "semantic_hash": "163a038d3e4736da558bc6e1df71376b"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\helper\\populateHelper.js": {
+    "mtime": 1779815716.6127589,
+    "ast_hash": "3fa014428e182bd16ee7083e74f6fcd5",
+    "semantic_hash": "3fa014428e182bd16ee7083e74f6fcd5"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\middlewares\\agentAuthMiddleware.js": {
+    "mtime": 1779815716.6127589,
+    "ast_hash": "ebb894570b23f21d263846beafe446fe",
+    "semantic_hash": "ebb894570b23f21d263846beafe446fe"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\middlewares\\apiHitLogger.js": {
+    "mtime": 1779815716.6127589,
+    "ast_hash": "e35192eb88e5eff996b543a2073ada19",
+    "semantic_hash": "e35192eb88e5eff996b543a2073ada19"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\middlewares\\auth.js": {
+    "mtime": 1779815716.6127589,
+    "ast_hash": "5d3d86136f47acfdba0cce2fff095a78",
+    "semantic_hash": "5d3d86136f47acfdba0cce2fff095a78"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\middlewares\\errorHandler.js": {
+    "mtime": 1779815716.6127589,
+    "ast_hash": "5ab7dbff3bf1e93f248d8e350c9d6743",
+    "semantic_hash": "5ab7dbff3bf1e93f248d8e350c9d6743"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\middlewares\\multerConfig.js": {
+    "mtime": 1779815716.6127589,
+    "ast_hash": "63267b233aa4d5400de93b8b05cdfb94",
+    "semantic_hash": "63267b233aa4d5400de93b8b05cdfb94"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\middlewares\\notificationMessagePrasher.js": {
+    "mtime": 1779815716.6127589,
+    "ast_hash": "4b6bb5b941e34a85a8e081029de4cf75",
+    "semantic_hash": "4b6bb5b941e34a85a8e081029de4cf75"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\middlewares\\performanceMiddleware.js": {
+    "mtime": 1779815716.622237,
+    "ast_hash": "a2ff6cec442f811b6500591deb9582ce",
+    "semantic_hash": "a2ff6cec442f811b6500591deb9582ce"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\middlewares\\requestTracer.js": {
+    "mtime": 1779815716.622237,
+    "ast_hash": "0421ef8a31397ab9e5bba7c3f86b91ee",
+    "semantic_hash": "0421ef8a31397ab9e5bba7c3f86b91ee"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\AccessPolicies.js": {
+    "mtime": 1779815716.622237,
+    "ast_hash": "f4443ad4c89e40db5a1aca5b2a3d1ff7",
+    "semantic_hash": "f4443ad4c89e40db5a1aca5b2a3d1ff7"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\Agent.js": {
+    "mtime": 1779815716.622237,
+    "ast_hash": "32c7deb579bac6e9314a8c37ccdac11b",
+    "semantic_hash": "32c7deb579bac6e9314a8c37ccdac11b"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\AgentToken.js": {
+    "mtime": 1779815716.622237,
+    "ast_hash": "3e0ed74d1c5950bdcb9a41219cec3fa4",
+    "semantic_hash": "3e0ed74d1c5950bdcb9a41219cec3fa4"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\ApiHitLog.js": {
+    "mtime": 1779815716.622237,
+    "ast_hash": "d140e03d52207bb3502c064a887945a9",
+    "semantic_hash": "d140e03d52207bb3502c064a887945a9"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\Attendance.js": {
+    "mtime": 1779815716.622237,
+    "ast_hash": "c9db0400cb61ae35ce5dfdb687fc4d2e",
+    "semantic_hash": "c9db0400cb61ae35ce5dfdb687fc4d2e"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\AuditLog.js": {
+    "mtime": 1779815716.622237,
+    "ast_hash": "535adf382fc918437966317ab77c120f",
+    "semantic_hash": "535adf382fc918437966317ab77c120f"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\Client.js": {
+    "mtime": 1779815716.6250904,
+    "ast_hash": "b62b75b86d9a29181e3bcaba26a11b80",
+    "semantic_hash": "b62b75b86d9a29181e3bcaba26a11b80"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\Collection.js": {
+    "mtime": 1779815716.6250904,
+    "ast_hash": "365fe41b61466cf53cdd70e2b2256ad3",
+    "semantic_hash": "365fe41b61466cf53cdd70e2b2256ad3"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\CommentsThreads.js": {
+    "mtime": 1779815716.6250904,
+    "ast_hash": "8768728598b0a2808e2aa41beffc08d7",
+    "semantic_hash": "8768728598b0a2808e2aa41beffc08d7"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\DailyActivity.js": {
+    "mtime": 1779815716.6250904,
+    "ast_hash": "9883a61531f27e3f7defccfbf33d3dab",
+    "semantic_hash": "9883a61531f27e3f7defccfbf33d3dab"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\Department.js": {
+    "mtime": 1779815716.6250904,
+    "ast_hash": "94abe960f395a0bd7c379ee4862eda62",
+    "semantic_hash": "94abe960f395a0bd7c379ee4862eda62"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\Designation.js": {
+    "mtime": 1779815716.6250904,
+    "ast_hash": "0cc60bcd4d048bfef7d940c5cce31dc4",
+    "semantic_hash": "0cc60bcd4d048bfef7d940c5cce31dc4"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\EmailConfig.js": {
+    "mtime": 1779815716.6250904,
+    "ast_hash": "888f3cb11451ffcc8109b4746b551632",
+    "semantic_hash": "888f3cb11451ffcc8109b4746b551632"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\Employee.js": {
+    "mtime": 1779815716.6281967,
+    "ast_hash": "0bccf986b7d4815292a7c37e2bddf506",
+    "semantic_hash": "0bccf986b7d4815292a7c37e2bddf506"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\ErrorLog.js": {
+    "mtime": 1779815716.6281967,
+    "ast_hash": "8301021f7125f59d287c6d85382da263",
+    "semantic_hash": "8301021f7125f59d287c6d85382da263"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\Expense.js": {
+    "mtime": 1779815716.6281967,
+    "ast_hash": "b24f85cb82c68d392b9e23a9f0949563",
+    "semantic_hash": "b24f85cb82c68d392b9e23a9f0949563"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\HRPolicy.js": {
+    "mtime": 1779815716.6281967,
+    "ast_hash": "2fa314416abb1c892b41b111fa37290e",
+    "semantic_hash": "2fa314416abb1c892b41b111fa37290e"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\LeadType.js": {
+    "mtime": 1779815716.6281967,
+    "ast_hash": "08b89f4fa91292d483b9484dde5391c7",
+    "semantic_hash": "08b89f4fa91292d483b9484dde5391c7"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\Leave.js": {
+    "mtime": 1779815716.6281967,
+    "ast_hash": "75791f2b9ee31e88baf646c74e15bf14",
+    "semantic_hash": "75791f2b9ee31e88baf646c74e15bf14"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\LeavePolicy.js": {
+    "mtime": 1779815716.6281967,
+    "ast_hash": "d7e8b6e1dfa38f7cc1ac6a198526b208",
+    "semantic_hash": "d7e8b6e1dfa38f7cc1ac6a198526b208"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\LeaveTypes.js": {
+    "mtime": 1779815716.6281967,
+    "ast_hash": "a41867cd6393b7a780b1e4fae200c894",
+    "semantic_hash": "a41867cd6393b7a780b1e4fae200c894"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\MileStone.js": {
+    "mtime": 1779815716.6281967,
+    "ast_hash": "67c5925a473d30ded459e32740f56583",
+    "semantic_hash": "67c5925a473d30ded459e32740f56583"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\notification.js": {
+    "mtime": 1779815716.6320798,
+    "ast_hash": "46b2bd06bd4cc201243a6752f10b74c3",
+    "semantic_hash": "46b2bd06bd4cc201243a6752f10b74c3"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\Payroll.js": {
+    "mtime": 1779815716.6281967,
+    "ast_hash": "17d5fc912375af9eb3502af0adb57ac8",
+    "semantic_hash": "17d5fc912375af9eb3502af0adb57ac8"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\ProjectType.js": {
+    "mtime": 1779815716.6281967,
+    "ast_hash": "d894301c475df1e15238301790f0f95c",
+    "semantic_hash": "d894301c475df1e15238301790f0f95c"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\ReferenceType.js": {
+    "mtime": 1779815716.6320798,
+    "ast_hash": "15ef5956bf348f203177891687168f24",
+    "semantic_hash": "15ef5956bf348f203177891687168f24"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\Regularization.js": {
+    "mtime": 1779815716.6320798,
+    "ast_hash": "08b56b783839d53cba44846c055fa1a5",
+    "semantic_hash": "08b56b783839d53cba44846c055fa1a5"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\Role.js": {
+    "mtime": 1779815716.6320798,
+    "ast_hash": "cbfdc335ee40a6c539885dab8d165a71",
+    "semantic_hash": "cbfdc335ee40a6c539885dab8d165a71"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\Session.js": {
+    "mtime": 1779815716.6320798,
+    "ast_hash": "0770953bfe75029f0becb0d56d4735cb",
+    "semantic_hash": "0770953bfe75029f0becb0d56d4735cb"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\Shift.js": {
+    "mtime": 1779815716.6320798,
+    "ast_hash": "36a1e5cc88fa7c4edc5f9edadc98ce45",
+    "semantic_hash": "36a1e5cc88fa7c4edc5f9edadc98ce45"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\SideBar.js": {
+    "mtime": 1779815716.6320798,
+    "ast_hash": "dd0008b54832b7a526224b17a189c0f8",
+    "semantic_hash": "dd0008b54832b7a526224b17a189c0f8"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\Tasks.js": {
+    "mtime": 1779815716.6320798,
+    "ast_hash": "b336dc3ef2e0d86f7eb9d35e8874f1cb",
+    "semantic_hash": "b336dc3ef2e0d86f7eb9d35e8874f1cb"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\TaskType.js": {
+    "mtime": 1779815716.6320798,
+    "ast_hash": "49e366d63e2ecec0abdd21366ff91805",
+    "semantic_hash": "49e366d63e2ecec0abdd21366ff91805"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\Ticket.js": {
+    "mtime": 1779815716.6320798,
+    "ast_hash": "3634b4babcd40877c7f19bf777fb0099",
+    "semantic_hash": "3634b4babcd40877c7f19bf777fb0099"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\models\\Todo.js": {
+    "mtime": 1779815716.6320798,
+    "ast_hash": "1a14b8cf84d13ff77629cb59cebb59b0",
+    "semantic_hash": "1a14b8cf84d13ff77629cb59cebb59b0"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\routes\\agentAuth.js": {
+    "mtime": 1779815716.6320798,
+    "ast_hash": "3f94a8d570fde81a4ea939b89c95e539",
+    "semantic_hash": "3f94a8d570fde81a4ea939b89c95e539"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\routes\\agentInviteRoutes.js": {
+    "mtime": 1779815716.6320798,
+    "ast_hash": "0bc42bb66a6d1d0b805b3ae7f49fe5e3",
+    "semantic_hash": "0bc42bb66a6d1d0b805b3ae7f49fe5e3"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\routes\\agentRoutes.js": {
+    "mtime": 1779815716.6320798,
+    "ast_hash": "8660edffa68e682107a42db9d1351c18",
+    "semantic_hash": "8660edffa68e682107a42db9d1351c18"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\routes\\authRoutes.js": {
+    "mtime": 1779815716.6320798,
+    "ast_hash": "464145a46b2b8226af6ed74485b4814d",
+    "semantic_hash": "464145a46b2b8226af6ed74485b4814d"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\routes\\bankRoutes.js": {
+    "mtime": 1779815716.6320798,
+    "ast_hash": "335261840690390a4eb6ea3adb0d336b",
+    "semantic_hash": "335261840690390a4eb6ea3adb0d336b"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\routes\\configRoutes.js": {
+    "mtime": 1779815716.6382093,
+    "ast_hash": "206dfc7133a9c6a4c382844b2441973e",
+    "semantic_hash": "206dfc7133a9c6a4c382844b2441973e"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\routes\\cronRoutes.js": {
+    "mtime": 1779815716.6382093,
+    "ast_hash": "f450eba24343e2eb6cbedfa0d4e087bd",
+    "semantic_hash": "f450eba24343e2eb6cbedfa0d4e087bd"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\routes\\fileRoutes.js": {
+    "mtime": 1779815716.6382093,
+    "ast_hash": "0713d59f4bfb02c96ca5242d2e1027a3",
+    "semantic_hash": "0713d59f4bfb02c96ca5242d2e1027a3"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\routes\\locationRoutes.js": {
+    "mtime": 1779815716.6382093,
+    "ast_hash": "0568fed83e4fe14a3fa2307f6ead7e6e",
+    "semantic_hash": "0568fed83e4fe14a3fa2307f6ead7e6e"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\routes\\populateRoutes.js": {
+    "mtime": 1779815716.6382093,
+    "ast_hash": "7829933d617a09f1598a3963992231c6",
+    "semantic_hash": "7829933d617a09f1598a3963992231c6"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\services\\agent.js": {
+    "mtime": 1779815716.6382093,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\services\\AgentInviteService.js": {
+    "mtime": 1779815716.6382093,
+    "ast_hash": "99ea338cbdd2a6e1813030eff529accb",
+    "semantic_hash": "99ea338cbdd2a6e1813030eff529accb"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\services\\agents.js": {
+    "mtime": 1779815716.6382093,
+    "ast_hash": "5734f09ac79da4b9849a50406a6c3345",
+    "semantic_hash": "5734f09ac79da4b9849a50406a6c3345"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\services\\asyncNotificationService.js": {
+    "mtime": 1779815716.6382093,
+    "ast_hash": "d5642f8757bcdee813ec4786c7ced71c",
+    "semantic_hash": "d5642f8757bcdee813ec4786c7ced71c"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\services\\attendances.js": {
+    "mtime": 1779815716.6382093,
+    "ast_hash": "89aa570a214d73670d669feae868368f",
+    "semantic_hash": "89aa570a214d73670d669feae868368f"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\services\\attendanceService.js": {
+    "mtime": 1779815716.6382093,
+    "ast_hash": "02a5ade108f15f5421cc8c9377dc745c",
+    "semantic_hash": "02a5ade108f15f5421cc8c9377dc745c"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\services\\commentthreads.js": {
+    "mtime": 1779815716.6382093,
+    "ast_hash": "6a43bd5763fde9a6654f57df0efc5794",
+    "semantic_hash": "6a43bd5763fde9a6654f57df0efc5794"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\services\\computationService.js": {
+    "mtime": 1779815716.6382093,
+    "ast_hash": "6b7cf717169da553c19906e046b7dbc9",
+    "semantic_hash": "6b7cf717169da553c19906e046b7dbc9"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\services\\databaseIndexer.js": {
+    "mtime": 1779815716.6382093,
+    "ast_hash": "14ad13bc0e3e2528d8a8bdb6ac84dd5e",
+    "semantic_hash": "14ad13bc0e3e2528d8a8bdb6ac84dd5e"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\services\\employee.js": {
+    "mtime": 1779815716.6382093,
+    "ast_hash": "e2a0b5022ce59274dfb8ea95ea4db84e",
+    "semantic_hash": "e2a0b5022ce59274dfb8ea95ea4db84e"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\services\\jobQueue.js": {
+    "mtime": 1779815716.6382093,
+    "ast_hash": "367cabef53ed31f5263da36184ef2e9b",
+    "semantic_hash": "367cabef53ed31f5263da36184ef2e9b"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\services\\leaves.js": {
+    "mtime": 1779815716.6382093,
+    "ast_hash": "3c0e7048e69489a7e4fc85444019444b",
+    "semantic_hash": "3c0e7048e69489a7e4fc85444019444b"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\services\\milestoneService.js": {
+    "mtime": 1779815716.6382093,
+    "ast_hash": "cac4bff6efdee4387d23f9955e893186",
+    "semantic_hash": "cac4bff6efdee4387d23f9955e893186"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\services\\queryOptimizer.js": {
+    "mtime": 1779815716.6382093,
+    "ast_hash": "f17a8271428fee77a5bddb21cdd364f0",
+    "semantic_hash": "f17a8271428fee77a5bddb21cdd364f0"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\services\\regularizations.js": {
+    "mtime": 1779815716.6382093,
+    "ast_hash": "c9013755089938cf95708fcdf8549c64",
+    "semantic_hash": "c9013755089938cf95708fcdf8549c64"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\services\\sidebars.js": {
+    "mtime": 1779815716.6382093,
+    "ast_hash": "a7142b0e6529ad8f5b205c382c7d25a6",
+    "semantic_hash": "a7142b0e6529ad8f5b205c382c7d25a6"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\services\\tasks.js": {
+    "mtime": 1779815716.6382093,
+    "ast_hash": "f19be6bb91197de44c992bd2f61d1461",
+    "semantic_hash": "f19be6bb91197de44c992bd2f61d1461"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\services\\tickets.js": {
+    "mtime": 1779815716.6382093,
+    "ast_hash": "c1c025ba0f6790605d3f38fefb4cfeca",
+    "semantic_hash": "c1c025ba0f6790605d3f38fefb4cfeca"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\services\\ticketTaskSync.js": {
+    "mtime": 1779815716.6382093,
+    "ast_hash": "5d399086c528c15fd410e597aa5803aa",
+    "semantic_hash": "5d399086c528c15fd410e597aa5803aa"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\auditLogger.js": {
+    "mtime": 1779815716.6382093,
+    "ast_hash": "93d9c062b4d1140b49dbfca0aa17e985",
+    "semantic_hash": "93d9c062b4d1140b49dbfca0aa17e985"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\cache.js": {
+    "mtime": 1779815716.6382093,
+    "ast_hash": "45c70836310c966d1117af8ee8b192f2",
+    "semantic_hash": "45c70836310c966d1117af8ee8b192f2"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\deviceInfo.js": {
+    "mtime": 1779815716.6485474,
+    "ast_hash": "dc96719201b5f6bd6c65b5bc4627e674",
+    "semantic_hash": "dc96719201b5f6bd6c65b5bc4627e674"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\filterParser.js": {
+    "mtime": 1779815716.6485474,
+    "ast_hash": "c88f0be33ac04ae7b456ab6ee6a9c3db",
+    "semantic_hash": "c88f0be33ac04ae7b456ab6ee6a9c3db"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\memoryMonitor.js": {
+    "mtime": 1779815716.6485474,
+    "ast_hash": "bb9da49f785d257f67fc19d93d347611",
+    "semantic_hash": "bb9da49f785d257f67fc19d93d347611"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\mongoFilterCompiler.js": {
+    "mtime": 1779815716.6485474,
+    "ast_hash": "9b34a157746fb3a420d8a5da60733aa1",
+    "semantic_hash": "9b34a157746fb3a420d8a5da60733aa1"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\notificationService.js": {
+    "mtime": 1779815716.6485474,
+    "ast_hash": "d9cbc4914bc8a3172a79aaede539d590",
+    "semantic_hash": "d9cbc4914bc8a3172a79aaede539d590"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\parseExpr.js": {
+    "mtime": 1779815716.6485474,
+    "ast_hash": "3c8f759c6c0742bf4385dd662045e2e1",
+    "semantic_hash": "3c8f759c6c0742bf4385dd662045e2e1"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\pushSender.js": {
+    "mtime": 1779815716.658851,
+    "ast_hash": "ff49bcd82657fc30eea198cc6336d48a",
+    "semantic_hash": "ff49bcd82657fc30eea198cc6336d48a"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\queryOptimizer.js": {
+    "mtime": 1779815716.658851,
+    "ast_hash": "dee9968ef24f06a1574fd26342c95c89",
+    "semantic_hash": "dee9968ef24f06a1574fd26342c95c89"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\registryExecutor.js": {
+    "mtime": 1779815716.658851,
+    "ast_hash": "1d877958ddf7b5dbb544746908fb924b",
+    "semantic_hash": "1d877958ddf7b5dbb544746908fb924b"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\safeAggregator.js": {
+    "mtime": 1779815716.658851,
+    "ast_hash": "482a99dbebbac62f367372dfc2386883",
+    "semantic_hash": "482a99dbebbac62f367372dfc2386883"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\sanitizePopulated.js": {
+    "mtime": 1779815716.660854,
+    "ast_hash": "19c09d88ffefdb8affa69bf8837b0cee",
+    "semantic_hash": "19c09d88ffefdb8affa69bf8837b0cee"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\sanitizeRead.js": {
+    "mtime": 1779815716.660854,
+    "ast_hash": "5223b02522646961393f28704092c857",
+    "semantic_hash": "5223b02522646961393f28704092c857"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\sanitizeUpdate.js": {
+    "mtime": 1779815716.660854,
+    "ast_hash": "ca64158b7898219b2f65cc54359b8ef0",
+    "semantic_hash": "ca64158b7898219b2f65cc54359b8ef0"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\sanitizeWrite.js": {
+    "mtime": 1779815716.660854,
+    "ast_hash": "303d224e5891bdfab9f235e5d8239cc7",
+    "semantic_hash": "303d224e5891bdfab9f235e5d8239cc7"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\securityIntegrationTest.js": {
+    "mtime": 1779815716.660854,
+    "ast_hash": "3d06e6a16e0d532c4380a24742e94c8c",
+    "semantic_hash": "3d06e6a16e0d532c4380a24742e94c8c"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\servicesCache.js": {
+    "mtime": 1779815716.660854,
+    "ast_hash": "662b2316987af109f85504980650d9c3",
+    "semantic_hash": "662b2316987af109f85504980650d9c3"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\sessionCleanup.js": {
+    "mtime": 1779815716.6628575,
+    "ast_hash": "94112084265d57b864a408fa3341321d",
+    "semantic_hash": "94112084265d57b864a408fa3341321d"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\socket.js": {
+    "mtime": 1779815716.6628575,
+    "ast_hash": "10d79864f60e2056df44e5e9d552a835",
+    "semantic_hash": "10d79864f60e2056df44e5e9d552a835"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\tokenGenrator.js": {
+    "mtime": 1779815716.6628575,
+    "ast_hash": "42fec4dec9034f633e76c2f2eac9eef2",
+    "semantic_hash": "42fec4dec9034f633e76c2f2eac9eef2"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\validateFieldUpdateRules.js": {
+    "mtime": 1779815716.6628575,
+    "ast_hash": "d6aad23572e390bb41b88bb88a4405c9",
+    "semantic_hash": "d6aad23572e390bb41b88bb88a4405c9"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\Validator.js": {
+    "mtime": 1779815716.6382093,
+    "ast_hash": "693e26570dfef25adde66a99a9c1fb66",
+    "semantic_hash": "693e26570dfef25adde66a99a9c1fb66"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\policy\\index.js": {
+    "mtime": 1779815716.6485474,
+    "ast_hash": "9aed2ee587667ba7769bb21065ecea23",
+    "semantic_hash": "9aed2ee587667ba7769bb21065ecea23"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\policy\\policyEngine.js": {
+    "mtime": 1779815716.6485474,
+    "ast_hash": "525654a640d58fb536f57a70560dbe20",
+    "semantic_hash": "525654a640d58fb536f57a70560dbe20"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\policy\\todos.js": {
+    "mtime": 1779815716.658851,
+    "ast_hash": "a475ec54072d4e1b1fa9ec2a3d3354d4",
+    "semantic_hash": "a475ec54072d4e1b1fa9ec2a3d3354d4"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\policy\\registry\\index.js": {
+    "mtime": 1779815716.6524014,
+    "ast_hash": "637ce85606b2f47d45ffe22aba235532",
+    "semantic_hash": "637ce85606b2f47d45ffe22aba235532"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\policy\\registry\\isAssigned.js": {
+    "mtime": 1779815716.6524014,
+    "ast_hash": "3cc37890ca84aa29e415489d972bb6af",
+    "semantic_hash": "3cc37890ca84aa29e415489d972bb6af"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\policy\\registry\\isCreatedBy.js": {
+    "mtime": 1779815716.6524014,
+    "ast_hash": "808b1b84680c8a374f1cc6e047bc6cea",
+    "semantic_hash": "808b1b84680c8a374f1cc6e047bc6cea"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\policy\\registry\\isHR.js": {
+    "mtime": 1779815716.6524014,
+    "ast_hash": "7493b81306ff309659a559acd01e0994",
+    "semantic_hash": "7493b81306ff309659a559acd01e0994"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\policy\\registry\\isManager.js": {
+    "mtime": 1779815716.6524014,
+    "ast_hash": "8779f12b2778e2a322756616efad232a",
+    "semantic_hash": "8779f12b2778e2a322756616efad232a"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\policy\\registry\\isRecipient.js": {
+    "mtime": 1779815716.6541443,
+    "ast_hash": "66a10c9cf7dcca414bf69cbae0a67435",
+    "semantic_hash": "66a10c9cf7dcca414bf69cbae0a67435"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\policy\\registry\\isRef.js": {
+    "mtime": 1779815716.6554568,
+    "ast_hash": "e85334c5f4ddbbeff4e4240926263a10",
+    "semantic_hash": "e85334c5f4ddbbeff4e4240926263a10"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\policy\\registry\\isSelf.js": {
+    "mtime": 1779815716.6554568,
+    "ast_hash": "9c25efbd5fb705aa22b8a49540b60ae4",
+    "semantic_hash": "9c25efbd5fb705aa22b8a49540b60ae4"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\policy\\registry\\isSender.js": {
+    "mtime": 1779815716.6554568,
+    "ast_hash": "115fc51411a3b4ccf34b3ec81f6f8253",
+    "semantic_hash": "115fc51411a3b4ccf34b3ec81f6f8253"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\policy\\registry\\isTeamMember.js": {
+    "mtime": 1779815716.6554568,
+    "ast_hash": "df821c55d63d48401e48325815603738",
+    "semantic_hash": "df821c55d63d48401e48325815603738"
+  },
+  "E:\\Loigmax\\Tracker\\backend\\src\\utils\\policy\\registry\\populateRef.js": {
+    "mtime": 1779815716.658851,
+    "ast_hash": "527b8e5929971bef83957d143234f8f7",
+    "semantic_hash": "527b8e5929971bef83957d143234f8f7"
+  },
+  "E:\\Loigmax\\Tracker\\external\\eslint.config.mjs": {
+    "mtime": 1779815716.6778643,
+    "ast_hash": "6c4307ffa009658f5c97f5629094c0c2",
+    "semantic_hash": "6c4307ffa009658f5c97f5629094c0c2"
+  },
+  "E:\\Loigmax\\Tracker\\external\\next.config.ts": {
+    "mtime": 1779815716.6778643,
+    "ast_hash": "025f4fcb6024b3524d19492cf7ce54a2",
+    "semantic_hash": "025f4fcb6024b3524d19492cf7ce54a2"
+  },
+  "E:\\Loigmax\\Tracker\\external\\package.json": {
+    "mtime": 1779815716.6797326,
+    "ast_hash": "4d4aededc4d7ccb5238b4916210bcdf6",
+    "semantic_hash": "4d4aededc4d7ccb5238b4916210bcdf6"
+  },
+  "E:\\Loigmax\\Tracker\\external\\postcss.config.mjs": {
+    "mtime": 1779815716.6797326,
+    "ast_hash": "481fac0fdecd70e1821cc30b86030c1a",
+    "semantic_hash": "481fac0fdecd70e1821cc30b86030c1a"
+  },
+  "E:\\Loigmax\\Tracker\\external\\tsconfig.json": {
+    "mtime": 1779815716.6831157,
+    "ast_hash": "ab575e944f15d39a5486cf9fca385c5e",
+    "semantic_hash": "ab575e944f15d39a5486cf9fca385c5e"
+  },
+  "E:\\Loigmax\\Tracker\\external\\app\\layout.tsx": {
+    "mtime": 1779815716.6735919,
+    "ast_hash": "a4ccb70ba3f1be5ff5bb74f28a73cba5",
+    "semantic_hash": "a4ccb70ba3f1be5ff5bb74f28a73cba5"
+  },
+  "E:\\Loigmax\\Tracker\\external\\app\\page.tsx": {
+    "mtime": 1779815716.6735919,
+    "ast_hash": "be652c27cbd7d4e13f424b4aa8d2dd30",
+    "semantic_hash": "be652c27cbd7d4e13f424b4aa8d2dd30"
+  },
+  "E:\\Loigmax\\Tracker\\external\\app\\(client)\\layout.tsx": {
+    "mtime": 1779815716.6681201,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "E:\\Loigmax\\Tracker\\external\\app\\(client)\\tickets\\page.tsx": {
+    "mtime": 1779815716.6681201,
+    "ast_hash": "8869f9a7113d50817e6c102e07884ab9",
+    "semantic_hash": "8869f9a7113d50817e6c102e07884ab9"
+  },
+  "E:\\Loigmax\\Tracker\\external\\app\\(protuctedRoute)\\layout.tsx": {
+    "mtime": 1779815716.6681201,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "E:\\Loigmax\\Tracker\\external\\app\\agent\\setup\\page.tsx": {
+    "mtime": 1779815716.6698625,
+    "ast_hash": "71df220b11a466cf8b3973cbc4207285",
+    "semantic_hash": "71df220b11a466cf8b3973cbc4207285"
+  },
+  "E:\\Loigmax\\Tracker\\external\\app\\api\\client-products\\route.ts": {
+    "mtime": 1779815716.6698625,
+    "ast_hash": "6f58fab846808eb37e86b8f532f59551",
+    "semantic_hash": "6f58fab846808eb37e86b8f532f59551"
+  },
+  "E:\\Loigmax\\Tracker\\external\\app\\api\\tickets\\route.ts": {
+    "mtime": 1779815716.6735919,
+    "ast_hash": "8de222a56160f9b6a545dbe6ebcbdf33",
+    "semantic_hash": "8de222a56160f9b6a545dbe6ebcbdf33"
+  },
+  "E:\\Loigmax\\Tracker\\external\\app\\api\\tickets\\[id]\\route.ts": {
+    "mtime": 1779815716.6698625,
+    "ast_hash": "81114e1ce3b29e5db31230c66e132037",
+    "semantic_hash": "81114e1ce3b29e5db31230c66e132037"
+  },
+  "E:\\Loigmax\\Tracker\\external\\app\\dashboard\\page.tsx": {
+    "mtime": 1779815716.6735919,
+    "ast_hash": "e797d78bbe51727f48cd65d27089817b",
+    "semantic_hash": "e797d78bbe51727f48cd65d27089817b"
+  },
+  "E:\\Loigmax\\Tracker\\external\\app\\login\\page.tsx": {
+    "mtime": 1779815716.6735919,
+    "ast_hash": "e7fb74bf0849d714b6b6d2bcdd754bcb",
+    "semantic_hash": "e7fb74bf0849d714b6b6d2bcdd754bcb"
+  },
+  "E:\\Loigmax\\Tracker\\external\\components\\ExternalTicketView.jsx": {
+    "mtime": 1779815716.6735919,
+    "ast_hash": "ee59cc7c90e6bf460f5765342809caeb",
+    "semantic_hash": "ee59cc7c90e6bf460f5765342809caeb"
+  },
+  "E:\\Loigmax\\Tracker\\external\\components\\tickets\\TicketForm.tsx": {
+    "mtime": 1779815716.6778643,
+    "ast_hash": "80b67f98c15d5ae9226a12449fda280f",
+    "semantic_hash": "80b67f98c15d5ae9226a12449fda280f"
+  },
+  "E:\\Loigmax\\Tracker\\external\\components\\tickets\\TicketList.tsx": {
+    "mtime": 1779815716.6778643,
+    "ast_hash": "2b0fe6ebc33e52c67df8c48ee87e8dc1",
+    "semantic_hash": "2b0fe6ebc33e52c67df8c48ee87e8dc1"
+  },
+  "E:\\Loigmax\\Tracker\\external\\components\\tickets\\TicketView.tsx": {
+    "mtime": 1779815716.6778643,
+    "ast_hash": "debf4f1414cdd06f0b14d39bd3f606bf",
+    "semantic_hash": "debf4f1414cdd06f0b14d39bd3f606bf"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\eslint.config.js": {
+    "mtime": 1779815716.684268,
+    "ast_hash": "2c92ee8c1d7c10a6cb0e834c108be353",
+    "semantic_hash": "2c92ee8c1d7c10a6cb0e834c108be353"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\package.json": {
+    "mtime": 1779815716.685775,
+    "ast_hash": "28e1836d48fd088dc628a59aa543d41e",
+    "semantic_hash": "28e1836d48fd088dc628a59aa543d41e"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\tailwind.config.js": {
+    "mtime": 1779815716.7442179,
+    "ast_hash": "f0d9f10dd8f45035c92faa19e2b13364",
+    "semantic_hash": "f0d9f10dd8f45035c92faa19e2b13364"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\vite.config.js": {
+    "mtime": 1779815716.7442179,
+    "ast_hash": "237d02e58c585a8686def922848c2a3d",
+    "semantic_hash": "237d02e58c585a8686def922848c2a3d"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\App.jsx": {
+    "mtime": 1779815716.6888292,
+    "ast_hash": "5d616709aa34ad0dd4f1872720264108",
+    "semantic_hash": "5d616709aa34ad0dd4f1872720264108"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\main.jsx": {
+    "mtime": 1779815716.7033372,
+    "ast_hash": "4981f649740cb417cb5fc9008ef4042a",
+    "semantic_hash": "4981f649740cb417cb5fc9008ef4042a"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\api\\axiosInstance.js": {
+    "mtime": 1779815716.6888292,
+    "ast_hash": "e9802b9710741d1a6e35b39111e2d620",
+    "semantic_hash": "e9802b9710741d1a6e35b39111e2d620"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\components\\useGenericAPI.js": {
+    "mtime": 1779815716.7033372,
+    "ast_hash": "5fc48553204d884d07ad699e4aa89aea",
+    "semantic_hash": "5fc48553204d884d07ad699e4aa89aea"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\components\\useSocket.js": {
+    "mtime": 1779815716.7033372,
+    "ast_hash": "44331cda1b5c2dd4fbe5a15b420375f1",
+    "semantic_hash": "44331cda1b5c2dd4fbe5a15b420375f1"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\components\\Common\\ActionCard.jsx": {
+    "mtime": 1779815716.6914718,
+    "ast_hash": "12aaf2c29c9da34a2605a7a45248c02e",
+    "semantic_hash": "12aaf2c29c9da34a2605a7a45248c02e"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\components\\Common\\AddComment.jsx": {
+    "mtime": 1779815716.6914718,
+    "ast_hash": "e7fd9d6185b898f65688bf13d33ef186",
+    "semantic_hash": "e7fd9d6185b898f65688bf13d33ef186"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\components\\Common\\ColumnVisibility.jsx": {
+    "mtime": 1779815716.6914718,
+    "ast_hash": "dc6b2c3728375fd21b196efda9f89300",
+    "semantic_hash": "dc6b2c3728375fd21b196efda9f89300"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\components\\Common\\FloatingCard.jsx": {
+    "mtime": 1779815716.6914718,
+    "ast_hash": "875966a0119a97cc913631aaa38fae3c",
+    "semantic_hash": "875966a0119a97cc913631aaa38fae3c"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\components\\Common\\FormRenderer.jsx": {
+    "mtime": 1779815716.6914718,
+    "ast_hash": "18d96b175748521fd176d7ad0379f2b2",
+    "semantic_hash": "18d96b175748521fd176d7ad0379f2b2"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\components\\Common\\InLineEdit.jsx": {
+    "mtime": 1779815716.6914718,
+    "ast_hash": "52949c05b2067ea64d072377abeb6d3e",
+    "semantic_hash": "52949c05b2067ea64d072377abeb6d3e"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\components\\Common\\KambanBoard.jsx": {
+    "mtime": 1779815716.6914718,
+    "ast_hash": "b2978d91f6c9a906e4f8f48cf79ffa69",
+    "semantic_hash": "b2978d91f6c9a906e4f8f48cf79ffa69"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\components\\Common\\ModernLoader.jsx": {
+    "mtime": 1779815716.6914718,
+    "ast_hash": "40dc80beb931f4c7a59c59a29c772f12",
+    "semantic_hash": "40dc80beb931f4c7a59c59a29c772f12"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\components\\Common\\Pagination.jsx": {
+    "mtime": 1779815716.6959703,
+    "ast_hash": "e10385f09b8af51f5c25e093d47504ca",
+    "semantic_hash": "e10385f09b8af51f5c25e093d47504ca"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\components\\Common\\PriorityTasks.jsx": {
+    "mtime": 1779815716.6959703,
+    "ast_hash": "d2fd709beefbe78c5f730fd2219203bc",
+    "semantic_hash": "d2fd709beefbe78c5f730fd2219203bc"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\components\\Common\\ProfileImage.jsx": {
+    "mtime": 1779815716.6959703,
+    "ast_hash": "6d74e1b07f2b0de3497280068dacb3de",
+    "semantic_hash": "6d74e1b07f2b0de3497280068dacb3de"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\components\\Common\\SearchBar.jsx": {
+    "mtime": 1779815716.6959703,
+    "ast_hash": "5adcea9a63f0a29c6d0a53a3663da1da",
+    "semantic_hash": "5adcea9a63f0a29c6d0a53a3663da1da"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\components\\Common\\StatCard.jsx": {
+    "mtime": 1779815716.6959703,
+    "ast_hash": "0ffba0ecc3584fad7799311b5c8c1512",
+    "semantic_hash": "0ffba0ecc3584fad7799311b5c8c1512"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\components\\Common\\TableGenerator.jsx": {
+    "mtime": 1779815716.6959703,
+    "ast_hash": "fdb762e56475ed69a4ce5b97210ae522",
+    "semantic_hash": "fdb762e56475ed69a4ce5b97210ae522"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\components\\Common\\ThemeToggler.jsx": {
+    "mtime": 1779815716.6959703,
+    "ast_hash": "67dee6398da7b3ef8d3c31d288e92021",
+    "semantic_hash": "67dee6398da7b3ef8d3c31d288e92021"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\components\\role\\index.js": {
+    "mtime": 1779815716.7033372,
+    "ast_hash": "1ec943bcb77e41f91337338e836e87e8",
+    "semantic_hash": "1ec943bcb77e41f91337338e836e87e8"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\components\\role\\RoleBasedAttendance.jsx": {
+    "mtime": 1779815716.7017555,
+    "ast_hash": "7c8c7386df0acc05e41dd3a2d75b1436",
+    "semantic_hash": "7c8c7386df0acc05e41dd3a2d75b1436"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\components\\role\\RoleBasedExpenses.jsx": {
+    "mtime": 1779815716.7017555,
+    "ast_hash": "cbc424a9e6977cd486859bc7fda54ca1",
+    "semantic_hash": "cbc424a9e6977cd486859bc7fda54ca1"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\components\\role\\RoleBasedReports.jsx": {
+    "mtime": 1779815716.7017555,
+    "ast_hash": "310cffebf899ec128a5d375cc218f1c9",
+    "semantic_hash": "310cffebf899ec128a5d375cc218f1c9"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\components\\role\\RoleBasedTasks.jsx": {
+    "mtime": 1779815716.7033372,
+    "ast_hash": "4d61aaa529cb99be76edddb69feee0b5",
+    "semantic_hash": "4d61aaa529cb99be76edddb69feee0b5"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\components\\role\\Employee\\Dashboard.jsx": {
+    "mtime": 1779815716.6959703,
+    "ast_hash": "c9e2d81fd8b07ee426ec02c5e786431d",
+    "semantic_hash": "c9e2d81fd8b07ee426ec02c5e786431d"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\components\\role\\Employee\\RecentActivity.jsx": {
+    "mtime": 1779815716.6959703,
+    "ast_hash": "e57ede0bbfbf02159f5adb9585ae7761",
+    "semantic_hash": "e57ede0bbfbf02159f5adb9585ae7761"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\components\\role\\HR\\Dashboard.jsx": {
+    "mtime": 1779815716.6959703,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\components\\Static\\NotificationDrawer.jsx": {
+    "mtime": 1779815716.6959703,
+    "ast_hash": "ecf6bb5aa64a85706040e17a339d5655",
+    "semantic_hash": "ecf6bb5aa64a85706040e17a339d5655"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\components\\Static\\NotificationIndicator.jsx": {
+    "mtime": 1779815716.6959703,
+    "ast_hash": "c7d1a25504fbeab1950a2068f61fecb3",
+    "semantic_hash": "c7d1a25504fbeab1950a2068f61fecb3"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\constants\\ActivityEntryFrom.js": {
+    "mtime": 1779815716.7033372,
+    "ast_hash": "09f2e3ca2986badab0a42d22bee1a6c0",
+    "semantic_hash": "09f2e3ca2986badab0a42d22bee1a6c0"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\constants\\AgentForm.js": {
+    "mtime": 1779815716.7033372,
+    "ast_hash": "6636e09af54dda5eba5952e8c3144b91",
+    "semantic_hash": "6636e09af54dda5eba5952e8c3144b91"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\constants\\AgentFrom.js": {
+    "mtime": 1779815716.7033372,
+    "ast_hash": "33312051ed243be1620cc5ae0f7727bb",
+    "semantic_hash": "33312051ed243be1620cc5ae0f7727bb"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\constants\\ClientForm.js": {
+    "mtime": 1779815716.7033372,
+    "ast_hash": "01a2be1bfdce557bc28a85d63780d641",
+    "semantic_hash": "01a2be1bfdce557bc28a85d63780d641"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\constants\\DesignationForm.js": {
+    "mtime": 1779815716.7033372,
+    "ast_hash": "9eb04b4039b22dff869cb6ef3dfb4a66",
+    "semantic_hash": "9eb04b4039b22dff869cb6ef3dfb4a66"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\constants\\LeadTypeForm.js": {
+    "mtime": 1779815716.7033372,
+    "ast_hash": "cc8d5556500f23bddc0ce788031991b0",
+    "semantic_hash": "cc8d5556500f23bddc0ce788031991b0"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\constants\\leaveForm.js": {
+    "mtime": 1779815716.7033372,
+    "ast_hash": "6d9fc72730bca97aabbcddd948405d79",
+    "semantic_hash": "6d9fc72730bca97aabbcddd948405d79"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\constants\\MilestoneForm.js": {
+    "mtime": 1779815716.7033372,
+    "ast_hash": "5621220447bdd41a3c3856e503eace95",
+    "semantic_hash": "5621220447bdd41a3c3856e503eace95"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\constants\\profileForm.js": {
+    "mtime": 1779815716.7033372,
+    "ast_hash": "906f65a4777644b23a9436435da89c79",
+    "semantic_hash": "906f65a4777644b23a9436435da89c79"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\constants\\ReferenceTypeForm.js": {
+    "mtime": 1779815716.7033372,
+    "ast_hash": "a03ec0678fb9ad3adc25ac90e4a14d73",
+    "semantic_hash": "a03ec0678fb9ad3adc25ac90e4a14d73"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\constants\\regularizationForm.js": {
+    "mtime": 1779815716.7033372,
+    "ast_hash": "612e58cdea1be0252795e75e57a83042",
+    "semantic_hash": "612e58cdea1be0252795e75e57a83042"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\constants\\SidebarFrom.js": {
+    "mtime": 1779815716.7033372,
+    "ast_hash": "ae831ddf1667499e46aa9746799b937f",
+    "semantic_hash": "ae831ddf1667499e46aa9746799b937f"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\constants\\taskForm.js": {
+    "mtime": 1779815716.7033372,
+    "ast_hash": "8f661a32be362a66d28dc5159eeb413c",
+    "semantic_hash": "8f661a32be362a66d28dc5159eeb413c"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\context\\authProvider.jsx": {
+    "mtime": 1779815716.7033372,
+    "ast_hash": "fb5272fa72bd6fecbfdc4df9226f626e",
+    "semantic_hash": "fb5272fa72bd6fecbfdc4df9226f626e"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\context\\notificationProvider.jsx": {
+    "mtime": 1779815716.7033372,
+    "ast_hash": "c6c068abc444b7aa9543bf36d2cbd984",
+    "semantic_hash": "c6c068abc444b7aa9543bf36d2cbd984"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\context\\themeProvider.jsx": {
+    "mtime": 1779815716.7033372,
+    "ast_hash": "ece054d430eb4ba4a2305a7124c9f9c2",
+    "semantic_hash": "ece054d430eb4ba4a2305a7124c9f9c2"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\hooks\\useUserProfile.js": {
+    "mtime": 1779815716.7033372,
+    "ast_hash": "b23ccdffd24721fdb20689bd0f8e7371",
+    "semantic_hash": "b23ccdffd24721fdb20689bd0f8e7371"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\hooks\\useUserRole.js": {
+    "mtime": 1779815716.7033372,
+    "ast_hash": "afa020f6e4641a08fa5b100c58416e47",
+    "semantic_hash": "afa020f6e4641a08fa5b100c58416e47"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\layouts\\baseLayouts.jsx": {
+    "mtime": 1779815716.7033372,
+    "ast_hash": "e40dee05e5bccbdac9ad067f1f696b1c",
+    "semantic_hash": "e40dee05e5bccbdac9ad067f1f696b1c"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\layouts\\Sidebar.jsx": {
+    "mtime": 1779815716.7033372,
+    "ast_hash": "be0a39662414a2d35f4c4e73e7d7d544",
+    "semantic_hash": "be0a39662414a2d35f4c4e73e7d7d544"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\layouts\\topNavBar.jsx": {
+    "mtime": 1779815716.7033372,
+    "ast_hash": "57a848d56c8d1856dae89c1ad48a652d",
+    "semantic_hash": "57a848d56c8d1856dae89c1ad48a652d"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\login.jsx": {
+    "mtime": 1779815716.7336543,
+    "ast_hash": "8a254aba3874ba29fe5cb91f59c9004c",
+    "semantic_hash": "8a254aba3874ba29fe5cb91f59c9004c"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Logout.jsx": {
+    "mtime": 1779815716.7177193,
+    "ast_hash": "5413f9ba96930724cbe9826c7dbf929c",
+    "semantic_hash": "5413f9ba96930724cbe9826c7dbf929c"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Teams.jsx": {
+    "mtime": 1779815716.7336543,
+    "ast_hash": "3057fdbc3e501224a64d4a3178c9ea11",
+    "semantic_hash": "3057fdbc3e501224a64d4a3178c9ea11"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Attendance\\index.jsx": {
+    "mtime": 1779815716.7177193,
+    "ast_hash": "03922fd4f339afc93ca201d06a65c3c8",
+    "semantic_hash": "03922fd4f339afc93ca201d06a65c3c8"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Attendance\\leave-regularization.jsx": {
+    "mtime": 1779815716.7177193,
+    "ast_hash": "e4bda8e8373f4a48a40f1814ae02e64d",
+    "semantic_hash": "e4bda8e8373f4a48a40f1814ae02e64d"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Attendance\\pending-approvals.jsx": {
+    "mtime": 1779815716.7177193,
+    "ast_hash": "001fea5dfb22d288222407371b9cd3ed",
+    "semantic_hash": "001fea5dfb22d288222407371b9cd3ed"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Attendance\\Daily-tracker\\Activity.jsx": {
+    "mtime": 1779815716.7033372,
+    "ast_hash": "60195887ea6a46a0cef8bdf4e879af8c",
+    "semantic_hash": "60195887ea6a46a0cef8bdf4e879af8c"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Attendance\\Daily-tracker\\add-daily-activity.jsx": {
+    "mtime": 1779815716.7033372,
+    "ast_hash": "72b207b64db2cfc536171f78cac575a2",
+    "semantic_hash": "72b207b64db2cfc536171f78cac575a2"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Attendance\\Daily-tracker\\index.jsx": {
+    "mtime": 1779815716.7177193,
+    "ast_hash": "bed368082a2b1718a94370f6f4eb6656",
+    "semantic_hash": "bed368082a2b1718a94370f6f4eb6656"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Attendance\\Daily-tracker\\activity\\[id].jsx": {
+    "mtime": 1779815716.7033372,
+    "ast_hash": "b5b810d503b9a9c4784ac2426c6bf234",
+    "semantic_hash": "b5b810d503b9a9c4784ac2426c6bf234"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Attendance\\leaves\\model.jsx": {
+    "mtime": 1779815716.7177193,
+    "ast_hash": "e9ceb65c321ac741ad799bd8beb3088b",
+    "semantic_hash": "e9ceb65c321ac741ad799bd8beb3088b"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Attendance\\leaves\\[id].jsx": {
+    "mtime": 1779815716.7177193,
+    "ast_hash": "fecb65582b16bc3bef936a51c1c9a51e",
+    "semantic_hash": "fecb65582b16bc3bef936a51c1c9a51e"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\CRM\\index.jsx": {
+    "mtime": 1779815716.7177193,
+    "ast_hash": "94bfc5fb7c5134ccbf2b73b56c96f718",
+    "semantic_hash": "94bfc5fb7c5134ccbf2b73b56c96f718"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\CRM\\contacts\\index.jsx": {
+    "mtime": 1779815716.7177193,
+    "ast_hash": "e3e299df77e8f15605d66323286627f6",
+    "semantic_hash": "e3e299df77e8f15605d66323286627f6"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Dashboard\\index.jsx": {
+    "mtime": 1779815716.7177193,
+    "ast_hash": "a9a5e470f48210134a0ce3041d8a6939",
+    "semantic_hash": "a9a5e470f48210134a0ce3041d8a6939"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Master-Data\\Agents\\index.jsx": {
+    "mtime": 1779815716.7177193,
+    "ast_hash": "68bd0f9f9a620196347757e9a1acfb0c",
+    "semantic_hash": "68bd0f9f9a620196347757e9a1acfb0c"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Master-Data\\Clients\\index.jsx": {
+    "mtime": 1779815716.7177193,
+    "ast_hash": "d5a7c24de6b6767f288c9ef308307016",
+    "semantic_hash": "d5a7c24de6b6767f288c9ef308307016"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Master-Data\\Departments\\index.jsx": {
+    "mtime": 1779815716.7177193,
+    "ast_hash": "a7a304b339b1ffefa3fb732cfc2fa52e",
+    "semantic_hash": "a7a304b339b1ffefa3fb732cfc2fa52e"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Master-Data\\Designations\\index.jsx": {
+    "mtime": 1779815716.7177193,
+    "ast_hash": "cf530a700ad8ed8b5705626aecf98497",
+    "semantic_hash": "cf530a700ad8ed8b5705626aecf98497"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Master-Data\\Employees\\index.jsx": {
+    "mtime": 1779815716.7177193,
+    "ast_hash": "f5d1a90ddc10a0c9e8b38229d393c460",
+    "semantic_hash": "f5d1a90ddc10a0c9e8b38229d393c460"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Master-Data\\HR-Policies\\index.jsx": {
+    "mtime": 1779815716.7278526,
+    "ast_hash": "cb24366b705952c643dbc70e32413865",
+    "semantic_hash": "cb24366b705952c643dbc70e32413865"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Master-Data\\Lead-Types\\index.jsx": {
+    "mtime": 1779815716.7278526,
+    "ast_hash": "ab3fda158eb0b47d392592907cb8f276",
+    "semantic_hash": "ab3fda158eb0b47d392592907cb8f276"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Master-Data\\Leave-Policies\\index.jsx": {
+    "mtime": 1779815716.7278526,
+    "ast_hash": "b992b760e4027270b4b8a27b2074f34e",
+    "semantic_hash": "b992b760e4027270b4b8a27b2074f34e"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Master-Data\\Leave-Types\\index.jsx": {
+    "mtime": 1779815716.7278526,
+    "ast_hash": "43b3ed80b2c5751a7d966e8545f39474",
+    "semantic_hash": "43b3ed80b2c5751a7d966e8545f39474"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Master-Data\\Milestones\\index.jsx": {
+    "mtime": 1779815716.7278526,
+    "ast_hash": "5745fa78e131913715a8811918bd40c1",
+    "semantic_hash": "5745fa78e131913715a8811918bd40c1"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Master-Data\\Project-Types\\index.jsx": {
+    "mtime": 1779815716.7278526,
+    "ast_hash": "3e3ff0e42184ce762f007b43ebdf0f01",
+    "semantic_hash": "3e3ff0e42184ce762f007b43ebdf0f01"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Master-Data\\Reference-Types\\index.jsx": {
+    "mtime": 1779815716.7278526,
+    "ast_hash": "bd29987851842d56de36233c099a1810",
+    "semantic_hash": "bd29987851842d56de36233c099a1810"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Master-Data\\Roles\\index.jsx": {
+    "mtime": 1779815716.7278526,
+    "ast_hash": "60882f42ca391622da3b3ef05f39d576",
+    "semantic_hash": "60882f42ca391622da3b3ef05f39d576"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Master-Data\\Shifts\\index.jsx": {
+    "mtime": 1779815716.7336543,
+    "ast_hash": "3bbc121a6f68f6ac590f6ad1b297c66b",
+    "semantic_hash": "3bbc121a6f68f6ac590f6ad1b297c66b"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Master-Data\\Task-Types\\index.jsx": {
+    "mtime": 1779815716.7336543,
+    "ast_hash": "f8333c36a22859ff02867ab9948029a1",
+    "semantic_hash": "f8333c36a22859ff02867ab9948029a1"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\PlayGround\\index.jsx": {
+    "mtime": 1779815716.7336543,
+    "ast_hash": "b904afe4683ddafd2eb23b0620d1147d",
+    "semantic_hash": "b904afe4683ddafd2eb23b0620d1147d"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Profile\\index.jsx": {
+    "mtime": 1779815716.7336543,
+    "ast_hash": "a5085697ff524511a86b6886dccaf66c",
+    "semantic_hash": "a5085697ff524511a86b6886dccaf66c"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Settings\\RoleAccessPolicy.jsx": {
+    "mtime": 1779815716.7336543,
+    "ast_hash": "6dea408aa570a8a7c3cdd7c14b9255aa",
+    "semantic_hash": "6dea408aa570a8a7c3cdd7c14b9255aa"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Settings\\SidebarPolicy.jsx": {
+    "mtime": 1779815716.7336543,
+    "ast_hash": "e016821545748e618d693b6688b5d31c",
+    "semantic_hash": "e016821545748e618d693b6688b5d31c"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Settings\\Email-Config\\index.jsx": {
+    "mtime": 1779815716.7336543,
+    "ast_hash": "69c7d2889f42eb8b22a2328b786b1a52",
+    "semantic_hash": "69c7d2889f42eb8b22a2328b786b1a52"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Settings\\Menu\\index.jsx": {
+    "mtime": 1779815716.7336543,
+    "ast_hash": "b73b17e55cb5aa30c14eb338fae43dae",
+    "semantic_hash": "b73b17e55cb5aa30c14eb338fae43dae"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\tasks\\CreateTaskModal.jsx": {
+    "mtime": 1779815716.7336543,
+    "ast_hash": "8c93aaba59650458293adae3a3f04078",
+    "semantic_hash": "8c93aaba59650458293adae3a3f04078"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\tasks\\index.jsx": {
+    "mtime": 1779815716.7442179,
+    "ast_hash": "bf1e0efa040e387066dd320d00d88feb",
+    "semantic_hash": "bf1e0efa040e387066dd320d00d88feb"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\tasks\\my-tasks.jsx": {
+    "mtime": 1779815716.7442179,
+    "ast_hash": "2137b426e4665823313d2079bfe428b6",
+    "semantic_hash": "2137b426e4665823313d2079bfe428b6"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\tasks\\reports.jsx": {
+    "mtime": 1779815716.7442179,
+    "ast_hash": "0ed5575f24eb255df694b56318596749",
+    "semantic_hash": "0ed5575f24eb255df694b56318596749"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\tasks\\Task.jsx": {
+    "mtime": 1779815716.7336543,
+    "ast_hash": "b4fac200663f1c955a3f90d62d2fea02",
+    "semantic_hash": "b4fac200663f1c955a3f90d62d2fea02"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\tasks\\TaskModal.jsx": {
+    "mtime": 1779815716.7442179,
+    "ast_hash": "d594cdb382b68e94da80f98fb61fba69",
+    "semantic_hash": "d594cdb382b68e94da80f98fb61fba69"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\tasks\\updateTaskById.js": {
+    "mtime": 1779815716.7442179,
+    "ast_hash": "01ccf2dc91f7d1b1f4378cc89920d361",
+    "semantic_hash": "01ccf2dc91f7d1b1f4378cc89920d361"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\tasks\\[id].jsx": {
+    "mtime": 1779815716.7442179,
+    "ast_hash": "93cef2e220ba80ac8401004ab668f710",
+    "semantic_hash": "93cef2e220ba80ac8401004ab668f710"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Tickets\\index.jsx": {
+    "mtime": 1779815716.7336543,
+    "ast_hash": "9b6a74ac23e7aaf73c2c4bc8b4894321",
+    "semantic_hash": "9b6a74ac23e7aaf73c2c4bc8b4894321"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Tickets\\my-tickets.jsx": {
+    "mtime": 1779815716.7336543,
+    "ast_hash": "8479592bcdd85d153920efa24adca416",
+    "semantic_hash": "8479592bcdd85d153920efa24adca416"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Tickets\\reports.jsx": {
+    "mtime": 1779815716.7336543,
+    "ast_hash": "007186f57f10b63b2e54d0b7a32cced0",
+    "semantic_hash": "007186f57f10b63b2e54d0b7a32cced0"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\Travel-Expenses\\index.jsx": {
+    "mtime": 1779815716.7336543,
+    "ast_hash": "98816daf54c726bfcf0ead06d26a50a4",
+    "semantic_hash": "98816daf54c726bfcf0ead06d26a50a4"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\pages\\[model]\\[id].jsx": {
+    "mtime": 1779815716.7336543,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "E:\\Loigmax\\Tracker\\frontend\\src\\utils\\Sharebutton.jsx": {
+    "mtime": 1779815716.7442179,
+    "ast_hash": "080ba1e3a91de18430a5f34d005ac580",
+    "semantic_hash": "080ba1e3a91de18430a5f34d005ac580"
+  },
+  "E:\\Loigmax\\Tracker\\Ref Docs\\DB Ref\\access.json": {
+    "mtime": 1779815716.5680964,
+    "ast_hash": "1880bf219dcaefb99d38a2eb26bc0f7b",
+    "semantic_hash": "1880bf219dcaefb99d38a2eb26bc0f7b"
+  },
+  "E:\\Loigmax\\Tracker\\Ref Docs\\DB Ref\\AccessPolicies.json": {
+    "mtime": 1779815716.5680964,
+    "ast_hash": "3f42adfef5f3821373aead7109d82522",
+    "semantic_hash": "3f42adfef5f3821373aead7109d82522"
+  },
+  "E:\\Loigmax\\Tracker\\Ref Docs\\DB Ref\\AgentPolicies.json": {
+    "mtime": 1779815716.5680964,
+    "ast_hash": "d99a874647210b5c41d0aa9514e6bea3",
+    "semantic_hash": "d99a874647210b5c41d0aa9514e6bea3"
+  },
+  "E:\\Loigmax\\Tracker\\Ref Docs\\DB Ref\\Client.json": {
+    "mtime": 1779815716.5680964,
+    "ast_hash": "ada3e7d28601581376926ce210436aef",
+    "semantic_hash": "ada3e7d28601581376926ce210436aef"
+  },
+  "E:\\Loigmax\\Tracker\\Ref Docs\\DB Ref\\common_readonly_policies.json": {
+    "mtime": 1779815716.5680964,
+    "ast_hash": "0e050f3efb5459a5ebba88350829dd48",
+    "semantic_hash": "0e050f3efb5459a5ebba88350829dd48"
+  },
+  "E:\\Loigmax\\Tracker\\Ref Docs\\DB Ref\\complete_access_policies.json": {
+    "mtime": 1779815716.5680964,
+    "ast_hash": "3a096bdb730600414d4d5a3a4e13ae78",
+    "semantic_hash": "3a096bdb730600414d4d5a3a4e13ae78"
+  },
+  "E:\\Loigmax\\Tracker\\Ref Docs\\DB Ref\\Department.json": {
+    "mtime": 1779815716.5680964,
+    "ast_hash": "c6cfac96044e21a7a413da120ba5a506",
+    "semantic_hash": "c6cfac96044e21a7a413da120ba5a506"
+  },
+  "E:\\Loigmax\\Tracker\\Ref Docs\\DB Ref\\employee.json": {
+    "mtime": 1779815716.5680964,
+    "ast_hash": "2a58aca42d41a1420f77a1a5b2c7ab95",
+    "semantic_hash": "2a58aca42d41a1420f77a1a5b2c7ab95"
+  },
+  "E:\\Loigmax\\Tracker\\Ref Docs\\DB Ref\\LeavePolicy.json": {
+    "mtime": 1779815716.5680964,
+    "ast_hash": "839825f400f0742880f6b6b41000c0da",
+    "semantic_hash": "839825f400f0742880f6b6b41000c0da"
+  },
+  "E:\\Loigmax\\Tracker\\Ref Docs\\DB Ref\\LeaveTypes.json": {
+    "mtime": 1779815716.5680964,
+    "ast_hash": "c811ad60078e401a9bef5044f96447a0",
+    "semantic_hash": "c811ad60078e401a9bef5044f96447a0"
+  },
+  "E:\\Loigmax\\Tracker\\Ref Docs\\DB Ref\\projectTypes.json": {
+    "mtime": 1779815716.5680964,
+    "ast_hash": "b4248f99668d7f6d9ee00a63e7ba32a5",
+    "semantic_hash": "b4248f99668d7f6d9ee00a63e7ba32a5"
+  },
+  "E:\\Loigmax\\Tracker\\Ref Docs\\DB Ref\\roles.json": {
+    "mtime": 1779815716.5680964,
+    "ast_hash": "0930acb978efbd725f5a3091f2aa7466",
+    "semantic_hash": "0930acb978efbd725f5a3091f2aa7466"
+  },
+  "E:\\Loigmax\\Tracker\\Ref Docs\\DB Ref\\sidebar.json": {
+    "mtime": 1779815716.5680964,
+    "ast_hash": "97cd0d485b08f7145733fc580421a618",
+    "semantic_hash": "97cd0d485b08f7145733fc580421a618"
+  },
+  "E:\\Loigmax\\Tracker\\Ref Docs\\DB Ref\\SideBarAddons.json": {
+    "mtime": 1779815716.5680964,
+    "ast_hash": "ecc75608502ebe586e62591e9366c2d3",
+    "semantic_hash": "ecc75608502ebe586e62591e9366c2d3"
+  },
+  "E:\\Loigmax\\Tracker\\Ref Docs\\DB Ref\\Status.json": {
+    "mtime": 1779815716.5680964,
+    "ast_hash": "86fbd9dc0d000823f5504f3b78ae73d2",
+    "semantic_hash": "86fbd9dc0d000823f5504f3b78ae73d2"
+  },
+  "E:\\Loigmax\\Tracker\\Ref Docs\\DB Ref\\StatusGroup.json": {
+    "mtime": 1779815716.5680964,
+    "ast_hash": "101af3f1d95719d37b250e3e4e70a831",
+    "semantic_hash": "101af3f1d95719d37b250e3e4e70a831"
+  },
+  "E:\\Loigmax\\Tracker\\Ref Docs\\DB Ref\\taskType.json": {
+    "mtime": 1779815716.5680964,
+    "ast_hash": "0d819b9bb39ee59620489ef7f07b0c52",
+    "semantic_hash": "0d819b9bb39ee59620489ef7f07b0c52"
+  },
+  "E:\\Loigmax\\Tracker\\Ref Docs\\DB Ref\\tickets.json": {
+    "mtime": 1779815716.574351,
+    "ast_hash": "4c9e1ff0e80009651f5f6ade60fccbec",
+    "semantic_hash": "4c9e1ff0e80009651f5f6ade60fccbec"
+  },
+  "E:\\Loigmax\\Tracker\\Ref Docs\\DB Ref\\tracker.leavepolicies.json": {
+    "mtime": 1779815716.574351,
+    "ast_hash": "bfa0d9071258aa207717cdf8f3e2bfd5",
+    "semantic_hash": "bfa0d9071258aa207717cdf8f3e2bfd5"
+  },
+  "E:\\Loigmax\\Tracker\\Ref Docs\\Study Ref\\dynamic router checklist.js": {
+    "mtime": 1779815716.574351,
+    "ast_hash": "1d632869a242a8295cbce9a57d669c65",
+    "semantic_hash": "1d632869a242a8295cbce9a57d669c65"
+  },
+  "E:\\Loigmax\\Tracker\\Ref Docs\\Study Ref\\dynamic router roadmap.js": {
+    "mtime": 1779815716.574351,
+    "ast_hash": "88d707b29bda5f6c1b4bdf0632677870",
+    "semantic_hash": "88d707b29bda5f6c1b4bdf0632677870"
+  },
+  "E:\\Loigmax\\Tracker\\Ref Docs\\Study Ref\\phase structure.js": {
+    "mtime": 1779815716.574351,
+    "ast_hash": "b6c8bcf95b331f457a99e8db1c4bf5b1",
+    "semantic_hash": "b6c8bcf95b331f457a99e8db1c4bf5b1"
+  }
+}

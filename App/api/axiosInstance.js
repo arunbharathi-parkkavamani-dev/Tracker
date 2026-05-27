@@ -111,6 +111,9 @@ axiosInstance.interceptors.response.use(
 
         if (refreshResponse.data.accessToken) {
           await AsyncStorage.setItem("auth_token", refreshResponse.data.accessToken);
+          if (refreshResponse.data.refreshToken) {
+            await AsyncStorage.setItem("refresh_token", refreshResponse.data.refreshToken);
+          }
           resetFailedCount();
         }
 

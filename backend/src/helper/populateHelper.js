@@ -4,6 +4,9 @@ import { buildQuery } from "../utils/policy/policyEngine.js";
 import { parseFilter } from "../utils/filterParser.js";
 import queryOptimizer from "../utils/queryOptimizer.js";
 import { DEFAULT_POPULATE_FIELDS } from "../Config/defaultPopulateFields.js";
+import { requestQueue } from "../services/requestQueue.js";
+import { raceConditionHandler } from "../services/raceConditionHandler.js";
+import { getFingerprint } from "../utils/deviceFingerprint.js";
 
 export async function populateHelper(req, res, next) {
   try {
@@ -35,8 +38,9 @@ export async function populateHelper(req, res, next) {
 
       const results = [];
       const errors = [];
+      const fingerprint = getFingerprint(req).fingerprint;
 
-      // We process sequentially or parallel. Sequential is safer for auditing order.
+      // Process sequentially with race condition handling
       for (const item of req.body) {
         try {
           // Item structure: { filter: {...}, body: {...} }
@@ -61,15 +65,33 @@ export async function populateHelper(req, res, next) {
 
           let opResult;
           if (existing && Array.isArray(existing) && existing.length > 0) {
-            // UPDATE
+            // UPDATE - Use race condition handling
+            const docId = existing[0]._id;
+            const currentVersion = existing[0].__v || 0;
+
+            // Check version conflict
+            const versionCheck = raceConditionHandler.checkVersionConflict(docId, currentVersion);
+            
+            if (versionCheck.conflict) {
+              errors.push({
+                filter: item.filter,
+                error: 'Version conflict - document was modified',
+                expectedVersion: versionCheck.expectedVersion
+              });
+              continue;
+            }
+
             opResult = await buildQuery({
               role: user.role,
               userId: user.id,
               action: 'update',
               modelName: model,
-              docId: existing[0]._id, // Update the first match (usually unique due to indexes)
+              docId: docId,
               body: item.body
             });
+
+            // Increment version on successful update
+            raceConditionHandler.incrementVersion(docId);
           } else {
             // CREATE
             // Merge filter into body for creation if needed (e.g. role, modelName)
@@ -81,6 +103,11 @@ export async function populateHelper(req, res, next) {
               modelName: model,
               body: { ...item.filter, ...item.body } // ensure keys from filter are in body
             });
+
+            // Track new document version
+            if (opResult && opResult._id) {
+              raceConditionHandler.incrementVersion(opResult._id);
+            }
           }
           results.push(opResult);
         } catch (err) {
@@ -92,7 +119,9 @@ export async function populateHelper(req, res, next) {
       return res.json({
         success: true,
         count: results.length,
-        errors: errors.length > 0 ? errors : undefined
+        errors: errors.length > 0 ? errors : undefined,
+        rateLimit: req.rateLimit?.status,
+        deviceFingerprint: fingerprint.substring(0, 16) // Only expose part of fingerprint
       });
     }
 
@@ -312,12 +341,30 @@ export async function populateHelper(req, res, next) {
 
     const statusCode = action === "create" ? 201 : 200;
 
+    // Build response with rate limit and lock info
     const response = {
       success: true,
       count: Array.isArray(data) ? data.length : undefined,
       data,
       type: type ? (parseInt(type) === 1 ? 'summary' : parseInt(type) === 2 ? 'detailed' : 'statistics') : undefined
     };
+
+    // Add rate limit information if available
+    if (req.rateLimit?.status) {
+      response.rateLimit = {
+        allowed: req.rateLimit.status.allowed,
+        remaining: req.rateLimit.status.remaining,
+        resetAt: req.rateLimit.status.resetAt
+      };
+    }
+
+    // Add lock information for mutations
+    if ((action === 'update' || action === 'create') && req.lock) {
+      response.lock = {
+        docId: req.lock.docId,
+        version: req.lock.version
+      };
+    }
 
     return res.status(statusCode).json(response);
   } catch (error) {

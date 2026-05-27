@@ -11,18 +11,18 @@ import fileRoutes from "./routes/fileRoutes.js";
 import locationRoutes from "./routes/locationRoutes.js";
 import bankRoutes from "./routes/bankRoutes.js";
 import configRoutes from "./routes/configRoutes.js";
+import adminSystemRoutes from "./routes/adminSystemRoutes.js";
 
 import { apiHitLogger } from "./middlewares/apiHitLogger.js";
 import { agentAuthMiddleware } from "./middlewares/agentAuthMiddleware.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import { requestTracer } from "./middlewares/requestTracer.js";
+import { rateLimitMiddleware } from "./middlewares/rateLimitMiddleware.js";
+import { raceConditionMiddleware } from "./services/raceConditionHandler.js";
 import { runSecurityTests } from "./utils/securityIntegrationTest.js";
 import connectDB from "./Config/ConnectDB.js";
 import cookieParser from "cookie-parser";
 import databaseIndexer from "./services/databaseIndexer.js";
-
-
-
 
 import "./cron/AttendanceCron.js";
 
@@ -31,39 +31,14 @@ process.env.NODE_OPTIONS = '--max-old-space-size=4096'; // 4GB heap
 process.env.UV_THREADPOOL_SIZE = 16; // Increase thread pool
 
 dotenv.config();
-connectDB();
 
-// Initialize database indexes after connection
-setTimeout(async () => {
-  try {
-    // Initialize cache first
-    const { setCache } = await import('./utils/cache.js');
-    await setCache();
-
-    // Redis completely disabled - no connection attempt
-
-  } catch (error) {
-    // Silenced
-  }
-}, 5000); // Wait 5 seconds for DB connection
-
+// ─── App & Server ────────────────────────────────────────────────────────────
 const app = express();
 const server = http.createServer(app);
 
-// Startup Self-Check
-(async () => {
-  try {
-    await runSecurityTests();
-  } catch (error) {
-    console.error("⛔ CRITICAL WARNING: Security self-check failed. Proceeding with caution... (Server not crashing per policy)");
-    console.error(error);
-  }
-})();
-
-// Memory-efficient middleware setup
+// ─── Middleware ───────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
-
 
 const allowedOrigins = [
   "https://lmx-tracker--p1hvjsjwqq.expo.app",
@@ -87,18 +62,16 @@ app.use(cors({
 }));
 
 app.use(agentAuthMiddleware);
-app.use(requestTracer); // Attach request ID before logger
+app.use(requestTracer);
 app.use(apiHitLogger);
+app.use(rateLimitMiddleware({ enabled: true }));
+app.use(raceConditionMiddleware({ enabled: true }));
 
-// Test endpoint to verify server is working
+// ─── Routes ───────────────────────────────────────────────────────────────────
 app.get('/test', (req, res) => {
-  // console.log('TEST ENDPOINT HIT');
   res.json({ message: 'Server is working', timestamp: new Date().toISOString() });
 });
 
-
-
-// Routes
 app.use("/api/agent", agentRoutes);
 app.use("/api/agent-invite", agentInviteRoutes);
 app.use("/api/auth", AuthRouter);
@@ -106,78 +79,58 @@ app.use("/api/populate", populateHelper);
 app.use("/api/files", fileRoutes);
 app.use("/api", locationRoutes);
 app.use("/api", bankRoutes);
-app.use("/api/config", configRoutes); // Config/Admin routes
-
+app.use("/api/config", configRoutes);
+app.use("/api/admin", adminSystemRoutes);
 
 app.use(errorHandler);
 
-// Optimized Socket.io configuration
+// ─── Socket.io ────────────────────────────────────────────────────────────────
 const io = new Server(server, {
-  cors: {
-    origin: true,
-    credentials: true
-  },
-  // Connection limits and timeouts
-  maxHttpBufferSize: 1e6, // 1MB max message size
-  pingTimeout: 60000, // 60s ping timeout
-  pingInterval: 25000, // 25s ping interval
-  upgradeTimeout: 10000, // 10s upgrade timeout
-  // Memory optimization
+  cors: { origin: true, credentials: true },
+  maxHttpBufferSize: 1e6,
+  pingTimeout: 60000,
+  pingInterval: 25000,
+  upgradeTimeout: 10000,
   transports: ['websocket', 'polling'],
   allowEIO3: true
 });
 
-// Connection tracking for memory management
 const activeConnections = new Map();
 const userRooms = new Map();
 
 io.on("connection", (socket) => {
-  // Track connection
   activeConnections.set(socket.id, {
     userId: null,
     connectedAt: Date.now(),
     lastActivity: Date.now()
   });
 
-  // Join user room with cleanup
   socket.on("join", (userId) => {
     if (!userId) return;
-
     const connection = activeConnections.get(socket.id);
     if (connection) {
       connection.userId = userId;
       connection.lastActivity = Date.now();
     }
-
-    // Leave previous rooms
     const previousRooms = userRooms.get(socket.id) || [];
     previousRooms.forEach(room => socket.leave(room));
-
-    // Join new room
     socket.join(userId);
     userRooms.set(socket.id, [userId]);
   });
 
-  // Update activity timestamp
   socket.on('activity', () => {
     const connection = activeConnections.get(socket.id);
-    if (connection) {
-      connection.lastActivity = Date.now();
-    }
+    if (connection) connection.lastActivity = Date.now();
   });
 
-  // Cleanup on disconnect
   socket.on("disconnect", (reason) => {
     activeConnections.delete(socket.id);
     userRooms.delete(socket.id);
-
-    // Log disconnection reason for monitoring
     if (reason === 'transport error' || reason === 'ping timeout') {
       console.warn(`Socket disconnected due to: ${reason}`);
     }
   });
 
-  // Handle connection errors
   socket.on('error', (error) => {
     console.error('Socket error:', error);
     activeConnections.delete(socket.id);
@@ -185,45 +138,26 @@ io.on("connection", (socket) => {
   });
 });
 
-// Memory cleanup intervals
+// Stale connection cleanup
 setInterval(() => {
   const now = Date.now();
-  const staleThreshold = 5 * 60 * 1000; // 5 minutes
-
-  // Clean stale connections
+  const staleThreshold = 5 * 60 * 1000;
   for (const [socketId, connection] of activeConnections.entries()) {
     if (now - connection.lastActivity > staleThreshold) {
       const socket = io.sockets.sockets.get(socketId);
-      if (socket) {
-        socket.disconnect(true);
-      }
+      if (socket) socket.disconnect(true);
       activeConnections.delete(socketId);
       userRooms.delete(socketId);
     }
   }
-
-  // Log memory usage
   const memUsage = process.memoryUsage();
-  if (memUsage.heapUsed > 1024 * 1024 * 1024) { // > 1GB
+  if (memUsage.heapUsed > 1024 * 1024 * 1024) {
     console.warn('High memory usage:', {
       heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024) + 'MB',
       connections: activeConnections.size
     });
   }
-}, 60000); // Every minute
-
-// Graceful shutdown
-process.on('SIGTERM', async () => {
-  // console.log('Gracefully shutting down...');
-
-  // Close services
-  await Promise.all([
-    new Promise(resolve => io.close(resolve))
-  ]);
-
-  // console.log('All services closed');
-  process.exit(0);
-});
+}, 60000);
 
 // Memory leak detection
 process.on('warning', (warning) => {
@@ -231,5 +165,25 @@ process.on('warning', (warning) => {
     console.warn('Memory leak detected:', warning.message);
   }
 });
+
+// ─── initApp: called by server.js BEFORE listen() ────────────────────────────
+export async function initApp() {
+  // 1. Connect to MongoDB — everything else depends on this
+  await connectDB();
+
+  // 2. Initialize cache now that DB is confirmed ready
+  try {
+    const { setCache } = await import('./utils/cache.js');
+    await setCache();
+  } catch (error) {
+    // Silenced — cache failure is non-fatal
+  }
+
+  // 3. Security self-check — non-blocking, won't crash server on failure
+  runSecurityTests().catch((error) => {
+    console.error("⛔ CRITICAL WARNING: Security self-check failed. Proceeding with caution...");
+    console.error(error);
+  });
+}
 
 export { app, server, io, activeConnections };
