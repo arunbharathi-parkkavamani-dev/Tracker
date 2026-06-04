@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../context/authProvider";
 import axiosInstance from "../../api/axiosInstance";
-import FloatingCard from "../../components/Common/FloatingCard";
 import InlineEdit from "../../components/Common/InLineEdit";
 import { updateTaskById } from "./updateTaskById";
 import { MdAdd, MdPlayArrow, MdSchedule, MdFlag, MdLabel, MdPersonAdd, MdMoreVert, MdContentCopy, MdDelete } from "react-icons/md";
@@ -79,7 +78,7 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
 
   const fetchEmployees = async () => {
     try {
-      const response = await axiosInstance.get('/populate/read/employees?fields=basicInfo.firstName,basicInfo.lastName');
+      const response = await axiosInstance.post('/populate/read/employees', {fields: "basicInfo.firstName,basicInfo.lastName"});
       setEmployees(response.data.data || []);
     } catch (error) {
       console.error('Error fetching employees:', error);
@@ -254,7 +253,7 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
   };
 
   return (
-    <FloatingCard onClose={onClose}>
+    <div className="w-full">
       {/* Header - Full Width */}
       <div className="flex items-center gap-3 mb-6 pb-4 border-b">
         <select
@@ -563,7 +562,7 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
           </div>
         </div>
       </div>
-    </FloatingCard>
+    </div>
   );
 };
 

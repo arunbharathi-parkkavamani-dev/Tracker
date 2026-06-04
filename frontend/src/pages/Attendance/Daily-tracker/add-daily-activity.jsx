@@ -1,18 +1,21 @@
-import React from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/authProvider";
 import axiosInstance from "../../../api/axiosInstance";
+import FormPageLayout from "../../../components/Forms/FormPageLayout";
 import FormRenderer from "../../../components/Common/FormRenderer";
 import ActivityEntryFrom from "../../../constants/ActivityEntryFrom";
+import toast from "react-hot-toast";
 
-const AddDailyEntry = ({ onClose }) => {
+const AddDailyEntry = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (formData) => {
     try {
       const { clientName, projectType, activities } = formData;
 
       if (!clientName || !projectType || !activities?.length) {
-        alert("Please complete all required fields.");
+        toast.error("Please complete all required fields.");
         return;
       }
 
@@ -25,33 +28,28 @@ const AddDailyEntry = ({ onClose }) => {
         date: new Date(),
       }));
 
-      const res = await axiosInstance.post("/populate/create/dailyactivities", payload);
-      alert("Daily entry saved successfully!", res);
-      onClose();
+      await axiosInstance.post("/populate/create/dailyactivities", payload);
+      toast.success("Daily entry saved");
+      navigate("/Attendance/Daily-tracker");
     } catch (err) {
       console.error("Error saving entry:", err);
-      alert("Failed to save entry.");
+      toast.error("Failed to save entry.");
     }
   };
 
   return (
-    <div className="bg-white p-1 rounded-2xl max-w-4xl w-full">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold">Add Daily Activity</h2>
-        <button
-          onClick={onClose}
-          className="text-gray-500 hover:text-gray-800 text-xl"
-        >
-          ✕
-        </button>
-      </div>
-
+    <FormPageLayout
+      title="Add daily activity"
+      subtitle="Log work against clients and project types"
+      backTo="/Attendance/Daily-tracker"
+      maxWidth="max-w-4xl"
+    >
       <FormRenderer
         fields={ActivityEntryFrom}
         submitButton={{ text: "Save Activity", color: "blue" }}
         onSubmit={handleSubmit}
       />
-    </div>
+    </FormPageLayout>
   );
 };
 

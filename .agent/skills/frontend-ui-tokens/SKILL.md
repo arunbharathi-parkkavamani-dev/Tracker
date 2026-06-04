@@ -57,6 +57,22 @@ Top bar accent: `indigo-500` / `indigo-400` (dark). Hero: `PROFILE_PAGE.heroGrad
 - [ ] Primary buttons in forms: `tracker-btn-primary` (FormRenderer pattern)
 - [ ] List/stat cards: `STAT_CARD` from `uiTokens.js` or `tracker-card`
 
+## Form layout (no FloatingCard)
+
+Forms must **not** use `FloatingCard`. Use this structure instead:
+
+| Piece | Path / component |
+|-------|------------------|
+| List view only | `{Module}/index.jsx` — table + navigate to form |
+| Form page | `{Module}/form.jsx` — full page via `EntityFormPage` or `MasterDataFormView` |
+| Shell | `components/Forms/FormPageLayout.jsx` |
+| Many fields (8+) | `components/Forms/TabbedFormTabs.jsx` — same pattern as `Profile/index.jsx` |
+| Route | `{basePath}/form?id=` via `utils/formRoutes.js` → `entityFormPath()` |
+
+**Tab examples:** Profile (`personal` / `professional` / …), Employees (`EMPLOYEE_FORM_TABS`), Clients (`CLIENT_FORM_TABS`), Tickets (`TICKET_FORM_TABS`).
+
+**Field definitions:** `frontend/src/constants/*Form.js` — never large inline `formFields` arrays in `index.jsx`.
+
 ## Related
 
 - Brain + DESIGN overview: `.agent/skills/knowledge-brain/design-tokens.md`

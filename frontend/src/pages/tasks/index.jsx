@@ -1,16 +1,14 @@
 import { use, useEffect, useState } from "react";
 import axiosInstance from "../../api/axiosInstance";
 import { useAuth } from "../../context/authProvider";
-import TaskModal from "./TaskModal.jsx";
-import CreateTaskModal from "./CreateTaskModal.jsx";
+import { useNavigate } from "react-router-dom";
 import KanbanBoard from "../../components/Common/KambanBoard.jsx";
 
 const TasksPage = () => {
   const { user } = useAuth();
   const [tasks, setTasks] = useState([]);
   const [filteredTasks, setFilteredTasks] = useState([]);
-  const [selectedTask, setSelectedTask] = useState(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState('All');
   const [loading, setLoading] = useState(true);
   const [kanbanView, setKanbanView] = useState('status');
@@ -124,16 +122,8 @@ const TasksPage = () => {
     }
   };
 
-  const handleTaskClick = async (task) => {
-    const fullTask = await fetchTaskDetails(task._id);
-    if (fullTask) {
-      setSelectedTask(fullTask);
-    }
-  };
-
-  const handleTaskUpdate = () => {
-    fetchTasks();
-    setSelectedTask(null);
+  const handleTaskClick = (task) => {
+    navigate(`/tasks/${task._id}`, { state: { fromModal: true } });
   };
 
   const handleClientSelect = async (client) => {
@@ -246,7 +236,9 @@ const TasksPage = () => {
               employees={employees}
               taskTypes={taskTypes}
               kanbanView={kanbanView}
-              onNewTask={() => setShowCreateModal(true)}
+              onNewTask={() =>
+                navigate("/tasks/form", { state: { selectedClient } })
+              }
             />
           ) : (
             <div className="flex items-center justify-center h-full bg-white rounded-lg shadow dark:bg-gray-800">
@@ -260,25 +252,6 @@ const TasksPage = () => {
         </div>
       </div>
 
-      {/* Modals */}
-      {selectedTask && (
-        <TaskModal
-          task={selectedTask}
-          onClose={() => setSelectedTask(null)}
-          onUpdate={handleTaskUpdate}
-        />
-      )}
-
-      {showCreateModal && (
-        <CreateTaskModal
-          onClose={() => setShowCreateModal(false)}
-          onCreated={() => {
-            fetchTasks();
-            setShowCreateModal(false);
-          }}
-          selectedClient={selectedClient}
-        />
-      )}
     </div>
   );
 };
