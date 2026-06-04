@@ -115,7 +115,7 @@ const KanbanBoard = ({
         onClick={() => onCardClick?.(task)}
         draggable={task.createdBy?._id === currentUserId || task.user?._id === currentUserId}
         onDragStart={(e) => handleDragStart(e, task, getValue(task, groupBy))}
-        className={`bg-white dark:bg-black border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-3 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow ${
+        className={`bg-surface dark:bg-surface border border-hairline-soft dark:border-hairline rounded-lg p-4 mb-3 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow ${
           draggingCard?.item?._id === task._id ? "opacity-25" : ""
         }`}
       >
@@ -130,7 +130,7 @@ const KanbanBoard = ({
           </div>
           
           {/* Task Title */}
-          <h3 className="text-sm font-semibold leading-tight text-black dark:text-white">
+          <h3 className="text-sm font-semibold leading-tight text-ink">
             {title || 'Untitled Task'}
           </h3>
           
@@ -204,12 +204,12 @@ const KanbanBoard = ({
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black p-6">
+    <div className="min-h-screen bg-canvas-muted dark:bg-canvas p-6">
       <div className="flex flex-col h-[calc(100vh-8rem)]">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-black dark:text-white">{title}</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-ink">{title}</h1>
             <p className="text-gray-600 dark:text-gray-400 text-sm">{subtitle}</p>
           </div>
           
@@ -219,7 +219,7 @@ const KanbanBoard = ({
             <div className="relative">
               <button 
                 onClick={() => setShowFilter(!showFilter)}
-                className="border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-md text-sm font-medium shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-black dark:text-white bg-white dark:bg-black flex items-center gap-2"
+                className="border border-hairline px-4 py-2 rounded-md text-sm font-medium shadow-sm hover:bg-canvas-muted dark:hover:bg-surface-2 transition-colors text-ink bg-surface flex items-center gap-2"
               >
                 <Filter className="h-4 w-4" />
                 Filter

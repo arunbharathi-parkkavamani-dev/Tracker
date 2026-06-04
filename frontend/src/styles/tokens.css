@@ -1,0 +1,170 @@
+/**
+ * Tracker UI tokens — DESIGN.md (cream/ink) + Profile page palette (indigo/cyan accents).
+ * Prefer semantic utilities: bg-canvas, bg-surface, text-ink, text-ink-muted, border-hairline, btn-primary.
+ */
+
+:root {
+  /* Shell (DESIGN.md) */
+  --tracker-canvas: #f5f1ec;
+  --tracker-canvas-muted: #f9fafb;
+  --tracker-surface: #ffffff;
+  --tracker-surface-2: #ebe7e1;
+  --tracker-ink: #111111;
+  --tracker-ink-muted: #626260;
+  --tracker-ink-subtle: #7b7b78;
+  --tracker-ink-tertiary: #9c9fa5;
+  --tracker-hairline: #d3cec6;
+  --tracker-hairline-soft: #ebe7e1;
+  --tracker-on-primary: #ffffff;
+
+  /* Profile / product accents (not pure black CTAs everywhere) */
+  --tracker-accent: #6366f1;
+  --tracker-accent-hover: #4f46e5;
+  --tracker-accent-muted: #e0e7ff;
+  --tracker-accent-foreground: #4338ca;
+  --tracker-cyan: #06b6d4;
+  --tracker-success: #10b981;
+  --tracker-warning: #f59e0b;
+  --tracker-danger: #e11d48;
+
+  --tracker-gradient-hero: linear-gradient(
+    135deg,
+    #4f46e5 0%,
+    #9333ea 50%,
+    #06b6d4 100%
+  );
+  --tracker-gradient-progress: linear-gradient(90deg, #6366f1 0%, #06b6d4 100%);
+  --tracker-gradient-ring: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%);
+
+  --tracker-btn-primary-bg: #111111;
+  --tracker-btn-primary-hover: #313130;
+  --tracker-btn-secondary-bg: #ffffff;
+  --tracker-btn-accent-bg: #6366f1;
+  --tracker-btn-accent-hover: #4f46e5;
+
+  --tracker-overlay: rgb(17 17 17 / 0.45);
+  --tracker-shadow-sm: 0 1px 2px rgb(17 17 17 / 0.06);
+  --tracker-shadow-md: 0 4px 12px rgb(17 17 17 / 0.08);
+
+  --tracker-radius-sm: 6px;
+  --tracker-radius-md: 8px;
+  --tracker-radius-lg: 12px;
+  --tracker-radius-xl: 16px;
+}
+
+.dark {
+  --tracker-canvas: #09090b;
+  --tracker-canvas-muted: #09090b;
+  --tracker-surface: #111113;
+  --tracker-surface-2: #1c1c1f;
+  --tracker-ink: #f4f4f5;
+  --tracker-ink-muted: #a1a1aa;
+  --tracker-ink-subtle: #71717a;
+  --tracker-ink-tertiary: #52525b;
+  --tracker-hairline: rgb(255 255 255 / 0.08);
+  --tracker-hairline-soft: rgb(255 255 255 / 0.04);
+  --tracker-on-primary: #ffffff;
+
+  --tracker-accent: #818cf8;
+  --tracker-accent-hover: #a5b4fc;
+  --tracker-accent-muted: rgb(99 102 241 / 0.15);
+  --tracker-accent-foreground: #c7d2fe;
+
+  --tracker-gradient-hero: linear-gradient(
+    135deg,
+    #312e81 0%,
+    #581c87 50%,
+    #155e75 100%
+  );
+
+  --tracker-btn-primary-bg: #27272a;
+  --tracker-btn-primary-hover: #3f3f46;
+  --tracker-btn-secondary-bg: rgb(255 255 255 / 0.06);
+  --tracker-btn-accent-bg: #6366f1;
+  --tracker-btn-accent-hover: #818cf8;
+
+  --tracker-overlay: rgb(0 0 0 / 0.55);
+  --tracker-shadow-md: 0 4px 24px rgb(0 0 0 / 0.35);
+}
+
+@theme inline {
+  --color-canvas: var(--tracker-canvas);
+  --color-canvas-muted: var(--tracker-canvas-muted);
+  --color-surface: var(--tracker-surface);
+  --color-surface-2: var(--tracker-surface-2);
+  --color-ink: var(--tracker-ink);
+  --color-ink-muted: var(--tracker-ink-muted);
+  --color-ink-subtle: var(--tracker-ink-subtle);
+  --color-ink-tertiary: var(--tracker-ink-tertiary);
+  --color-hairline: var(--tracker-hairline);
+  --color-hairline-soft: var(--tracker-hairline-soft);
+  --color-accent: var(--tracker-accent);
+  --color-accent-hover: var(--tracker-accent-hover);
+  --color-accent-muted: var(--tracker-accent-muted);
+  --color-accent-foreground: var(--tracker-accent-foreground);
+  --color-tracker-cyan: var(--tracker-cyan);
+  --color-tracker-success: var(--tracker-success);
+  --color-tracker-warning: var(--tracker-warning);
+  --color-tracker-danger: var(--tracker-danger);
+  --radius-tracker-sm: var(--tracker-radius-sm);
+  --radius-tracker-md: var(--tracker-radius-md);
+  --radius-tracker-lg: var(--tracker-radius-lg);
+  --radius-tracker-xl: var(--tracker-radius-xl);
+}
+
+@layer components {
+  .tracker-page {
+    @apply min-h-screen bg-canvas-muted text-ink;
+  }
+
+  .tracker-page-app {
+    @apply min-h-full bg-canvas text-ink;
+  }
+
+  .tracker-card {
+    @apply bg-surface border border-hairline-soft rounded-tracker-lg shadow-sm;
+  }
+
+  .tracker-card-profile {
+    @apply bg-surface border border-gray-100 dark:border-white/[0.06] rounded-tracker-xl shadow-sm
+      hover:shadow-md dark:hover:shadow-indigo-500/5 transition-shadow duration-300 overflow-hidden;
+  }
+
+  .tracker-btn-primary {
+    background-color: var(--tracker-btn-primary-bg);
+    color: var(--tracker-on-primary);
+    @apply rounded-tracker-md text-sm font-medium px-4 py-2 transition-colors duration-200;
+  }
+  .tracker-btn-primary:hover {
+    background-color: var(--tracker-btn-primary-hover);
+  }
+
+  .tracker-btn-accent {
+    background-color: var(--tracker-btn-accent-bg);
+    color: var(--tracker-on-primary);
+    @apply rounded-tracker-md text-sm font-medium px-4 py-2 transition-colors duration-200;
+  }
+  .tracker-btn-accent:hover {
+    background-color: var(--tracker-btn-accent-hover);
+  }
+
+  .tracker-btn-secondary {
+    background-color: var(--tracker-btn-secondary-bg);
+    color: var(--tracker-ink);
+    border: 1px solid var(--tracker-hairline);
+    @apply rounded-tracker-md text-sm font-medium px-4 py-2 transition-colors duration-200;
+  }
+
+  .tracker-overlay {
+    background-color: var(--tracker-overlay);
+  }
+
+  .tracker-gradient-progress {
+    background: var(--tracker-gradient-progress);
+  }
+
+  .tracker-gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--tracker-gradient-ring);
+  }
+}

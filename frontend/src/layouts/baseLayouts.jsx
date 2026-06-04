@@ -4,42 +4,73 @@ import routes from "~react-pages";
 import Sidebar from "./Sidebar";
 import TopNavBar from "./topNavBar.jsx";
 import Login from "../pages/login.jsx";
+import { useState, useEffect } from "react";
 
 const BaseLayout = () => {
   const location = useLocation();
   const element = useRoutes(routes);
   const { user, loading } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  // While checking auth state
+  // Auto-collapse on mobile
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 1023px)");
+    const handler = (e) => setSidebarOpen(!e.matches);
+    handler(mql);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
+  }, []);
+
+  // Close mobile overlay on navigation
+  useEffect(() => {
+    if (window.innerWidth < 1024) setSidebarOpen(false);
+  }, [location.pathname]);
+
   if (loading) {
-    return <p className="p-4">Loading...</p>;
+    return (
+      <div className="flex items-center justify-center h-screen bg-canvas">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+          <p className="text-[13px] text-ink-muted">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
-  // If not logged in → redirect to login
   if (!user && location.pathname !== "/login") {
     return <Navigate to="/login" replace />;
   }
 
-  // If already logged in → prevent going back to login
   if (user && location.pathname === "/login") {
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Show login page
   if (location.pathname === "/login") {
     return <Login />;
   }
 
-  // Default layout for logged-in users
   return (
-    <div className="flex h-screen dark:bg-black dark:text-white">
-      <Sidebar/>
-      <main className="flex-1 flex flex-col overflow-hidden bg-gray-300 dark:bg-black lg:ml-0">
-        <TopNavBar />
-        <div className="flex-1 overflow-y-auto lg:pl-0">
+    <div className="flex h-screen overflow-hidden bg-canvas text-ink" style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
+      {/* Mobile overlay backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 tracker-overlay z-30 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        onOpen={() => setSidebarOpen(true)}
+      />
+
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <TopNavBar onToggleSidebar={() => setSidebarOpen(prev => !prev)} sidebarOpen={sidebarOpen} />
+        <main className="flex-1 overflow-y-auto">
           {element}
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 };

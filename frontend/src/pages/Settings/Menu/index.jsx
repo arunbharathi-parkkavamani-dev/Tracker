@@ -18,7 +18,7 @@ const Menu = () => {
             setLoading(true);
             // Using 'sidebars' to match the mongoose model name
             const response = await axiosInstance.get('populate/read/sidebars?limit=100&sort=-order');
-            setSidebarData(response.data.data);
+            setSidebarData((response.data.data || []).map(item => ({...item, _id: item._id?.$oid || item._id})));
         } catch (error) {
             console.error('Error fetching sidebar:', error);
             // fallup in case 'sidebars' fails, try 'sidebar' or handle error
@@ -119,7 +119,7 @@ const Menu = () => {
                         setEditItem(null);
                         setModelOpen(true);
                     }}
-                    className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+                    className="tracker-btn-primary flex items-center gap-2 px-4 py-2"
                 >
                     <Plus size={18} />
                     Add Menu Item

@@ -33,7 +33,7 @@ const TasksPage = () => {
           // Populate clientId
           if (task.clientId) {
             try {
-              const clientRes = await axiosInstance.get(`/populate/read/clients/${task.clientId}`);
+              const clientRes = await axiosInstance.post(`/populate/read/clients/${task.clientId}`);
               populatedTask.clientId = clientRes.data.data;
               // // console.log('Populated clientId for task:', populatedTask.title, populatedTask.clientId);
             } catch (e) {
@@ -44,7 +44,7 @@ const TasksPage = () => {
           // Populate projectTypeId
           if (task.projectTypeId) {
             try {
-              const projectTypeRes = await axiosInstance.get(`/populate/read/projecttypes/${task.projectTypeId}`);
+              const projectTypeRes = await axiosInstance.post(`/populate/read/projecttypes/${task.projectTypeId}`);
               populatedTask.projectTypeId = projectTypeRes.data.data;
               // // console.log('Populated projectTypeId for task:', populatedTask.title, populatedTask.projectTypeId);
             } catch (e) {
@@ -68,7 +68,7 @@ const TasksPage = () => {
 
   const fetchClients = async () => {
     try {
-      const response = await axiosInstance.get('/populate/read/clients');
+      const response = await axiosInstance.post('/populate/read/clients');
       const clientsData = response.data.data || [];
       setClients(clientsData);
     } catch (error) {
@@ -78,7 +78,7 @@ const TasksPage = () => {
 
   const fetchEmployees = async () => {
     try {
-      const response = await axiosInstance.get('/populate/read/employees');
+      const response = await axiosInstance.post('/populate/read/employees');
       const employeesData = response.data.data || [];
       setEmployees(employeesData);
     } catch (error) {
@@ -88,7 +88,7 @@ const TasksPage = () => {
 
   const fetchTaskTypes = async () => {
     try {
-      const response = await axiosInstance.get('/populate/read/tasktypes');
+      const response = await axiosInstance.post('/populate/read/tasktypes');
       const taskTypesData = response.data.data || [];
       setTaskTypes(taskTypesData);
     } catch (error) {
@@ -112,8 +112,9 @@ const TasksPage = () => {
         'assignedTo': 'basicInfo.firstName,basicInfo.lastName'
       };
 
-      const response = await axiosInstance.get(
-        `/populate/read/tasks/${taskId}?populateFields=${encodeURIComponent(JSON.stringify(populateFields))}`
+      const response = await axiosInstance.post(
+        `/populate/read/tasks/${taskId}`,
+        { populateFields }
       );
 
       return response.data.data;
@@ -139,7 +140,10 @@ const TasksPage = () => {
     setSelectedClient(client);
     try {
       const clientId = typeof client._id === 'object' ? client._id.toString() : client._id;
-      const response = await axiosInstance.get(`/populate/read/clients/${clientId}?fields=projectTypes&populateFields={"projectTypes":"name"}`);
+      const response = await axiosInstance.post(`/populate/read/clients/${clientId}`, {
+        fields: "projectTypes",
+        populateFields: { "projectTypes": "name" }
+      });
       const clientData = response.data.data;
       const colors = ['bg-purple-500', 'bg-green-500', 'bg-red-500', 'bg-indigo-500', 'bg-yellow-600', 'bg-pink-500'];
       const clientColumns = clientData.projectTypes?.map((projectType, index) => ({
@@ -171,7 +175,7 @@ const TasksPage = () => {
   );
 
   return (
-    <div className="h-full flex flex-col dark:bg-black dark:text-white">
+    <div className="h-full flex flex-col bg-canvas-muted dark:bg-canvas text-ink">
 
       {/* Main Content */}
       <div className="flex-1 flex gap-6 p-6 overflow-hidden">

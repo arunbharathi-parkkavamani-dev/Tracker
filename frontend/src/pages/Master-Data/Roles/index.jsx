@@ -29,7 +29,7 @@ const Roles = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const res = await axiosInstance.get("/populate/read/roles?limit=1000");
+      const res = await axiosInstance.post("/populate/read/roles", {limit: 1000});
       setData(res.data?.data || []);
     } catch (err) {
       console.error("Error fetching roles:", err);
@@ -126,7 +126,7 @@ const Roles = () => {
             setEditingItem(null);
             setModelOpen(true);
           }}
-          className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+          className="tracker-btn-accent px-4 py-2"
         >
           Add Role
         </button>

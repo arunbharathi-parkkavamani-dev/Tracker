@@ -18,7 +18,7 @@ const Designations = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const res = await axiosInstance.get("/populate/read/designations?limit=1000");
+      const res = await axiosInstance.post("/populate/read/designations", {limit: 1000});
       const cleanData = (res.data?.data || []).map(item => {
         const { professionalInfo, ...cleanItem } = item;
         return cleanItem;
@@ -88,7 +88,7 @@ const Designations = () => {
             setEditingItem(null);
             setModelOpen(true);
           }}
-          className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+          className="tracker-btn-accent px-4 py-2"
         >
           Add Designation
         </button>

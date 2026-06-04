@@ -19,7 +19,7 @@ const TicketsPage = () => {
   const fetchTickets = async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get('/populate/read/tickets?fields=assignedTo,accountManager,createdBy,linkedTaskId');
+      const response = await axiosInstance.post('/populate/read/tickets', {fields: "assignedTo,accountManager,createdBy,linkedTaskId"});
       const ticketsData = response.data.data || [];
       // Clean the data to remove problematic objects
       const cleanTickets = ticketsData.map(ticket => {
@@ -217,7 +217,7 @@ const TicketsPage = () => {
   );
 
   return (
-    <div className="p-6 space-y-6 dark:bg-black dark:text-white">
+    <div className="p-6 space-y-6 bg-canvas-muted dark:bg-canvas text-ink">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -268,7 +268,7 @@ const TicketsPage = () => {
 
       {/* Create Ticket Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 tracker-overlay flex items-center justify-center z-50">
           <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto m-4">
             <div className="flex justify-between items-center p-6 border-b">
               <h2 className="text-xl font-semibold">Create New Ticket</h2>
@@ -289,7 +289,7 @@ const TicketsPage = () => {
 
       {/* Edit Ticket Modal */}
       {editingTicket && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 tracker-overlay flex items-center justify-center z-50">
           <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto m-4">
             <div className="flex justify-between items-center p-6 border-b">
               <h2 className="text-xl font-semibold">Edit Ticket</h2>
