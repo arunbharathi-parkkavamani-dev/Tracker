@@ -36,18 +36,15 @@ jobs:
 
       - name: Generate AI Code Review
         env:
-          OPENAI_API_KEY : ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           node <<'EOF'
           import fs from 'fs';
           import { execSync } from 'child_process';
           import OpenAI from 'openai';
 
-
           if (!process.env.OPENAI_API_KEY) {
-            throw new Error(
-              'OPENAI_API_KEY secret is missing'
-            );
+            throw new Error('OPENAI_API_KEY secret is missing');
           }
 
           const openai = new OpenAI({
@@ -55,81 +52,86 @@ jobs:
             baseURL: 'https://openrouter.ai/api/v1'
           });
 
-          // Detect if we're in the ai-review branch
-          const branch = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf8' }).trim();
+          // -----------------------------
+          // Get diff (smaller + safer)
+          // -----------------------------
           let content = '';
 
-          if (branch.includes('review')) {
-            // console.log('📦 Performing full project review...');
-            // Get all project files except node_modules
-            const files = execSync('find . -type f ! -path "./node_modules/*" ! -path "./.git/*" -name "*.js" -o -name "*.jsx" -o -name "*.ts" -o -name "*.tsx"', { encoding: 'utf8' });
-            const limitedFiles = files.split('\n').slice(0, 20).join('\n'); // Limit for large projects
-            content = execSync(`cat ${limitedFiles}`, { encoding: 'utf8', maxBuffer: 1024 * 1000 });
+          const commitCount = parseInt(
+            execSync('git rev-list --count HEAD', { encoding: 'utf8' }).trim(),
+            10
+          );
+
+          if (commitCount > 1) {
+            content = execSync(
+              'git diff --unified=3 HEAD~1 HEAD | head -c 20000',
+              { encoding: 'utf8' }
+            );
           } else {
-            // console.log('🧩 Performing diff-based review...');
-            const commitCount = parseInt(execSync('git rev-list --count HEAD', { encoding: 'utf8' }).trim(), 10);
-            if (commitCount > 1) {
-              content = execSync('git diff HEAD~1 HEAD', { encoding: 'utf8', maxBuffer: 50 * 1024 * 1024 });
-            } else {
-              content = execSync('git show HEAD', { encoding: 'utf8', maxBuffer: 50 * 1024 * 1024 });
+            content = execSync(
+              'git show HEAD | head -c 20000',
+              { encoding: 'utf8' }
+            );
+          }
+
+          if (!content || content.trim().length === 0) {
+            console.log("No changes detected");
+            process.exit(0);
+          }
+
+          // -----------------------------
+          // Chunking (prevents token overflow)
+          // -----------------------------
+          function chunkText(text, size = 12000) {
+            const chunks = [];
+            for (let i = 0; i < text.length; i += size) {
+              chunks.push(text.slice(i, i + size));
             }
+            return chunks;
           }
 
-          const MAX_CHARS = 120000;
-          if (content.length > MAX_CHARS) {
-            content = content.slice(0, MAX_CHARS);
-          }
+          const chunks = chunkText(content, 12000);
+          let fullReview = '';
 
-          const prompt = `
-          Act as a Staff Software Engineer.
+          for (let i = 0; i < chunks.length; i++) {
+            const chunk = chunks[i];
 
-          Review this code change and provide:
+            console.log(`Reviewing chunk ${i + 1}/${chunks.length}`);
 
-          # Overview
-
-          Short summary.
-
-          # Positives
-
-          What is implemented well.
-
-          # Issues
-
-          Only real bugs, security risks, performance problems,
-          architecture concerns, race conditions,
-          memory leaks, maintainability issues.
-
-          # Suggestions
-
-          Actionable improvements.
-
-          # Risk Level
-
-          Low / Medium / High
-
-          Code:
-
-          ${content}
-          `;
-          const runReview = async () => {
             const response = await openai.chat.completions.create({
               model: "google/gemini-2.5-flash",
               messages: [
-                { role: "system", content: "You are an expert code reviewer and software architect." },
-                { role: "user", content: prompt }
+                {
+                  role: "system",
+                  content: "You are a senior software engineer reviewing code."
+                },
+                {
+                  role: "user",
+                  content: `
+                  Review PART ${i + 1}/${chunks.length}.
+
+                  Focus only on this section.
+
+                  Code:
+                  ${chunk}
+                  `
+                }
               ],
-              temperature: 0.4,
+              temperature: 0.3,
+              max_tokens: 1200
             });
 
-            const review = response.choices[0].message.content;
-            const date = new Date().toLocaleString();
-            const output = `\n\n---\n### 🧠 AI Review (${date})\n${review}\n`;
+            fullReview += `\n\n### Part ${i + 1}\n` +
+              response.choices[0].message.content;
+          }
 
-            fs.appendFileSync('./text.md', output);
-            // console.log('✅ Review added to text.md');
-          };
+          // -----------------------------
+          // Save output
+          // -----------------------------
+          const date = new Date().toLocaleString();
+          const output = `\n\n---\n### 🧠 AI Review (${date})\n${fullReview}\n`;
 
-          await runReview();
+          fs.appendFileSync('./text.md', output);
           EOF
 
       - name: Commit and push review file
