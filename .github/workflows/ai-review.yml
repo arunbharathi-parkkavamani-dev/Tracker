@@ -36,12 +36,19 @@ jobs:
 
       - name: Generate AI Code Review
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENROUTER_API_KEY : ${{ secrets.OPENROUTER_API_KEY }}
         run: |
           node <<'EOF'
           import fs from 'fs';
           import { execSync } from 'child_process';
           import OpenAI from 'openai';
+
+          
+          if (!process.env.OPENROUTER_API_KEY) {
+            throw new Error(
+              'OPENROUTER_API_KEY secret is missing'
+            );
+          }
 
           const openai = new OpenAI({
             apiKey: process.env.OPENROUTER_API_KEY,
