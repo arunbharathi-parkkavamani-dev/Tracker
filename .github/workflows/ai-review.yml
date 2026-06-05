@@ -56,7 +56,12 @@ jobs:
             content = execSync(`cat ${limitedFiles}`, { encoding: 'utf8', maxBuffer: 1024 * 1000 });
           } else {
             // console.log('🧩 Performing diff-based review...');
-            content = execSync('git diff HEAD~1 HEAD', { encoding: 'utf8' });
+            const commitCount = parseInt(execSync('git rev-list --count HEAD', { encoding: 'utf8' }).trim(), 10);
+            if (commitCount > 1) {
+              content = execSync('git diff HEAD~1 HEAD', { encoding: 'utf8' });
+            } else {
+              content = execSync('git show HEAD', { encoding: 'utf8', maxBuffer: 1024 * 1000 });
+            }
           }
 
           const prompt = `
