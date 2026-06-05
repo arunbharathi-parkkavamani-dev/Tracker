@@ -8,12 +8,9 @@
 export default function validateFieldUpdateRules({ body, modelName, role, userId }) {
   if (!body || typeof body !== "object") return;
 
-  // 🔥 List of fields that must NEVER change regardless of role
   const globalLockedFields = [
     "_id",
     "id",
-    "role",
-    "permissions",
     "deleted",
     "deletedAt",
     "deletedBy",
@@ -21,8 +18,12 @@ export default function validateFieldUpdateRules({ body, modelName, role, userId
     "updatedAt",
   ];
 
+  if (modelName !== "accesspolicies") {
+    globalLockedFields.push("role", "permissions");
+  }
+
   for (const field of Object.keys(body)) {
-    if (field in body && globalLockedFields.includes(field)) {
+    if (globalLockedFields.some(f => match(field, f))) {
       throw new Error(`⛔ Field "${field}" cannot be modified`);
     }
   }

@@ -7,10 +7,13 @@ import {
 } from "../../constants/regularizationForm";
 import axiosInstance from "../../api/axiosInstance";
 import { useAuth } from "../../context/authProvider";
+import { Calendar, Clock, ChevronLeft, ChevronRight, CheckCircle, AlertTriangle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-const LeaveAndRegularization = ({ onClose, onSuccess, onFailed }) => {
-  const [formType, setFormType] = useState("");
+const LeaveAndRegularization = ({ onClose, onSuccess, onFailed, defaultType = "" }) => {
+  const [formType, setFormType] = useState(defaultType);
   const [showDateSelection, setShowDateSelection] = useState(false);
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [userData, setUserData] = useState(null);
   const [liveForm, setLiveForm] = useState({});
@@ -22,7 +25,7 @@ const LeaveAndRegularization = ({ onClose, onSuccess, onFailed }) => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const res = await axiosInstance.get(`/populate/read/employees/${user.id}`);
+        const res = await axiosInstance.post(`/populate/read/employees/${user.id}`);
         setUserData(res.data.data);
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -36,17 +39,15 @@ const LeaveAndRegularization = ({ onClose, onSuccess, onFailed }) => {
     try {
       const endDate = new Date();
       const startDate = new Date();
-      startDate.setDate(startDate.getDate() - 30); // Last 30 days
+      startDate.setDate(startDate.getDate() - 30);
       
-      const res = await axiosInstance.get('/populate/read/attendances', {
-        params: {
-          filter: JSON.stringify({
-            employee: user.id,
-            date: {
-              $gte: startDate.toISOString().split('T')[0],
-              $lte: endDate.toISOString().split('T')[0]
-            }
-          })
+      const res = await axiosInstance.post('/populate/read/attendances', {
+        filter: {
+          employee: user.id,
+          date: {
+            $gte: startDate.toISOString().split('T')[0],
+            $lte: endDate.toISOString().split('T')[0]
+          }
         }
       });
       
@@ -92,8 +93,9 @@ const LeaveAndRegularization = ({ onClose, onSuccess, onFailed }) => {
 
     const fetchAvailable = async () => {
       try {
-        const res = await axiosInstance.get(
-          `/populate/read/employees/${user.id}?filter=${leaveTypeId}`
+        const res = await axiosInstance.post(
+          `/populate/read/employees/${user.id}`,
+          { filter: leaveTypeId }
         );
         const stats = res?.data?.data?.leaveStatus || [];
         const match = stats.find((l) => l.leaveType === leaveTypeId);
@@ -124,15 +126,13 @@ const LeaveAndRegularization = ({ onClose, onSuccess, onFailed }) => {
   const handleSubmit = async (data) => {
     if (!userData) return;
 
-    // leave workflow
     if (formType === "leave") {
       if (liveForm.totalDays > availableDays) {
-        onFailed?.("❌ Insufficient Leave Balance");
+        onFailed?.("Insufficient Leave Balance");
         return;
       }
 
       const leave = data.leaveType;
-
       const payload = {
         employeeId: userData._id,
         employeeName: userData.basicInfo.firstName,
@@ -150,15 +150,22 @@ const LeaveAndRegularization = ({ onClose, onSuccess, onFailed }) => {
 
       try {
         await axiosInstance.post("/populate/create/leaves", payload);
-        onSuccess?.();
-        onClose?.();
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          toast?.success?.("Leave requested successfully!");
+        }
+        if (onClose) {
+          onClose();
+        } else {
+          navigate(-1);
+        }
       } catch (err) {
         onFailed?.(err);
       }
       return;
     }
 
-    // regularization workflow
     if (formType === "regularization") {
       if (!selectedDate) {
         onFailed?.("Please select a date first");
@@ -175,8 +182,16 @@ const LeaveAndRegularization = ({ onClose, onSuccess, onFailed }) => {
 
       try {
         await axiosInstance.post("/populate/create/regularizations", payload);
-        onSuccess?.();
-        onClose?.();
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          toast?.success?.("Regularization requested successfully!");
+        }
+        if (onClose) {
+          onClose();
+        } else {
+          navigate(-1);
+        }
       } catch (err) {
         onFailed?.(err);
       }
@@ -184,178 +199,220 @@ const LeaveAndRegularization = ({ onClose, onSuccess, onFailed }) => {
     }
   };
 
-  return (
-    <div className="p-8">
-      {!formType ? (
-        <div className="text-center">
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
-              Leave & Regularization
-            </h2>
-            <p className="text-gray-600 dark:text-gray-300">
-              Choose the type of request you'd like to submit
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-            <button
-              onClick={() => setFormType("leave")}
-              className="group bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 hover:from-blue-100 hover:to-blue-200 dark:hover:from-blue-800 dark:hover:to-blue-700 p-8 rounded-2xl border border-blue-200 dark:border-blue-700 transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
-            >
-              <div className="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-600 transition-colors">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold text-blue-800 dark:text-blue-200 mb-2">Apply for Leave</h3>
-              <p className="text-blue-600 dark:text-blue-300 text-sm">Submit a leave request for vacation, sick days, or personal time</p>
-            </button>
-            
-            <button
-              onClick={handleRegularizationClick}
-              className="group bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 hover:from-green-100 hover:to-green-200 dark:hover:from-green-800 dark:hover:to-green-700 p-8 rounded-2xl border border-green-200 dark:border-green-700 transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
-            >
-              <div className="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-green-600 transition-colors">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold text-green-800 dark:text-green-200 mb-2">Regularization</h3>
-              <p className="text-green-600 dark:text-green-300 text-sm">Request attendance regularization for missed check-ins or check-outs</p>
-            </button>
+  const getIssueType = (record) => {
+    if (!record.checkIn && !record.checkOut) return 'No Check-in/Check-out';
+    if (!record.checkIn) return 'Missing Check-in';
+    if (!record.checkOut) return 'Missing Check-out';
+    if (record.status === 'Absent') return 'Marked Absent';
+    if (record.status === 'Half Day') return 'Half Day';
+    return 'Attendance Issue';
+  };
+
+  const fmtTime = (d) => d ? new Date(d).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true }) : null;
+
+  /* ── DYNAMIC CONTENT BASED ON STATE ── */
+  let innerContent = null;
+
+  if (!formType) {
+    innerContent = (
+      <div style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
+        <div className="mb-6">
+          <h2 className="text-[18px] font-medium text-[#111111]">New Request</h2>
+          <p className="text-[14px] text-[#626260] mt-1">Choose the type of request</p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <button
+            onClick={() => setFormType("leave")}
+            className="group flex flex-col sm:flex-row items-start gap-3 p-4 rounded-[12px] border border-[#d3cec6] hover:bg-[#f5f1ec]/50 transition-all text-left cursor-pointer"
+          >
+            <div className="h-10 w-10 rounded-[8px] bg-[#f5f1ec] flex items-center justify-center flex-shrink-0 group-hover:bg-white transition-colors">
+              <Calendar className="h-5 w-5 text-[#111111]" />
+            </div>
+            <div>
+              <span className="text-[14px] font-medium text-[#111111] block mb-1">Apply for Leave</span>
+              <span className="text-[12px] text-[#7b7b78] leading-snug block">Vacation, sick days, or personal time</span>
+            </div>
+          </button>
+
+          <button
+            onClick={handleRegularizationClick}
+            className="group flex flex-col sm:flex-row items-start gap-3 p-4 rounded-[12px] border border-[#d3cec6] hover:bg-[#f5f1ec]/50 transition-all text-left cursor-pointer"
+          >
+            <div className="h-10 w-10 rounded-[8px] bg-[#f5f1ec] flex items-center justify-center flex-shrink-0 group-hover:bg-white transition-colors">
+              <Clock className="h-5 w-5 text-[#111111]" />
+            </div>
+            <div>
+              <span className="text-[14px] font-medium text-[#111111] block mb-1">Regularization</span>
+              <span className="text-[12px] text-[#7b7b78] leading-snug block">Fix missed check-ins or check-outs</span>
+            </div>
+          </button>
+        </div>
+      </div>
+    );
+  } else if (showDateSelection) {
+    innerContent = (
+      <div style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
+        <div className="flex items-center gap-3 mb-5">
+          <button
+            onClick={() => { setShowDateSelection(false); setFormType(""); }}
+            className="p-2 rounded-[8px] hover:bg-[#f5f1ec] text-[#626260] transition-colors cursor-pointer"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <div>
+            <h2 className="text-[16px] font-medium text-[#111111]">Select Date</h2>
+            <p className="text-[12px] text-[#7b7b78]">Choose the attendance record to regularize</p>
           </div>
         </div>
-      ) : showDateSelection ? (
-        <div>
-          <div className="flex items-center mb-8">
-            <button
-              onClick={() => { setShowDateSelection(false); setFormType(""); }}
-              className="mr-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
-            >
-              <svg className="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
-              Select Date for Regularization
-            </h2>
+
+        {attendanceIssues.length === 0 ? (
+          <div className="flex flex-col items-center py-10 text-center">
+            <div className="h-12 w-12 rounded-full bg-[#0bdf50]/10 flex items-center justify-center mb-4">
+              <CheckCircle className="h-6 w-6 text-[#0bdf50]" />
+            </div>
+            <p className="text-[15px] font-medium text-[#111111]">No Issues Found</p>
+            <p className="text-[13px] text-[#626260] mt-1">All records from the last 30 days are complete.</p>
           </div>
-          
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-            {attendanceIssues.length === 0 ? (
-              <div className="text-center py-8">
-                <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">No Issues Found</h3>
-                <p className="text-gray-600 dark:text-gray-300">All your attendance records for the last 30 days are complete.</p>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-[13px] text-[#7b7b78] mb-1">
+              {attendanceIssues.length} record{attendanceIssues.length > 1 ? 's' : ''} found:
+            </p>
+            {attendanceIssues.map((record, index) => {
+              const date = new Date(record.date);
+              return (
+                <button
+                  key={index}
+                  onClick={() => handleDateSelect(record)}
+                  className="w-full flex items-center justify-between p-3.5 rounded-[8px] border border-[#ebe7e1] hover:border-[#d3cec6] hover:bg-[#f5f1ec]/50 transition-all text-left cursor-pointer group"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="h-8 w-8 rounded-[6px] bg-[#c41c1c]/10 flex items-center justify-center flex-shrink-0">
+                      <AlertTriangle className="h-4 w-4 text-[#c41c1c]" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-medium text-[#111111]">
+                        {date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                      </p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[11px] text-[#c41c1c] font-medium">{getIssueType(record)}</span>
+                        <span className="text-[11px] text-[#9c9fa5]">
+                          {fmtTime(record.checkIn) || '—'} → {fmtTime(record.checkOut) || '—'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-[#d3cec6] group-hover:text-[#111111] transition-colors flex-shrink-0" />
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  } else {
+    innerContent = (
+      <div style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
+        {/* Tab switcher */}
+        <div className="flex gap-1 p-1 bg-[#f5f1ec] rounded-[8px] mb-5">
+          <button
+            onClick={() => { setFormType("leave"); setShowDateSelection(false); setSelectedDate(null); }}
+            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-[6px] text-[13px] font-medium transition-all cursor-pointer ${
+              formType === "leave" 
+                ? "bg-white text-[#111111] shadow-sm" 
+                : "text-[#626260] hover:text-[#111111]"
+            }`}
+          >
+            <Calendar className="h-4 w-4" />
+            Leave
+          </button>
+          <button
+            onClick={() => { 
+              if (formType !== "regularization") {
+                handleRegularizationClick();
+              }
+            }}
+            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-[6px] text-[13px] font-medium transition-all cursor-pointer ${
+              formType === "regularization"
+                ? "bg-white text-[#111111] shadow-sm" 
+                : "text-[#626260] hover:text-[#111111]"
+            }`}
+          >
+            <Clock className="h-4 w-4" />
+            Regularization
+          </button>
+        </div>
+
+        {/* Leave form */}
+        {formType === "leave" && (
+          <div>
+            {!userData ? (
+              <div className="flex items-center justify-center py-10">
+                <div className="h-6 w-6 border-2 border-[#111111] border-t-transparent rounded-full animate-spin" />
               </div>
             ) : (
-              <div>
-                <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  Found {attendanceIssues.length} attendance record(s) that may need regularization:
-                </p>
-                <div className="space-y-3">
-                  {attendanceIssues.map((record, index) => {
-                    const date = new Date(record.date);
-                    const getIssueType = () => {
-                      if (!record.checkIn && !record.checkOut) return 'No Check-in/Check-out';
-                      if (!record.checkIn) return 'Missing Check-in';
-                      if (!record.checkOut) return 'Missing Check-out';
-                      if (record.status === 'Absent') return 'Marked Absent';
-                      if (record.status === 'Half Day') return 'Half Day';
-                      return 'Attendance Issue';
-                    };
-                    
-                    return (
-                      <button
-                        key={index}
-                        onClick={() => handleDateSelect(record)}
-                        className="w-full p-4 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 transition-colors text-left"
-                      >
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <div className="font-semibold text-gray-800 dark:text-white">
-                              {date.toLocaleDateString('en-IN', { 
-                                weekday: 'long', 
-                                year: 'numeric', 
-                                month: 'long', 
-                                day: 'numeric' 
-                              })}
-                            </div>
-                            <div className="text-sm text-red-600 dark:text-red-400 mt-1">
-                              {getIssueType()}
-                            </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                              Check-in: {record.checkIn || 'Not recorded'} | Check-out: {record.checkOut || 'Not recorded'}
-                            </div>
-                          </div>
-                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+              <FormRenderer
+                fields={leaveFormFields(userData).map(f =>
+                  f.name === "availableDays" ? { ...f, externalValue: availableDays } : f
+                )}
+                submitButton={leaveSubmitButton}
+                onSubmit={handleSubmit}
+                onChange={handleFormChange}
+              />
             )}
           </div>
-        </div>
-      ) : (
-        <div>
-          <div className="flex items-center mb-8">
-            <button
-              onClick={() => formType === "regularization" ? setShowDateSelection(true) : setFormType("")}
-              className="mr-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
-            >
-              <svg className="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
-              {formType === "leave" ? "Leave Application" : "Attendance Regularization"}
-            </h2>
-            {formType === "regularization" && selectedDate && (
-              <div className="ml-4 px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-lg text-sm">
-                {new Date(selectedDate.date).toLocaleDateString('en-IN')}
-              </div>
-            )}
-          </div>
-          
-          {formType === "leave" && (
-            <div>
-              {!userData ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                  <p className="text-gray-600">Loading user data...</p>
-                </div>
-              ) : (
-                <FormRenderer
-                  fields={leaveFormFields(userData).map(f =>
-                    f.name === "availableDays" ? { ...f, externalValue: availableDays } : f
-                  )}
-                  submitButton={leaveSubmitButton}
-                  onSubmit={handleSubmit}
-                  onChange={handleFormChange}
-                />
-              )}
-            </div>
-          )}
+        )}
 
-          {formType === "regularization" && (
+        {/* Regularization: form after date selected */}
+        {formType === "regularization" && !showDateSelection && selectedDate && (
+          <div>
+            <div className="flex items-center gap-2 mb-5 px-4 py-2.5 rounded-[8px] bg-[#f5f1ec] border border-[#d3cec6]">
+              <Calendar className="h-4 w-4 text-[#111111]" />
+              <span className="text-[13px] font-medium text-[#111111]">
+                {new Date(selectedDate.date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+              </span>
+              <button
+                onClick={() => setShowDateSelection(true)}
+                className="ml-auto text-[12px] text-[#626260] hover:text-[#111111] hover:underline cursor-pointer"
+              >
+                Change
+              </button>
+            </div>
             <FormRenderer
               fields={regularizationFormFields}
               submitButton={regularizationSubmitButton}
               onSubmit={handleSubmit}
             />
-          )}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // If there's no onClose provided, we assume it's a full page
+  if (!onClose) {
+    return (
+      <div className="min-h-screen bg-[#f5f1ec] p-4 lg:p-6" style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
+        <div className="max-w-2xl mx-auto bg-white border border-[#d3cec6] rounded-[16px] shadow-sm p-6">
+          <div className="flex items-center gap-3 mb-6 border-b border-[#ebe7e1] pb-4">
+            <button
+              onClick={() => navigate(-1)}
+              className="p-2 rounded-[8px] hover:bg-[#f5f1ec] text-[#626260] hover:text-[#111111] transition-colors cursor-pointer"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <h1 className="text-[20px] font-medium text-[#111111]">
+              Leave & Regularization
+            </h1>
+          </div>
+          {innerContent}
         </div>
-      )}
-    </div>
-  );
+      </div>
+    );
+  }
+
+  return innerContent;
 };
 
 export default LeaveAndRegularization;

@@ -34,7 +34,7 @@ AgentSchema.methods.comparePassword = async function(candidatePassword) {
 };
 
 // Indexes
-AgentSchema.index({ email: 1 });
+
 AgentSchema.index({ client: 1 });
 
 export default model('agents', AgentSchema);

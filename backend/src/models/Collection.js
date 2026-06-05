@@ -32,6 +32,15 @@ import regularizations from "./Regularization.js";
 import emailconfigs from "./EmailConfig.js";
 import referencetypes from "./ReferenceType.js";
 import leadtypes from "./LeadType.js";
+import feedgroups from "./FeedGroup.js";
+import feedchannels from "./FeedChannel.js";
+import feedposts from "./FeedPost.js";
+import feedcomments from "./FeedComment.js";
+import NotificationReceptionist from "./NotificationReceptionist.js";
+import products from "./products.js";
+import salarystructures from "./SalaryStructure.js";
+import payrollruns from "./PayrollRun.js";
+import holidays from "./Holiday.js";
 
 const models = {
   accesspolicies,
@@ -66,7 +75,16 @@ const models = {
   milestones,
   regularizations,
   referencetypes,
-  leadtypes
+  leadtypes,
+  feedgroups,
+  feedchannels,
+  feedposts,
+  feedcomments,
+  NotificationReceptionist,
+  products,
+  salarystructures,
+  payrollruns,
+  holidays,
 };
 
 export default models;

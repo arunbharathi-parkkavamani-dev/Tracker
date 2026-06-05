@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import axiosInstance from "../../api/axiosInstance";
 import TaskModal from "./TaskModal";
-import FloatingCard from "../../components/Common/FloatingCard";
+import FormPageLayout from "../../components/Forms/FormPageLayout";
 import { useAuth } from "../../context/authProvider.jsx";
 import ShareButton from "../../utils/Sharebutton.jsx";
 
@@ -92,22 +92,23 @@ const TaskDetailPage = () => {
     return null;
   }
 
-  // Always show FloatingCard - no background content needed
   return (
-    <FloatingCard onClose={handleClose}>
+    <FormPageLayout
+      title={task.title || "Task"}
+      backTo="/tasks"
+      onBack={handleClose}
+      embedded
+      maxWidth="max-w-6xl"
+    >
       <div className="relative">
         {isDirectAccess && (
           <div className="absolute top-2 right-2 z-10">
             <ShareButton model="tasks" id={id} />
           </div>
         )}
-        <TaskModal
-          task={task}
-          onClose={handleClose}
-          onUpdate={handleUpdate}
-        />
+        <TaskModal task={task} onClose={handleClose} onUpdate={handleUpdate} />
       </div>
-    </FloatingCard>
+    </FormPageLayout>
   );
 };
 

@@ -1,8 +1,9 @@
 @import "tailwindcss";
+@import "./styles/tokens.css";
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  font-family:system-ui,;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -12,6 +13,33 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Login page animations */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+.animate-fade-in-up {
+  animation: fadeInUp 0.7s ease-out both;
+}
+.animate-fade-in {
+  animation: fadeIn 0.35s ease-out both;
+}
+.animate-float {
+  animation: float 6s ease-in-out infinite;
 }
 
 *{
@@ -30,19 +58,19 @@
 
 /* Month navigation (header) */
 .react-calendar__navigation button {
-  color: black !important;
+  color: var(--tracker-ink) !important;
   font-weight: 600;
   font-size: 14px;
 }
 
 /* Days of the week (Mon, Tue, etc.) */
 .react-calendar__month-view__weekdays {
-  color: black !important;
+  color: var(--tracker-ink) !important;
   font-size: 12px;
 }
 
 /* Calendar days */
 .react-calendar__tile {
-  color: rgb(0, 0, 0) !important;
+  color: var(--tracker-ink) !important;
   font-size: 14px;
 }

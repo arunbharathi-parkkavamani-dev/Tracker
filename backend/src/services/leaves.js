@@ -1,7 +1,7 @@
 import Leave from "../models/Leave.js";
 import Employee from "../models/Employee.js";
 import Attendance from "../models/Attendance.js";
-import { sendNotification } from "../utils/notificationService.js";
+import fcmService from "./fcmService.js";
 import { generateNotification } from "../middlewares/notificationMessagePrasher.js";
 
 export default function leaves() {
@@ -24,14 +24,13 @@ export default function leaves() {
       );
 
       // Send notification → Employee ➝ Manager
-      await sendNotification({
-        recipient: leaveDoc.managerId,
-        sender: userId,
+      await fcmService.dispatchNotification({
         type: 'leave_request',
         title: 'Leave Request',
         message,
-        relatedModel: modelName,
-        relatedId: leaveDoc._id,
+        sender: userId,
+        meta: { model: 'leaves', modelId: leaveDoc._id },
+        receiversArray: [leaveDoc.managerId]
       });
     },
 
@@ -66,14 +65,13 @@ export default function leaves() {
         modelName
       );
 
-      await sendNotification({
-        recipient: leaveDoc.employeeId,
-        sender: userId,
+      await fcmService.dispatchNotification({
         type: 'leave_status',
         title: 'Leave Status Update',
         message,
-        relatedModel: modelName,
-        relatedId: docId,
+        sender: userId,
+        meta: { model: 'leaves', modelId: docId },
+        receiversArray: [leaveDoc.employeeId]
       });
 
       // CASE 1: Pending/Rejected → Approved (NORMAL APPROVAL FLOW)

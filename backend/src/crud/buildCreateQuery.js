@@ -13,6 +13,8 @@ export default async function buildCreateQuery({
   body,
   policy
 }) {
+  console.log("[buildCreateQuery] body:", body);
+
   const Model = models[modelName];
   if (!Model) throw new Error(`Model "${modelName}" not found`);
 
@@ -28,6 +30,7 @@ export default async function buildCreateQuery({
    * ----------------------------------------------- */
   body = sanitizeWrite({ body, policy, action: "create" }); // applies allowAccess + forbiddenAccess
 
+  console.log("[buildCreateQuery] body after sanitizeWrite:", body, "policy:", policy);
   /** -----------------------------------------------
    * 3) Registry rules (ABAC: isSelf, custom)
    * ----------------------------------------------- */

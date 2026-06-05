@@ -8,8 +8,8 @@ const EmployeeSchema = new Schema({
     dob: { type: Date },
     doa: { type: Date },
     maritalStatus: { type: String, enum: ['Single', 'Married', 'Divorced', 'Widowed'] },
-    phone: { type: String, validate: { validator: function(v) { return /^(\+\d{1,3}[- ]?)?\d{10}$/.test(v); }, message: props => `${props.value} is not a valid phone number!`}},
-    email: { type: String, lowercase: true, trim: true, index: true, validate: { validator: function(v) { return /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(v); }, message: props => `${props.value} is not a valid email!` }},
+    phone: { type: String, validate: { validator: function (v) { return /^(\+\d{1,3}[- ]?)?\d{10}$/.test(v); }, message: props => `${props.value} is not a valid phone number!` } },
+    email: { type: String, lowercase: true, trim: true, index: true, validate: { validator: function (v) { return /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(v); }, message: props => `${props.value} is not a valid email!` } },
     fatherName: { type: String, trim: true },
     motherName: { type: String, trim: true },
     address: {
@@ -34,15 +34,16 @@ const EmployeeSchema = new Schema({
     confirmDate: { type: Date },
   },
   authInfo: {
-    workEmail: { type: String, lowercase: true, trim: true, unique: true, validate: { validator: function(v) { return /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(v); }, message: props => `${props.value} is not a valid email!` } },
+    workEmail: { type: String, lowercase: true, trim: true, unique: true, validate: { validator: function (v) { return /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(v); }, message: props => `${props.value} is not a valid email!` } },
     password: { type: String }
   },
+
   accountDetails: {
     accountName: { type: String },
     accountNo: { type: String },
     bankName: { type: String },
     branch: { type: String },
-    ifscCode: { type: String, validate: { validator: function(v) { return /^[A-Z]{4}0[A-Z0-9]{6}$/.test(v); }, message: props => `${props.value} is not a valid IFSC code!` } },
+    ifscCode: { type: String, validate: { validator: function (v) { return /^[A-Z]{4}0[A-Z0-9]{6}$/.test(v); }, message: props => `${props.value} is not a valid IFSC code!` } },
   },
   salaryDetails: {
     package: { type: Number },
@@ -52,16 +53,16 @@ const EmployeeSchema = new Schema({
     deductions: { type: Number }
   },
   personalDocuments: {
-    pan: { 
+    pan: {
       type: String,
       validate: {
-        validator: function(v) {
+        validator: function (v) {
           return /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(v);
         },
         message: props => `${props.value} is not a valid PAN number!`
       }
     },
-    aadhar: { type: String, validate: { validator: function(v) { return /^\d{12}$/.test(v); }, message: props => `${props.value} is not a valid Aadhar number!` } },
+    aadhar: { type: String, validate: { validator: function (v) { return /^\d{12}$/.test(v); }, message: props => `${props.value} is not a valid Aadhar number!` } },
     esi: { type: String },
     pf: { type: String },
     documentFiles: [{ type: String }]

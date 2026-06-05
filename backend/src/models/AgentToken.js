@@ -20,8 +20,7 @@ const agentTokenSchema = new mongoose.Schema({
 });
 
 // Indexes
-agentTokenSchema.index({ agentId: 1 });
-agentTokenSchema.index({ email: 1 });
+
 agentTokenSchema.index({ currentSessionToken: 1 });
 agentTokenSchema.index({ clientId: 1 });
 

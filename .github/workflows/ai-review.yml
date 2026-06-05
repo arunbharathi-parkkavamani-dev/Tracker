@@ -17,6 +17,7 @@ on:
 jobs:
   ai-code-review:
     runs-on: ubuntu-latest
+    if: github.actor != 'github-actions[bot]'
     permissions:
       contents: write
       pull-requests: write
@@ -31,7 +32,7 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        run: npm install openai@4.0.0 simple-git@3.21.0
+        run: npm install openai
 
       - name: Generate AI Code Review
         env:
@@ -42,52 +43,95 @@ jobs:
           import { execSync } from 'child_process';
           import OpenAI from 'openai';
 
-          const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-          // Detect if we're in the ai-review branch
-          const branch = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf8' }).trim();
-          let content = '';
-
-          if (branch.includes('review')) {
-            // console.log('📦 Performing full project review...');
-            // Get all project files except node_modules
-            const files = execSync('find . -type f ! -path "./node_modules/*" ! -path "./.git/*" -name "*.js" -o -name "*.jsx" -o -name "*.ts" -o -name "*.tsx"', { encoding: 'utf8' });
-            const limitedFiles = files.split('\n').slice(0, 20).join('\n'); // Limit for large projects
-            content = execSync(`cat ${limitedFiles}`, { encoding: 'utf8', maxBuffer: 1024 * 1000 });
-          } else {
-            // console.log('🧩 Performing diff-based review...');
-            content = execSync('git diff HEAD~1 HEAD', { encoding: 'utf8' });
+          if (!process.env.OPENAI_API_KEY) {
+            throw new Error('OPENAI_API_KEY secret is missing');
           }
 
-          const prompt = `
-          You are a senior full-stack reviewer (React, React Native, Express, and Node).
-          Review the following codebase or diff.
-          Identify key architectural issues, design inconsistencies, or optimizations.
-          Output a markdown-formatted summary with sections: Overview, Positives, Issues, Suggestions, Overall.
-          
-          Code Input:
-          ${content}
-          `;
+          const openai = new OpenAI({
+            apiKey: process.env.OPENAI_API_KEY,
+            baseURL: 'https://openrouter.ai/api/v1'
+          });
 
-          const runReview = async () => {
+          // -----------------------------
+          // Get diff (smaller + safer)
+          // -----------------------------
+          let content = '';
+
+          const commitCount = parseInt(
+            execSync('git rev-list --count HEAD', { encoding: 'utf8' }).trim(),
+            10
+          );
+
+          if (commitCount > 1) {
+            content = execSync(
+              'git diff --unified=3 HEAD~1 HEAD | head -c 20000',
+              { encoding: 'utf8' }
+            );
+          } else {
+            content = execSync(
+              'git show HEAD | head -c 20000',
+              { encoding: 'utf8' }
+            );
+          }
+
+          if (!content || content.trim().length === 0) {
+            console.log("No changes detected");
+            process.exit(0);
+          }
+
+          // -----------------------------
+          // Chunking (prevents token overflow)
+          // -----------------------------
+          function chunkText(text, size = 12000) {
+            const chunks = [];
+            for (let i = 0; i < text.length; i += size) {
+              chunks.push(text.slice(i, i + size));
+            }
+            return chunks;
+          }
+
+          const chunks = chunkText(content, 12000);
+          let fullReview = '';
+
+          for (let i = 0; i < chunks.length; i++) {
+            const chunk = chunks[i];
+
+            console.log(`Reviewing chunk ${i + 1}/${chunks.length}`);
+
             const response = await openai.chat.completions.create({
-              model: "gpt-4o-mini",
+              model: "google/gemini-2.5-flash",
               messages: [
-                { role: "system", content: "You are an expert code reviewer and software architect." },
-                { role: "user", content: prompt }
+                {
+                  role: "system",
+                  content: "You are a senior software engineer reviewing code."
+                },
+                {
+                  role: "user",
+                  content: `
+                  Review PART ${i + 1}/${chunks.length}.
+
+                  Focus only on this section.
+
+                  Code:
+                  ${chunk}
+                  `
+                }
               ],
-              temperature: 0.4,
+              temperature: 0.3,
+              max_tokens: 1200
             });
 
-            const review = response.choices[0].message.content;
-            const date = new Date().toLocaleString();
-            const output = `\n\n---\n### 🧠 AI Review (${date})\n${review}\n`;
+            fullReview += `\n\n### Part ${i + 1}\n` +
+              response.choices[0].message.content;
+          }
 
-            fs.appendFileSync('./text.md', output);
-            // console.log('✅ Review added to text.md');
-          };
+          // -----------------------------
+          // Save output
+          // -----------------------------
+          const date = new Date().toLocaleString();
+          const output = `\n\n---\n### 🧠 AI Review (${date})\n${fullReview}\n`;
 
-          await runReview();
+          fs.appendFileSync('./text.md', output);
           EOF
 
       - name: Commit and push review file
@@ -95,5 +139,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add text.md
+          git diff --cached --quiet && exit 0
           git commit -m "🤖 AI code review update"
           git push

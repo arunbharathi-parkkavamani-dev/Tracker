@@ -171,7 +171,7 @@ const EmailConfig = () => {
                 type="text"
                 value={config.fromName}
                 onChange={(e) => handleChange('fromName', e.target.value)}
-                placeholder="Logimax HR System"
+                placeholder="WorkHub HR System"
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required
               />
@@ -183,7 +183,7 @@ const EmailConfig = () => {
                 type="email"
                 value={config.fromEmail}
                 onChange={(e) => handleChange('fromEmail', e.target.value)}
-                placeholder="noreply@logimax.com"
+                placeholder="noreply@company.com"
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required
               />

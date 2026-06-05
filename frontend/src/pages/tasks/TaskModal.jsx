@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../context/authProvider";
 import axiosInstance from "../../api/axiosInstance";
-import FloatingCard from "../../components/Common/FloatingCard";
 import InlineEdit from "../../components/Common/InLineEdit";
 import { updateTaskById } from "./updateTaskById";
 import { MdAdd, MdPlayArrow, MdSchedule, MdFlag, MdLabel, MdPersonAdd, MdMoreVert, MdContentCopy, MdDelete } from "react-icons/md";
 import toast from "react-hot-toast";
 import ShareButton from "../../utils/Sharebutton";
+import ProfileImage from "../../components/Common/ProfileImage";
 
 const TaskModal = ({ task, onClose, onUpdate }) => {
   const { user } = useAuth();
@@ -79,7 +79,7 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
 
   const fetchEmployees = async () => {
     try {
-      const response = await axiosInstance.get('/populate/read/employees?fields=basicInfo.firstName,basicInfo.lastName');
+      const response = await axiosInstance.post('/populate/read/employees', {fields: "basicInfo.firstName,basicInfo.lastName"});
       setEmployees(response.data.data || []);
     } catch (error) {
       console.error('Error fetching employees:', error);
@@ -254,7 +254,7 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
   };
 
   return (
-    <FloatingCard onClose={onClose}>
+    <div className="w-full">
       {/* Header - Full Width */}
       <div className="flex items-center gap-3 mb-6 pb-4 border-b">
         <select
@@ -285,10 +285,11 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
                   title="Click to manage assignment"
                 >
                   {formData.assignedTo[0].basicInfo?.profileImage ? (
-                    <img
-                      src={`http://10.232.224.208:3000/api/files/render/profile/${typeof formData.assignedTo[0].basicInfo.profileImage === 'string' ? formData.assignedTo[0].basicInfo.profileImage.split('/').pop() : formData.assignedTo[0].basicInfo.profileImage}`}
-                      alt={formData.assignedTo[0].basicInfo?.firstName || 'User'}
-                      className="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm"
+                    <ProfileImage
+                      profileImage={formData.assignedTo[0].basicInfo.profileImage}
+                      firstName={formData.assignedTo[0].basicInfo.firstName}
+                      lastName={formData.assignedTo[0].basicInfo.lastName}
+                      px={32}
                     />
                   ) : (
                     <div className="w-8 h-8 rounded-full bg-blue-500 text-white text-sm flex items-center justify-center border-2 border-white shadow-sm">
@@ -563,7 +564,7 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
           </div>
         </div>
       </div>
-    </FloatingCard>
+    </div>
   );
 };
 

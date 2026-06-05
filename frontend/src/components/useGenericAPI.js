@@ -49,27 +49,24 @@ export const useGenericAPI = () => {
     
     if (id) url += `/${id}`;
     
-    const params = new URLSearchParams();
+    const payload = {};
     
     // Add pagination parameters
     if (!id) {
-      params.append('page', page.toString());
-      params.append('limit', limit.toString());
+      payload.page = page;
+      payload.limit = limit;
     }
     
-    // Add query parameters
-    if (filter) params.append('filter', JSON.stringify(filter));
-    if (fields) params.append('fields', Array.isArray(fields) ? fields.join(',') : fields);
-    if (populateFields) params.append('populateFields', JSON.stringify(populateFields));
-    if (sort) params.append('sort', JSON.stringify(sort));
-    if (type) params.append('type', type.toString());
-    if (stages) params.append('stages', JSON.stringify(stages));
-    
-    const queryString = params.toString();
-    if (queryString) url += `?${queryString}`;
+    // Add query parameters as JSON body
+    if (filter) payload.filter = filter;
+    if (fields) payload.fields = Array.isArray(fields) ? fields.join(',') : fields;
+    if (populateFields) payload.populateFields = populateFields;
+    if (sort) payload.sort = sort;
+    if (type) payload.type = type;
+    if (stages) payload.stages = stages;
     
     return handleRequest(
-      () => axiosInstance.get(url),
+      () => axiosInstance.post(url, payload),
       null,
       `Failed to fetch ${model}`
     );

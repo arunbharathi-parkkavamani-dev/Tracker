@@ -20,10 +20,11 @@ const RoleAccessPolicy = () => {
         const fetchData = async () => {
             try {
                 const [rolesRes, modelsRes] = await Promise.all([
-                    axiosInstance.get('/populate/read/roles'),
+                    axiosInstance.post('/populate/read/roles'),
                     axiosInstance.get('/config/models')
                 ]);
-                setRoles(rolesRes.data.data || []);
+                const normalizedRoles = (rolesRes.data.data || []).map(r => ({ ...r, _id: r._id?.$oid || r._id }));
+                setRoles(normalizedRoles);
                 setModels(modelsRes.data.models || []);
             } catch (err) {
                 console.error("Failed to load setup data", err);
@@ -60,7 +61,6 @@ const RoleAccessPolicy = () => {
         fetchPolicies();
     }, [selectedRole]);
 
-    // Handle Toggle
     const handleToggle = (model, type) => {
         setPolicies(prev => {
             const current = prev[model]?.[type] || false;
@@ -71,6 +71,46 @@ const RoleAccessPolicy = () => {
                     [type]: !current
                 }
             };
+        });
+    };
+
+    const handleModelToggleAll = (model) => {
+        setPolicies(prev => {
+            const current = prev[model] || {};
+            const allSelected = current.read && current.create && current.update && current.delete;
+            const targetState = !allSelected;
+            return {
+                ...prev,
+                [model]: {
+                    read: targetState,
+                    create: targetState,
+                    update: targetState,
+                    delete: targetState
+                }
+            };
+        });
+    };
+
+    const handleGlobalToggle = () => {
+        setPolicies(prev => {
+            let allSelected = true;
+            for (const model of models) {
+                if (!prev[model]?.read || !prev[model]?.create || !prev[model]?.update || !prev[model]?.delete) {
+                    allSelected = false;
+                    break;
+                }
+            }
+            const targetState = !allSelected;
+            const newState = { ...prev };
+            models.forEach(model => {
+                newState[model] = {
+                    read: targetState,
+                    create: targetState,
+                    update: targetState,
+                    delete: targetState
+                };
+            });
+            return newState;
         });
     };
 
@@ -180,7 +220,7 @@ const RoleAccessPolicy = () => {
                     >
                         <option value="">-- Choose a Role --</option>
                         {roles.map(r => (
-                            <option key={r._id} value={r._id}>{r.roleName}</option>
+                            <option key={r._id} value={r._id}>{r.name}</option>
                         ))}
                     </select>
                     <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
@@ -201,27 +241,47 @@ const RoleAccessPolicy = () => {
                                     <th className="p-4 font-semibold text-gray-600 dark:text-gray-200 uppercase text-xs tracking-wider text-center">Create</th>
                                     <th className="p-4 font-semibold text-gray-600 dark:text-gray-200 uppercase text-xs tracking-wider text-center">Update</th>
                                     <th className="p-4 font-semibold text-gray-600 dark:text-gray-200 uppercase text-xs tracking-wider text-center">Delete</th>
+                                    <th className="p-4 font-semibold text-gray-600 dark:text-gray-200 uppercase text-xs tracking-wider text-center">
+                                        <button
+                                            onClick={handleGlobalToggle}
+                                            className="px-3 py-1 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors focus:outline-none"
+                                        >
+                                            Toggle All
+                                        </button>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
-                                {models.map(model => (
-                                    <tr key={model} className="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
-                                        <td className="p-4 font-medium text-gray-900 dark:text-gray-100">
-                                            {model.charAt(0).toUpperCase() + model.slice(1)}
-                                        </td>
-                                        {['read', 'create', 'update', 'delete'].map(type => (
-                                            <td key={type} className="p-2 text-center">
+                                {models.map(model => {
+                                    const isAllSelected = policies[model]?.read && policies[model]?.create && policies[model]?.update && policies[model]?.delete;
+                                    return (
+                                        <tr key={model} className="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                            <td className="p-4 font-medium text-gray-900 dark:text-gray-100">
+                                                {model.charAt(0).toUpperCase() + model.slice(1)}
+                                            </td>
+                                            {['read', 'create', 'update', 'delete'].map(type => (
+                                                <td key={type} className="p-2 text-center">
+                                                    <div className="flex justify-center">
+                                                        <PermissionChip
+                                                            active={policies[model]?.[type] || false}
+                                                            onClick={() => handleToggle(model, type)}
+                                                            label={type.toUpperCase()}
+                                                        />
+                                                    </div>
+                                                </td>
+                                            ))}
+                                            <td className="p-2 text-center">
                                                 <div className="flex justify-center">
                                                     <PermissionChip
-                                                        active={policies[model]?.[type] || false}
-                                                        onClick={() => handleToggle(model, type)}
-                                                        label={type.toUpperCase()}
+                                                        active={isAllSelected}
+                                                        onClick={() => handleModelToggleAll(model)}
+                                                        label="ALL"
                                                     />
                                                 </div>
                                             </td>
-                                        ))}
-                                    </tr>
-                                ))}
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>

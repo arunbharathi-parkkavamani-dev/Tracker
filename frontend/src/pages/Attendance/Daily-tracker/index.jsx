@@ -1,19 +1,15 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../../api/axiosInstance.js";
 import { useAuth } from "../../../context/authProvider.jsx";
-import FloatingCard from "../../../components/Common/FloatingCard.jsx";
-import AddDailyEntry from "./add-daily-activity.jsx";
-import Activity from "./activity.jsx";
 import { MdAdd, MdRefresh, MdCalendarToday, MdAccessTime } from "react-icons/md";
 
 const DailyTracker = () => {
   const [data, setData] = useState([]);
   const [error, setError] = useState(null);
   const [refresh, setRefresh] = useState(false);
-  const [selectedActivity, setSelectedActivity] = useState(null);
-  const [showAddModal, setShowAddModal] = useState(false);
   const [loading, setLoading] = useState(true);
-
+  const navigate = useNavigate();
   const { user } = useAuth();
 
   useEffect(() => {
@@ -21,14 +17,11 @@ const DailyTracker = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const filter = JSON.stringify({ employee: user.id });
-        const populateFields = JSON.stringify({
-          'employee': 'basicInfo.firstName,basicInfo.lastName'
+        const response = await axiosInstance.post('/populate/read/dailyactivities', {
+          filter: { employee: user.id },
+          populateFields: { 'employee': 'basicInfo.firstName,basicInfo.lastName' },
+          sort: { date: -1 }
         });
-        
-        const response = await axiosInstance.get(
-          `/populate/read/dailyactivities?filter=${encodeURIComponent(filter)}&populateFields=${encodeURIComponent(populateFields)}&sort={"date":-1}`
-        );
         
         if (response.data.success) {
           setData(response.data.data || []);
@@ -49,7 +42,7 @@ const DailyTracker = () => {
   const handleRefresh = () => setRefresh((prev) => !prev);
 
   const handleActivityClick = (activity) => {
-    setSelectedActivity(activity);
+    navigate(`/Attendance/Daily-tracker/activity/${activity._id}`);
   };
 
   const formatDate = (dateString) => {
@@ -99,7 +92,7 @@ const DailyTracker = () => {
             <MdRefresh size={20} />
           </button>
           <button
-            onClick={() => setShowAddModal(true)}
+            onClick={() => navigate("/Attendance/Daily-tracker/add-daily-activity")}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
           >
             <MdAdd size={20} />
@@ -172,26 +165,6 @@ const DailyTracker = () => {
         </div>
       </div>
 
-      {/* Modals */}
-      {selectedActivity && (
-        <FloatingCard onClose={() => setSelectedActivity(null)}>
-          <Activity 
-            activity={selectedActivity} 
-            onClose={() => setSelectedActivity(null)} 
-          />
-        </FloatingCard>
-      )}
-      
-      {showAddModal && (
-        <FloatingCard onClose={() => setShowAddModal(false)}>
-          <AddDailyEntry 
-            onClose={() => {
-              setShowAddModal(false);
-              handleRefresh();
-            }} 
-          />
-        </FloatingCard>
-      )}
     </div>
   );
 };

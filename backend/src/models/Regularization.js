@@ -28,7 +28,7 @@ const RegularizationSchema = new mongoose.Schema({
   approverComment: { type: String, maxLength: 500, trim: true },
   
   // Reference to attendance record
-  attendanceId: { type: mongoose.Schema.Types.ObjectId, ref: "attendances", required: true, index: true },
+  attendanceId: { type: mongoose.Schema.Types.ObjectId, ref: "attendances", required: true },
   
   // Audit fields
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "employees", required: true },

@@ -175,3 +175,16 @@ export const profileSubmitButton = {
   text: "Update Profile",
   color: "blue",
 };
+
+/** Tab config for profile edit — keeps one FormRenderer across tab switches */
+export const PROFILE_FORM_TABS = [
+  { id: "personal", label: "Personal", fieldPrefixes: ["basicInfo"] },
+  { id: "financial", label: "Financial", fieldPrefixes: ["accountDetails"] },
+  { id: "documents", label: "Documents", fieldPrefixes: ["personalDocuments"] },
+];
+
+export const PROFILE_SUBMIT_LABELS = {
+  personal: "Update Personal Info",
+  financial: "Update Financial Info",
+  documents: "Update Documents",
+};

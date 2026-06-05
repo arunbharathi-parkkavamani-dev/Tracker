@@ -34,21 +34,21 @@ const SearchBar = ({ data, onFilter, searchFields, placeholder = "Search..." }) 
   return (
     <div className="relative w-64">
       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-        <Search className="h-4 w-4 text-gray-400" />
+        <Search className="h-4 w-4 text-[#7b7b78]" />
       </div>
       <input
         type="text"
         value={searchTerm}
         onChange={(e) => handleSearch(e.target.value)}
         placeholder={placeholder}
-        className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+        className="block w-full pl-10 pr-10 py-2 border border-[#d3cec6] rounded-[8px] focus:ring-1 focus:ring-[#111111] focus:border-[#111111] text-[13px] text-[#111111] placeholder:text-[#7b7b78] bg-white outline-none transition-colors"
       />
       {searchTerm && (
         <button
           onClick={clearSearch}
           className="absolute inset-y-0 right-0 pr-3 flex items-center"
         >
-          <X className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+          <X className="h-4 w-4 text-[#7b7b78] hover:text-[#111111]" />
         </button>
       )}
     </div>

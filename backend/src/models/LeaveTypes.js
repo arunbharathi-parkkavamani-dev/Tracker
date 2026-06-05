@@ -6,8 +6,7 @@ const LeaveTypeSchema = new Schema({
     type: String,
     trim: true,
     unique: true,
-    required: true,
-    index: true
+    required: true
   },
   description: { type: String },
   maxDaysPerMonth: { type: Number, default: 2, min: 0 },

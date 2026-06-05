@@ -17,7 +17,7 @@ const Teams = () => {
       setLoading(true);
       
       // Fetch all employees with department info
-      const employeesRes = await axiosInstance.get('/populate/read/employees');
+      const employeesRes = await axiosInstance.post('/populate/read/employees');
       const employees = employeesRes.data.data || [];
       
       // Get current user's department

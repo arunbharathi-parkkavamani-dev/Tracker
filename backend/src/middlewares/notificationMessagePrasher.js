@@ -230,6 +230,33 @@ export function generateNotification(userName, status, modelName) {
   }
 
   // ==========================================================
+  // FEED POSTS & COMMENTS
+  // ==========================================================
+  if (modelName === "feedposts") {
+    switch (status?.type) {
+      case "mention":
+        return `${userName} mentioned you in a post`;
+      case "group_post":
+        return `${userName} posted in ${status.groupName}`;
+      case "channel_post":
+        return `${userName} posted in ${status.channelName}`;
+      case "reaction":
+        return `${userName} reacted to your post`;
+      default:
+        return `${userName} created a post`;
+    }
+  }
+
+  if (modelName === "feedcomments") {
+    switch (status?.type) {
+      case "comment":
+        return `${userName} commented on a post`;
+      default:
+        return `${userName} added a comment`;
+    }
+  }
+
+  // ==========================================================
   // GENERIC FALLBACK
   // ==========================================================
   return `${userName} performed an update`;
