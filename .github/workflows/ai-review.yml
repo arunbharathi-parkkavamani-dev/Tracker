@@ -58,9 +58,9 @@ jobs:
             // console.log('🧩 Performing diff-based review...');
             const commitCount = parseInt(execSync('git rev-list --count HEAD', { encoding: 'utf8' }).trim(), 10);
             if (commitCount > 1) {
-              content = execSync('git diff HEAD~1 HEAD', { encoding: 'utf8' });
+              content = execSync('git diff HEAD~1 HEAD', { encoding: 'utf8', maxBuffer: 50 * 1024 * 1024 });
             } else {
-              content = execSync('git show HEAD', { encoding: 'utf8', maxBuffer: 1024 * 1000 });
+              content = execSync('git show HEAD', { encoding: 'utf8', maxBuffer: 50 * 1024 * 1024 });
             }
           }
 
