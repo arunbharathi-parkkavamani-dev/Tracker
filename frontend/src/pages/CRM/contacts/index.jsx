@@ -36,7 +36,7 @@ const CRMContacts = () => {
 
   const fetchClients = async () => {
     try {
-      const res = await axiosInstance.get("/populate/read/clients?limit=1000");
+      const res = await axiosInstance.post("/populate/read/clients", {limit: 1000});
       setClients(res.data?.data || []);
     } catch (err) {
       console.error("Error fetching clients:", err);

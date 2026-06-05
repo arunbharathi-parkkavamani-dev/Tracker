@@ -4,6 +4,8 @@
  * Similar to AWS SQS with FIFO ordering per partition key (device fingerprint)
  */
 
+import { getFingerprintKey } from '../utils/deviceFingerprint.js';
+
 class RequestQueue {
   constructor(options = {}) {
     this.queues = new Map(); // fingerprint -> queue array
@@ -287,7 +289,7 @@ const requestQueue = new RequestQueue({
 export const queueMiddleware = (options = {}) => {
   const {
     enabled = false, // Disabled by default, enable for specific endpoints
-    keyGenerator = (req) => require('../utils/deviceFingerprint.js').getFingerprintKey(req),
+    keyGenerator = (req) => getFingerprintKey(req),
     shouldQueue = (req) => false, // Override this per route
     onQueueFull = (req, res) => {
       res.status(503).json({

@@ -4,6 +4,8 @@
  * Uses optimistic locking (version field) and distributed locks
  */
 
+import { getFingerprintKey } from '../utils/deviceFingerprint.js';
+
 class RaceConditionHandler {
   constructor(options = {}) {
     this.locks = new Map(); // docId -> lock info
@@ -18,6 +20,14 @@ class RaceConditionHandler {
     };
 
     this.startCleanup();
+  }
+
+  /**
+   * Helper to get version safely
+   */
+  _getVersion(docId) {
+    const v = this.versions.get(docId);
+    return (typeof v === 'object' && v !== null) ? v.version : (v || 0);
   }
 
   /**
@@ -77,7 +87,7 @@ class RaceConditionHandler {
       expiresAt: now + timeout,
       renewals: 0,
       priority,
-      version: this.versions.get(docId) || 0
+      version: this._getVersion(docId)
     };
 
     this.locks.set(lockKey, lock);
@@ -125,7 +135,7 @@ class RaceConditionHandler {
    * Check version conflict (optimistic locking)
    */
   checkVersionConflict(docId, currentVersion, newVersion = null) {
-    const storedVersion = this.versions.get(docId) || 0;
+    const storedVersion = this._getVersion(docId);
 
     if (currentVersion !== storedVersion) {
       return {
@@ -148,9 +158,9 @@ class RaceConditionHandler {
    * Increment version on successful write
    */
   incrementVersion(docId) {
-    const currentVersion = this.versions.get(docId) || 0;
+    const currentVersion = this._getVersion(docId);
     const newVersion = currentVersion + 1;
-    this.versions.set(docId, newVersion);
+    this.versions.set(docId, { version: newVersion, updatedAt: Date.now() });
 
     return newVersion;
   }
@@ -246,7 +256,7 @@ class RaceConditionHandler {
   getLockStatus(docId) {
     const lockKey = `lock_${docId}`;
     const lock = this.locks.get(lockKey);
-    const version = this.versions.get(docId) || 0;
+    const version = this._getVersion(docId);
 
     if (!lock) {
       return {
@@ -341,7 +351,7 @@ class RaceConditionHandler {
       expiredLocks,
       totalVersions: this.versions.size,
       avgVersion: this.versions.size > 0 
-        ? Array.from(this.versions.values()).reduce((a, b) => a + b, 0) / this.versions.size
+        ? Array.from(this.versions.keys()).reduce((a, b) => a + this._getVersion(b), 0) / this.versions.size
         : 0
     };
   }
@@ -353,6 +363,7 @@ class RaceConditionHandler {
     this.cleanupTimer = setInterval(() => {
       const now = Date.now();
       let cleaned = 0;
+      let cleanedVersions = 0;
 
       for (const [lockKey, lock] of this.locks.entries()) {
         if (now >= lock.expiresAt) {
@@ -361,8 +372,19 @@ class RaceConditionHandler {
         }
       }
 
+      // Clean up stale versions (older than 24 hours) to prevent memory leaks
+      for (const [docId, info] of this.versions.entries()) {
+        if (typeof info === 'object' && info.updatedAt && (now - info.updatedAt > 24 * 60 * 60 * 1000)) {
+          this.versions.delete(docId);
+          cleanedVersions++;
+        }
+      }
+
       if (cleaned > 0 && cleaned > 100) {
         console.warn(`[RaceConditionHandler] Cleaned ${cleaned} expired locks`);
+      }
+      if (cleanedVersions > 0) {
+        console.warn(`[RaceConditionHandler] Cleaned ${cleanedVersions} stale versions`);
       }
     }, this.config.cleanupInterval);
 
@@ -393,7 +415,7 @@ export const raceConditionMiddleware = (options = {}) => {
   const {
     enabled = true,
     documentIdExtractor = (req) => req.params.id,
-    fingerprintExtractor = (req) => require('../utils/deviceFingerprint.js').getFingerprintKey(req)
+    fingerprintExtractor = (req) => getFingerprintKey(req)
   } = options;
 
   return async (req, res, next) => {

@@ -14,7 +14,6 @@ const Pagination = ({
 }) => {
   const getVisiblePages = () => {
     const delta = 2;
-    const range = [];
     const rangeWithDots = [];
 
     // Always show first page
@@ -67,15 +66,18 @@ const Pagination = ({
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
   return (
-    <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-700 ${className}`}>
+    <div
+      className={`flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-white border-t border-[#ebe7e1] ${className}`}
+      style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}
+    >
       {/* Items per page selector */}
       {showItemsPerPage && onItemsPerPageChange && (
         <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-700 dark:text-gray-300">Show</span>
+          <span className="text-[13px] text-[#626260]">Show</span>
           <select
             value={itemsPerPage}
             onChange={(e) => onItemsPerPageChange(parseInt(e.target.value))}
-            className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-black text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-600"
+            className="px-3 py-1 border border-[#d3cec6] rounded-[6px] bg-white text-[#111111] text-[13px] focus:outline-none focus:ring-1 focus:ring-[#111111] focus:border-[#111111]"
           >
             <option value={5}>5</option>
             <option value={10}>10</option>
@@ -83,13 +85,13 @@ const Pagination = ({
             <option value={50}>50</option>
             <option value={100}>100</option>
           </select>
-          <span className="text-sm text-gray-700 dark:text-gray-300">per page</span>
+          <span className="text-[13px] text-[#626260]">per page</span>
         </div>
       )}
 
       {/* Page info */}
       {showPageInfo && (
-        <div className="text-sm text-gray-700 dark:text-gray-300">
+        <div className="text-[13px] text-[#626260]">
           Showing {startItem} to {endItem} of {totalItems} results
         </div>
       )}
@@ -101,7 +103,7 @@ const Pagination = ({
           <button
             onClick={() => onPageChange(1)}
             disabled={currentPage === 1}
-            className="p-2 border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-800 bg-white dark:bg-black text-black dark:text-white"
+            className="p-2 border border-[#d3cec6] rounded-[6px] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#f5f1ec] bg-white text-[#626260] hover:text-[#111111] transition-colors"
             title="First page"
           >
             <ChevronsLeft className="h-4 w-4" />
@@ -111,7 +113,7 @@ const Pagination = ({
           <button
             onClick={() => onPageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className="p-2 border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-800 bg-white dark:bg-black text-black dark:text-white"
+            className="p-2 border border-[#d3cec6] rounded-[6px] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#f5f1ec] bg-white text-[#626260] hover:text-[#111111] transition-colors"
             title="Previous page"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -124,12 +126,12 @@ const Pagination = ({
                 key={index}
                 onClick={() => typeof page === 'number' && onPageChange(page)}
                 disabled={page === '...'}
-                className={`px-3 py-2 border text-sm font-medium rounded min-w-[40px] ${
+                className={`px-3 py-2 border text-[13px] font-medium rounded-[6px] min-w-[40px] transition-colors ${
                   page === currentPage
-                    ? 'bg-blue-600 border-blue-600 text-white'
+                    ? 'bg-[#111111] border-[#111111] text-white'
                     : page === '...'
-                    ? 'bg-white dark:bg-black border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 cursor-default'
-                    : 'bg-white dark:bg-black border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
+                    ? 'bg-white border-[#d3cec6] text-[#7b7b78] cursor-default'
+                    : 'bg-white border-[#d3cec6] text-[#626260] hover:bg-[#f5f1ec] hover:text-[#111111]'
                 }`}
               >
                 {page}
@@ -141,7 +143,7 @@ const Pagination = ({
           <button
             onClick={() => onPageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className="p-2 border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-800 bg-white dark:bg-black text-black dark:text-white"
+            className="p-2 border border-[#d3cec6] rounded-[6px] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#f5f1ec] bg-white text-[#626260] hover:text-[#111111] transition-colors"
             title="Next page"
           >
             <ChevronRight className="h-4 w-4" />
@@ -151,7 +153,7 @@ const Pagination = ({
           <button
             onClick={() => onPageChange(totalPages)}
             disabled={currentPage === totalPages}
-            className="p-2 border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-800 bg-white dark:bg-black text-black dark:text-white"
+            className="p-2 border border-[#d3cec6] rounded-[6px] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#f5f1ec] bg-white text-[#626260] hover:text-[#111111] transition-colors"
             title="Last page"
           >
             <ChevronsRight className="h-4 w-4" />
@@ -162,14 +164,14 @@ const Pagination = ({
       {/* Jump to page */}
       {showJumpToPage && totalPages > 10 && (
         <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-700 dark:text-gray-300">Go to page:</span>
+          <span className="text-[13px] text-[#626260]">Go to page:</span>
           <input
             type="number"
             min="1"
             max={totalPages}
             placeholder={currentPage.toString()}
             onKeyPress={handleJumpToPage}
-            className="w-16 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-black text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-600"
+            className="w-16 px-2 py-1 border border-[#d3cec6] rounded-[6px] bg-white text-[#111111] text-[13px] focus:outline-none focus:ring-1 focus:ring-[#111111] focus:border-[#111111]"
           />
         </div>
       )}

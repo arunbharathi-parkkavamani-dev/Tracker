@@ -2,7 +2,7 @@
 import { Schema, model } from 'mongoose';
 
 const ProjectTypeSchema = new Schema({
-  name: { type: String, trim: true, unique: true, required: true, index: true },
+  name: { type: String, trim: true, unique: true, required: true },
   description: { type: String },
   isActive: { type: Boolean, default: true, index: true },
   estimatedHours: { type: Number, min: 0 },

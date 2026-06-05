@@ -12,8 +12,8 @@ const CRM = () => {
   const fetchStats = async () => {
     try {
       const [clientsRes, tasksRes] = await Promise.all([
-        axiosInstance.get("/populate/read/clients?limit=1000"),
-        axiosInstance.get("/populate/read/tasks?limit=1000")
+        axiosInstance.post("/populate/read/clients", {limit: 1000}),
+        axiosInstance.post("/populate/read/tasks", {limit: 1000})
       ]);
 
       const clients = clientsRes.data?.data || [];

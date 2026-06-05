@@ -1,193 +1,157 @@
-import { useState, useEffect } from 'react';
-import axiosInstance from '../../api/axiosInstance';
-import { useAuth } from '../../context/authProvider';
-import KanbanBoard from '../../components/Common/KambanBoard';
-import CreateTaskModal from './CreateTaskModal';
-import TaskModal from './TaskModal';
-import { User } from 'lucide-react';
+import { useState, useEffect } from "react";
+import axiosInstance from "../../api/axiosInstance";
+import { useAuth } from "../../context/authProvider";
+import { useNavigate } from "react-router-dom";
+import KanbanBoard from "../../components/Common/KambanBoard";
+import TaskModal from "./TaskModal";
+import { User, Plus } from "lucide-react";
+
+const STATUS_COLS = [
+  { id: "Backlogs",    title: "Backlogs" },
+  { id: "To Do",       title: "To Do" },
+  { id: "In Progress", title: "In Progress" },
+  { id: "In Review",   title: "In Review" },
+  { id: "Approved",    title: "Approved" },
+  { id: "Completed",   title: "Completed" },
+];
+const PRIORITY_COLS = [
+  { id: "Low",             title: "Low" },
+  { id: "Medium",          title: "Medium" },
+  { id: "High",            title: "High" },
+  { id: "Weekly Priority", title: "Weekly Priority" },
+];
 
 const MyTasks = () => {
-    const { user } = useAuth();
-    const [tasks, setTasks] = useState([]);
-    const [selectedTask, setSelectedTask] = useState(null);
-    const [showCreateModal, setShowCreateModal] = useState(false);
-    const [loading, setLoading] = useState(true);
-    const [kanbanView, setKanbanView] = useState('status');
-    const [employees, setEmployees] = useState([]);
-    const [taskTypes, setTaskTypes] = useState([]);
+  const { user }  = useAuth();
+  const navigate  = useNavigate();
+  const [tasks, setTasks]               = useState([]);
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [loading, setLoading]           = useState(true);
+  const [groupBy, setGroupBy]           = useState("status");
+  const [employees, setEmployees]       = useState([]);
+  const [taskTypes, setTaskTypes]       = useState([]);
 
-    useEffect(() => {
-        fetchMyTasks();
-        fetchEmployees();
-        fetchTaskTypes();
-    }, []);
-    const fetchMyTasks = async () => {
-        try {
-            setLoading(true);
-            const response = await axiosInstance.get(`/populate/read/tasks?filter={"$or":[{"createdBy":"${user.id}"},{"assignedTo":"${user.id}"}]}&fields=clientId,projectTypeId,taskTypeId,createdBy,assignedTo`);
-            const tasksData = response.data.data || [];
-            setTasks(tasksData);
-        } catch (error) {
-            console.error('Error fetching my tasks:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+  useEffect(() => { fetchMyTasks(); fetchMeta(); }, []);
 
-    const fetchEmployees = async () => {
-        try {
-            const response = await axiosInstance.get('/populate/read/employees');
-            setEmployees(response.data.data || []);
-        } catch (error) {
-            console.error('Error fetching employees:', error);
-        }
-    };
-    const fetchTaskTypes = async () => {
-        try {
-            const response = await axiosInstance.get('/populate/read/tasktypes');
-            setTaskTypes(response.data.data || []);
-        } catch (error) {
-            console.error('Error fetching task types:', error);
-        }
-    };
+  const fetchMyTasks = async () => {
+    try {
+      setLoading(true);
+      const res = await axiosInstance.post("/populate/read/tasks", {
+        filter: { $or: [{ createdBy: user.id }, { assignedTo: user.id }] },
+        populateFields: {
+          clientId:      "name",
+          projectTypeId: "name",
+          taskTypeId:    "name",
+          createdBy:     "basicInfo.firstName,basicInfo.lastName,basicInfo.profileImage",
+          assignedTo:    "basicInfo.firstName,basicInfo.lastName,basicInfo.profileImage",
+        },
+      });
+      setTasks(res.data.data || []);
+    } catch (e) { console.error(e); } finally { setLoading(false); }
+  };
 
-    const handleTaskClick = async (task) => {
-        try {
-            const response = await axiosInstance.get(`/populate/read/tasks/${task._id}?fields=clientId,projectTypeId,taskTypeId,createdBy,assignedTo`);
-            setSelectedTask(response.data.data);
-        } catch (error) {
-            console.error('Error fetching task details:', error);
-        }
-    };
+  const fetchMeta = async () => {
+    try {
+      const [e, t] = await Promise.all([
+        axiosInstance.post("/populate/read/employees"),
+        axiosInstance.post("/populate/read/tasktypes"),
+      ]);
+      setEmployees(e.data.data || []);
+      setTaskTypes(t.data.data || []);
+    } catch (e) { console.error(e); }
+  };
 
-    const handleTaskUpdate = () => {
-        fetchMyTasks();
-        setSelectedTask(null);
-    };
+  const handleTaskClick = async (task) => {
+    try {
+      const res = await axiosInstance.post(`/populate/read/tasks/${task._id}`, {
+        populateFields: {
+          clientId:      "name",
+          projectTypeId: "name",
+          taskTypeId:    "name",
+          createdBy:     "basicInfo.firstName,basicInfo.lastName,basicInfo.profileImage",
+          assignedTo:    "basicInfo.firstName,basicInfo.lastName,basicInfo.profileImage",
+        },
+      });
+      setSelectedTask(res.data.data);
+    } catch (e) { console.error(e); }
+  };
 
-    const statusColumns = [
-        { id: 'Backlogs', title: 'Backlogs', color: 'bg-gray-500' },
-        { id: 'To Do', title: 'To Do', color: 'bg-orange-500' },
-        { id: 'In Progress', title: 'In Progress', color: 'bg-blue-500' },
-        { id: 'In Review', title: 'In Review', color: 'bg-purple-500' },
-        { id: 'Approved', title: 'Approved', color: 'bg-green-500' },
-        { id: 'Completed', title: 'Completed', color: 'bg-green-700' }
-    ];
+  const handleCardMove = async (task, _from, toCol) => {
+    try {
+      const field = groupBy === "status" ? "status" : "priorityLevel";
+      await axiosInstance.put(`/populate/update/tasks/${task._id}`, { [field]: toCol });
+      setTasks((prev) => prev.map((t) => t._id === task._id ? { ...t, [field]: toCol } : t));
+    } catch (e) { console.error(e); }
+  };
 
-    const priorityColumns = [
-        { id: 'Low', title: 'Low Priority', color: 'bg-green-500' },
-        { id: 'Medium', title: 'Medium Priority', color: 'bg-yellow-500' },
-        { id: 'High', title: 'High Priority', color: 'bg-red-500' },
-        { id: 'Weekly Priority', title: 'Weekly Priority', color: 'bg-purple-500' }
-    ];
-
-    const myCreatedTasks = tasks.filter(t => t.createdBy?._id === user.id).length;
-    const myAssignedTasks = tasks.filter(t => t.assignedTo?.some(a => a._id === user.id)).length;
-    const inProgressTasks = tasks.filter(t => t.status === 'In Progress').length;
-
-    if (loading) return (
-        <div className="flex items-center justify-center h-64>">
-            <div className="text-lg">Loading tasks...</div>
-        </div>
+  if (loading)
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="w-8 h-8 rounded-full border-2 border-[var(--module-accent)] border-t-transparent animate-spin" />
+      </div>
     );
 
-    return (
-        <div className="h-full flex flex-col">
-            {/* Header */}
-            <div className="p-6 border-b">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-                            <User className="h-6 w-6" />
-                            My Tasks
-                        </h1>
-                        <p className="text-gray-600 text-sm">Tasks created by you or assigned to you</p>
-                    </div>
-                    <div className="flex gap-2">
-                        <button
-                            onClick={() => setKanbanView('status')}
-                            className={`px-3 py-1 text-sm rounded ${kanbanView === 'status'
-                                ? 'bg-blue-100 text-blue-700'
-                                : 'bg-gray-100 text-gray-600'
+  return (
+    <div className="flex flex-col h-full bg-canvas" data-module="project">
 
-                                }`}
-                        >
-                            By Status
-                        </button>
-                        <button
-                            onClick={() => setKanbanView('priority')}
-                            className={`px-3 py-1 text-sm rounded ${kanbanView === 'priority'
-                                ? 'bg-blue-100 text-blue-700'
-                                : 'bg-gray-100 text-gray-600'
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between pb-3">
+        <div className="flex items-center gap-2">
+          <User size={16} className="text-[var(--module-project)]" />
+          <h1 className="text-[15px] font-semibold text-ink tracking-tight">My Tasks</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-0.5 p-0.5 rounded-tracker-md bg-surface-2">
+            {[{ id: "status", label: "Status" }, { id: "priorityLevel", label: "Priority" }].map((g) => (
+              <button key={g.id} onClick={() => setGroupBy(g.id)}
+                className={`px-2.5 py-1 rounded-[6px] text-[11px] font-semibold transition-all ${
+                  groupBy === g.id ? "bg-[var(--module-accent)] text-white" : "text-ink-muted hover:text-ink"
+                }`}>
+                {g.label}
+              </button>
+            ))}
+          </div>
+          <button onClick={() => navigate("/tasks/form")} className="tracker-btn-accent flex items-center gap-1.5 text-[12px] px-3 py-1.5">
+            <Plus size={13} /> New Task
+          </button>
+        </div>
+      </div>
 
-                                }`}
-                        >
-                            By Priority
-                        </button>
-                    </div>
-                </div>
-                {/* Stats Cards */}
-                <div className="grid gap-4 md:grid-cols-3 mt-6">
-                    <div className="bg-blue-50/50 border border-blue-100 rounded-lg p-4">
-                        <div className="pb-2">
-                            <h3 className="text-sm font-medium text-blue-600">Created by Me</h3>
-                        </div>
-                        <div className="text-2xl font-bold">{myCreatedTasks}</div>
-                    </div>
+      {/* ── Board ── */}
+      <div className="flex-1 overflow-hidden">
+        <KanbanBoard
+          data={tasks}
+          groupBy={groupBy}
+          columns={groupBy === "status" ? STATUS_COLS : PRIORITY_COLS}
+          currentUserId={user?.id}
+          onCardClick={handleTaskClick}
+          onCardMove={handleCardMove}
+          employees={employees}
+          taskTypes={taskTypes}
+          showFollowerFilter
+          onNewTask={() => navigate("/tasks/form")}
+        />
+      </div>
 
-                    <div className="bg-green-50/50 border border-green-100 rounded-lg p-4">
-                        <div className="pb-2">
-                            <h3 className="text-sm font-medium text-green-600">Assigned to Me</h3>
-                        </div>
-                        <div className="text-2xl font-bold">{myAssignedTasks}</div>
-                    </div>
-
-                    <div className="bg-orange-50/50 border border-orange-100 rounded-lg p-4">
-                        <div className="pb-2">
-                            <h3 className="text-sm font-medium text-orange-600">In Progress</h3>
-                        </div>
-                        <div className="text-2xl font-bold">{inProgressTasks}</div>
-                    </div>
-                </div>
+      {/* ── Task detail modal ── */}
+      {selectedTask && (
+        <div className="fixed inset-0 tracker-overlay z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-surface rounded-tracker-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+            style={{ boxShadow: "var(--tracker-shadow-overlay)" }}>
+            <div className="flex items-center justify-between px-6 py-4 text-white rounded-t-[16px] bg-gradient-to-br from-[#0369A1] to-[#0EA5E9]">
+              <span className="text-[16px] font-semibold">Task Detail</span>
+              <button onClick={() => setSelectedTask(null)}
+                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors text-lg font-bold">×</button>
             </div>
-            {/* Kanban Board */}
-            <div className="flex-1 overflow-hidden">
-                <KanbanBoard
-                    data={tasks}
-                    groupBy={kanbanView === 'status' ? 'status' : 'priorityLevel'}
-                    columns={kanbanView === 'status' ? statusColumns : priorityColumns}
-                    currentUserId={user?.id}
-                    onCardClick={handleTaskClick}
-                    onCardMove={(task, fromStatus, toStatus) => {
-                        // console.log('Move task:', task.title, 'from', fromStatus, 'to', toStatus);
-                    }}
-                    title="My Tasks"
-                    subtitle="Tasks created by you or assigned to you"
-                    employees={employees}
-                    taskTypes={taskTypes}
-                    kanbanView={kanbanView}
-                    onNewTask={() => setShowCreateModal(true)}
-                />
+            <div className="p-6">
+              <TaskModal task={selectedTask} onClose={() => setSelectedTask(null)}
+                onUpdate={() => { fetchMyTasks(); setSelectedTask(null); }} />
             </div>
-            {/* Modals */}
-            {selectedTask && (
-                <TaskModal
-                    task={selectedTask}
-                    onClose={() => setSelectedTask(null)}
-                    onUpdate={handleTaskUpdate}
-                />
-            )}
-            {showCreateModal && (
-                <CreateTaskModal
-                    onClose={() => setShowCreateModal(false)}
-                    onCreated={() => {
-                        fetchMyTasks();
-                        setShowCreateModal(false);
-
-                    }}
-                />
-            )}
-        </div>);
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default MyTasks;

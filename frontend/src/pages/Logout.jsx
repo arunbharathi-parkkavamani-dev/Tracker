@@ -8,23 +8,42 @@ const LogoutPage = () => {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const performLogout = async () => {
-    Cookies.remove("auth_token");
-    Cookies.remove("refresh_token");
-    localStorage.removeItem('auth_token');
-    navigate("/login");
     try {
-      // Call logout API
+      // Call logout API with current device UUID before clearing
+      const deviceUuid = localStorage.getItem('device_uuid');
       await axiosInstance.post("/auth/logout", {}, {
         headers: {
-          'x-device-uuid': getDeviceUUID()
+          'x-device-uuid': deviceUuid
         }
       });
     } catch (error) {
       console.error("Logout API error:", error);
+    } finally {
+      // Clear all auth data and device_uuid
+      Cookies.remove("auth_token");
+      Cookies.remove("refresh_token");
+      localStorage.clear(); // Clear entire localStorage to ensure device_uuid is removed
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('device_uuid');
+      localStorage.removeItem('refresh_token');
+      
+      // Verify device_uuid is cleared
+      if (localStorage.getItem('device_uuid')) {
+        console.warn('device_uuid still exists after clear, forcing removal');
+        Object.keys(localStorage).forEach(key => {
+          if (key.includes('device') || key.includes('uuid')) {
+            localStorage.removeItem(key);
+          }
+        });
+      }
+      
+      // Clear context and redirect
+      await logout();
+      
+      // Small delay to ensure storage operations complete
+      await new Promise(resolve => setTimeout(resolve, 100));
+      navigate("/login");
     }
-
-    // Clear local storage and context
-    await logout();
   };
   useEffect(() => {
     performLogout();

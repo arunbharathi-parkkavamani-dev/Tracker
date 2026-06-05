@@ -157,7 +157,7 @@ const RoleBasedTasks = () => {
     if (isFullAccessUser) {
       return <HRTasks />;
     }
-    
+
     switch (userRole) {
       case 'employee':
         return <EmployeeTasks />;
@@ -165,6 +165,7 @@ const RoleBasedTasks = () => {
         return <ManagerTasks />;
       case 'hr':
       case 'super admin':
+      case 'developer':
         return <HRTasks />;
       default:
         return <EmployeeTasks />;

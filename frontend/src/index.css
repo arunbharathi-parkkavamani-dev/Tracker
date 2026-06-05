@@ -36,7 +36,7 @@
   animation: fadeInUp 0.7s ease-out both;
 }
 .animate-fade-in {
-  animation: fadeIn 0.8s ease-out both;
+  animation: fadeIn 0.35s ease-out both;
 }
 .animate-float {
   animation: float 6s ease-in-out infinite;

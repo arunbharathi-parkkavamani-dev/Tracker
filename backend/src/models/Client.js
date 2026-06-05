@@ -34,7 +34,7 @@ const ClientSchema = new Schema({
   accountManager: { type: Schema.Types.ObjectId, ref: 'Employee' },
   projectManager: { type: Schema.Types.ObjectId, ref: 'Employee' },
   projectTypes: [{ type: Schema.Types.ObjectId, ref: 'projecttypes' }],
-  proposedProducts: [{ type: String }],
+  proposedProducts: [{ type: Schema.Types.ObjectId, ref: 'products' }],
   milestones: [{
     milestoneId: { type: Schema.Types.ObjectId, ref: 'milestones', required: true },
     status: {
@@ -49,8 +49,6 @@ const ClientSchema = new Schema({
   }]
 }, { timestamps: true });
 
-// Indexes for optimal filtering
-ClientSchema.index({ name: 1 });
 ClientSchema.index({ email: 1 });
 ClientSchema.index({ accountManager: 1 });
 

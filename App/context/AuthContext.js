@@ -50,7 +50,8 @@ export const AuthProvider = ({ children }) => {
             "refresh_token",
             "current_session_id",
             "fcm_token_stored",
-            "last_fcm_token"
+            "last_fcm_token",
+            "device_uuid"
         ]);
         setUser(null);
     };

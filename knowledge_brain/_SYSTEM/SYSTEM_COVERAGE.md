@@ -1,0 +1,22 @@
+# System Coverage
+
+Modules Scanned: 19
+- Core (Models: 13, Frontend: 5)
+- HR (Models: 5, Frontend: 0)
+- Attendance (Models: 7, Frontend: 9)
+- Masters (Models: 4, Frontend: 0)
+- Tickets (Models: 3, Frontend: 3)
+- Tasks (Models: 3, Frontend: 0)
+- CRM (Models: 0, Frontend: 2)
+- Dashboard (Models: 0, Frontend: 1)
+- Master-Data (Models: 0, Frontend: 15)
+- PlayGround (Models: 0, Frontend: 1)
+- Profile (Models: 0, Frontend: 1)
+- Settings (Models: 0, Frontend: 4)
+- tasks (Models: 0, Frontend: 8)
+- Travel-Expenses (Models: 0, Frontend: 1)
+- [model] (Models: 0, Frontend: 1)
+- Common (Models: 0, Frontend: 15)
+- role (Models: 0, Frontend: 8)
+- Static (Models: 0, Frontend: 2)
+- Payroll (Models: 4, Frontend: 4)

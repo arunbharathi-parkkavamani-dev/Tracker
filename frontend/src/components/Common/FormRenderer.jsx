@@ -2,6 +2,12 @@ import { useState, useEffect, useRef } from "react";
 import axiosInstance from "../../api/axiosInstance";
 import toast from "react-hot-toast";
 import { ChevronDown, X, Search, Upload, FileText, Plus, Trash2, Check } from "lucide-react";
+import {
+  buildDirtyPatch,
+  getNestedValue,
+  setNestedValue,
+  stripMetaFields,
+} from "../../utils/formPatch";
 
 /* ════════════════════════════════════════════
    FLOATING LABEL INPUT WRAPPER
@@ -148,11 +154,36 @@ const SearchableSelect = ({ options = [], value, onChange, multiple, labelField,
 /* ════════════════════════════════════════════
    FORM RENDERER
 ════════════════════════════════════════════ */
-const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}, value }) => {
+const FormRenderer = ({
+  fields = [],
+  fieldsByTab = null,
+  activeTab = null,
+  submitButton,
+  onSubmit,
+  onChange,
+  data = {},
+  value,
+}) => {
   const [formData, setFormData] = useState(data);
   const [changedFields, setChangedFields] = useState({});
   const [dynamicOptions, setDynamicOptions] = useState({});
   const [focusedField, setFocusedField] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const baselineRef = useRef(null);
+  const recordId = data?._id;
+
+  const visibleFields =
+    fieldsByTab && activeTab
+      ? fieldsByTab[activeTab] || fields
+      : fields;
+
+  useEffect(() => {
+    if (recordId && data) {
+      baselineRef.current = structuredClone(data);
+      setFormData(structuredClone(data));
+      setChangedFields({});
+    }
+  }, [recordId, data]);
 
   useEffect(() => {
     const defaults = {};
@@ -163,23 +194,8 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
     setFormData((prev) => ({ ...defaults, ...data, ...prev }));
   }, [fields, data]);
 
-  const getNestedValue = (obj, path) => path.split('.').reduce((c, k) => c?.[k], obj);
-
-  const setNestedValue = (obj, path, value) => {
-    const keys = path.split('.');
-    const lastKey = keys.pop();
-    const target = keys.reduce((current, key) => {
-      if (typeof current[key] === 'string' && (current[key].startsWith('{') || current[key].startsWith('['))) {
-        try { current[key] = JSON.parse(current[key]); } catch (e) { current[key] = {}; }
-      }
-      if (!current[key] || typeof current[key] !== 'object') current[key] = {};
-      return current[key];
-    }, obj);
-    target[lastKey] = value;
-    return obj;
-  };
-
   const update = (name, value) => {
+    if (!name) return;
     setFormData((prev) => {
       const updated = { ...prev };
       setNestedValue(updated, name, value);
@@ -451,13 +467,54 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
   /* ═════════ SUBMIT ═════════ */
   const onSubmitHandler = async (e) => {
     e.preventDefault();
+    if (submitting) return;
+
+    const cleanData = stripMetaFields(formData);
+    const isEdit = Boolean(recordId);
+    const changedKeys = Object.keys(changedFields);
+
+    let payload = cleanData;
+    if (isEdit) {
+      if (changedKeys.length === 0) {
+        toast("No changes to save");
+        return;
+      }
+      payload = buildDirtyPatch(
+        baselineRef.current || data,
+        formData,
+        changedKeys
+      );
+      if (Object.keys(payload).length === 0) {
+        toast("No changes to save");
+        return;
+      }
+    }
+
+    const meta = {
+      formData: cleanData,
+      fullPayload: cleanData,
+      changedFields,
+      isEdit,
+      patchPayload: isEdit ? payload : cleanData,
+    };
+
+    setSubmitting(true);
     try {
-      const { _id, createdAt, updatedAt, __v, ...cleanData } = formData;
-      if (onSubmit) await onSubmit(cleanData);
-      else console.error('onSubmit function is not provided!');
+      const result = onSubmit?.(payload, meta);
+      if (result && typeof result.then === "function") {
+        await result;
+        if (isEdit) {
+          baselineRef.current = structuredClone(formData);
+          setChangedFields({});
+        }
+      }
     } catch (error) {
-      console.error('FormRenderer submit error:', error);
-      toast.error(error.response?.data?.message || 'Failed to save changes');
+      console.error("FormRenderer submit error:", error);
+      if (!error?.queued) {
+        toast.error(error.response?.data?.message || "Failed to save changes");
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -465,7 +522,7 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
   return (
     <form onSubmit={onSubmitHandler} className="space-y-5">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
-        {fields
+        {visibleFields
           .filter((f) => !f.hidden)
           .sort((a, b) => (a.orderKey ?? 999) - (b.orderKey ?? 999))
           .map((field) => (
@@ -479,10 +536,12 @@ const FormRenderer = ({ fields = [], submitButton, onSubmit, onChange, data = {}
           ))}
       </div>
 
-      <button type="submit"
-        className="tracker-btn-primary w-full h-[44px] text-[14px] cursor-pointer"
+      <button
+        type="submit"
+        disabled={submitting}
+        className="tracker-btn-primary w-full h-[44px] text-[14px] cursor-pointer disabled:opacity-60"
       >
-        {submitButton?.text || "Submit"}
+        {submitting ? "Saving…" : submitButton?.text || "Submit"}
       </button>
     </form>
   );

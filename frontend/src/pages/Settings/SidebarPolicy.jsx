@@ -15,12 +15,12 @@ const SidebarPolicy = () => {
             try {
                 const [sidRes, depRes, desRes] = await Promise.all([
                     axiosInstance.get('/populate/list/sidebars?limit=100&sort={"order":1}'),
-                    axiosInstance.get('/populate/list/departments'),
-                    axiosInstance.get('/populate/list/designations')
+                    axiosInstance.post('/populate/list/departments'),
+                    axiosInstance.post('/populate/list/designations')
                 ]);
-                setSidebars(sidRes.data.data || []);
-                setDepartments(depRes.data.data || []);
-                setDesignations(desRes.data.data || []);
+                setSidebars((sidRes.data.data || []).map(item => ({...item, _id: item._id?.$oid || item._id})));
+                setDepartments((depRes.data.data || []).map(item => ({...item, _id: item._id?.$oid || item._id})));
+                setDesignations((desRes.data.data || []).map(item => ({...item, _id: item._id?.$oid || item._id})));
             } catch (err) {
                 console.error("Failed to load sidebar data", err);
             }

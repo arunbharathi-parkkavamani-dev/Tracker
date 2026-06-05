@@ -19,8 +19,14 @@ export default function Login() {
     setError("");
 
     try {
+      // Ensure device_uuid is created before login
+      let deviceUUID = await AsyncStorage.getItem('device_uuid');
+      if (!deviceUUID) {
+        deviceUUID = 'mobile_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        await AsyncStorage.setItem('device_uuid', deviceUUID);
+      }
+
       // 1️⃣ Login API
-      const deviceUUID = await getDeviceUUID();
       const response = await axiosInstance.post(
         "/auth/login",
         {

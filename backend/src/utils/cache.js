@@ -1,10 +1,13 @@
 //  src/utils/cache.js
 
 import AccessPolicies from "../models/AccessPolicies.js";
+import Role from "../models/Role.js";
 import mongoose from "mongoose";
 
-const cache = new Map()
+const cache = new Map();
+const roleCapabilityCache = new Map(); // roleId -> Set<capability>
 let cacheInitialized = false;
+
 
 export async function setCache() {
     try {
@@ -19,17 +22,23 @@ export async function setCache() {
             });
         }
 
-        const data = await AccessPolicies.find({}).lean()
+        const [policies, roles] = await Promise.all([
+            AccessPolicies.find({}).lean(),
+            Role.find({ isActive: true }).lean(),
+        ]);
+
         cache.clear();
-        data.forEach((policies) => {
-            // Use role ID as string, not toLowerCase since role IDs are ObjectIds
-            const role = policies.role.toString();
-            if (!cache.has(role)) {
-                cache.set(role, {})
-            }
-            const roleCache = cache.get(role);
-            roleCache[policies.modelName] = policies;
+        policies.forEach((p) => {
+            const role = p.role.toString();
+            if (!cache.has(role)) cache.set(role, {});
+            cache.get(role)[p.modelName] = p;
         });
+
+        roleCapabilityCache.clear();
+        roles.forEach((r) => {
+            roleCapabilityCache.set(r._id.toString(), new Set(r.capabilities || []));
+        });
+
         cacheInitialized = true;
     }
     catch (error) {
@@ -39,30 +48,22 @@ export async function setCache() {
 
 export function getPolicy(role, modelName) {
     try {
-        // Check if cache is initialized
-        if (!cacheInitialized) {
-            // console.log('Cache not initialized yet, returning null');
-            return null;
-        }
-
-        // Use role ID as string, not toLowerCase
+        if (!cacheInitialized) return null;
         const roleCache = cache.get(role.toString());
-        if (!roleCache) {
-            // console.log(`Role permission not found for role: ${role}`);
-            return null;
-        }
+        if (!roleCache) return null;
         if (!modelName) return roleCache;
-        const policy = roleCache[modelName];
-        if (!policy) {
-            // console.log(`Model policy not found for role: ${role}, model: ${modelName}`);
-            return null;
-        }
-        return policy;
-    }
-    catch (error) {
-        // console.log(error);
-        return null;
-    }
+        return roleCache[modelName] || null;
+    } catch { return null; }
+}
+
+/**
+ * Check if a role (by ObjectId string) has a given capability.
+ * @param {string} roleId  - req.user.role (ObjectId as string)
+ * @param {string} capability - e.g. 'manage:salarystructures'
+ */
+export function canDo(roleId, capability) {
+    if (!cacheInitialized || !roleId) return false;
+    return roleCapabilityCache.get(roleId.toString())?.has(capability) ?? false;
 }
 
 export default cache;

@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
+import toast from "react-hot-toast";
 import FormRenderer from "../Common/FormRenderer";
 import FormPageLayout from "./FormPageLayout";
 import TabbedFormTabs from "./TabbedFormTabs";
 import { splitFieldsIntoTabs, shouldUseTabs } from "../../utils/formFieldTabs";
+import { formDraftKey, loadFormDraft, clearFormDraft } from "../../utils/formDrafts";
 
 /**
  * Reusable full-page form with optional Profile-style tabs.
+ * Tab state is kept in one FormRenderer instance (no remount on tab change).
  */
 const EntityFormPage = ({
   title,
@@ -20,8 +23,10 @@ const EntityFormPage = ({
   onSubmit,
   loadRecord,
   maxWidth,
+  draftModel = null,
 }) => {
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const id = searchParams.get("id");
   const [record, setRecord] = useState(data);
   const [fetching, setFetching] = useState(Boolean(id && loadRecord));
@@ -47,6 +52,19 @@ const EntityFormPage = ({
     };
   }, [id, loadRecord, data]);
 
+  useEffect(() => {
+    if (id || !draftModel) return;
+    const key = formDraftKey(draftModel, "new");
+    const shouldRestore =
+      location.state?.restoreDraft || searchParams.get("restoreDraft") === "1";
+    const draft = loadFormDraft(key);
+    if (draft?.data && shouldRestore) {
+      const formValues = draft.data.formData || draft.data;
+      setRecord((prev) => ({ ...prev, ...formValues }));
+      toast.success("Draft restored");
+    }
+  }, [id, draftModel, location.state, searchParams]);
+
   const useTabbed = shouldUseTabs(fields, tabs);
   const fieldsByTab = useMemo(
     () => (useTabbed && tabs?.length ? splitFieldsIntoTabs(fields, tabs) : { default: fields }),
@@ -54,10 +72,6 @@ const EntityFormPage = ({
   );
 
   const tabList = useTabbed && tabs?.length ? tabs : null;
-  const activeFields = tabList
-    ? fieldsByTab[activeTab] || []
-    : fieldsByTab.default || fields;
-
   const pageTitle = id ? `Edit ${title}` : `Add ${title}`;
 
   if (fetching || loading) {
@@ -77,11 +91,13 @@ const EntityFormPage = ({
       )}
 
       <FormRenderer
-        key={activeTab + (record?._id || "new")}
-        fields={activeFields}
+        key={record?._id || "new"}
+        fields={fields}
+        fieldsByTab={tabList ? fieldsByTab : null}
+        activeTab={tabList ? activeTab : null}
         submitButton={submitButton}
         onSubmit={onSubmit}
-        data={record}
+        data={record || {}}
       />
     </FormPageLayout>
   );

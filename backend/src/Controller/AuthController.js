@@ -209,8 +209,20 @@ export const refresh = async (req, res, next) => {
     const newRefreshSecret = generateSecret();
     const newJti = generateJti();
 
+    // Re-fetch employee to get latest role (role may have changed since last login)
+    const employee = await Employee.findById(decoded.id).lean();
+    if (!employee) return res.status(401).json({ message: "User not found" });
+
     const newAccessToken = jwt.sign(
-      { id: decoded.id, platform: decoded.platform },
+      {
+        id: decoded.id,
+        platform: decoded.platform,
+        role: employee.professionalInfo.role,
+        department: employee.professionalInfo.department,
+        designation: employee.professionalInfo.designation,
+        name: employee.basicInfo.firstName,
+        managerId: employee.professionalInfo.reportingManager,
+      },
       newAccessSecret,
       { expiresIn: "1h" }
     );
@@ -314,39 +326,10 @@ export const storePushToken = async (req, res, next) => {
     }
 
 
-    // Send test notification
-    await sendTestNotification(fcmToken);
-
     return res.json({ message: "FCM Token stored successfully" });
   } catch (err) {
     console.error("Store push token error:", err);
     res.status(500).json({ message: "Failed to store push token" });
-  }
-};
-
-const sendTestNotification = async (fcmToken) => {
-  try {
-    const message = {
-      to: fcmToken,
-      sound: 'default',
-      title: 'FCM Token Registered! 🎉',
-      body: 'Your device is now ready to receive push notifications.',
-      data: { type: 'test', timestamp: Date.now() }
-    };
-
-    const response = await fetch('https://exp.host/--/api/v2/push/send', {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Accept-encoding': 'gzip, deflate',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(message)
-    });
-
-    const result = await response.json();
-  } catch (error) {
-    console.error('Failed to send test notification:', error);
   }
 };
 
@@ -369,27 +352,29 @@ export const sendManualTestNotification = async (req, res) => {
       return res.status(404).json({ message: "No FCM token found for this device" });
     }
 
-    const notification = {
-      to: userSession.fcmToken,
-      sound: 'default',
-      title: title || 'Test Notification 📱',
-      body: message || 'This is a manual test notification from your HR system.',
-      data: { type: 'manual_test', timestamp: Date.now() }
-    };
+    const { default: fcmService } = await import('../services/fcmService.js');
+    const { default: NotificationReceptionist } = await import('../models/NotificationReceptionist.js');
+    const { default: NotificationContent } = await import('../models/notification.js');
 
-    const response = await fetch('https://exp.host/--/api/v2/push/send', {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Accept-encoding': 'gzip, deflate',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(notification)
+    // 1. Create a dummy content record so sendMulticast has something to reference
+    const contentDoc = await NotificationContent.create({
+      type: 'system',
+      title: title || 'Test Notification 📱',
+      message: message || 'This is a manual test notification from your HR system.',
+      sender: req.user.id
     });
 
-    const result = await response.json();
+    // 2. Create receptionist record
+    const receptionistDoc = await NotificationReceptionist.create({
+      notificationId: contentDoc._id,
+      receiver: req.user.id,
+      fcmStatus: 'pending'
+    });
 
-    return res.json({ message: "Test notification sent successfully", result });
+    // 3. Send via FCM
+    await fcmService.sendMulticast(contentDoc, [receptionistDoc], [userSession.fcmToken]);
+
+    return res.json({ message: "Test notification dispatched to Firebase successfully", notificationId: contentDoc._id });
   } catch (error) {
     console.error('Manual test notification error:', error);
     res.status(500).json({ message: "Failed to send test notification" });

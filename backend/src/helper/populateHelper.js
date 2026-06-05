@@ -11,13 +11,17 @@ import { getFingerprint } from "../utils/deviceFingerprint.js";
 export async function populateHelper(req, res, next) {
   try {
     const { action, model, id } = req.params;
-    const { type, page = 1, limit = 20, useCache = 'true' } = req.query;
     const user = req.user;
 
-    // console.log(`[PopulateHelper] Request: ${action} ${model} ${id || ''}`);
-    // console.log(`[PopulateHelper] Raw query params:`, req.query);
+    // For read actions, parameters are sent in the JSON payload (req.body). For others, they might still be in req.query.
+    const isReadAction = ['read', 'statistics'].includes(action) || !['create', 'update', 'bulk-upsert', 'bulk-create', 'bulk-update', 'delete', 'bulk-delete'].includes(action);
+    const optionsSource = isReadAction ? { ...req.query, ...req.body } : req.query;
 
-    let { fields, filter, populateFields: rawPopulateFields, sort, ...params } = req.query;
+    const { type, page = 1, limit = 20, useCache = 'true' } = optionsSource;
+    let { fields, filter, populateFields: rawPopulateFields, sort, ...params } = optionsSource;
+
+    // console.log(`[PopulateHelper] Request: ${action} ${model} ${id || ''}`);
+    // console.log(`[PopulateHelper] Raw query params/payload:`, optionsSource);
     // console.log(`[PopulateHelper] rawPopulateFields:`, rawPopulateFields);
 
     // Clear cache if requested
@@ -60,7 +64,7 @@ export async function populateHelper(req, res, next) {
             action: 'read',
             modelName: model,
             filter: item.filter,
-            fields: ['_id'] // minimal read
+            fields: ['_id', '__v'] // fetch __v for correct version tracking
           });
 
           let opResult;
@@ -69,29 +73,43 @@ export async function populateHelper(req, res, next) {
             const docId = existing[0]._id;
             const currentVersion = existing[0].__v || 0;
 
-            // Check version conflict
-            const versionCheck = raceConditionHandler.checkVersionConflict(docId, currentVersion);
-            
-            if (versionCheck.conflict) {
+            // Explicitly acquire lock to prevent race conditions during bulk upsert
+            const lockResult = await raceConditionHandler.acquireLock(docId, fingerprint);
+            if (!lockResult.success) {
               errors.push({
                 filter: item.filter,
-                error: 'Version conflict - document was modified',
-                expectedVersion: versionCheck.expectedVersion
+                error: 'Document locked by another process'
               });
               continue;
             }
 
-            opResult = await buildQuery({
-              role: user.role,
-              userId: user.id,
-              action: 'update',
-              modelName: model,
-              docId: docId,
-              body: item.body
-            });
+            try {
+              // Check version conflict
+              const versionCheck = raceConditionHandler.checkVersionConflict(docId, currentVersion);
 
-            // Increment version on successful update
-            raceConditionHandler.incrementVersion(docId);
+              if (versionCheck.conflict) {
+                errors.push({
+                  filter: item.filter,
+                  error: 'Version conflict - document was modified',
+                  expectedVersion: versionCheck.expectedVersion
+                });
+                continue;
+              }
+
+              opResult = await buildQuery({
+                role: user.role,
+                userId: user.id,
+                action: 'update',
+                modelName: model,
+                docId: docId,
+                body: item.body
+              });
+
+              // Increment version on successful update
+              raceConditionHandler.incrementVersion(docId);
+            } finally {
+              raceConditionHandler.releaseLock(docId, lockResult.lockId, fingerprint);
+            }
           } else {
             // CREATE
             // Merge filter into body for creation if needed (e.g. role, modelName)
@@ -135,11 +153,11 @@ export async function populateHelper(req, res, next) {
       if (typeNum === 1) {
         // Summary: minimal fields for performance
         fields = getSummaryFields(model);
-        populateFields = getSummaryPopulate(model);
+        rawPopulateFields = getSummaryPopulate(model);
       } else if (typeNum === 2) {
         // Detailed: optimized full fields
         fields = getDetailedFields(model);
-        populateFields = getDetailedPopulate(model);
+        rawPopulateFields = getDetailedPopulate(model);
       } else if (typeNum === 3) {
         // Statistics: aggregation for counts/summaries
         return await handleStatistics(req, res, model, user, finalFilter || {});
@@ -154,7 +172,6 @@ export async function populateHelper(req, res, next) {
           .map(f => f.trim())
           .filter(Boolean);
       }
-    if (fields) console.log("[populateHelper.js:46] fields after normalization:", fields);
 
     // ------------------------ SORT OPTIMIZATION ------------------------
     let sortObj = { createdAt: -1 }; // Default sort
@@ -233,13 +250,17 @@ export async function populateHelper(req, res, next) {
     // Handle file upload for create/update actions
     let requestBody = req.body;
     if ((action === 'create' || action === 'update') && (req.file || req.files)) {
-      const folder = req.route.path.includes('profile') || (req.file && req.file.fieldname === 'profileImage') ? 'profile' : 'general';
+      // Import getDatePath dynamically or ensure it is available (since we can't easily add top-level imports dynamically, we'll just format the date here)
+      const today = new Date();
+      const datePath = `${today.getFullYear()}/${String(today.getMonth() + 1).padStart(2, '0')}`;
 
-      // Handle single file upload
-      if (req.file) {
-        const filePath = `documents/${folder}/${req.file.filename}`;
+      const singleFile = req.file || (req.files && req.files.file && req.files.file[0]) || (req.files && req.files.profileImage && req.files.profileImage[0]);
+      const folder = req.route.path.includes('profile') || (singleFile && singleFile.fieldname === 'profileImage') || (singleFile && singleFile.fieldname === 'file' && req.params?.model === 'employees') ? 'profile' : 'documents';
 
-        if (req.file.fieldname === 'profileImage' || req.file.fieldname === 'file') {
+      if (singleFile) {
+        const filePath = `serve/${folder}/${datePath}/${singleFile.filename}`;
+
+        if (singleFile.fieldname === 'profileImage' || singleFile.fieldname === 'file') {
           requestBody = {
             ...req.body,
             'basicInfo.profileImage': filePath
@@ -257,7 +278,7 @@ export async function populateHelper(req, res, next) {
         const attachmentPaths = req.files.attachments.map(file => ({
           filename: file.filename,
           originalName: file.originalname,
-          path: `documents/${folder}/${file.filename}`,
+          path: `serve/documents/${datePath}/${file.filename}`,
           mimetype: file.mimetype,
           size: file.size,
           uploadedAt: new Date()
@@ -537,6 +558,65 @@ async function handleAgentClientProducts(req, res, agentId) {
     return res.status(500).json({
       success: false,
       message: 'Internal server error'
+    });
+  }
+}
+
+// Handle statistics aggregation for models
+async function handleStatistics(req, res, modelName, user, filter) {
+  try {
+    const { buildQuery } = await import("../utils/policy/policyEngine.js");
+    const { default: models } = await import("../models/Collection.js");
+
+    // First ensure the user has access by using the policy engine to get a scoped filter
+    const scopedFilter = await buildQuery({
+      role: user.role,
+      userId: user.id,
+      action: 'read',
+      modelName: modelName,
+      filter: filter,
+      returnFilterOnly: true // Assuming buildQuery can return just the filter
+    }) || filter;
+
+    let stats = {};
+
+    if (modelName === 'expenses') {
+      const Model = models.expenses;
+      if (Model) {
+        const result = await Model.aggregate([
+          { $match: scopedFilter },
+          {
+            $group: {
+              _id: null,
+              pending: { $sum: { $cond: [{ $eq: ["$status", "pending"] }, 1, 0] } },
+              approved: { $sum: { $cond: [{ $eq: ["$status", "approved"] }, 1, 0] } },
+              rejected: { $sum: { $cond: [{ $eq: ["$status", "rejected"] }, 1, 0] } },
+              totalAmount: { $sum: "$dayTotal" }
+            }
+          }
+        ]);
+
+        stats = result.length > 0 ? result[0] : { pending: 0, approved: 0, rejected: 0, totalAmount: 0 };
+        delete stats._id;
+      }
+    } else {
+       // Fallback for other models: basic count
+       const Model = models[modelName];
+       if (Model) {
+         stats.totalCount = await Model.countDocuments(scopedFilter);
+       }
+    }
+
+    return res.json({
+      success: true,
+      stats,
+      type: 'statistics'
+    });
+  } catch (error) {
+    console.error(`Error in handleStatistics for ${modelName}:`, error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to aggregate statistics'
     });
   }
 }

@@ -6,21 +6,35 @@ import {
   Clock,
   TrendingUp,
   AlertCircle,
-  RefreshCw,
-  Filter,
-  Download,
+  Plus,
+  LogIn,
+  Sparkles,
 } from 'lucide-react';
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import axiosInstance from "../../api/axiosInstance";
-import ThemeToggler from "../../components/Common/ThemeToggler";
 import { useAuth } from "../../context/authProvider";
 import { useUserRole } from "../../hooks/useUserRole";
 import TaskModal from "../tasks/TaskModal";
 import TableGenerator from '../../components/Common/TableGenerator';
-
-
 import StatCard from '../../components/Common/StatCard';
 import EmployeeDashboard from "../../components/role/Employee/Dashboard";
+import { MODULES, APP_SHELL } from "../../constants/uiTokens";
+
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return { text: 'Good Morning', emoji: '☀️' };
+  if (h < 17) return { text: 'Good Afternoon', emoji: '🌤️' };
+  return { text: 'Good Evening', emoji: '🌙' };
+}
+
+function getFormattedDate() {
+  return new Date().toLocaleDateString('en-IN', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -28,7 +42,6 @@ export default function Dashboard() {
   const location = useLocation();
   const navigate = useNavigate();
   const [selectedTimeRange, setSelectedTimeRange] = useState('7d');
-
 
   const [hrStats, setHrStats] = useState(null);
   const [employeeStats, setEmployeeStats] = useState(null);
@@ -45,11 +58,11 @@ export default function Dashboard() {
   const [pendingLeaves, setPendingLeaves] = useState([]);
   const [leavesLoading, setLeavesLoading] = useState(false);
 
-
+  const greeting = getGreeting();
 
   // Calculate dashboard statistics
   const stats = useMemo(() => {
-    if (userRole === 'employee') {
+    if (userRole === 'developer') {
       return [
         {
           title: "Today's Attendance",
@@ -155,8 +168,8 @@ export default function Dashboard() {
       label: 'Task',
       render: (value, item) => (
         <div>
-          <div className="font-medium">{value}</div>
-          <div className="text-sm text-gray-500">#{item.taskId}</div>
+          <div className="font-medium text-ink">{value}</div>
+          <div className="text-sm text-ink-muted">#{item.taskId}</div>
         </div>
       )
     },
@@ -164,9 +177,10 @@ export default function Dashboard() {
       key: 'status',
       label: 'Status',
       render: (value) => (
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${value === 'completed' ? 'bg-green-100 text-green-800' :
-          value === 'in-progress' ? 'bg-blue-100 text-blue-800' :
-            'bg-yellow-100 text-yellow-800'
+        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
+          value === 'completed' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' :
+          value === 'in-progress' ? 'bg-sky-500/10 text-sky-700 dark:text-sky-400' :
+            'bg-amber-500/10 text-amber-700 dark:text-amber-400'
           }`}>
           {value}
         </span>
@@ -176,10 +190,16 @@ export default function Dashboard() {
       key: 'priorityLevel',
       label: 'Priority',
       render: (value) => (
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${value === 'high' ? 'bg-red-100 text-red-800' :
-          value === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-            'bg-gray-100 text-gray-800'
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
+          value === 'high' ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400' :
+          value === 'medium' ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400' :
+            'bg-surface-2 text-ink-muted'
           }`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${
+            value === 'high' ? 'bg-rose-500' :
+            value === 'medium' ? 'bg-amber-500' :
+              'bg-ink-subtle'
+            }`} />
           {value}
         </span>
       )
@@ -213,8 +233,9 @@ export default function Dashboard() {
         'assignedTo': 'basicInfo.firstName,basicInfo.lastName'
       };
 
-      const response = await axiosInstance.get(
-        `/populate/read/tasks/${taskId}?populateFields=${encodeURIComponent(JSON.stringify(populateFields))}`
+      const response = await axiosInstance.post(
+        `/populate/read/tasks/${taskId}`,
+        { populateFields }
       );
 
       setSelectedTask(response.data.data);
@@ -238,16 +259,18 @@ export default function Dashboard() {
       const today = new Date().toISOString().split('T')[0];
 
       const [teamResponse, attendanceResponse, tasksResponse] = await Promise.all([
-        axiosInstance.get('/populate/read/employees?filter=' + encodeURIComponent(JSON.stringify({
-          'professionalInfo.reportingManager': user?.id
-        }))),
-        axiosInstance.get('/populate/read/attendances?filter=' + encodeURIComponent(JSON.stringify({
-          date: {
-            $gte: `${today}T00:00:00.000Z`,
-            $lte: `${today}T23:59:59.999Z`
+        axiosInstance.post('/populate/read/employees', {
+          filter: { 'professionalInfo.reportingManager': user?.id }
+        }),
+        axiosInstance.post('/populate/read/attendances', {
+          filter: {
+            date: {
+              $gte: `${today}T00:00:00.000Z`,
+              $lte: `${today}T23:59:59.999Z`
+            }
           }
-        }))),
-        axiosInstance.get('/populate/read/tasks')
+        }),
+        axiosInstance.post('/populate/read/tasks')
       ]);
 
       const teamMembers = teamResponse.data?.data || [];
@@ -301,13 +324,10 @@ export default function Dashboard() {
     try {
       const userId = user?.id;
       const [attendanceRes, leavesRes, tasksRes] = await Promise.all([
-        axiosInstance.get(`/populate/read/attendances?filter=${encodeURIComponent(filter)}`),
-        axiosInstance.get(`/populate/read/leaves?filter={"employeeId":"${userId}"}`),
-        axiosInstance.get(`/populate/read/tasks?filter={"assignedTo":"${userId}"}`),
+        axiosInstance.post(`/populate/read/attendances`, { filter: JSON.parse(filter) }),
+        axiosInstance.post(`/populate/read/leaves`, { filter: { employeeId: userId } }),
+        axiosInstance.post(`/populate/read/tasks`, { filter: { assignedTo: userId } }),
       ]);
-      // console.log("Employee Stats - Attendance Response:", attendanceRes.data);
-      // console.log("Employee Stats - Leaves Response:", leavesRes.data);
-      // console.log("Employee Stats - Tasks Response:", tasksRes.data);
 
       const todayAttendance = attendanceRes.data?.data?.[0] || null;
       const leaves = leavesRes.data?.data || [];
@@ -373,17 +393,18 @@ export default function Dashboard() {
         return (
           <div className="space-y-6">
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
               {stats.map((stat, index) => (
-                <StatCard
-                  key={index}
-                  title={stat.title}
-                  value={stat.value}
-                  icon={stat.icon}
-                  color={stat.color}
-                  trend={stat.trend}
-                  loading={stat.loading}
-                />
+                <div key={index} className="animate-fade-in" >
+                  <StatCard
+                    title={stat.title}
+                    value={stat.value}
+                    icon={stat.icon}
+                    color={stat.color}
+                    trend={stat.trend}
+                    loading={stat.loading}
+                  />
+                </div>
               ))}
             </div>
 
@@ -407,21 +428,22 @@ export default function Dashboard() {
           </div>
         );
 
-      case "hr":
+      case "developer":
         return (
           <div className="space-y-6">
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
               {stats.map((stat, index) => (
-                <StatCard
-                  key={index}
-                  title={stat.title}
-                  value={stat.value}
-                  icon={stat.icon}
-                  color={stat.color}
-                  trend={stat.trend}
-                  loading={stat.loading}
-                />
+                <div key={index} className="animate-fade-in">
+                  <StatCard
+                    title={stat.title}
+                    value={stat.value}
+                    icon={stat.icon}
+                    color={stat.color}
+                    trend={stat.trend}
+                    loading={stat.loading}
+                  />
+                </div>
               ))}
             </div>
 
@@ -473,8 +495,64 @@ export default function Dashboard() {
 
       default:
         return (
-          <div className="flex justify-center items-center py-10">
-            <p className="text-gray-600 dark:text-gray-400 text-lg">Role not recognized</p>
+          <div className="space-y-6 animate-fade-in">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+              {stats.map((stat, index) => (
+                <div key={index} className="animate-fade-in">
+                  <StatCard
+                    title={stat.title}
+                    value={stat.value}
+                    icon={stat.icon}
+                    color={stat.color}
+                    trend={stat.trend}
+                    loading={stat.loading}
+                  />
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="lg:col-span-2">
+                <TableGenerator
+                  model="tasks"
+                  title="Recent Tasks"
+                  columns={taskColumns}
+                  searchable={true}
+                  sortable={true}
+                  pagination={false}
+                  className="h-96"
+                  autoRefresh={true}
+                  refreshInterval={30000}
+                  exportable={true}
+                />
+              </div>
+
+              <div>
+                <TableGenerator
+                  model="attendances"
+                  title="Recent Attendance"
+                  searchable={true}
+                  sortable={true}
+                  pagination={false}
+                  className="h-80"
+                  autoRefresh={true}
+                  refreshInterval={60000}
+                />
+              </div>
+
+              <div>
+                <TableGenerator
+                  model="leaves"
+                  title="Pending Leave Requests"
+                  searchable={false}
+                  sortable={true}
+                  pagination={false}
+                  className="h-80"
+                  autoRefresh={true}
+                  refreshInterval={60000}
+                />
+              </div>
+            </div>
           </div>
         );
     }
@@ -482,67 +560,57 @@ export default function Dashboard() {
 
   if (loading || roleLoading) {
     return (
-      <div className="flex flex-col justify-center items-center h-screen bg-white dark:bg-black">
-        <div className="animate-spin h-10 w-10 border-4 border-gray-300 dark:border-gray-600 border-t-blue-800 dark:border-t-blue-600 rounded-full"></div>
-        <p className="mt-3 text-gray-600 dark:text-gray-400">Loading Dashboard...</p>
+      <div className="flex flex-col justify-center items-center min-h-[50vh] bg-canvas">
+        <div className="relative">
+          <div className="h-12 w-12 rounded-full border-4 border-surface-2" />
+          <div className="absolute inset-0 h-12 w-12 rounded-full border-4 border-transparent border-t-[var(--module-accent)] animate-spin" />
+        </div>
+        <p className="mt-4 text-ink-muted font-medium text-base">Loading Dashboard...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white p-4">
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 space-y-4 lg:space-y-0">
-        <div className="space-y-2">
-          <h1 className="text-4xl font-bold text-blue-800 dark:text-blue-400">
-            Welcome back, {user?.name || 'User'}!
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 text-lg">Here's what's happening in your organization today.</p>
-        </div>
-        <div>
-          <div className="flex gap-2">
-            <Link to="/tasks/new">
-              <button className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium shadow-sm hover:bg-blue-700 transition-colors">
-                + New Task
+    <div className="space-y-6 animate-fade-in" data-module={MODULES.project.id}>
+
+      {/* Welcome banner */}
+      <section className="lmx-section-card !border-l-[var(--module-project)] p-6 sm:p-8 lg:p-10">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-2xl" aria-hidden>{greeting.emoji}</span>
+              <p className="lmx-page-eyebrow !text-[var(--module-project)] mb-0">
+                {greeting.text}
+              </p>
+            </div>
+            <h1 className={`${APP_SHELL.pageTitle} !text-3xl lg:!text-[40px]`}>
+              Welcome back, {user?.name || 'User'}!
+            </h1>
+            <p className={`${APP_SHELL.pageSubtitle} flex items-center gap-2`}>
+              <Calendar className="h-4 w-4" />
+              {getFormattedDate()}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <Link to="/tasks">
+              <button type="button" className="tracker-btn-secondary inline-flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Manage Tasks
               </button>
             </Link>
-            <button className="bg-white dark:bg-black border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-md text-sm font-medium shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-black dark:text-white">
-              Clock In
-            </button>
+            <Link to="/Attendance/Daily-tracker">
+              <button type="button" className="tracker-btn-brand inline-flex items-center gap-2">
+                <LogIn className="h-4 w-4" />
+                Clock In
+              </button>
+            </Link>
           </div>
         </div>
-      </div>
+      </section>
 
+      {renderRoleBasedDashboard()}
 
-      <div className="px-2">
-        {renderRoleBasedDashboard()}
-      </div>
-
-      {/* Performance Metrics (Development Mode) */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-700 rounded-lg p-4 mt-6">
-          <h3 className="text-lg font-semibold mb-3 text-black dark:text-white">Performance Metrics</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div>
-              <span className="text-gray-600 dark:text-gray-400">Avg API Response:</span>
-              <span className="ml-2 font-medium text-black dark:text-white">100ms</span>
-            </div>
-            <div>
-              <span className="text-gray-600 dark:text-gray-400">Error Rate:</span>
-              <span className="ml-2 font-medium text-black dark:text-white">0%</span>
-            </div>
-            <div>
-              <span className="text-gray-600 dark:text-gray-400">Memory Usage:</span>
-              <span className="ml-2 font-medium text-black dark:text-white">50MB</span>
-            </div>
-            <div>
-              <span className="text-gray-600 dark:text-gray-400">Total Requests:</span>
-              <span className="ml-2 font-medium text-black dark:text-white">0</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Task Modal for direct URL access */}
       {selectedTask && (
         <TaskModal
           task={selectedTask}

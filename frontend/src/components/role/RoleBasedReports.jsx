@@ -330,9 +330,9 @@ const EmployeeReports = ({ userId }) => {
         // console.log('Fetching reports for user:', userId);
 
         const [attendanceRes, tasksRes, leavesRes] = await Promise.all([
-          axiosInstance.get('/populate/read/attendances'),
-          axiosInstance.get('/populate/read/tasks'),
-          axiosInstance.get('/populate/read/leaves')
+          axiosInstance.post('/populate/read/attendances'),
+          axiosInstance.post('/populate/read/tasks'),
+          axiosInstance.post('/populate/read/leaves')
         ]);
 
         // console.log('API responses:', { attendanceRes, tasksRes, leavesRes });

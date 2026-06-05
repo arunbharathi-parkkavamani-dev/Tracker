@@ -6,7 +6,7 @@ let authContextLogout = null;
 let failedRequestCount = 0;
 const MAX_FAILED_REQUESTS = 5;
 
-const baseUrl = "http://10.126.166.208:3000";
+const baseUrl = "http://192.168.1.36:3000";
 
 export const setAuthLogout = (logoutFn) => {
   authContextLogout = logoutFn;
@@ -58,11 +58,17 @@ const axiosInstance = axios.create({
 
 const getDeviceUUID = async () => {
   let uuid = await AsyncStorage.getItem('device_uuid');
-  if (!uuid) {
+  
+  // Check if user is logged in
+  const hasAuthToken = await AsyncStorage.getItem('auth_token');
+  
+  if (!uuid && hasAuthToken) {
+    // Only generate new UUID if user is authenticated
     uuid = 'mobile_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     await AsyncStorage.setItem('device_uuid', uuid);
   }
-  return uuid;
+  
+  return uuid || '';
 };
 
 // Enhanced request interceptor with optimized query support

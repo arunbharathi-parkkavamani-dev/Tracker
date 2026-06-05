@@ -1,36 +1,75 @@
 /**
- * JS mirror of Profile/index.jsx section accents — use with Tailwind gradient classes.
- * Reference: frontend/src/pages/Profile/index.jsx (Card component)
+ * Logimax ERP UI tokens — maps to backend/DESIGN.md v2.0 module accents.
  */
+
+export const MODULES = {
+  hr: {
+    id: "hr",
+    eyebrow: "HR TRACKER",
+    accent: "var(--module-hr)",
+    accentClass: "text-[var(--module-hr)]",
+    tabActiveClass: "lmx-tab-active",
+    heroGradient: "lmx-gradient-hero",
+    iconBg: "bg-[var(--module-hr-light)] text-[var(--module-hr)]",
+  },
+  project: {
+    id: "project",
+    eyebrow: "PROJECTS",
+    accentClass: "text-[var(--module-project)]",
+    heroGradient: "bg-gradient-to-br from-[#0369A1] to-[#0EA5E9]",
+    iconBg: "bg-[var(--module-project-light)] text-[var(--module-project)]",
+  },
+  ticket: {
+    id: "ticket",
+    eyebrow: "SUPPORT TICKETS",
+    accentClass: "text-[var(--module-ticket)]",
+    heroGradient: "bg-gradient-to-br from-[#9F1239] to-[#E11D48]",
+    iconBg: "bg-[var(--module-ticket-light)] text-[var(--module-ticket)]",
+  },
+  payroll: {
+    id: "payroll",
+    eyebrow: "PAYROLL",
+    accentClass: "text-[var(--module-payroll)]",
+    heroGradient: "bg-gradient-to-br from-[#064E3B] to-[#059669]",
+    iconBg: "bg-[var(--module-payroll-light)] text-[var(--module-payroll)]",
+  },
+};
+
+/** Profile page — HR module styling */
 export const SECTION_GRADIENTS = {
-  indigo: "from-indigo-500 to-indigo-600",
-  emerald: "from-emerald-500 to-emerald-600",
-  amber: "from-amber-500 to-orange-500",
-  rose: "from-rose-500 to-pink-500",
-  cyan: "from-cyan-500 to-teal-500",
+  indigo: "from-[#7C3AED] to-[#6C3DE8]",
+  emerald: "from-[#059669] to-[#10B981]",
+  amber: "from-[#F59E0B] to-[#F97316]",
+  rose: "from-[#E11D48] to-[#FB7185]",
+  cyan: "from-[#0EA5E9] to-[#06B6D4]",
 };
 
 export const PROFILE_PAGE = {
-  canvasLight: "bg-gray-50",
-  canvasDark: "dark:bg-[#09090b]",
-  surfaceDark: "dark:bg-[#111113]",
-  borderDark: "dark:border-white/[0.06]",
-  heroGradient:
-    "bg-gradient-to-br from-indigo-600 via-purple-600 to-cyan-500 dark:from-indigo-900 dark:via-purple-900 dark:to-cyan-800",
-  progressBar: "bg-gradient-to-r from-indigo-500 to-cyan-500",
-  ringGradient: { start: "#6366f1", end: "#06b6d4" },
-  tabActive:
-    "bg-white dark:bg-white/10 text-indigo-600 dark:text-indigo-400 shadow-sm",
-  tabInactive:
-    "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-white/60 dark:hover:bg-white/5",
+  module: "hr",
+  canvasLight: "bg-canvas",
+  canvasDark: "dark:bg-canvas",
+  surfaceDark: "dark:bg-surface",
+  borderDark: "dark:border-hairline",
+  heroGradient: "lmx-gradient-hero",
+  progressBar: "tracker-gradient-progress",
+  ringGradient: { start: "#0EA5E9", end: "#8B5CF6" },
+  tabBar: "lmx-tab-bar",
+  tabActive: "lmx-tab-active",
+  tabInactive: "lmx-tab",
 };
 
-/** Tailwind class bundles for stat / list cards (replaces raw black borders) */
 export const STAT_CARD = {
-  root: "bg-surface border border-hairline rounded-tracker-lg p-6 transition-colors",
-  iconWrap: "p-2.5 bg-canvas rounded-tracker-md",
-  icon: "h-5 w-5 text-ink",
+  root: "tracker-card-plain p-5 sm:p-6 transition-colors",
+  iconWrap: "lmx-icon-tile",
+  icon: "h-5 w-5",
   title: "text-sm font-medium text-ink-muted mb-1",
-  value: "text-[28px] font-medium text-ink tracking-tight leading-tight",
+  value: "text-[28px] font-semibold text-ink tracking-tight leading-tight",
   subtitle: "text-xs text-ink-subtle mt-1",
+};
+
+export const APP_SHELL = {
+  content: "lmx-content",
+  pageHeader: "mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4",
+  pageTitle: "text-2xl sm:text-[28px] font-semibold text-ink tracking-tight",
+  pageSubtitle: "text-sm text-ink-muted mt-1",
 };

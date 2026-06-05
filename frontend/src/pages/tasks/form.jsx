@@ -6,6 +6,8 @@ import {
   TASK_CREATE_TABS,
   buildTaskCreateFields,
 } from "../../constants/taskCreateForm";
+import { enqueueFormSubmit } from "../../services/formSubmitQueue";
+import { formDraftKey } from "../../utils/formDrafts";
 import toast from "react-hot-toast";
 
 const TaskFormPage = () => {
@@ -15,20 +17,24 @@ const TaskFormPage = () => {
   const selectedClient = location.state?.selectedClient;
   const fields = buildTaskCreateFields(selectedClient);
 
-  const handleSubmit = async (formData) => {
-    try {
-      await axiosInstance.post("/populate/create/tasks", {
-        ...formData,
-        createdBy: user.id,
-        status: "Backlogs",
-      });
-      toast.success("Task created");
-      navigate("/tasks");
-    } catch (err) {
-      console.error("Error creating task:", err);
-      toast.error("Failed to create task");
-      throw err;
-    }
+  const handleSubmit = (_payload, meta) => {
+    const draftKey = formDraftKey("tasks", "new");
+    const fullPayload = {
+      ...meta.fullPayload,
+      createdBy: user.id,
+      status: "Backlogs",
+    };
+
+    enqueueFormSubmit({
+      draftKey,
+      draft: { formData: fullPayload },
+      execute: async () => {
+        await axiosInstance.post("/populate/create/tasks", fullPayload);
+      },
+      onSuccess: () => toast.success("Task created"),
+    });
+
+    navigate("/tasks");
   };
 
   return (
@@ -38,6 +44,7 @@ const TaskFormPage = () => {
       backTo="/tasks"
       fields={fields}
       tabs={TASK_CREATE_TABS}
+      draftModel="tasks"
       submitButton={{ text: "Create Task", color: "blue" }}
       onSubmit={handleSubmit}
       maxWidth="max-w-4xl"

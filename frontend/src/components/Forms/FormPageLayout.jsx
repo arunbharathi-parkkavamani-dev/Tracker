@@ -22,7 +22,7 @@ const FormPageLayout = ({
   };
 
   return (
-    <div className="min-h-full bg-canvas-muted dark:bg-canvas py-6 px-4 sm:px-6">
+    <div className="min-h-full bg-canvas text-ink py-4 sm:py-6 px-4 sm:px-6">
       <div className={`mx-auto ${maxWidth}`}>
         <div className="mb-6">
           <button
@@ -37,11 +37,7 @@ const FormPageLayout = ({
           {subtitle && <p className="text-sm text-ink-muted mt-1">{subtitle}</p>}
         </div>
 
-        {embedded ? (
-          children
-        ) : (
-          <div className="tracker-card p-5 sm:p-6">{children}</div>
-        )}
+        {embedded ? children : <div className="tracker-card-plain !border-l-0 p-5 sm:p-6">{children}</div>}
       </div>
     </div>
   );

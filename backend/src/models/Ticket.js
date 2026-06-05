@@ -6,10 +6,11 @@ const ticketSchema = new mongoose.Schema({
   userStory: { type: String }, // This will be visible to external clients
   description: { type: String, required: true }, // Agent provides description, can be used as userStory
   projectTypeId: { type: mongoose.Schema.Types.ObjectId, ref: 'projecttypes' }, // Optional, to be selected by agent
+  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'products' },
   type: { 
-    type: String, 
-    enum: ['Bug', 'Feature', 'Enhancement', 'Support'], 
-    default: 'Bug' 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'tasktypes',
+    required: true
   },
   impactAnalysis: { type: String },
   url: { type: String },
@@ -92,7 +93,7 @@ ticketSchema.pre('save', async function(next) {
 });
 
 // Indexes
-ticketSchema.index({ ticketId: 1 });
+
 ticketSchema.index({ createdBy: 1, status: 1 });
 ticketSchema.index({ assignedTo: 1, status: 1 });
 ticketSchema.index({ projectTypeId: 1 });

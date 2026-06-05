@@ -1,5 +1,3 @@
-import asyncNotificationService from './asyncNotificationService.js';
-
 export default function tickets() {
   return {
     // ---------------- Before Create ----------------
@@ -18,6 +16,36 @@ export default function tickets() {
 
         // Remove agentId from body as it's not a ticket field
         delete body.agentId;
+      }
+    },
+
+    // ---------------- After Create ----------------
+    afterCreate: async ({ docId, userId }) => {
+      try {
+        const { default: models } = await import('../models/Collection.js');
+        const { default: fcmService } = await import('./fcmService.js');
+
+        const ticket = await models.tickets.findById(docId)
+          .populate('createdBy', 'basicInfo.firstName basicInfo.lastName')
+          .lean();
+
+        if (!ticket) return;
+
+        const creatorName = `${ticket.createdBy?.basicInfo?.firstName || ''} ${ticket.createdBy?.basicInfo?.lastName || ''}`.trim() || 'Someone';
+
+        // Notify all assigned employees
+        if (ticket.assignedTo && ticket.assignedTo.length > 0) {
+          await fcmService.dispatchNotification({
+            type: 'ticket_assigned',
+            title: 'New Ticket Assigned',
+            message: `${creatorName} assigned you a new ticket: ${ticket.title || ticket.ticketId || 'Untitled'}`,
+            sender: userId,
+            meta: { model: 'tickets', modelId: docId },
+            receiversArray: ticket.assignedTo
+          });
+        }
+      } catch (error) {
+        console.error('[tickets service] afterCreate FCM error:', error);
       }
     },
 
@@ -152,27 +180,33 @@ function getExpectedTicketStatus(taskStatus) {
 
 async function notifyTicketConversion(ticket, task, convertedBy) {
   try {
-    // Notify ticket creator
+    const { default: fcmService } = await import('./fcmService.js');
+
+    // Notify ticket creator if they didn't do the conversion themselves
     if (ticket.createdBy.toString() !== convertedBy.toString()) {
-      await asyncNotificationService.queuePushNotification(
-        ticket.createdBy,
-        'Ticket Converted',
-        `Your ticket ${ticket.ticketId} has been converted to a development task`,
-        { ticketId: ticket._id, taskId: task._id }
-      );
+      await fcmService.dispatchNotification({
+        type: 'ticket_converted',
+        title: 'Ticket Converted to Task',
+        message: `Your ticket ${ticket.ticketId || ticket.title} has been converted to a development task.`,
+        sender: convertedBy,
+        meta: { model: 'tickets', modelId: ticket._id },
+        receiversArray: [ticket.createdBy]
+      });
     }
 
-    // Notify assigned developer
+    // Notify all assigned developers on the new task
     if (task.assignedTo && task.assignedTo.length > 0) {
-      await asyncNotificationService.queuePushNotification(
-        task.assignedTo[0],
-        'New Development Task',
-        `New task assigned from ticket ${ticket.ticketId}: ${task.title}`,
-        { ticketId: ticket._id, taskId: task._id }
-      );
+      await fcmService.dispatchNotification({
+        type: 'task_assigned',
+        title: 'New Development Task Assigned',
+        message: `New task from ticket ${ticket.ticketId || ''}: ${task.title}`,
+        sender: convertedBy,
+        meta: { model: 'tasks', modelId: task._id },
+        receiversArray: task.assignedTo
+      });
     }
 
   } catch (error) {
-    console.error('Error sending ticket conversion notifications:', error);
+    console.error('[tickets service] notifyTicketConversion FCM error:', error);
   }
 }

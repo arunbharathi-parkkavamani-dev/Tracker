@@ -1,5 +1,16 @@
 export const TICKET_FORM_TABS = [
   {
+    id: "client",
+    label: "Client",
+    fieldNames: ["clientName"],
+    type: "AutoComplete",
+    source: "/populate/read/clients",
+    placeholder: "Select Client",
+    required: true,
+    multiple: false,
+    gridClass: "col-span-2",
+  },
+  {
     id: "details",
     label: "Details",
     fieldNames: [
@@ -19,6 +30,30 @@ export const TICKET_FORM_TABS = [
   },
 ];
 
+export const clientFormFields = [
+  {
+    id: "client",
+    label: "Client",
+    fieldNames: ["clientName"],
+    type: "AutoComplete",
+    source: "/populate/read/clients",
+    placeholder: "Select Client",
+    required: true,
+    multiple: false,
+    gridClass: "col-span-2",
+  },
+  {
+    id: "product",
+    label: "Product",
+    fieldNames: ["product"],
+    type: "AutoComplete",
+    source: "/populate/read/products",
+    placeholder: "Select Product",
+    required: true,
+    multiple: false,
+  },
+];
+
 export const ticketFormFields = [
   {
     name: "title",
@@ -35,19 +70,7 @@ export const ticketFormFields = [
     rows: 4,
     gridClass: "col-span-2",
   },
-  { name: "product", label: "Product", type: "text", placeholder: "Product name" },
-  {
-    name: "type",
-    label: "Type",
-    type: "AutoComplete",
-    source: "",
-    options: [
-      { _id: "Bug", name: "Bug" },
-      { _id: "Feature", name: "Feature" },
-      { _id: "Enhancement", name: "Enhancement" },
-      { _id: "Support", name: "Support" },
-    ],
-  },
+  { name: "type", label: "Type", type: "AutoComplete", source: "/populate/read/tasktypes", placeholder: "Ticket type" },
   {
     name: "priority",
     label: "Priority",

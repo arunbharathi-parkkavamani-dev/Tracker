@@ -52,6 +52,25 @@ export const projectTypeFormFields = [
   statusField,
 ];
 
+export const holidayFormFields = [
+  { name: "name", label: "Holiday Name", type: "text", required: true },
+  { name: "date", label: "Holiday Date", type: "date", required: true },
+  { 
+    name: "type", 
+    label: "Holiday Type", 
+    type: "select", 
+    required: true,
+    options: [
+      { value: "national", label: "National" },
+      { value: "regional", label: "Regional" },
+      { value: "optional", label: "Optional" },
+      { value: "company", label: "Company" },
+    ]
+  },
+  { name: "applicableStates", label: "Applicable States (comma-separated)", type: "text" },
+  { name: "year", label: "Year", type: "number", required: true },
+];
+
 const save = (text) => ({ text, color: "blue" });
 
 export const hrPolicySubmit = save("Save HR Policy");
@@ -60,6 +79,7 @@ export const leaveTypeSubmit = save("Save Leave Type");
 export const shiftSubmit = save("Save Shift");
 export const taskTypeSubmit = save("Save Task Type");
 export const projectTypeSubmit = save("Save Project Type");
+export const holidaySubmit = save("Save Holiday");
 
 export {
   milestoneFormFields,

@@ -39,6 +39,20 @@ class ComputationService {
       const { employeeId, period } = job.data;
       return await this.computePerformanceAnalytics(employeeId, period);
     });
+
+    // Payroll compute processor
+    this.computeQueue.process('payroll-compute', 3, async (job) => {
+      const { employeeId, month, year, runId, processedBy } = job.data;
+      const engine = await import('./payrollEngine.js');
+      try {
+        const result = await engine.runPayrollForEmployee(employeeId, month, year, processedBy, runId);
+        await engine.finalizeRun(runId, result.grossSalary, result.netSalary, result.payrollId);
+        return result;
+      } catch (err) {
+        await engine.finalizeRunOnFailure(runId);
+        throw err;
+      }
+    });
   }
 
   setupEventHandlers() {

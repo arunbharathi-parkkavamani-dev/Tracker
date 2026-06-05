@@ -61,7 +61,7 @@ const storage = multer.diskStorage({
     const datePath = getDatePath();
     let uploadDir;
 
-    if (req.route.path.includes('profile') || file.fieldname === 'profileImage') {
+    if (req.route.path.includes('profile') || file.fieldname === 'profileImage' || (file.fieldname === 'file' && req.params?.model === 'employees')) {
       uploadDir = path.join(UPLOAD_PATH, 'profile', datePath);
     } else {
       uploadDir = path.join(UPLOAD_PATH, 'documents', datePath);

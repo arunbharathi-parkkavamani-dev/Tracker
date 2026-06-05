@@ -1,0 +1,62 @@
+# Master-Data Module Brain
+
+## Overview
+This module contains 0 models, 0 services, and 15 frontend files.
+
+## Backend Models
+| Model | File | Lines | References |
+|---|---|---|---|
+
+## Dynamic API Usage
+| File | Method | URL | Target Model |
+|---|---|---|---|
+| index.jsx | POST | /populate/read/clients | clients |
+| index.jsx | GET | /populate/read/agents?populateFields=${encodeURIComponent(JSON.stringify(populateFields))} | agents?populateFields=${encodeURIComponent(JSON.stringify(populateFields))} |
+| index.jsx | DELETE | /populate/delete/clients/${row._id} | clients |
+| index.jsx | PUT | /populate/update/clients/${row._id} | clients |
+| index.jsx | POST | /populate/create/agents | agents |
+| index.jsx | PUT | /populate/update/clients/${editingClient._id} | clients |
+| index.jsx | POST | /populate/create/clients | clients |
+| index.jsx | POST | /populate/read/departments | departments |
+| index.jsx | DELETE | /populate/delete/departments/${row._id} | departments |
+| index.jsx | PUT | /populate/update/departments/${row._id} | departments |
+| index.jsx | PUT | /populate/update/departments/${editingItem._id} | departments |
+| index.jsx | POST | /populate/create/departments | departments |
+| index.jsx | POST | /populate/read/designations | designations |
+| index.jsx | DELETE | /populate/delete/designations/${row._id} | designations |
+| index.jsx | PUT | /populate/update/designations/${editingItem._id} | designations |
+| index.jsx | POST | /populate/create/designations | designations |
+| index.jsx | POST | /populate/read/employees | employees |
+| index.jsx | POST | /populate/read/departments | departments |
+| index.jsx | POST | /populate/read/designations | designations |
+| index.jsx | POST | /populate/read/roles | roles |
+| index.jsx | POST | /populate/read/employees | employees |
+| index.jsx | DELETE | /populate/delete/employees/${row._id} | employees |
+| index.jsx | PUT | /populate/update/employees/${row._id} | employees |
+| index.jsx | PUT | /populate/update/employees/${editingItem._id} | employees |
+| index.jsx | POST | /populate/create/employees | employees |
+| index.jsx | POST | /populate/read/hrpolicies | hrpolicies |
+| index.jsx | DELETE | /populate/delete/hrpolicies/${row._id} | hrpolicies |
+| index.jsx | PUT | /populate/update/hrpolicies/${row._id} | hrpolicies |
+| index.jsx | PUT | /populate/update/hrpolicies/${editingItem._id} | hrpolicies |
+| index.jsx | POST | /populate/create/hrpolicies | hrpolicies |
+| index.jsx | POST | /populate/read/leadtypes | leadtypes |
+| index.jsx | DELETE | /populate/delete/leadtypes/${row._id} | leadtypes |
+| index.jsx | PUT | /populate/update/leadtypes/${row._id} | leadtypes |
+| index.jsx | PUT | /populate/update/leadtypes/${editingItem._id} | leadtypes |
+| index.jsx | POST | /populate/create/leadtypes | leadtypes |
+| index.jsx | POST | /populate/read/leavepolicy | leavepolicy |
+| index.jsx | DELETE | /populate/delete/leavepolicy/${row._id} | leavepolicy |
+| index.jsx | PUT | /populate/update/leavepolicy/${row._id} | leavepolicy |
+| index.jsx | PUT | /populate/update/leavepolicy/${editingItem._id} | leavepolicy |
+| index.jsx | POST | /populate/create/leavepolicy | leavepolicy |
+| index.jsx | POST | /populate/read/leavetypes | leavetypes |
+| index.jsx | DELETE | /populate/delete/leavetypes/${row._id} | leavetypes |
+| index.jsx | PUT | /populate/update/leavetypes/${row._id} | leavetypes |
+| index.jsx | PUT | /populate/update/leavetypes/${editingItem._id} | leavetypes |
+| index.jsx | POST | /populate/create/leavetypes | leavetypes |
+| index.jsx | POST | /populate/read/milestones | milestones |
+| index.jsx | DELETE | /populate/delete/milestones/${row._id} | milestones |
+| index.jsx | PUT | /populate/update/milestones/${row._id} | milestones |
+| index.jsx | PUT | /populate/update/milestones/${editingItem._id} | milestones |
+| index.jsx | POST | /populate/create/milestones | milestones |

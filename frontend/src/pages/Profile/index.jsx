@@ -1,9 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import axiosInstance from "../../api/axiosInstance";
 import { useAuth } from "../../context/authProvider";
 import FormRenderer from "../../components/Common/FormRenderer";
+import FormDraftBanner from "../../components/Forms/FormDraftBanner";
 import ProfileImage from "../../components/Common/ProfileImage";
-import { profileFormFields, profileSubmitButton } from "../../constants/profileForm";
+import {
+  profileFormFields,
+  profileSubmitButton,
+  PROFILE_FORM_TABS,
+  PROFILE_SUBMIT_LABELS,
+} from "../../constants/profileForm";
+import { splitFieldsIntoTabs } from "../../utils/formFieldTabs";
+import { enqueueFormSubmit } from "../../services/formSubmitQueue";
+import { formDraftKey } from "../../utils/formDrafts";
+import { buildEmployeeUpdateFormData } from "../../utils/profileSubmit";
 import toast from "react-hot-toast";
 import { SECTION_GRADIENTS, PROFILE_PAGE } from "../../constants/uiTokens";
 
@@ -119,25 +129,36 @@ const Profile = () => {
     return (f.filter(v => v && v.toString().trim() !== '').length / f.length) * 100;
   })();
 
-  const handleUpdate = async (data) => {
-    try {
-      if (!Object.keys(data).length) { toast('No changes to save'); return; }
-      const fd = new FormData();
-      const flat = (o, pre = '') => Object.keys(o).reduce((a, k) => {
-        const p = pre ? pre + '.' + k : k;
-        if (typeof o[k] === 'object' && o[k] !== null && !Array.isArray(o[k]) && !(o[k] instanceof File)) Object.assign(a, flat(o[k], p));
-        else a[p] = o[k]; return a;
-      }, {});
-      const f = flat(data);
-      if (f['basicInfo.profileImage'] instanceof File) { fd.append('file', f['basicInfo.profileImage']); delete f['basicInfo.profileImage']; }
-      const skip = ['_id', 'id', 'createdAt', 'updatedAt', '__v', 'authInfo', 'professionalInfo', 'leaveStatus', 'salaryDetails', 'status', 'isActive', 'personalDocuments.documentFiles', 'personalDocuments.esi', 'personalDocuments.pf', 'professionalDocuments'];
-      Object.entries(f).forEach(([k, v]) => {
-        if (!skip.includes(k.split('.')[0]) && !skip.some(s => k === s || k.startsWith(s + '.')) && v != null) fd.append(k, Array.isArray(v) ? JSON.stringify(v) : v);
-      });
-      await axiosInstance.put(`/populate/update/employees/${user.id}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-      toast.success('Profile updated'); setEditing(false); fetchProfile();
-    } catch (e) { console.error(e); toast.error(e.response?.data?.message || 'Update failed'); }
+  const handleUpdate = (payload, meta) => {
+    const draftKey = formDraftKey("profile", user.id);
+
+    enqueueFormSubmit({
+      draftKey,
+      draft: { formData: meta.fullPayload, patch: payload, tab },
+      execute: async () => {
+        const fd = buildEmployeeUpdateFormData(payload);
+        if (![...fd.entries()].length) return;
+        await axiosInstance.put(`/populate/update/employees/${user.id}`, fd, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      },
+      onSuccess: () => {
+        toast.success("Profile updated");
+        fetchProfile();
+        setEditing(false);
+      },
+    });
   };
+
+  const allProfileFields = useMemo(
+    () => (employee ? profileFormFields(employee) : []),
+    [employee]
+  );
+
+  const profileFieldsByTab = useMemo(
+    () => splitFieldsIntoTabs(allProfileFields, PROFILE_FORM_TABS),
+    [allProfileFields]
+  );
 
   if (loading) return (
     <div className={`min-h-screen ${PROFILE_PAGE.canvasLight} ${PROFILE_PAGE.canvasDark} flex items-center justify-center`}>
@@ -147,7 +168,7 @@ const Profile = () => {
   if (!employee) return <div className={`min-h-screen ${PROFILE_PAGE.canvasLight} ${PROFILE_PAGE.canvasDark} flex items-center justify-center text-ink-muted text-sm`}>Profile not found</div>;
 
   return (
-    <div className={`min-h-screen ${PROFILE_PAGE.canvasLight} ${PROFILE_PAGE.canvasDark}`}>
+    <div className="tracker-page -mx-4 sm:-mx-6 lg:-mx-8 -mt-4 sm:-mt-6" data-module="hr">
       {/* ══ HERO ══ */}
       <div className="relative overflow-hidden">
         <div className={`absolute inset-0 ${PROFILE_PAGE.heroGradient}`} />
@@ -189,6 +210,18 @@ const Profile = () => {
 
       {/* ══ CONTENT ══ */}
       <div className="max-w-5xl mx-auto px-5 -mt-16 relative z-10 pb-10">
+        <FormDraftBanner
+          model="profile"
+          recordId={user.id}
+          label="profile changes"
+          onRestore={(draft) => {
+            const formValues = draft.data?.formData || draft.data;
+            setEmployee((prev) => ({ ...prev, ...formValues }));
+            setEditing(true);
+            toast.success("Draft restored");
+          }}
+        />
+
         {/* Completion bar */}
         <div className={`bg-surface ${PROFILE_PAGE.surfaceDark} border border-gray-100 ${PROFILE_PAGE.borderDark} rounded-xl shadow-lg dark:shadow-black/40 p-4 mb-6 flex items-center gap-5`}>
           <Ring pct={completion} />
@@ -205,22 +238,29 @@ const Profile = () => {
         </div>
 
         {/* Tabs */}
-        <div className="flex items-center gap-1 mb-6 bg-gray-100/80 dark:bg-white/[0.03] rounded-xl p-1 overflow-x-auto scrollbar-hide">
+        <div className={`lmx-tab-bar mb-6`}>
           <Tab active={tab === 'personal'} onClick={() => setTab('personal')} icon={icons.user} label="Personal" />
           <Tab active={tab === 'professional'} onClick={() => setTab('professional')} icon={icons.case} label="Professional" />
           <Tab active={tab === 'financial'} onClick={() => setTab('financial')} icon={icons.bank} label="Financial" />
           <Tab active={tab === 'documents'} onClick={() => setTab('documents')} icon={icons.doc} label="Documents" />
         </div>
 
+        {editing && tab !== "professional" ? (
+          <FormRenderer
+            key={employee._id}
+            fields={allProfileFields}
+            fieldsByTab={profileFieldsByTab}
+            activeTab={tab}
+            data={employee}
+            onSubmit={handleUpdate}
+            submitButton={{
+              ...profileSubmitButton,
+              text: PROFILE_SUBMIT_LABELS[tab] || profileSubmitButton.text,
+            }}
+          />
+        ) : (
+          <>
         {tab === 'personal' && (
-          editing ? (
-            <FormRenderer 
-              fields={profileFormFields(employee).filter(f => f.name.startsWith('basicInfo'))} 
-              submitButton={{ text: "Update Personal Info", color: "blue" }} 
-              data={employee} 
-              onSubmit={handleUpdate} 
-            />
-          ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               <Card icon={icons.user} title="Basic Info" color="indigo">
                 <Row icon={icons.user} label="First Name" value={employee.basicInfo?.firstName} />
@@ -246,7 +286,6 @@ const Profile = () => {
                 </Card>
               </div>
             </div>
-          )
         )}
 
         {tab === 'professional' && (
@@ -274,14 +313,6 @@ const Profile = () => {
         )}
 
         {tab === 'financial' && (
-          editing ? (
-            <FormRenderer 
-              fields={profileFormFields(employee).filter(f => f.name.startsWith('accountDetails'))} 
-              submitButton={{ text: "Update Financial Info", color: "blue" }} 
-              data={employee} 
-              onSubmit={handleUpdate} 
-            />
-          ) : (
             <div className="max-w-lg">
               <Card icon={icons.bank} title="Bank Account" color="emerald">
                 <Row icon={icons.user} label="Holder" value={employee.accountDetails?.accountName} />
@@ -291,18 +322,9 @@ const Profile = () => {
                 <Row icon={icons.hash} label="IFSC" value={employee.accountDetails?.ifscCode} />
               </Card>
             </div>
-          )
         )}
 
         {tab === 'documents' && (
-          editing ? (
-            <FormRenderer 
-              fields={profileFormFields(employee).filter(f => f.name.startsWith('personalDocuments'))} 
-              submitButton={{ text: "Update Documents", color: "blue" }} 
-              data={employee} 
-              onSubmit={handleUpdate} 
-            />
-          ) : (
             <div className="max-w-lg">
               <Card icon={icons.doc} title="Identity Documents" color="amber">
                 <Row icon={icons.shield} label="PAN" value={employee.personalDocuments?.pan} masked />
@@ -311,7 +333,8 @@ const Profile = () => {
                 <Row icon={icons.shield} label="PF" value={employee.personalDocuments?.pf} masked />
               </Card>
             </div>
-          )
+        )}
+          </>
         )}
       </div>
     </div>

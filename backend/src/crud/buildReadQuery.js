@@ -129,34 +129,51 @@ export default async function buildReadQuery({
     ? Model.findById(new mongoose.Types.ObjectId(docId))
     : Model.find(mongoFilter || {});
 
-  if (fields) // console.log("[buildReadQuery.js:115] Fields to select:", fields);
-    // console.log(`[buildReadQuery] populateFields received in buildReadQuery:`, JSON.stringify(populateFields));
+  if (fields && fields.length > 0) {
+    query = query.select(fields.join(' '));
+  }
 
-    // 🛡️ UNIVERSAL POPULATE: Populate everything in populateFields (defaults + overrides)
-    if (populateFields && typeof populateFields === 'object') {
-      Object.entries(populateFields).forEach(([path, selectFields]) => {
-        if (!selectFields) return;
+  // 🛡️ UNIVERSAL POPULATE: Populate everything in populateFields (defaults + overrides)
+  if (populateFields && typeof populateFields === 'object') {
+    Object.entries(populateFields).forEach(([path, selectFields]) => {
+      if (!selectFields) return;
 
-        // Check if path exists in schema (handles both direct and nested paths)
-        const schemaPath = Model.schema.path(path) || Model.schema.path(`${path}.$`);
+      // Check if path exists in schema (handles both direct and nested paths)
+      const schemaPath = Model.schema.path(path) || Model.schema.path(`${path}.$`);
 
-        // Check if it's a direct ref OR an array of refs
-        const isRef = schemaPath?.options?.ref ||
-          (schemaPath?.instance === 'Array' && schemaPath?.caster?.options?.ref) ||
-          (schemaPath?.instance === 'ObjectID') || // Some schemas might use this
-          (!schemaPath && !path.includes('.')); // Fallback for top-level fields even if path detection fails
+      // Check if it's a direct ref OR an array of refs
+      const targetModelName = schemaPath?.options?.ref || schemaPath?.caster?.options?.ref;
+      const isRef = targetModelName ||
+        (schemaPath?.instance === 'ObjectID') || // Some schemas might use this
+        (!schemaPath && !path.includes('.')); // Fallback for top-level fields even if path detection fails
 
-        if (isRef) {
-          // console.log(`[buildReadQuery] SUCCESS: Triggering population for: ${path}`);
-          query.populate({
-            path,
-            select: String(selectFields).replace(/,/g, ' ')
-          });
-        } else {
-          console.log(`[buildReadQuery] SKIPPING population for: ${path} (not identified as a ref)`);
+      if (isRef) {
+        let finalSelect = String(selectFields).replace(/,/g, ' ');
+        
+        // Sanitize populate selection if targetModelName is known
+        if (targetModelName && role) {
+          const targetPolicy = policy ? getPolicy(role, targetModelName) : null;
+          if (targetPolicy) {
+             if (!targetPolicy.permissions?.read) {
+                console.log(`[buildReadQuery] BLOCKED population for: ${path} (No read permission on ${targetModelName})`);
+                return; // skip populate
+             }
+             const safeSelect = sanitizeRead({ fields: finalSelect, policy: targetPolicy });
+             if (safeSelect.length === 0) return;
+             finalSelect = safeSelect.join(' ');
+          }
         }
-      });
-    }
+        
+        // console.log(`[buildReadQuery] SUCCESS: Triggering population for: ${path}`);
+        query.populate({
+          path,
+          select: finalSelect
+        });
+      } else {
+        console.log(`[buildReadQuery] SKIPPING population for: ${path} (not identified as a ref)`);
+      }
+    });
+  }
 
   // ❗ populate first, then lean
   let result = await query.lean();

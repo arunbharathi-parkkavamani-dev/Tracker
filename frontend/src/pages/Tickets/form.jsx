@@ -2,10 +2,14 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import axiosInstance from "../../api/axiosInstance";
 import EntityFormPage from "../../components/Forms/EntityFormPage";
 import {
+
   TICKET_FORM_TABS,
+  clientFormFields,
   ticketFormFields,
   ticketSubmitButton,
 } from "../../constants/ticketForm";
+import { enqueueFormSubmit } from "../../services/formSubmitQueue";
+import { formDraftKey } from "../../utils/formDrafts";
 import toast from "react-hot-toast";
 
 const TicketsFormPage = () => {
@@ -13,22 +17,25 @@ const TicketsFormPage = () => {
   const [searchParams] = useSearchParams();
   const id = searchParams.get("id");
 
-  const handleSubmit = async (formData) => {
-    try {
-      if (id) {
-        const { createdBy, ...updateData } = formData;
-        await axiosInstance.put(`/populate/update/tickets/${id}`, updateData);
-        toast.success("Ticket updated");
-      } else {
-        await axiosInstance.post("/populate/create/tickets", formData);
-        toast.success("Ticket created");
-      }
-      navigate("/Tickets");
-    } catch (err) {
-      console.error("Ticket save error:", err);
-      toast.error(err.response?.data?.message || "Save failed");
-      throw err;
-    }
+  const handleSubmit = (payload, meta) => {
+    const draftKey = formDraftKey("tickets", id || "new");
+    const isEdit = Boolean(id);
+
+    enqueueFormSubmit({
+      draftKey,
+      draft: { formData: meta.fullPayload, patch: payload, isEdit },
+      execute: async () => {
+        if (isEdit) {
+          await axiosInstance.put(`/populate/update/tickets/${id}`, payload);
+        } else {
+          await axiosInstance.post("/populate/create/tickets", meta.fullPayload);
+        }
+      },
+      onSuccess: () =>
+        toast.success(isEdit ? "Ticket updated" : "Ticket created"),
+    });
+
+    navigate("/Tickets");
   };
 
   const loadRecord = id
@@ -43,8 +50,9 @@ const TicketsFormPage = () => {
       title="Ticket"
       subtitle="Create or update support tickets"
       backTo="/Tickets"
-      fields={ticketFormFields}
+      fields={[...clientFormFields, ...ticketFormFields]}
       tabs={TICKET_FORM_TABS}
+      draftModel="tickets"
       submitButton={{
         ...ticketSubmitButton,
         text: id ? "Update Ticket" : "Create Ticket",

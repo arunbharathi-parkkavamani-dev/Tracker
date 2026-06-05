@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../api/axiosInstance";
 import TableGenerator from "../Common/TableGenerator";
 import { entityFormPath } from "../../utils/formRoutes";
+import FormDraftBanner from "../Forms/FormDraftBanner";
 import toast from "react-hot-toast";
 
 /**
@@ -19,8 +20,11 @@ const MasterDataListView = ({ config }) => {
     subtitle,
     basePath,
     list = {},
+    singularName,
     addLabel = `Add ${title.replace(/s$/, "")}`,
   } = config;
+
+  const itemLabel = (singularName || title.replace(/s$/, "")).toLowerCase();
 
   const fetchData = async () => {
     try {
@@ -62,6 +66,11 @@ const MasterDataListView = ({ config }) => {
 
   return (
     <div className="p-6 space-y-6 bg-canvas-muted dark:bg-canvas min-h-full">
+      <FormDraftBanner
+        model={model}
+        formPath={entityFormPath(basePath)}
+        label={itemLabel}
+      />
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-ink">{title}</h1>

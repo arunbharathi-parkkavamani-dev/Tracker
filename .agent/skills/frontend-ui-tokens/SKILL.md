@@ -1,79 +1,111 @@
 ---
 name: frontend-ui-tokens
-description: Applies Tracker frontend design tokens from frontend/src/styles/tokens.css, backend/DESIGN.md, and the Profile page palette (Profile/index.jsx). Use when styling React pages, components, forms, dashboards, or fixing harsh black-and-white UI.
+description: |
+  Applies Logimax ERP design tokens from backend/DESIGN.md v2, frontend/src/styles/tokens.css, and uiTokens.js. 
+  Enforces theme-aware (light/dark) and responsive layouts on every page. 
+  Apply these tokens and rules to all new or modified React components in the frontend codebase (including login, shell, forms, and dashboards). 
+  Do not retroactively change third-party vendor components unless explicitly migrating them to use tokens.
+  Ensure color contrast meets WCAG 2.1 AA: minimum 4.5:1 for normal text and 3:1 for large text. 
+  Include automated contrast checks in CI and add tests that validate token contrast in both .light and .dark modes.
 ---
 
-# Frontend UI Tokens (Tracker)
+# Frontend UI Tokens (Logimax ERP)
+
+## Mandatory rules (enforce by CI/linting)
+
+**1) Theme: Ensure .light and .dark support**
+- Enforce: Use `ThemeProvider` from `context/themeProvider.jsx` or add `.dark` selector on `html`
+- CI Check: Lint rule flags components without theme context
+- Do NOT use pure `#000` / `#FFF` as the only surfaces. Use `bg-canvas`, `bg-surface`, `text-ink`, module accents.
+- All colors must use CSS variables (`var(--tracker-ink)`) or Tailwind semantic tokens (`text-ink`, `bg-surface`)
+
+**2) Responsiveness: Follow DESIGN.md breakpoints**
+- Enforce: Mobile-first layout with `sm:`, `md:`, `lg:` breakpoint classes per DESIGN.md
+- CI Check: Build fails if fixed px widths lack mobile fallbacks
+- App shell, content area, headers, tabs, and grids must be responsive per checklists below
+
+**3) Forms: Forbid FloatingCard and require {Module}/form.jsx + FormPageLayout**
+- Enforce: Linter flags `FloatingCard` usage in any form; CI must fail until component is migrated to `{Module}/form.jsx` + `FormPageLayout`
+- CI Check: Build fails if FloatingCard is detected in form components
 
 ## Token sources (priority)
 
-1. **CSS variables** — `frontend/src/styles/tokens.css` (semantic utilities: `bg-canvas`, `text-ink`, `border-hairline`, `tracker-btn-primary`)
-2. **Profile palette** — `frontend/src/pages/Profile/index.jsx` + `frontend/src/constants/uiTokens.js`
-3. **Marketing / shell spec** — `backend/DESIGN.md` (cream canvas `#f5f1ec`, ink `#111111`, hairlines)
+1. **`backend/DESIGN.md` v2** — Logimax ERP system (canonical)
+2. **`frontend/src/styles/tokens.css`** — CSS variables + component classes
+3. **`frontend/src/constants/uiTokens.js`** — module map, `APP_SHELL`, `STAT_CARD`
 
-Do **not** default to `bg-black`, `text-black`, `dark:bg-black`, or `#000` / `#fff` for app chrome. Use ink/canvas/accent tokens.
+## Theme-aware checklist
+
+- [ ] All colors via CSS variables (`var(--tracker-ink)`) or Tailwind semantic tokens (`text-ink`, `bg-surface`)
+- [ ] Test both `.light` and `.dark` — For every light-theme hex introduced in tokens.css, add a corresponding CSS variable with the same name inside the `.dark` selector (example: `:root { --tracker-bg: #ffffff; } .dark { --tracker-bg: #111111; }`). If a dark counterpart is not present for a token, fall back to `--tracker-surface` and fail the build with a lint error indicating the missing `.dark` token.
+- [ ] Theme toggle: `useTheme()` from `context/themeProvider.jsx` (top bar + login)
+- [ ] Cards, inputs, borders use `--tracker-border`, `--tracker-surface` (auto-switch in `.dark`)
+
+## Responsive checklist
+
+- [ ] App shell: `lmx-app-shell` → sidebar collapses `<1024px`, overlay on mobile
+- [ ] Content: `lmx-content` — fluid padding `clamp(16px, 3vw, 32px)`, max-width `1440px`
+- [ ] Page headers: stack on mobile (`flex-col sm:flex-row`)
+- [ ] Tab bars: `overflow-x-auto scrollbar-hide` on narrow screens
+- [ ] Grids: `grid-cols-1 md:grid-cols-2 lg:grid-cols-3` (use `lg:grid-cols-4` only for dashboard-listing pages) per DESIGN.md card-grid
+- [ ] Touch targets: Ensure touch targets have `min-width: 40px` and `min-height: 40px` (e.g., CSS: `min-width:40px; min-height:40px;`) or meet an equivalent 40x40px touch area on buttons/inputs
 
 ## Quick classes
 
 | Use | Class |
 |-----|--------|
-| App shell background | `bg-canvas text-ink` |
-| Profile-style page | `tracker-page` or `PROFILE_PAGE.canvasLight` + `canvasDark` |
-| Card | `tracker-card` or `tracker-card-profile` |
-| Primary submit (charcoal) | `tracker-btn-primary` |
-| Accent CTA (indigo) | `tracker-btn-accent` |
+| App shell | `lmx-app-shell` |
+| Page content area | `lmx-content` |
+| Top bar | `lmx-topbar` |
+| Section card (+ left accent) | `lmx-section-card` or `tracker-card` |
+| Plain card (no accent) | `tracker-card-plain` |
+| Brand CTA | `tracker-btn-brand` (gradient) |
+| Module CTA | `tracker-btn-accent` |
 | Secondary | `tracker-btn-secondary` |
-| Modal backdrop | `tracker-overlay` (not `bg-black/50`) |
-| Progress / highlights | `tracker-gradient-progress` or `from-indigo-500 to-cyan-500` |
+| Ghost / icon | `tracker-btn-ghost` |
+| Input | `lmx-input` |
+| Tabs | `lmx-tab-bar` + `lmx-tab` / `lmx-tab-active` |
+| Page eyebrow | `lmx-page-eyebrow` |
+| Hero gradient | `lmx-gradient-hero` |
 
-## Profile section accents
+## Module accents (one screen = one module)
 
-From Profile `Card` — import `SECTION_GRADIENTS` from `constants/uiTokens.js`:
+Set `data-module` to one of the following values on the page root to switch `--module-accent`:
+- `data-module="hr"`
+- `data-module="project"`
+- `data-module="ticket"`
+- `data-module="payroll"`
 
-| Key | Gradient |
-|-----|----------|
-| `indigo` | Basic / default sections |
-| `emerald` | Work, bank, success |
-| `amber` | Dates, documents, warnings |
-| `rose` | Family / personal |
-| `cyan` | Address / location |
+**Fallback behavior:** If `data-module` is missing or not one of the listed values, default to `data-module="project"` and emit a console warning and a build-time lint warning.
 
-Top bar accent: `indigo-500` / `indigo-400` (dark). Hero: `PROFILE_PAGE.heroGradient`.
+| Module | Accent | Use for |
+|--------|--------|---------|
+| `hr` | `#7C3AED` | Profile, Employees, Attendance, Master HR |
+| `project` | `#0EA5E9` | Tasks, Dashboard projects |
+| `ticket` | `#E11D48` | Tickets, support |
+| `payroll` | `#059669` | Payroll, expenses |
 
-## DESIGN.md vs Profile
-
-| Context | Prefer |
-|---------|--------|
-| Main app (sidebar, dashboard, master data) | DESIGN tokens — cream canvas, charcoal primary buttons |
-| People-centric pages (profile, teams, HR cards) | Profile tokens — gray-50 / `#09090b` dark, indigo–cyan gradients |
-| Fin / AI-only CTA | `backend/DESIGN.md` `button-fin` `#ff5600` only |
-
-## Implementation checklist
-
-- [ ] Replace `bg-black` / `dark:bg-black` with `bg-canvas` / `dark:bg-canvas` or `bg-surface`
-- [ ] Replace `text-black` with `text-ink` or `text-gray-800 dark:text-gray-200`
-- [ ] Replace hardcoded `#111111` in new code with `text-ink` or `var(--tracker-ink)`
-- [ ] Modals: `tracker-overlay` instead of `bg-black/50`
-- [ ] Primary buttons in forms: `tracker-btn-primary` (FormRenderer pattern)
-- [ ] List/stat cards: `STAT_CARD` from `uiTokens.js` or `tracker-card`
+Import `MODULES` from `constants/uiTokens.js`. **Error handling:** If importing `MODULES` fails, fall back to an inline mapping `{ hr: '#7C3AED', project:'#0EA5E9', ticket:'#E11D48', payroll:'#059669' }`, log an error, and create a lint failure for missing constants.
 
 ## Form layout (no FloatingCard)
 
-Forms must **not** use `FloatingCard`. Use this structure instead:
-
-| Piece | Path / component |
-|-------|------------------|
-| List view only | `{Module}/index.jsx` — table + navigate to form |
-| Form page | `{Module}/form.jsx` — full page via `EntityFormPage` or `MasterDataFormView` |
+| Piece | Path |
+|-------|------|
+| List view | `{Module}/index.jsx` |
+| Form page | `{Module}/form.jsx` |
 | Shell | `components/Forms/FormPageLayout.jsx` |
-| Many fields (8+) | `components/Forms/TabbedFormTabs.jsx` — same pattern as `Profile/index.jsx` |
-| Route | `{basePath}/form?id=` via `utils/formRoutes.js` → `entityFormPath()` |
+| 8+ fields | `TabbedFormTabs.jsx` (Profile pattern) |
+| Route | `entityFormPath(basePath, id?)` |
 
-**Tab examples:** Profile (`personal` / `professional` / …), Employees (`EMPLOYEE_FORM_TABS`), Clients (`CLIENT_FORM_TABS`), Tickets (`TICKET_FORM_TABS`).
+## Implementation anti-patterns
 
-**Field definitions:** `frontend/src/constants/*Form.js` — never large inline `formFields` arrays in `index.jsx`.
+- ❌ `bg-black`, `text-black`, `dark:bg-black` for chrome
+- ❌ Inline `#111111` / `#f5f1ec` (old Intercom tokens)
+- ❌ `FloatingCard` for forms
+- ❌ Fixed px widths without mobile fallback
+- ❌ Light-only colors with no `.dark` token
 
 ## Related
 
-- Brain + DESIGN overview: `.agent/skills/knowledge-brain/design-tokens.md`
-- Full DESIGN spec: `backend/DESIGN.md`
+- Full spec: `backend/DESIGN.md`
+- Brain overview: `.agent/skills/knowledge-brain/design-tokens.md`

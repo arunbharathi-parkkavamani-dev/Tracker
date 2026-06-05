@@ -1,257 +1,155 @@
-import { use, useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import axiosInstance from "../../api/axiosInstance";
 import { useAuth } from "../../context/authProvider";
 import { useNavigate } from "react-router-dom";
-import KanbanBoard from "../../components/Common/KambanBoard.jsx";
+import KanbanBoard from "../../components/Common/KambanBoard";
+import FormDraftBanner from "../../components/Forms/FormDraftBanner";
+import TaskModal from "./TaskModal";
+import { FolderKanban, Plus } from "lucide-react";
+
+const STATUS_COLS = [
+  { id: "Backlogs",    title: "Backlogs" },
+  { id: "To Do",       title: "To Do" },
+  { id: "In Progress", title: "In Progress" },
+  { id: "In Review",   title: "In Review" },
+  { id: "Approved",    title: "Approved" },
+  { id: "Completed",   title: "Completed" },
+];
+const PRIORITY_COLS = [
+  { id: "Low",             title: "Low" },
+  { id: "Medium",          title: "Medium" },
+  { id: "High",            title: "High" },
+  { id: "Weekly Priority", title: "Weekly Priority" },
+];
 
 const TasksPage = () => {
-  const { user } = useAuth();
-  const [tasks, setTasks] = useState([]);
-  const [filteredTasks, setFilteredTasks] = useState([]);
-  const navigate = useNavigate();
-  const [statusFilter, setStatusFilter] = useState('All');
-  const [loading, setLoading] = useState(true);
-  const [kanbanView, setKanbanView] = useState('status');
-  const [clients, setClients] = useState([]);
-  const [selectedClient, setSelectedClient] = useState(null);
-  const [clientProjectTypes, setClientProjectTypes] = useState([]);
-  const [employees, setEmployees] = useState([]);
-  const [taskTypes, setTaskTypes] = useState([]);
+  const { user }  = useAuth();
+  const navigate  = useNavigate();
+  const [tasks, setTasks]               = useState([]);
+  const [employees, setEmployees]       = useState([]);
+  const [taskTypes, setTaskTypes]       = useState([]);
+  const [clients, setClients]           = useState([]);
+  const [loading, setLoading]           = useState(true);
+  const [groupBy, setGroupBy]           = useState("status");
+  const [selectedTask, setSelectedTask] = useState(null);
 
-  useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        const response = await axiosInstance.get(`/populate/read/tasks`);
-        const tasksData = response.data.data || [];
+  useEffect(() => { fetchAll(); }, []);
 
-        // Manually populate the required fields
-        const populatedTasks = await Promise.all(tasksData.map(async (task) => {
-          const populatedTask = { ...task };
-
-          // Populate clientId
-          if (task.clientId) {
-            try {
-              const clientRes = await axiosInstance.post(`/populate/read/clients/${task.clientId}`);
-              populatedTask.clientId = clientRes.data.data;
-              // // console.log('Populated clientId for task:', populatedTask.title, populatedTask.clientId);
-            } catch (e) {
-              console.warn('Failed to populate clientId:', e);
-            }
-          }
-
-          // Populate projectTypeId
-          if (task.projectTypeId) {
-            try {
-              const projectTypeRes = await axiosInstance.post(`/populate/read/projecttypes/${task.projectTypeId}`);
-              populatedTask.projectTypeId = projectTypeRes.data.data;
-              // // console.log('Populated projectTypeId for task:', populatedTask.title, populatedTask.projectTypeId);
-            } catch (e) {
-              console.warn('Failed to populate projectTypeId:', e);
-            }
-          }
-
-          return populatedTask;
-        }));
-        // console.log('Fetched and populated tasks:', populatedTasks);
-        setTasks(populatedTasks);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching tasks:', error);
-        setLoading(false);
-      }
-    };
-
-    fetchTasks();
-  }, []);
-
-  const fetchClients = async () => {
+  const fetchAll = async () => {
     try {
-      const response = await axiosInstance.post('/populate/read/clients');
-      const clientsData = response.data.data || [];
-      setClients(clientsData);
-    } catch (error) {
-      console.error('Error fetching clients:', error);
-    }
+      setLoading(true);
+      const [tR, eR, tyR, cR] = await Promise.all([
+        axiosInstance.post("/populate/read/tasks", {
+          populateFields: {
+            clientId:      "name",
+            projectTypeId: "name",
+            taskTypeId:    "name",
+            createdBy:     "basicInfo.firstName,basicInfo.lastName,basicInfo.profileImage",
+            assignedTo:    "basicInfo.firstName,basicInfo.lastName,basicInfo.profileImage",
+          },
+        }),
+        axiosInstance.post("/populate/read/employees", { fields: "basicInfo.firstName,basicInfo.lastName" }),
+        axiosInstance.post("/populate/read/tasktypes"),
+        axiosInstance.post("/populate/read/clients", { fields: "name" }),
+      ]);
+      setTasks(tR.data.data || []);
+      setEmployees(eR.data.data || []);
+      setTaskTypes(tyR.data.data || []);
+      setClients(cR.data.data || []);
+    } catch (e) { console.error(e); } finally { setLoading(false); }
   };
 
-  const fetchEmployees = async () => {
+  const handleCardMove = async (task, _from, toCol) => {
     try {
-      const response = await axiosInstance.post('/populate/read/employees');
-      const employeesData = response.data.data || [];
-      setEmployees(employeesData);
-    } catch (error) {
-      console.error('Error fetching employees:', error);
-    }
+      const field = groupBy === "status" ? "status" : "priorityLevel";
+      await axiosInstance.put(`/populate/update/tasks/${task._id}`, { [field]: toCol });
+      setTasks((prev) => prev.map((t) => t._id === task._id ? { ...t, [field]: toCol } : t));
+    } catch (e) { console.error(e); }
   };
 
-  const fetchTaskTypes = async () => {
+  const handleTaskClick = async (task) => {
     try {
-      const response = await axiosInstance.post('/populate/read/tasktypes');
-      const taskTypesData = response.data.data || [];
-      setTaskTypes(taskTypesData);
-    } catch (error) {
-      console.error('Error fetching task types:', error);
-    }
-  };
-
-  useEffect(() => {
-    fetchClients();
-    fetchEmployees();
-    fetchTaskTypes();
-  }, []);
-
-  const fetchTaskDetails = async (taskId) => {
-    try {
-      const populateFields = {
-        'clientId': 'name',
-        'projectTypeId': 'name',
-        'taskTypeId': 'name',
-        'createdBy': 'basicInfo.firstName,basicInfo.lastName',
-        'assignedTo': 'basicInfo.firstName,basicInfo.lastName'
-      };
-
-      const response = await axiosInstance.post(
-        `/populate/read/tasks/${taskId}`,
-        { populateFields }
-      );
-
-      return response.data.data;
-    } catch (error) {
-      console.error('Error fetching task details:', error);
-      return null;
-    }
-  };
-
-  const handleTaskClick = (task) => {
-    navigate(`/tasks/${task._id}`, { state: { fromModal: true } });
-  };
-
-  const handleClientSelect = async (client) => {
-    setSelectedClient(client);
-    try {
-      const clientId = typeof client._id === 'object' ? client._id.toString() : client._id;
-      const response = await axiosInstance.post(`/populate/read/clients/${clientId}`, {
-        fields: "projectTypes",
-        populateFields: { "projectTypes": "name" }
+      const res = await axiosInstance.post(`/populate/read/tasks/${task._id}`, {
+        populateFields: {
+          clientId:      "name",
+          projectTypeId: "name",
+          taskTypeId:    "name",
+          createdBy:     "basicInfo.firstName,basicInfo.lastName,basicInfo.profileImage",
+          assignedTo:    "basicInfo.firstName,basicInfo.lastName,basicInfo.profileImage",
+        },
       });
-      const clientData = response.data.data;
-      const colors = ['bg-purple-500', 'bg-green-500', 'bg-red-500', 'bg-indigo-500', 'bg-yellow-600', 'bg-pink-500'];
-      const clientColumns = clientData.projectTypes?.map((projectType, index) => ({
-        id: projectType.name, // Use name as ID for matching
-        title: projectType.name,
-        color: colors[index % colors.length]
-      })) || [];
-      // console.log('Client project types columns:', clientColumns);
-      setClientProjectTypes(clientColumns);
-    } catch (error) {
-      console.error('Error fetching client project types:', error);
-      setClientProjectTypes([]);
-    }
+      setSelectedTask(res.data.data);
+    } catch (e) { console.error(e); }
   };
 
-  const statusColumns = [
-    { id: 'Backlogs', title: 'Backlogs', color: 'bg-gray-500' },
-    { id: 'To Do', title: 'To Do', color: 'bg-orange-500' },
-    { id: 'In Progress', title: 'In Progress', color: 'bg-blue-500' },
-    { id: 'In Review', title: 'In Review', color: 'bg-purple-500' },
-    { id: 'Approved', title: 'Approved', color: 'bg-green-500' },
-    { id: 'Completed', title: 'Completed', color: 'bg-green-700' }
-  ];
-
-  if (loading) return (
-    <div className="flex items-center justify-center h-64">
-      <div className="text-lg">Loading tasks...</div>
-    </div>
-  );
+  if (loading)
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="w-8 h-8 rounded-full border-2 border-[var(--module-accent)] border-t-transparent animate-spin" />
+      </div>
+    );
 
   return (
-    <div className="h-full flex flex-col bg-canvas-muted dark:bg-canvas text-ink">
+    <div className="flex flex-col h-full bg-canvas" data-module="project">
 
-      {/* Main Content */}
-      <div className="flex-1 flex gap-6 p-6 overflow-hidden">
-
-        {/* Client Selection */}
-        <div className="w-80 bg-white rounded-lg shadow p-4 overflow-y-auto dark:bg-gray-800">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold">Clients ({clients.length})</h3>
-            <div className="flex gap-1">
-              <button
-                onClick={() => setKanbanView('status')}
-                className={`px-2 py-1 text-xs rounded ${kanbanView === 'status'
-                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
-                    : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
-                  }`}
-              >
-                Status
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between pb-3">
+        <div className="flex items-center gap-2">
+          <FolderKanban size={16} className="text-[var(--module-project)]" />
+          <h1 className="text-[15px] font-semibold text-ink tracking-tight">All Tasks</h1>
+          <FormDraftBanner model="tasks" formPath="/tasks/form" label="task" />
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-0.5 p-0.5 rounded-tracker-md bg-surface-2">
+            {[{ id: "status", label: "Status" }, { id: "priorityLevel", label: "Priority" }].map((g) => (
+              <button key={g.id} onClick={() => setGroupBy(g.id)}
+                className={`px-2.5 py-1 rounded-[6px] text-[11px] font-semibold transition-all ${
+                  groupBy === g.id ? "bg-[var(--module-accent)] text-white" : "text-ink-muted hover:text-ink"
+                }`}>
+                {g.label}
               </button>
-              <button
-                onClick={() => setKanbanView('category')}
-                className={`px-2 py-1 text-xs rounded ${kanbanView === 'category'
-                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
-                    : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
-                  }`}
-              >
-                Category
-              </button>
-            </div>
-          </div>
-          <div className="space-y-2">
-            {clients.map((client) => (
-              <div
-                key={client._id}
-                onClick={() => handleClientSelect(client)}
-                className={`p-3 rounded-lg cursor-pointer transition-all duration-200 ${selectedClient?._id === client._id
-                    ? 'bg-blue-100 border-l-4 border-blue-500 shadow-md dark:bg-blue-900'
-                    : 'hover:bg-gray-50 border-l-4 border-transparent dark:hover:bg-gray-700'
-                  }`}
-              >
-                <div className="font-medium text-gray-800 dark:text-white truncate">
-                  {client.name || 'Unnamed Client'}
-                </div>
-                <div className="text-sm text-gray-500 mt-1 dark:text-gray-300">
-                  {tasks.filter(task => task.clientId._id === client._id).length} tasks
-                </div>
-              </div>
             ))}
           </div>
-        </div>
-
-        {/* Task Board */}
-        <div className="flex-1 overflow-hidden">
-          {selectedClient ? (
-            <KanbanBoard
-              data={tasks.filter(task => {
-                const isClientTask = task.clientId._id === selectedClient._id;
-                return isClientTask;
-              })}
-              groupBy={kanbanView === 'status' ? 'status' : 'projectTypeId'}
-              columns={kanbanView === 'status' ? statusColumns : clientProjectTypes}
-              currentUserId={user?.id}
-              onCardClick={handleTaskClick}
-              onCardMove={(task, fromStatus, toStatus) => {
-                // console.log('Move task:', task.title, 'from', fromStatus, 'to', toStatus);
-              }}
-              title={`Tasks - ${selectedClient.name}`}
-              subtitle="Manage projects and track progress."
-              employees={employees}
-              taskTypes={taskTypes}
-              kanbanView={kanbanView}
-              onNewTask={() =>
-                navigate("/tasks/form", { state: { selectedClient } })
-              }
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full bg-white rounded-lg shadow dark:bg-gray-800">
-              <div className="text-center">
-                <div className="text-gray-400 text-6xl mb-4">📋</div>
-                <h3 className="text-lg font-medium text-gray-600 dark:text-gray-300 mb-2">Select a Client</h3>
-                <p className="text-gray-500 dark:text-gray-400">Choose a client from the sidebar to view their tasks</p>
-              </div>
-            </div>
-          )}
+          <button onClick={() => navigate("/tasks/form")} className="tracker-btn-accent flex items-center gap-1.5 text-[12px] px-3 py-1.5">
+            <Plus size={13} /> New Task
+          </button>
         </div>
       </div>
 
+      {/* ── Board ── */}
+      <div className="flex-1 overflow-hidden">
+        <KanbanBoard
+          data={tasks}
+          groupBy={groupBy}
+          columns={groupBy === "status" ? STATUS_COLS : PRIORITY_COLS}
+          currentUserId={user?.id}
+          onCardClick={handleTaskClick}
+          onCardMove={handleCardMove}
+          employees={employees}
+          taskTypes={taskTypes}
+          clients={clients}
+          showClientFilter
+          showFollowerFilter
+          onNewTask={() => navigate("/tasks/form")}
+        />
+      </div>
+
+      {selectedTask && (
+        <div className="fixed inset-0 tracker-overlay z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-surface rounded-tracker-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+            style={{ boxShadow: "var(--tracker-shadow-overlay)" }}>
+            <div className="flex items-center justify-between px-6 py-4 text-white rounded-t-[16px] bg-gradient-to-br from-[#0369A1] to-[#0EA5E9]">
+              <span className="text-[16px] font-semibold">Task Detail</span>
+              <button onClick={() => setSelectedTask(null)}
+                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors text-lg font-bold">×</button>
+            </div>
+            <div className="p-6">
+              <TaskModal task={selectedTask} onClose={() => setSelectedTask(null)}
+                onUpdate={() => { fetchAll(); setSelectedTask(null); }} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

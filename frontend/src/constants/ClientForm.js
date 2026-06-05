@@ -139,7 +139,8 @@ export const clientFormFields = [
   {
     label: "Proposed Products",
     name: "proposedProducts",
-    type: "text",
+    type: "AutoComplete",
+    source: "/populate/read/products",
     multiple: true,
     gridClass: "col-span-2",
     orderKey: 13,

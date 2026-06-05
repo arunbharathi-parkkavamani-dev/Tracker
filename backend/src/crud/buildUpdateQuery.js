@@ -86,32 +86,16 @@ export default async function buildUpdateQuery({
    * ----------------------------------------------- */
   let updatedDoc;
 
-  // Handle external agent requests
-  if (body?.isExternal) {
-    // Skip role-based filtering for external agents
-    if (docId) {
-      updatedDoc = await Model.findByIdAndUpdate(docId, { $set: body }, {
-        new: true,
-        runValidators: true
-      });
-    } else {
-      updatedDoc = await Model.findOneAndUpdate(filter, { $set: body }, {
-        new: true,
-        runValidators: true
-      });
-    }
+  if (docId) {
+    updatedDoc = await Model.findByIdAndUpdate(docId, { $set: body }, {
+      new: true,
+      runValidators: true
+    });
   } else {
-    if (docId) {
-      updatedDoc = await Model.findByIdAndUpdate(docId, { $set: body }, {
-        new: true,
-        runValidators: true
-      });
-    } else {
-      updatedDoc = await Model.findOneAndUpdate(filter, { $set: body }, {
-        new: true,
-        runValidators: true
-      });
-    }
+    updatedDoc = await Model.findOneAndUpdate(filter, { $set: body }, {
+      new: true,
+      runValidators: true
+    });
   }
 
   if (!updatedDoc) throw new Error(`${modelName} not found`);
@@ -129,7 +113,8 @@ export default async function buildUpdateQuery({
       userId,
       docId: updatedDoc._id,
       data: cleanDoc,
-      body
+      body,
+      beforeDoc
     });
   }
 

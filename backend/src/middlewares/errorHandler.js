@@ -2,6 +2,9 @@
 import ErrorLog from '../models/ErrorLog.js';
 
 export const errorHandler = async (err, req, res, next) => {
+  // Log the error to console for server-side visibility
+  console.error('🔴 API Error:', err);
+
   try {
     // save to DB
     await ErrorLog.create({

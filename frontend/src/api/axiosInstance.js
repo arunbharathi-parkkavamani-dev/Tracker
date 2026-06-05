@@ -5,7 +5,7 @@ let authContextLogout = null;
 let failedRequestCount = 0;
 const MAX_FAILED_REQUESTS = 5;
 
-const baseUrl = "http://192.168.1.144:3000"
+const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000"
 
 export const setAuthLogout = (logoutFn) => {
   authContextLogout = logoutFn;
@@ -60,13 +60,20 @@ const axiosInstance = axios.create({
 });
 
 // Generate or get device UUID
+// Only auto-generate if user is logged in (has auth token)
 const getDeviceUUID = () => {
   let uuid = localStorage.getItem('device_uuid');
-  if (!uuid) {
+  
+  // Check if user is logged in
+  const hasAuthToken = localStorage.getItem('auth_token') || Cookies.get('auth_token');
+  
+  if (!uuid && hasAuthToken) {
+    // Only generate new UUID if user is authenticated
     uuid = 'web_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     localStorage.setItem('device_uuid', uuid);
   }
-  return uuid;
+  
+  return uuid || '';
 };
 
 // Request interceptor - add auth token and content-type

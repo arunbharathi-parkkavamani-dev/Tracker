@@ -1,5 +1,7 @@
 import models from "../models/Collection.js";
 import { getDefaultPopulateFields } from "../Config/defaultPopulateFields.js";
+import { aggregateValidator } from "../utils/Validator.js";
+import { getPolicy } from "../utils/cache.js";
 
 export default async function buildReportQuery({
   modelName,
@@ -309,6 +311,16 @@ export default async function buildReportQuery({
     if (body.skip) {
       pipeline.push({ $skip: body.skip });
     }
+
+    // --- APPLY POLICY VALIDATION ---
+    const filterStub = { aggregate: true, stages: pipeline };
+    aggregateValidator({ 
+      filter: filterStub, 
+      role, 
+      action: 'read', // validating lookups requires read access to target models
+      modelName, 
+      getPolicy 
+    });
 
     const result = await Model.aggregate(pipeline);
     return result;
