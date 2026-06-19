@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import axiosInstance from "../../api/axiosInstance";
+import useGenericAPI from "../../components/useGenericAPI";
 import TableGenerator from "../../components/Common/TableGenerator";
 
 const PendingApprovals = () => {
+  const { read, update, loading } = useGenericAPI();
   const [pendingRequests, setPendingRequests] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [actionType, setActionType] = useState("");
@@ -16,37 +16,28 @@ const PendingApprovals = () => {
 
   const fetchPendingRequests = async () => {
     try {
-      setLoading(true);
-      
-      // Fetch pending leaves
-      const leavesRes = await axiosInstance.get('/populate/read/leaves', {
-        params: { filter: JSON.stringify({ status: 'Pending' }) }
-      });
-      
-      // Fetch pending regularizations
-      const regularizationsRes = await axiosInstance.get('/populate/read/regularizations', {
-        params: { filter: JSON.stringify({ status: 'Pending' }) }
-      });
-      
-      const leaves = (leavesRes.data.data || []).map(item => ({
+      const [leavesRes, regularizationsRes] = await Promise.all([
+        read('leaves', { filter: { status: 'Pending' } }),
+        read('regularizations', { filter: { status: 'Pending' } }),
+      ]);
+
+      const leaves = (leavesRes?.data || []).map(item => ({
         ...item,
         requestType: 'Leave',
         employeeName: item.employeeName || item.employeeId?.basicInfo?.firstName,
         requestDate: item.startDate
       }));
-      
-      const regularizations = (regularizationsRes.data.data || []).map(item => ({
+
+      const regularizations = (regularizationsRes?.data || []).map(item => ({
         ...item,
         requestType: 'Regularization',
         employeeName: item.employeeId?.basicInfo?.firstName,
         requestDate: item.requestDate
       }));
-      
+
       setPendingRequests([...leaves, ...regularizations]);
     } catch (error) {
-      console.error('Error fetching pending requests:', error);
-    } finally {
-      setLoading(false);
+      // error toast handled by useGenericAPI
     }
   };
 
@@ -58,22 +49,19 @@ const PendingApprovals = () => {
 
   const submitAction = async () => {
     try {
-      const endpoint = selectedRequest.requestType === 'Leave' 
-        ? `/populate/update/leaves/${selectedRequest._id}`
-        : `/populate/update/regularizations/${selectedRequest._id}`;
-      
-      await axiosInstance.put(endpoint, {
+      const model = selectedRequest.requestType === 'Leave' ? 'leaves' : 'regularizations';
+      await update(model, selectedRequest._id, {
         status: actionType === 'approve' ? 'Approved' : 'Rejected',
         approverComment: comment,
         approvedAt: new Date(),
-        approvedBy: 'Current User' // Replace with actual user
-      });
-      
+        approvedBy: 'Current User'
+      }, actionType === 'approve' ? 'Request approved' : 'Request rejected');
+
       setShowModal(false);
       setComment("");
       fetchPendingRequests();
     } catch (error) {
-      console.error('Error updating request:', error);
+      // error toast handled by useGenericAPI
     }
   };
 

@@ -4,312 +4,1125 @@ import {
     CheckCircleIcon,
     XCircleIcon,
     ArrowPathIcon,
-    ShieldCheckIcon
+    ShieldCheckIcon,
+    TableCellsIcon,
+    SquaresPlusIcon,
+    FunnelIcon,
+    CpuChipIcon,
+    MagnifyingGlassIcon,
+    ChevronDownIcon,
+    InformationCircleIcon,
+    SparklesIcon,
 } from '@heroicons/react/24/solid';
+import { WIDGET_REGISTRY, WIDGET_GROUPS } from '../Dashboard/config/dashboardConfig';
 
-const RoleAccessPolicy = () => {
-    const [roles, setRoles] = useState([]);
-    const [models, setModels] = useState([]);
-    const [selectedRole, setSelectedRole] = useState('');
-    const [policies, setPolicies] = useState({}); // modelName -> { read: bool, create: bool... }
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const ACTIONS = ['read', 'create', 'update', 'delete'];
+
+const ACTION_META = {
+    read:   { label: 'Read',   gradient: 'from-sky-500 to-blue-600',     bg: 'bg-sky-50 dark:bg-sky-950/40',     text: 'text-sky-700 dark:text-sky-300',   border: 'border-sky-200 dark:border-sky-800',   glow: 'shadow-sky-200/50 dark:shadow-sky-900/30' },
+    create: { label: 'Create', gradient: 'from-emerald-500 to-teal-600', bg: 'bg-emerald-50 dark:bg-emerald-950/40', text: 'text-emerald-700 dark:text-emerald-300', border: 'border-emerald-200 dark:border-emerald-800', glow: 'shadow-emerald-200/50 dark:shadow-emerald-900/30' },
+    update: { label: 'Update', gradient: 'from-amber-500 to-orange-600', bg: 'bg-amber-50 dark:bg-amber-950/40',   text: 'text-amber-700 dark:text-amber-300', border: 'border-amber-200 dark:border-amber-800', glow: 'shadow-amber-200/50 dark:shadow-amber-900/30' },
+    delete: { label: 'Delete', gradient: 'from-rose-500 to-red-600',     bg: 'bg-rose-50 dark:bg-rose-950/40',     text: 'text-rose-700 dark:text-rose-300',   border: 'border-rose-200 dark:border-rose-800',   glow: 'shadow-rose-200/50 dark:shadow-rose-900/30' },
+};
+
+const REGISTRY_FUNCTIONS = [
+    { key: 'isSelf',        label: 'Is Self',         desc: 'Allows user to access their own record (matched by _id, userId, employee)', icon: '👤' },
+    { key: 'isTeamMember',  label: 'Is Team Member',  desc: 'Allows manager to access records of their direct reports', icon: '👥' },
+    { key: 'isManager',     label: 'Is Manager',      desc: 'Allows users with Manager role to access these records', icon: '🏢' },
+    { key: 'isHR',          label: 'Is HR',           desc: 'Allows users with HR role to access these records', icon: '📋' },
+    { key: 'isAssigned',    label: 'Is Assigned',     desc: 'Allows access when user is assigned to the record (assignedTo field)', icon: '📌' },
+    { key: 'isCreatedBy',   label: 'Is Created By',   desc: 'Allows access when user created the record (createdBy, assignedBy, author)', icon: '✏️' },
+    { key: 'isRecipient',   label: 'Is Recipient',    desc: 'Allows access when user is the recipient of a notification/message', icon: '📨' },
+    { key: 'isSender',      label: 'Is Sender',       desc: 'Allows access when user is the sender of a notification/message', icon: '📤' },
+    { key: 'isRef',         label: 'Is Reference',    desc: 'Allows any authenticated user to access basic reference data (dropdowns)', icon: '🔗' },
+];
+
+const GROUP_COLORS = {
+    blue:   'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+    green:  'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+    purple: 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300',
+};
+
+// ─── Premium Card Wrapper ─────────────────────────────────────────────────────
+
+const PremiumCard = ({ children, className = '', noPad = false }) => (
+    <div className={`
+        bg-white/80 dark:bg-gray-800/80
+        backdrop-blur-xl
+        border border-gray-200/60 dark:border-gray-700/60
+        rounded-xl
+        shadow-lg shadow-gray-200/40 dark:shadow-black/20
+        ${noPad ? '' : 'p-4'}
+        ${className}
+    `}>
+        {children}
+    </div>
+);
+
+// ─── Reusable Small Components ─────────────────────────────────────────────────
+
+const TabButton = ({ active, onClick, icon: Icon, label }) => (
+    <button
+        onClick={onClick}
+        className={`
+            flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg transition-all duration-300
+            ${active
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25 scale-[1.02]'
+                : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 hover:text-gray-700 dark:hover:text-gray-200'
+            }
+        `}
+    >
+        <Icon className="w-4 h-4" />
+        {label}
+    </button>
+);
+
+const ActionBadge = ({ action, active, onClick }) => {
+    const meta = ACTION_META[action];
+    return (
+        <button
+            onClick={onClick}
+            className={`
+                group relative px-3.5 py-1.5 rounded-lg text-xs font-bold border-2 transition-all duration-300 flex items-center gap-1.5 min-w-[90px] justify-center
+                ${active
+                    ? `${meta.bg} ${meta.text} ${meta.border} shadow-md ${meta.glow} scale-[1.02]`
+                    : 'bg-gray-50 dark:bg-gray-800 text-gray-300 dark:text-gray-600 border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600'
+                }
+            `}
+        >
+            {active
+                ? <CheckCircleIcon className="w-3.5 h-3.5 drop-shadow-sm" />
+                : <XCircleIcon className="w-3.5 h-3.5 opacity-40" />
+            }
+            {meta.label}
+        </button>
+    );
+};
+
+const SaveBar = ({ onSave, saving, message }) => (
+    <div className="flex justify-end items-center gap-3 pt-3 mt-auto shrink-0">
+        {message && (
+            <span className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-all ${
+                message.includes('Error') || message.includes('failed') || message.includes('Failed')
+                    ? 'bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400'
+                    : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400'
+            }`}>
+                {message}
+            </span>
+        )}
+        <button
+            onClick={onSave}
+            disabled={saving}
+            className={`
+                px-6 py-2.5 rounded-lg text-sm font-bold transition-all duration-300
+                bg-gradient-to-r from-blue-600 to-indigo-600 text-white
+                shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30
+                hover:scale-[1.02] active:scale-[0.98]
+                ${saving ? 'opacity-50 cursor-not-allowed' : ''}
+            `}
+        >
+            {saving ? (
+                <span className="flex items-center gap-1.5">
+                    <ArrowPathIcon className="w-3.5 h-3.5 animate-spin" />
+                    Saving…
+                </span>
+            ) : (
+                <span className="flex items-center gap-1.5">
+                    <SparklesIcon className="w-3.5 h-3.5" />
+                    Save Changes
+                </span>
+            )}
+        </button>
+    </div>
+);
+
+// ─── Tab 1: Data Access (RBAC) ─────────────────────────────────────────────────
+
+const DataAccessTab = ({ models, policies, onToggle, onModelToggleAll, onGlobalToggle, onSave, saving, message }) => (
+    <div className="flex flex-col flex-1 min-h-0 gap-3">
+        <PremiumCard noPad className="flex-1 overflow-hidden flex flex-col min-h-0">
+            <div className="flex-1 overflow-auto">
+                <table className="w-full text-left border-collapse">
+                    <thead className="sticky top-0 z-10">
+                        <tr className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-750">
+                            <th className="px-4 py-3 text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.15em]">
+                                Model
+                            </th>
+                            {ACTIONS.map(action => (
+                                <th key={action} className="px-2 py-3 text-center">
+                                    <span className={`text-xs font-black uppercase tracking-[0.15em] ${ACTION_META[action].text}`}>
+                                        {ACTION_META[action].label}
+                                    </span>
+                                </th>
+                            ))}
+                            <th className="px-2 py-3 text-center">
+                                <button
+                                    onClick={onGlobalToggle}
+                                    className="px-3 py-1.5 text-xs font-bold bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 text-gray-600 dark:text-gray-200 rounded-lg hover:shadow-md transition-all duration-300 hover:scale-105"
+                                >
+                                    Toggle All
+                                </button>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {models.map((model, i) => {
+                            const p = policies[model] || {};
+                            const isAllSelected = ACTIONS.every(a => p[a]);
+                            return (
+                                <tr
+                                    key={model}
+                                    className={`
+                                        border-b border-gray-100 dark:border-gray-700/50 transition-all duration-200
+                                        hover:bg-blue-50/50 dark:hover:bg-blue-900/10
+                                        ${i % 2 === 0 ? 'bg-white dark:bg-gray-800/50' : 'bg-gray-50/50 dark:bg-gray-800/30'}
+                                    `}
+                                >
+                                    <td className="px-4 py-2.5">
+                                        <span className="text-sm font-bold text-gray-800 dark:text-gray-100 capitalize">
+                                            {model}
+                                        </span>
+                                    </td>
+                                    {ACTIONS.map(action => (
+                                        <td key={action} className="px-2 py-2 text-center">
+                                            <div className="flex justify-center">
+                                                <ActionBadge
+                                                    action={action}
+                                                    active={!!p[action]}
+                                                    onClick={() => onToggle(model, action)}
+                                                />
+                                            </div>
+                                        </td>
+                                    ))}
+                                    <td className="px-2 py-2 text-center">
+                                        <button
+                                            onClick={() => onModelToggleAll(model)}
+                                            className={`
+                                                px-3.5 py-1.5 text-xs font-bold rounded-lg border-2 transition-all duration-300
+                                                ${isAllSelected
+                                                    ? 'bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                                    : 'bg-gradient-to-r from-blue-600 to-indigo-600 border-transparent text-white shadow-md shadow-blue-500/20 hover:shadow-lg hover:scale-105'
+                                                }
+                                            `}
+                                        >
+                                            {isAllSelected ? 'None' : 'All'}
+                                        </button>
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </div>
+        </PremiumCard>
+        <SaveBar onSave={onSave} saving={saving} message={message} />
+    </div>
+);
+
+// ─── Tab 2: Field Policies (FBAC) ─────────────────────────────────────────────
+
+const FieldCheckList = ({ fields, selected, onToggle, onSelectAll, onClearAll, searchQuery }) => {
+    const filtered = fields.filter(f => f.toLowerCase().includes(searchQuery.toLowerCase()));
+    return (
+        <div className="flex flex-col gap-3 flex-1">
+            <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+                    {selected.length} of {fields.length} selected
+                </span>
+                <div className="flex gap-3">
+                    <button onClick={onSelectAll} className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors px-1.5 py-0.5 rounded hover:bg-blue-50 dark:hover:bg-blue-900/30">
+                        Select All
+                    </button>
+                    <button onClick={onClearAll} className="text-xs font-bold text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors px-1.5 py-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700/50">
+                        Clear
+                    </button>
+                </div>
+            </div>
+            <div className="flex-1 overflow-y-auto rounded-lg border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800/50 min-h-0 max-h-[320px]">
+                {filtered.length === 0 ? (
+                    <div className="p-4 text-center text-gray-400 dark:text-gray-500 text-sm">No fields match your search</div>
+                ) : (
+                    filtered.map(field => {
+                        const isSelected = selected.includes(field);
+                        return (
+                            <label
+                                key={field}
+                                className={`
+                                    flex items-center gap-3 px-3.5 py-2.5 cursor-pointer transition-all duration-200
+                                    border-b border-gray-50 dark:border-gray-700/30 last:border-0
+                                    hover:bg-blue-50/60 dark:hover:bg-blue-900/20
+                                    ${isSelected ? 'bg-blue-50/80 dark:bg-blue-950/30' : ''}
+                                `}
+                            >
+                                <div className={`
+                                    w-5 h-5 rounded-lg border-2 flex items-center justify-center flex-shrink-0
+                                    transition-all duration-300
+                                    ${isSelected
+                                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 border-transparent shadow-md shadow-blue-500/30 scale-110'
+                                        : 'border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500'
+                                    }
+                                `}>
+                                    {isSelected && (
+                                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    )}
+                                </div>
+                                <input type="checkbox" className="sr-only" checked={isSelected} onChange={() => onToggle(field)} />
+                                <span className={`text-sm font-mono font-semibold tracking-wide ${
+                                    isSelected ? 'text-blue-700 dark:text-blue-300' : 'text-gray-500 dark:text-gray-400'
+                                }`}>
+                                    {field}
+                                </span>
+                            </label>
+                        );
+                    })
+                )}
+            </div>
+        </div>
+    );
+};
+
+const FieldPoliciesTab = ({ selectedRole, models, fieldMap, onSave, saving, message }) => {
+    const [selectedModel, setSelectedModel] = useState('');
+    const [activeAction, setActiveAction] = useState('read');
+    const [fieldPolicies, setFieldPolicies] = useState({});
     const [loading, setLoading] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    useEffect(() => {
+        if (!selectedModel || !selectedRole) return;
+        const fetch = async () => {
+            setLoading(true);
+            try {
+                const res = await axiosInstance.post('/populate/read/accesspolicies', {
+                    filter: { role: selectedRole, modelName: selectedModel },
+                    limit: 1,
+                });
+                const doc = res.data?.data?.[0];
+                if (doc) {
+                    setFieldPolicies({
+                        allowAccess: doc.allowAccess || { read: [], create: [], update: [], delete: [] },
+                        forbiddenAccess: doc.forbiddenAccess || { read: [], create: [], update: [], delete: [] },
+                    });
+                } else {
+                    setFieldPolicies({
+                        allowAccess: { read: [], create: [], update: [], delete: [] },
+                        forbiddenAccess: { read: [], create: [], update: [], delete: [] },
+                    });
+                }
+            } catch (err) {
+                console.error('Failed to load field policy', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetch();
+    }, [selectedModel, selectedRole]);
+
+    const fields = fieldMap[selectedModel] || [];
+
+    const toggleAllow = (field) => {
+        setFieldPolicies(prev => {
+            const current = prev.allowAccess?.[activeAction] || [];
+            const next = current.includes(field) ? current.filter(f => f !== field) : [...current, field];
+            return { ...prev, allowAccess: { ...prev.allowAccess, [activeAction]: next } };
+        });
+    };
+    const toggleForbidden = (field) => {
+        setFieldPolicies(prev => {
+            const current = prev.forbiddenAccess?.[activeAction] || [];
+            const next = current.includes(field) ? current.filter(f => f !== field) : [...current, field];
+            return { ...prev, forbiddenAccess: { ...prev.forbiddenAccess, [activeAction]: next } };
+        });
+    };
+
+    const selectAllAllow = () => setFieldPolicies(prev => ({ ...prev, allowAccess: { ...prev.allowAccess, [activeAction]: [...fields] } }));
+    const clearAllAllow = () => setFieldPolicies(prev => ({ ...prev, allowAccess: { ...prev.allowAccess, [activeAction]: [] } }));
+    const selectAllForbidden = () => setFieldPolicies(prev => ({ ...prev, forbiddenAccess: { ...prev.forbiddenAccess, [activeAction]: [...fields] } }));
+    const clearAllForbidden = () => setFieldPolicies(prev => ({ ...prev, forbiddenAccess: { ...prev.forbiddenAccess, [activeAction]: [] } }));
+
+    const handleSave = () => onSave(selectedModel, fieldPolicies);
+
+    if (!selectedModel) {
+        return (
+            <div className="flex flex-col flex-1 min-h-0 gap-3">
+                <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">
+                    Select a model to configure field-level access
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
+                    {models.map(m => (
+                        <button
+                            key={m}
+                            onClick={() => setSelectedModel(m)}
+                            className="
+                                group px-3.5 py-2.5 text-sm font-bold text-left capitalize
+                                bg-white dark:bg-gray-800/60 backdrop-blur
+                                border border-gray-100 dark:border-gray-700
+                                rounded-xl
+                                hover:border-blue-300 dark:hover:border-blue-700
+                                hover:bg-blue-50/60 dark:hover:bg-blue-900/20
+                                hover:shadow-lg hover:shadow-blue-100/50 dark:hover:shadow-blue-900/20
+                                hover:scale-[1.02]
+                                transition-all duration-300
+                                text-gray-700 dark:text-gray-300
+                            "
+                        >
+                            {m}
+                        </button>
+                    ))}
+                </div>
+                <div className="flex-1 flex flex-col items-center justify-center text-gray-300 dark:text-gray-600">
+                    <FunnelIcon className="w-12 h-12 mb-3 opacity-20" />
+                    <p className="font-semibold text-base">Select a model above</p>
+                </div>
+            </div>
+        );
+    }
+
+    const allowFields = fieldPolicies.allowAccess?.[activeAction] || [];
+    const forbiddenFields = fieldPolicies.forbiddenAccess?.[activeAction] || [];
+
+    return (
+        <div className="flex flex-col flex-1 min-h-0 gap-3">
+            {/* Breadcrumb + hint */}
+            <div className="flex items-center gap-4 flex-wrap">
+                <button
+                    onClick={() => setSelectedModel('')}
+                    className="text-sm font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors flex items-center gap-1"
+                >
+                    ← All Models
+                </button>
+                <span className="text-gray-300 dark:text-gray-600 text-lg">/</span>
+                <span className="px-3 py-1 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-bold shadow-sm shadow-blue-500/20 capitalize">
+                    {selectedModel}
+                </span>
+                <span className="ml-auto flex items-center gap-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-3 py-1.5 rounded-lg border border-amber-200/60 dark:border-amber-800/60">
+                    <InformationCircleIcon className="w-4 h-4" />
+                    Empty = no field restriction (inherits RBAC)
+                </span>
+            </div>
+
+            {/* Action tabs */}
+            <div className="flex gap-1.5 p-1 bg-gray-100/80 dark:bg-gray-700/40 rounded-xl backdrop-blur">
+                {ACTIONS.map(action => {
+                    const meta = ACTION_META[action];
+                    const isActive = activeAction === action;
+                    const count = (fieldPolicies.allowAccess?.[action] || []).length + (fieldPolicies.forbiddenAccess?.[action] || []).length;
+                    return (
+                        <button
+                            key={action}
+                            onClick={() => setActiveAction(action)}
+                            className={`
+                                flex-1 px-3 py-2 text-sm font-bold rounded-lg transition-all duration-300 flex items-center justify-center gap-2
+                                ${isActive
+                                    ? `bg-gradient-to-r ${meta.gradient} text-white shadow-lg ${meta.glow} scale-[1.01]`
+                                    : 'text-gray-500 dark:text-gray-400 hover:bg-white/60 dark:hover:bg-gray-600/40'
+                                }
+                            `}
+                        >
+                            {meta.label}
+                            {count > 0 && !isActive && (
+                                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                            )}
+                        </button>
+                    );
+                })}
+            </div>
+
+            {/* Search */}
+            <div className="relative">
+                <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                    type="text"
+                    placeholder="Search fields…"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    className="
+                        w-full pl-9 pr-4 py-2.5 text-sm font-medium
+                        border border-gray-100 dark:border-gray-700 rounded-xl
+                        bg-white/80 dark:bg-gray-800/60 backdrop-blur
+                        text-gray-900 dark:text-white placeholder-gray-400
+                        focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 dark:focus:border-blue-600
+                        transition-all duration-300
+                    "
+                />
+            </div>
+
+            {loading ? (
+                <div className="flex items-center gap-2 text-gray-400 py-8 justify-center">
+                    <ArrowPathIcon className="w-5 h-5 animate-spin" />
+                    <span className="font-semibold">Loading field policy…</span>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 flex-1 min-h-0">
+                    {/* Allow Access */}
+                    <PremiumCard className="flex flex-col gap-3 !border-emerald-200/60 dark:!border-emerald-800/40 !bg-emerald-50/30 dark:!bg-emerald-950/10">
+                        <div className="flex items-center gap-3 mb-1">
+                            <div className="w-3 h-3 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 shadow-md shadow-emerald-500/30" />
+                            <h4 className="text-sm font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Allow Fields</h4>
+                            <span className="text-xs font-medium text-emerald-500/60 dark:text-emerald-600 ml-auto">(explicit allowlist)</span>
+                        </div>
+                        <FieldCheckList
+                            fields={fields}
+                            selected={allowFields}
+                            onToggle={toggleAllow}
+                            onSelectAll={selectAllAllow}
+                            onClearAll={clearAllAllow}
+                            searchQuery={searchQuery}
+                        />
+                    </PremiumCard>
+
+                    {/* Forbidden Access */}
+                    <PremiumCard className="flex flex-col gap-3 !border-rose-200/60 dark:!border-rose-800/40 !bg-rose-50/30 dark:!bg-rose-950/10">
+                        <div className="flex items-center gap-3 mb-1">
+                            <div className="w-3 h-3 rounded-full bg-gradient-to-r from-rose-500 to-red-500 shadow-md shadow-rose-500/30" />
+                            <h4 className="text-sm font-black text-rose-700 dark:text-rose-400 uppercase tracking-wider">Forbidden Fields</h4>
+                            <span className="text-xs font-medium text-rose-500/60 dark:text-rose-600 ml-auto">(explicit blocklist)</span>
+                        </div>
+                        <FieldCheckList
+                            fields={fields}
+                            selected={forbiddenFields}
+                            onToggle={toggleForbidden}
+                            onSelectAll={selectAllForbidden}
+                            onClearAll={clearAllForbidden}
+                            searchQuery={searchQuery}
+                        />
+                    </PremiumCard>
+                </div>
+            )}
+
+            <SaveBar onSave={handleSave} saving={saving} message={message} />
+        </div>
+    );
+};
+
+// ─── Tab 3: Registry & Conditions (FBAC) ──────────────────────────────────────
+
+const RegistryTab = ({ selectedRole, models, onSave, saving, message }) => {
+    const [selectedModel, setSelectedModel] = useState('');
+    const [activeRegistry, setActiveRegistry] = useState(new Set());
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (!selectedModel || !selectedRole) return;
+        const fetch = async () => {
+            setLoading(true);
+            try {
+                const res = await axiosInstance.post('/populate/read/accesspolicies', {
+                    filter: { role: selectedRole, modelName: selectedModel },
+                    limit: 1,
+                });
+                const doc = res.data?.data?.[0];
+                setActiveRegistry(new Set(doc?.registry || []));
+            } catch (err) {
+                console.error('Failed to load registry config', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetch();
+    }, [selectedModel, selectedRole]);
+
+    const toggleRegistry = (key) => {
+        setActiveRegistry(prev => {
+            const next = new Set(prev);
+            next.has(key) ? next.delete(key) : next.add(key);
+            return next;
+        });
+    };
+
+    const handleSave = () => onSave(selectedModel, { registry: [...activeRegistry] });
+
+    return (
+        <div className="flex flex-col flex-1 min-h-0 gap-3">
+            {/* Model Selector */}
+            <div>
+                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wider">
+                    Select Model
+                </label>
+                <div className="relative max-w-sm">
+                    <select
+                        value={selectedModel}
+                        onChange={e => setSelectedModel(e.target.value)}
+                        className="
+                            w-full pl-4 pr-10 py-2.5 text-sm font-bold
+                            border border-gray-100 dark:border-gray-700 rounded-xl
+                            bg-white/80 dark:bg-gray-800/60 backdrop-blur
+                            text-gray-900 dark:text-white appearance-none
+                            focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 dark:focus:border-blue-600
+                            focus:outline-none transition-all duration-300 capitalize
+                        "
+                    >
+                        <option value="">— Choose a Model —</option>
+                        {models.map(m => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                    <ChevronDownIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                </div>
+            </div>
+
+            {!selectedModel ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-gray-300 dark:text-gray-600 py-10">
+                    <CpuChipIcon className="w-12 h-12 mb-3 opacity-20" />
+                    <p className="text-base font-bold">Select a model to configure</p>
+                    <p className="text-sm mt-1 opacity-60">Registry functions add fine-grained conditional access on top of RBAC</p>
+                </div>
+            ) : loading ? (
+                <div className="flex items-center gap-2 text-gray-400 py-8 justify-center">
+                    <ArrowPathIcon className="w-5 h-5 animate-spin" />
+                    <span className="font-semibold">Loading…</span>
+                </div>
+            ) : (
+                <>
+                    <PremiumCard noPad className="overflow-hidden">
+                        <div className="px-4 py-3 bg-gradient-to-r from-gray-50 to-gray-100/50 dark:from-gray-800 dark:to-gray-750 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+                            <div>
+                                <h4 className="text-sm font-black text-gray-800 dark:text-white uppercase tracking-wider">Registry Functions</h4>
+                                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1">
+                                    <span className="font-bold text-blue-600 dark:text-blue-400">{activeRegistry.size}</span> of {REGISTRY_FUNCTIONS.length} active for <span className="font-bold capitalize">{selectedModel}</span>
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setActiveRegistry(activeRegistry.size === REGISTRY_FUNCTIONS.length ? new Set() : new Set(REGISTRY_FUNCTIONS.map(r => r.key)))}
+                                className="px-3 py-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-all duration-200"
+                            >
+                                {activeRegistry.size === REGISTRY_FUNCTIONS.length ? 'Disable All' : 'Enable All'}
+                            </button>
+                        </div>
+
+                        <div>
+                            {REGISTRY_FUNCTIONS.map((fn, i) => {
+                                const isOn = activeRegistry.has(fn.key);
+                                return (
+                                    <div
+                                        key={fn.key}
+                                        onClick={() => toggleRegistry(fn.key)}
+                                        className={`
+                                            flex items-center gap-4 px-4 py-3.5 cursor-pointer transition-all duration-300
+                                            border-b border-gray-50 dark:border-gray-700/50 last:border-0
+                                            ${isOn
+                                                ? 'bg-blue-50/80 dark:bg-blue-950/20'
+                                                : `hover:bg-gray-50 dark:hover:bg-gray-700/30 ${i % 2 === 0 ? 'bg-white dark:bg-gray-800/50' : 'bg-gray-50/30 dark:bg-gray-800/30'}`
+                                            }
+                                        `}
+                                    >
+                                        {/* Emoji icon */}
+                                        <span className="text-lg flex-shrink-0">{fn.icon}</span>
+
+                                        {/* Toggle switch */}
+                                        <div
+                                            className={`
+                                                relative flex-shrink-0 rounded-full transition-all duration-300
+                                                ${isOn
+                                                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg shadow-blue-500/30'
+                                                    : 'bg-gray-200 dark:bg-gray-600'
+                                                }
+                                            `}
+                                            style={{ height: '22px', width: '40px' }}
+                                        >
+                                            <div className={`
+                                                absolute top-[2px] w-[18px] h-[18px] rounded-full bg-white shadow-md
+                                                transition-transform duration-300 ease-out
+                                                ${isOn ? 'translate-x-[20px]' : 'translate-x-[2px]'}
+                                            `} />
+                                        </div>
+
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-3">
+                                                <span className={`text-sm font-black font-mono ${isOn ? 'text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300'}`}>
+                                                    {fn.key}
+                                                </span>
+                                                <span className={`
+                                                    text-xs px-2 py-0.5 rounded-lg font-bold
+                                                    ${isOn
+                                                        ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300'
+                                                        : 'bg-gray-100 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400'
+                                                    }
+                                                `}>
+                                                    {fn.label}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 leading-relaxed">
+                                                {fn.desc}
+                                            </p>
+                                        </div>
+
+                                        {isOn && (
+                                            <span className="flex-shrink-0 px-3 py-1 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-black shadow-sm shadow-blue-500/20 uppercase tracking-wider">
+                                                Active
+                                            </span>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </PremiumCard>
+
+                    <SaveBar onSave={handleSave} saving={saving} message={message} />
+                </>
+            )}
+        </div>
+    );
+};
+
+// ─── Tab 4: Dashboard Widgets ──────────────────────────────────────────────────
+
+const DashboardWidgetsTab = ({ selectedRole }) => {
+    const [enabledWidgets, setEnabledWidgets] = useState(new Set());
+    const [loading, setLoading] = useState(false);
+    const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState('');
 
-    // Initial Data Load
+    const grouped = Object.entries(WIDGET_GROUPS).map(([groupKey, groupMeta]) => ({
+        key: groupKey,
+        ...groupMeta,
+        widgets: WIDGET_REGISTRY.filter((w) => w.group === groupKey),
+    }));
+
+    useEffect(() => {
+        if (!selectedRole) return;
+        const fetchWidgets = async () => {
+            setLoading(true);
+            setMessage('');
+            try {
+                const res = await axiosInstance.post('/populate/read/dashboardwidgets', {
+                    filter: { role: selectedRole },
+                    limit: 1,
+                });
+                const doc = res.data?.data?.[0];
+                setEnabledWidgets(new Set(doc?.widgets || []));
+            } catch (err) {
+                console.error('Failed to load widget config', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchWidgets();
+    }, [selectedRole]);
+
+    const toggleWidget = (id) => {
+        setEnabledWidgets((prev) => {
+            const next = new Set(prev);
+            next.has(id) ? next.delete(id) : next.add(id);
+            return next;
+        });
+    };
+    const toggleGroup = (widgets) => {
+        const allOn = widgets.every((w) => enabledWidgets.has(w.id));
+        setEnabledWidgets((prev) => {
+            const next = new Set(prev);
+            widgets.forEach((w) => (allOn ? next.delete(w.id) : next.add(w.id)));
+            return next;
+        });
+    };
+    const toggleAll = () => {
+        const allOn = WIDGET_REGISTRY.every((w) => enabledWidgets.has(w.id));
+        setEnabledWidgets(allOn ? new Set() : new Set(WIDGET_REGISTRY.map((w) => w.id)));
+    };
+    const handleSave = async () => {
+        setSaving(true);
+        setMessage('Saving...');
+        try {
+            const res = await axiosInstance.post('/populate/bulk-upsert/dashboardwidgets', [
+                { filter: { role: selectedRole }, body: { widgets: [...enabledWidgets] } },
+            ]);
+            setMessage(res.data.success ? '✓ Widget config saved!' : 'Save failed');
+        } catch (err) {
+            console.error(err);
+            setMessage('Error saving widget config');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex-1 flex items-center justify-center py-20 text-gray-400">
+                <ArrowPathIcon className="w-6 h-6 animate-spin mr-3" />
+                <span className="font-semibold">Loading widget config…</span>
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex flex-col gap-3 flex-1 min-h-0">
+            <div className="flex items-center justify-between">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <span className="font-black text-gray-800 dark:text-gray-100 text-base">{enabledWidgets.size}</span>
+                    <span className="font-medium"> of {WIDGET_REGISTRY.length} widgets enabled</span>
+                </p>
+                <button
+                    onClick={toggleAll}
+                    className="px-3 py-1.5 text-xs font-bold bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 text-gray-600 dark:text-gray-200 rounded-lg hover:shadow-md transition-all duration-300 hover:scale-105"
+                >
+                    Toggle All
+                </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto min-h-0 flex flex-col gap-3">
+                {grouped.map(({ key, label, color, widgets }) => {
+                    const allOn = widgets.every((w) => enabledWidgets.has(w.id));
+                    const someOn = widgets.some((w) => enabledWidgets.has(w.id));
+                    return (
+                        <PremiumCard key={key} noPad className="overflow-hidden">
+                            <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-gray-50 to-gray-100/50 dark:from-gray-800 dark:to-gray-750 border-b border-gray-100 dark:border-gray-700">
+                                <div className="flex items-center gap-4">
+                                    <span className={`px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider ${GROUP_COLORS[color] || GROUP_COLORS.blue}`}>
+                                        {label}
+                                    </span>
+                                    {someOn && !allOn && (
+                                        <span className="text-xs font-bold text-amber-500 bg-amber-50 dark:bg-amber-950/30 px-3 py-1 rounded-lg">Partial</span>
+                                    )}
+                                </div>
+                                <button
+                                    onClick={() => toggleGroup(widgets)}
+                                    className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 px-3 py-1.5 rounded-lg transition-all"
+                                >
+                                    {allOn ? 'Disable All' : 'Enable All'}
+                                </button>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                                {widgets.map((widget, i) => {
+                                    const isOn = enabledWidgets.has(widget.id);
+                                    return (
+                                        <div
+                                            key={widget.id}
+                                            className={`
+                                                p-3.5 flex items-start gap-3 cursor-pointer transition-all duration-300
+                                                border-b border-r border-gray-50 dark:border-gray-700/40 last:border-r-0
+                                                hover:bg-blue-50/40 dark:hover:bg-blue-900/10
+                                                ${isOn ? 'bg-blue-50/60 dark:bg-blue-950/20' : 'bg-white dark:bg-gray-800/50'}
+                                            `}
+                                            onClick={() => toggleWidget(widget.id)}
+                                        >
+                                            <div className={`
+                                                mt-0.5 w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0
+                                                transition-all duration-300
+                                                ${isOn
+                                                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-md shadow-blue-500/30 scale-110'
+                                                    : 'border-2 border-gray-300 dark:border-gray-600'
+                                                }
+                                            `}>
+                                                {isOn && (
+                                                    <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                )}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className={`text-sm font-bold ${isOn ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>
+                                                    {widget.label}
+                                                </p>
+                                                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 leading-relaxed">
+                                                    {widget.description}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </PremiumCard>
+                    );
+                })}
+            </div>
+
+            <SaveBar onSave={handleSave} saving={saving} message={message} />
+        </div>
+    );
+};
+
+// ─── Main Component ────────────────────────────────────────────────────────────
+
+const RoleAccessPolicy = () => {
+    const [activeTab, setActiveTab] = useState('rbac');
+
+    const [roles, setRoles] = useState([]);
+    const [selectedRole, setSelectedRole] = useState('');
+    const [models, setModels] = useState([]);
+    const [fieldMap, setFieldMap] = useState({});
+
+    const [policies, setPolicies] = useState({});
+    const [rbacLoading, setRbacLoading] = useState(false);
+    const [rbacSaving, setRbacSaving] = useState(false);
+    const [rbacMessage, setRbacMessage] = useState('');
+
+    const [fbacSaving, setFbacSaving] = useState(false);
+    const [fbacMessage, setFbacMessage] = useState('');
+
+    const [regSaving, setRegSaving] = useState(false);
+    const [regMessage, setRegMessage] = useState('');
+
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const [rolesRes, modelsRes] = await Promise.all([
                     axiosInstance.post('/populate/read/roles'),
-                    axiosInstance.get('/config/models')
+                    axiosInstance.get('/config/models', { params: { fields: true } }),
                 ]);
                 const normalizedRoles = (rolesRes.data.data || []).map(r => ({ ...r, _id: r._id?.$oid || r._id }));
                 setRoles(normalizedRoles);
                 setModels(modelsRes.data.models || []);
+                setFieldMap(modelsRes.data.fields || {});
             } catch (err) {
-                console.error("Failed to load setup data", err);
+                console.error('Failed to load setup data', err);
             }
         };
         fetchData();
     }, []);
 
-    // Load Policies when Role Selected
     useEffect(() => {
         if (!selectedRole) return;
-
         const fetchPolicies = async () => {
-            setLoading(true);
+            setRbacLoading(true);
             try {
-                const res = await axiosInstance.get(`/populate/read/accesspolicies`, {
-                    params: {
-                        filter: JSON.stringify({ role: selectedRole }),
-                        limit: 1000
-                    }
+                const res = await axiosInstance.post('/populate/read/accesspolicies', {
+                    filter: { role: selectedRole },
+                    limit: 1000,
                 });
-
                 const policyMap = {};
-                res.data.data.forEach(p => {
-                    policyMap[p.modelName] = p.permissions;
-                });
+                (res.data.data || []).forEach(p => { policyMap[p.modelName] = p.permissions; });
                 setPolicies(policyMap);
             } catch (err) {
-                console.error("Failed to load policies", err);
+                console.error('Failed to load policies', err);
             } finally {
-                setLoading(false);
+                setRbacLoading(false);
             }
         };
         fetchPolicies();
     }, [selectedRole]);
 
     const handleToggle = (model, type) => {
-        setPolicies(prev => {
-            const current = prev[model]?.[type] || false;
-            return {
-                ...prev,
-                [model]: {
-                    ...prev[model],
-                    [type]: !current
-                }
-            };
-        });
+        setPolicies(prev => ({
+            ...prev,
+            [model]: { ...prev[model], [type]: !prev[model]?.[type] },
+        }));
     };
-
     const handleModelToggleAll = (model) => {
         setPolicies(prev => {
             const current = prev[model] || {};
-            const allSelected = current.read && current.create && current.update && current.delete;
-            const targetState = !allSelected;
-            return {
-                ...prev,
-                [model]: {
-                    read: targetState,
-                    create: targetState,
-                    update: targetState,
-                    delete: targetState
-                }
-            };
+            const allSelected = ACTIONS.every(a => current[a]);
+            const next = {};
+            ACTIONS.forEach(a => { next[a] = !allSelected; });
+            return { ...prev, [model]: next };
         });
     };
-
     const handleGlobalToggle = () => {
         setPolicies(prev => {
-            let allSelected = true;
-            for (const model of models) {
-                if (!prev[model]?.read || !prev[model]?.create || !prev[model]?.update || !prev[model]?.delete) {
-                    allSelected = false;
-                    break;
-                }
-            }
-            const targetState = !allSelected;
-            const newState = { ...prev };
-            models.forEach(model => {
-                newState[model] = {
-                    read: targetState,
-                    create: targetState,
-                    update: targetState,
-                    delete: targetState
-                };
+            const allSelected = models.every(m => ACTIONS.every(a => prev[m]?.[a]));
+            const target = !allSelected;
+            const next = { ...prev };
+            models.forEach(m => {
+                next[m] = {};
+                ACTIONS.forEach(a => { next[m][a] = target; });
             });
-            return newState;
+            return next;
         });
     };
-
-    // Bulk Save
-    const handleSave = async () => {
-        setMessage('Saving...');
+    const handleRbacSave = async () => {
+        setRbacSaving(true);
+        setRbacMessage('Saving...');
         try {
-            // Prepare Bulk Payload
-            // We only send models that have at least one permission set OR exist in policies map
-            // Effectively we sync the state to backend.
-
-            const bulkPayload = models.map(model => {
-                const perms = policies[model] || { read: false, create: false, update: false, delete: false };
-                return {
-                    filter: { role: selectedRole, modelName: model },
-                    body: { permissions: perms }
-                };
-            });
-
-            // Use the new Bulk Upsert Endpoint
-            const res = await axiosInstance.post(`/populate/bulk-upsert/accesspolicies`, bulkPayload);
-
-            if (res.data.success) {
-                setMessage(`Saved! Updated: ${res.data.count}`);
-                if (res.data.errors) {
-                    console.error("Some updates failed", res.data.errors);
-                    alert("Partial success. Check console for details.");
-                }
-            } else {
-                setMessage('Save Failed');
-            }
-
+            const bulkPayload = models.map(model => ({
+                filter: { role: selectedRole, modelName: model },
+                body: { permissions: policies[model] || { read: false, create: false, update: false, delete: false } },
+            }));
+            const res = await axiosInstance.post('/populate/bulk-upsert/accesspolicies', bulkPayload);
+            setRbacMessage(res.data.success ? `✓ Saved ${res.data.count} policies` : 'Save failed');
         } catch (err) {
             console.error(err);
-            setMessage('Error saving policies');
+            setRbacMessage('Error saving policies');
+        } finally {
+            setRbacSaving(false);
         }
     };
-
+    const handleFbacSave = async (modelName, fieldPolicies) => {
+        setFbacSaving(true);
+        setFbacMessage('Saving...');
+        try {
+            const res = await axiosInstance.post('/populate/bulk-upsert/accesspolicies', [{
+                filter: { role: selectedRole, modelName },
+                body: { allowAccess: fieldPolicies.allowAccess, forbiddenAccess: fieldPolicies.forbiddenAccess },
+            }]);
+            setFbacMessage(res.data.success ? '✓ Field policies saved!' : 'Save failed');
+        } catch (err) {
+            console.error(err);
+            setFbacMessage('Error saving field policies');
+        } finally {
+            setFbacSaving(false);
+        }
+    };
+    const handleRegistrySave = async (modelName, { registry }) => {
+        setRegSaving(true);
+        setRegMessage('Saving...');
+        try {
+            const res = await axiosInstance.post('/populate/bulk-upsert/accesspolicies', [{
+                filter: { role: selectedRole, modelName },
+                body: { registry },
+            }]);
+            setRegMessage(res.data.success ? '✓ Registry saved!' : 'Save failed');
+        } catch (err) {
+            console.error(err);
+            setRegMessage('Error saving registry');
+        } finally {
+            setRegSaving(false);
+        }
+    };
     const handleRefreshCache = async () => {
         try {
             await axiosInstance.post('/config/refresh-policy');
-            alert('Cache Refreshed!');
-        } catch (e) {
+            alert('Policy Cache Refreshed!');
+        } catch {
             alert('Refresh Failed');
         }
     };
 
-    // Modern Toggle Button Component
-    const ToggleButton = ({ active, onClick }) => (
-        <button
-            onClick={onClick}
-            className={`
-            relative w-16 h-8 rounded-full transition-colors duration-200 focus:outline-none flex items-center px-1
-            ${active ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}
-        `}
-        >
-            <span
-                className={`
-                block w-6 h-6 rounded-full bg-white shadow transform transition-transform duration-200
-                ${active ? 'translate-x-8' : 'translate-x-0'}
-            `}
-            />
-            {/* Optional Icon/Text inside */}
-        </button>
-    );
+    const selectedRoleName = roles.find(r => r._id === selectedRole)?.name || '';
 
-    // Or even better, a "Chip" style button as requested ("button type check box")
-    const PermissionChip = ({ active, onClick, label }) => (
-        <button
-            onClick={onClick}
-            className={`
-            px-3 py-1.5 rounded-md text-sm font-semibold transition-all duration-200 flex items-center gap-2 border
-            ${active
-                    ? 'bg-green-100 text-green-700 border-green-300 dark:bg-green-900 dark:text-green-300 dark:border-green-700 hover:bg-green-200'
-                    : 'bg-white text-gray-400 border-gray-200 dark:bg-gray-800 dark:text-gray-500 dark:border-gray-700 hover:bg-gray-50'}
-        `}
-        >
-            {active ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />}
-            {label}
-        </button>
-    );
+    const tabs = [
+        { key: 'rbac',     label: 'Data Access',    icon: TableCellsIcon },
+        { key: 'fbac',     label: 'Field Policies', icon: FunnelIcon },
+        { key: 'registry', label: 'Registry',       icon: CpuChipIcon },
+        { key: 'widgets',  label: 'Dashboard',      icon: SquaresPlusIcon },
+    ];
 
     return (
-        <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow h-full flex flex-col">
-            <div className="flex justify-between items-center mb-6 border-b pb-4 dark:border-gray-700">
-                <div className="flex items-center gap-3">
-                    <ShieldCheckIcon className="w-8 h-8 text-blue-600" />
-                    <h2 className="text-2xl font-bold dark:text-white">Role Access Policy</h2>
+        <div className="min-h-full flex flex-col gap-3">
+            {/* ── Page Header ── */}
+            <div className="flex justify-between items-center pb-2 border-b border-gray-100 dark:border-gray-800/60">
+                <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-blue-50 dark:bg-blue-950/40 rounded-lg text-blue-600 dark:text-blue-400">
+                        <ShieldCheckIcon className="w-5 h-5" />
+                    </div>
+                    <div>
+                        <h2 className="text-lg font-black text-gray-800 dark:text-white tracking-tight">Role Access Policy</h2>
+                        <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 mt-0.5">
+                            RBAC + FBAC — Configure fine-grained data access and field policies
+                        </p>
+                    </div>
                 </div>
                 <button
                     onClick={handleRefreshCache}
-                    className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-sm"
+                    title="Refresh Cache"
+                    className="
+                        p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400
+                        bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700
+                        border border-gray-200/50 dark:border-gray-700/50
+                        rounded-lg transition-all duration-300 active:scale-95 shadow-sm
+                    "
                 >
-                    <ArrowPathIcon className="w-4 h-4" />
-                    Refresh System Cache
+                    <ArrowPathIcon className="w-4.5 h-4.5" />
                 </button>
             </div>
 
-            {/* Role Selector */}
-            <div className="mb-6 max-w-md">
-                <label className="block mb-2 font-medium text-gray-700 dark:text-gray-300">Select Role to Configure</label>
-                <div className="relative">
-                    <select
-                        className="w-full p-3 pl-4 bg-gray-50 border border-gray-300 rounded-lg appearance-none cursor-pointer focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                        value={selectedRole}
-                        onChange={e => setSelectedRole(e.target.value)}
-                    >
-                        <option value="">-- Choose a Role --</option>
-                        {roles.map(r => (
-                            <option key={r._id} value={r._id}>{r.name}</option>
-                        ))}
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </div>
+            {/* ── Main Side-by-Side Content Layout ── */}
+            <div className="flex-1 flex flex-col md:flex-row gap-3.5 min-h-0">
+                {/* Left Side: Roles Sidebar */}
+                <div className="w-full md:w-64 flex flex-col gap-3 shrink-0">
+                    <PremiumCard className="flex-1 flex flex-col min-h-0">
+                        <span className="block text-xs font-black text-gray-400 dark:text-gray-500 mb-3 uppercase tracking-wider">
+                            Select Role
+                        </span>
+                        <div className="flex-1 overflow-y-auto flex flex-col gap-1.5 pr-1 max-h-[300px] md:max-h-none">
+                            {roles.map(r => (
+                                <button
+                                    key={r._id}
+                                    onClick={() => { setSelectedRole(r._id); setRbacMessage(''); setFbacMessage(''); setRegMessage(''); }}
+                                    className={`
+                                        w-full px-4 py-2.5 text-sm font-bold text-left rounded-xl border transition-all duration-300
+                                        ${selectedRole === r._id
+                                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 border-transparent text-white shadow-md shadow-blue-500/20 scale-[1.02]'
+                                            : 'bg-transparent border-gray-100 dark:border-gray-700/50 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:border-gray-200 dark:hover:border-gray-600'
+                                        }
+                                    `}
+                                >
+                                    {r.name}
+                                </button>
+                            ))}
+                            {roles.length === 0 && (
+                                <div className="flex items-center gap-2 text-gray-400 text-sm py-4">
+                                    <ArrowPathIcon className="w-4 h-4 animate-spin" />
+                                    Loading roles…
+                                </div>
+                            )}
+                        </div>
+                    </PremiumCard>
+                </div>
+
+                {/* Right Side: Permissions details */}
+                <div className="flex-1 flex flex-col min-h-0">
+                    {selectedRole ? (
+                        <div className="flex-1 flex flex-col gap-3 min-h-0">
+                            {/* Tab Bar Header */}
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5">
+                                <div className="flex gap-1.5 p-1 bg-gray-100/60 dark:bg-gray-800/40 backdrop-blur rounded-xl overflow-x-auto scrollbar-hide">
+                                    {tabs.map(tab => (
+                                        <TabButton
+                                            key={tab.key}
+                                            active={activeTab === tab.key}
+                                            onClick={() => setActiveTab(tab.key)}
+                                            icon={tab.icon}
+                                            label={tab.label}
+                                        />
+                                    ))}
+                                </div>
+                                <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 px-3 py-1.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200/40 dark:border-gray-700/40 rounded-lg">
+                                    Configuring: <span className="text-blue-600 dark:text-blue-400 font-extrabold capitalize">{selectedRoleName}</span>
+                                </div>
+                            </div>
+
+                            {/* Active Tab Content */}
+                            <div className="flex-1 flex flex-col min-h-0">
+                                {activeTab === 'rbac' && (
+                                    <DataAccessTab
+                                        models={models}
+                                        policies={policies}
+                                        onToggle={handleToggle}
+                                        onModelToggleAll={handleModelToggleAll}
+                                        onGlobalToggle={handleGlobalToggle}
+                                        onSave={handleRbacSave}
+                                        saving={rbacSaving}
+                                        message={rbacMessage}
+                                    />
+                                )}
+                                {activeTab === 'fbac' && (
+                                    <FieldPoliciesTab
+                                        selectedRole={selectedRole}
+                                        models={models}
+                                        fieldMap={fieldMap}
+                                        onSave={handleFbacSave}
+                                        saving={fbacSaving}
+                                        message={fbacMessage}
+                                    />
+                                )}
+                                {activeTab === 'registry' && (
+                                    <RegistryTab
+                                        selectedRole={selectedRole}
+                                        models={models}
+                                        onSave={handleRegistrySave}
+                                        saving={regSaving}
+                                        message={regMessage}
+                                    />
+                                )}
+                                {activeTab === 'widgets' && (
+                                    <DashboardWidgetsTab selectedRole={selectedRole} />
+                                )}
+                            </div>
+                        </div>
+                    ) : (
+                        <PremiumCard className="flex-1 flex flex-col items-center justify-center py-12">
+                            <div className="p-3 bg-gray-100 dark:bg-gray-700/50 rounded-2xl mb-4">
+                                <ShieldCheckIcon className="w-12 h-12 text-gray-300 dark:text-gray-600" />
+                            </div>
+                            <p className="text-lg font-black text-gray-400 dark:text-gray-500">Select a role from the sidebar</p>
+                            <p className="text-sm font-medium mt-1 text-gray-400 dark:text-gray-500">
+                                Choose a role to edit its data access permissions, field-level policies, registry functions, and widgets.
+                            </p>
+                        </PremiumCard>
+                    )}
                 </div>
             </div>
-
-            {/* Permissions Grid */}
-            {selectedRole ? (
-                <>
-                    <div className="flex-1 overflow-auto rounded-lg border dark:border-gray-700">
-                        <table className="w-full text-left border-collapse">
-                            <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0 z-10 shadow-sm">
-                                <tr>
-                                    <th className="p-4 font-semibold text-gray-600 dark:text-gray-200 uppercase text-xs tracking-wider">Model Name</th>
-                                    <th className="p-4 font-semibold text-gray-600 dark:text-gray-200 uppercase text-xs tracking-wider text-center">Read</th>
-                                    <th className="p-4 font-semibold text-gray-600 dark:text-gray-200 uppercase text-xs tracking-wider text-center">Create</th>
-                                    <th className="p-4 font-semibold text-gray-600 dark:text-gray-200 uppercase text-xs tracking-wider text-center">Update</th>
-                                    <th className="p-4 font-semibold text-gray-600 dark:text-gray-200 uppercase text-xs tracking-wider text-center">Delete</th>
-                                    <th className="p-4 font-semibold text-gray-600 dark:text-gray-200 uppercase text-xs tracking-wider text-center">
-                                        <button
-                                            onClick={handleGlobalToggle}
-                                            className="px-3 py-1 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors focus:outline-none"
-                                        >
-                                            Toggle All
-                                        </button>
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
-                                {models.map(model => {
-                                    const isAllSelected = policies[model]?.read && policies[model]?.create && policies[model]?.update && policies[model]?.delete;
-                                    return (
-                                        <tr key={model} className="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
-                                            <td className="p-4 font-medium text-gray-900 dark:text-gray-100">
-                                                {model.charAt(0).toUpperCase() + model.slice(1)}
-                                            </td>
-                                            {['read', 'create', 'update', 'delete'].map(type => (
-                                                <td key={type} className="p-2 text-center">
-                                                    <div className="flex justify-center">
-                                                        <PermissionChip
-                                                            active={policies[model]?.[type] || false}
-                                                            onClick={() => handleToggle(model, type)}
-                                                            label={type.toUpperCase()}
-                                                        />
-                                                    </div>
-                                                </td>
-                                            ))}
-                                            <td className="p-2 text-center">
-                                                <div className="flex justify-center">
-                                                    <PermissionChip
-                                                        active={isAllSelected}
-                                                        onClick={() => handleModelToggleAll(model)}
-                                                        label="ALL"
-                                                    />
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div className="mt-6 flex justify-end items-center gap-6 border-t pt-6 bg-white dark:bg-gray-800">
-                        {message && (
-                            <div className={`text-sm font-medium animate-pulse ${message.includes('Error') || message.includes('Failed') ? 'text-red-500' : 'text-green-500'}`}>
-                                {message}
-                            </div>
-                        )}
-                        <button
-                            onClick={handleSave}
-                            className={`
-                        px-8 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-lg hover:bg-blue-700 hover:shadow-xl transform active:scale-95 transition-all
-                        ${loading ? 'opacity-50 cursor-not-allowed' : ''}
-                    `}
-                            disabled={loading}
-                        >
-                            {loading ? 'Saving...' : 'Save Changes'}
-                        </button>
-                    </div>
-                </>
-            ) : (
-                <div className="flex-1 flex flex-col items-center justify-center text-gray-400 border-2 border-dashed rounded-lg">
-                    <ShieldCheckIcon className="w-16 h-16 mb-4 opacity-50" />
-                    <p>Select a Role to view and edit policies</p>
-                </div>
-            )}
         </div>
     );
 };

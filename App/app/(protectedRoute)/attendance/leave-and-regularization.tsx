@@ -1,20 +1,20 @@
 import React, { useEffect, useState, useContext } from "react";
-import { View, ScrollView, TouchableOpacity } from "react-native";
-import { Text, Button, ActivityIndicator } from "react-native-paper";
+import { View, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
+import { Text } from "react-native-paper";
 import Toast from "react-native-toast-message";
 import axiosInstance from "@/api/axiosInstance";
 import { AuthContext } from "@/context/AuthContext";
 import { router } from "expo-router";
-
-// NEW imports
 import FormRenderer from "@/components/ui/FormRenderer";
 import { leaveFormFields, leaveSubmitButton } from "@/constants/Forms/leaveForm";
 import { regularizationFormFields, regularizationSubmitButton } from "@/constants/Forms/regularizationForm";
+import { Calendar, Clock, ChevronRight, ChevronLeft, CheckCircle, AlertTriangle } from 'lucide-react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const LeaveAndRegularizationScreen = ({ onClose, onSuccess, onFailed }: {
-  onClose: () => void,
-  onSuccess: () => void,
-  onFailed: (err: any) => void
+  onClose?: () => void,
+  onSuccess?: () => void,
+  onFailed?: (err: any) => void
 }) => {
   const { user } = useContext(AuthContext);
 
@@ -23,7 +23,6 @@ const LeaveAndRegularizationScreen = ({ onClose, onSuccess, onFailed }: {
   const [userData, setUserData] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
 
-  // Leave / Regularization live values
   const [formState, setFormState] = useState<any>({});
   const [availableDays, setAvailableDays] = useState<number | null>(null);
   const [attendanceIssues, setAttendanceIssues] = useState<any[]>([]);
@@ -53,35 +52,26 @@ const LeaveAndRegularizationScreen = ({ onClose, onSuccess, onFailed }: {
     setFetchingIssues(true);
     try {
       const now = new Date();
-      const endDate = now;
       const startDate = new Date();
-      startDate.setDate(now.getDate() - 7); // Last 7 days
-
-      // Ensure we don't go back to the previous month
+      startDate.setDate(now.getDate() - 7);
       const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       const effectiveStartDate = startDate < startOfCurrentMonth ? startOfCurrentMonth : startDate;
-
       const res = await axiosInstance.get('/populate/read/attendances', {
         params: {
           filter: JSON.stringify({
             employee: user.id,
             date: {
               $gte: effectiveStartDate.toISOString().split('T')[0],
-              $lte: endDate.toISOString().split('T')[0]
+              $lte: now.toISOString().split('T')[0]
             }
           })
         }
       });
-
-      const issues = res.data.data?.filter((record: any) => {
-        const hasIssue = !record.checkIn || !record.checkOut ||
-          record.status === 'Absent' || record.status === 'Half Day';
-        return hasIssue;
-      }) || [];
-
+      const issues = res.data.data?.filter((record: any) =>
+        !record.checkIn || !record.checkOut || record.status === 'Absent' || record.status === 'Half Day'
+      ) || [];
       setAttendanceIssues(issues);
     } catch (error) {
-      console.error('Error fetching attendance issues:', error);
       Toast.show({ type: "error", text1: "Error", text2: "Failed to load attendance issues" });
     } finally {
       setFetchingIssues(false);
@@ -110,7 +100,6 @@ const LeaveAndRegularizationScreen = ({ onClose, onSuccess, onFailed }: {
     if (mode !== "leave") return;
     const type = formState?.leaveTypeId?._id;
     if (!type || !user?.id) return;
-
     const fetchAvailableDays = async () => {
       try {
         const res = await axiosInstance.get(`/populate/read/employees/${user.id}?filter=${type}`);
@@ -129,11 +118,9 @@ const LeaveAndRegularizationScreen = ({ onClose, onSuccess, onFailed }: {
     if (mode !== "leave") return;
     const { startDate, endDate } = formState;
     if (!startDate || !endDate) return;
-
     const start = new Date(startDate);
     const end = new Date(endDate);
     if (end < start) return setFormState((x: any) => ({ ...x, totalDays: null }));
-
     const diff = (end.getTime() - start.getTime()) / 86400000 + 1;
     setFormState((x: any) => ({ ...x, totalDays: diff }));
   }, [formState.startDate, formState.endDate, mode]);
@@ -142,7 +129,6 @@ const LeaveAndRegularizationScreen = ({ onClose, onSuccess, onFailed }: {
   const handleSubmit = async (data: any) => {
     if (!userData) return;
     setSubmitting(true);
-
     try {
       if (mode === "leave") {
         if (availableDays !== null && (formState.totalDays || 0) > availableDays) {
@@ -150,8 +136,7 @@ const LeaveAndRegularizationScreen = ({ onClose, onSuccess, onFailed }: {
           setSubmitting(false);
           return;
         }
-
-        const payload = {
+        await axiosInstance.post("/populate/create/leaves", {
           employeeId: (userData as any)._id,
           employeeName: (userData as any).basicInfo.firstName,
           departmentId: data.leaveTypeId.departmentId,
@@ -164,9 +149,7 @@ const LeaveAndRegularizationScreen = ({ onClose, onSuccess, onFailed }: {
           reason: data.reason,
           status: "Pending",
           statusOrderKey: 0,
-        };
-
-        await axiosInstance.post("/populate/create/leaves", payload);
+        });
         Toast.show({ type: "success", text1: "Leave Application Submitted" });
       } else if (mode === "regularization") {
         if (!selectedIssue) {
@@ -174,30 +157,24 @@ const LeaveAndRegularizationScreen = ({ onClose, onSuccess, onFailed }: {
           setSubmitting(false);
           return;
         }
-
-        // Convert time strings (HH:mm) to full ISO dates based on the request date
         const combineDateAndTime = (dateStr: string, timeStr: string) => {
           if (!timeStr) return null;
-          // If it's already an ISO string, return it
           if (timeStr.includes('T')) return timeStr;
-
           try {
             const [hours, minutes] = timeStr.split(':').map(Number);
             const date = new Date(dateStr);
             date.setHours(hours, minutes, 0, 0);
             return date.toISOString();
-          } catch (e) {
-            console.error("Error combining date and time:", e);
+          } catch {
             return timeStr;
           }
         };
-
-        const payload = {
+        await axiosInstance.post("/populate/create/regularizations", {
           attendanceId: selectedIssue._id,
-          employeeId: userData._id,
-          employeeName: `${userData.basicInfo?.firstName || ''} ${userData.basicInfo?.lastName || ''}`.trim(),
-          departmentId: userData.professionalInfo?.department,
-          managerId: userData.professionalInfo?.reportingManager,
+          employeeId: (userData as any)._id,
+          employeeName: `${(userData as any).basicInfo?.firstName || ''} ${(userData as any).basicInfo?.lastName || ''}`.trim(),
+          departmentId: (userData as any).professionalInfo?.department,
+          managerId: (userData as any).professionalInfo?.reportingManager,
           requestDate: data.requestDate,
           originalCheckIn: selectedIssue.checkIn,
           originalCheckOut: selectedIssue.checkOut,
@@ -205,172 +182,204 @@ const LeaveAndRegularizationScreen = ({ onClose, onSuccess, onFailed }: {
           requestedCheckOut: combineDateAndTime(data.requestDate, data.requestedCheckOut),
           reason: data.reason,
           status: "Pending",
-          createdBy: userData._id
-        };
-
-        await axiosInstance.post("/populate/create/regularizations", payload);
+          createdBy: (userData as any)._id
+        });
         Toast.show({ type: "success", text1: "Regularization Submitted" });
       }
 
       if (onSuccess) {
         onSuccess();
       } else {
-        Toast.show({ type: "success", text1: "Request Submitted" });
         router.push("/(protectedRoute)/attendance" as any);
       }
-
-      if (onClose) {
-        onClose();
-      } else if (!onSuccess) {
-        // Already handled by router.back()
-      } else {
+      if (onClose) onClose();
+      else if (onSuccess) {
         setMode("");
         setShowDateSelection(false);
         setSelectedIssue(null);
       }
     } catch (err) {
-      if (onFailed) {
-        onFailed(err);
-      } else {
-        console.error("Submission error:", err);
-        Toast.show({ type: "error", text1: "Submission failed" });
-      }
+      if (onFailed) onFailed(err);
+      else Toast.show({ type: "error", text1: "Submission failed" });
     } finally {
       setSubmitting(false);
     }
   };
 
+  const resetMode = () => {
+    setMode("");
+    setShowDateSelection(false);
+    setSelectedIssue(null);
+  };
+
   // =================== RENDER ===================
   if (loadingUser) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50">
-        <ActivityIndicator color="#3b82f6" />
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F7F8FC' }}>
+        <ActivityIndicator color="#7C3AED" />
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#F7F8FC' }} edges={['bottom', 'left', 'right']}>
       <ScrollView
         nestedScrollEnabled
         contentContainerStyle={{ paddingBottom: 40 }}
-        className="flex-1 px-4 pt-4"
+        style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <View className="flex-row justify-between items-center mb-6">
-          <View>
-            <Text className="text-2xl font-bold text-gray-900">
-              {!mode ? "Leave & Regularization" : mode === "leave" ? "Leave Application" : "Regularization"}
-            </Text>
-            {mode === "regularization" && selectedIssue && (
-              <Text className="text-blue-600 font-medium">
-                For {new Date(selectedIssue.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-              </Text>
-            )}
-          </View>
-          <TouchableOpacity
-            onPress={mode ? () => { setMode(""); setShowDateSelection(false); setSelectedIssue(null); } : onClose}
-            className="w-10 h-10 rounded-full bg-gray-200 items-center justify-center"
-          >
-            <Text className="text-gray-600 text-xl">×</Text>
-          </TouchableOpacity>
-        </View>
+        <View style={{ paddingHorizontal: 20, paddingTop: 16 }}>
 
-        {/* INITIAL SELECTION */}
-        {!mode && (
-          <View className="gap-4 mt-4">
+          {/* ── Breadcrumb / Back control ── */}
+          {mode !== "" && (
             <TouchableOpacity
-              onPress={() => setMode("leave")}
-              className="bg-white border border-blue-100 p-6 rounded-3xl shadow-sm"
+              onPress={resetMode}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 12 }}
+              activeOpacity={0.7}
             >
-              <View className="w-12 h-12 bg-blue-500 rounded-2xl items-center justify-center mb-4">
-                <Text className="text-white text-xl">📅</Text>
-              </View>
-              <Text className="text-xl font-bold text-gray-900 mb-1">Apply for Leave</Text>
-              <Text className="text-gray-500 text-sm">Submit a request for vacation, sick days, or personal time</Text>
+              <ChevronLeft size={16} color="#7C3AED" />
+              <Text style={{ color: '#7C3AED', fontSize: 13, fontWeight: '600' }}>Back</Text>
             </TouchableOpacity>
+          )}
 
-            <TouchableOpacity
-              onPress={handleRegularizationClick}
-              className="bg-white border border-green-100 p-6 rounded-3xl shadow-sm"
-            >
-              <View className="w-12 h-12 bg-green-500 rounded-2xl items-center justify-center mb-4">
-                <Text className="text-white text-xl">🕒</Text>
-              </View>
-              <Text className="text-xl font-bold text-gray-900 mb-1">Regularization</Text>
-              <Text className="text-gray-500 text-sm">Correct missing check-ins or check-outs in your records</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+          {/* ── Page title ── */}
+          <Text style={{ fontSize: 11, fontWeight: '700', color: '#B4BACC', letterSpacing: 0.5, marginBottom: 4 }}>ATTENDANCE</Text>
+          <Text style={{ fontSize: 20, fontWeight: '700', color: '#1A1D2E', marginBottom: 16 }}>
+            {!mode
+              ? 'Leave & Regularization'
+              : mode === 'leave'
+                ? 'Leave Application'
+                : selectedIssue
+                  ? `Regularize · ${new Date(selectedIssue.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`
+                  : 'Regularization'}
+          </Text>
 
-        {/* DATE SELECTION (REGULARIZATION) */}
-        {mode === "regularization" && showDateSelection && (
-          <View>
-            {fetchingIssues ? (
-              <View className="py-12 items-center">
-                <ActivityIndicator color="#22c55e" />
-                <Text className="text-gray-500 mt-4">Checking attendance issues...</Text>
-              </View>
-            ) : attendanceIssues.length === 0 ? (
-              <View className="bg-white rounded-3xl p-8 items-center border border-gray-200">
-                <View className="w-16 h-16 bg-green-100 rounded-full items-center justify-center mb-4">
-                  <Text className="text-green-500 text-2xl">✅</Text>
+          {/* ══════ INITIAL SELECTION ══════ */}
+          {!mode && (
+            <View style={{ gap: 10 }}>
+              {/* Leave card */}
+              <TouchableOpacity
+                onPress={() => setMode("leave")}
+                activeOpacity={0.75}
+                style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center' }}
+              >
+                <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: '#EDE9FE', alignItems: 'center', justifyContent: 'center', marginRight: 14 }}>
+                  <Calendar size={20} color="#7C3AED" />
                 </View>
-                <Text className="text-lg font-bold text-gray-900 mb-2">All Clear!</Text>
-                <Text className="text-gray-500 text-center">Your attendance records for the last 30 days are complete.</Text>
-                <Button mode="text" textColor="#3b82f6" onPress={() => setMode("")} className="mt-4">
-                  Go Back
-                </Button>
-              </View>
-            ) : (
-              <View className="gap-3">
-                <Text className="text-gray-500 mb-2">Found {attendanceIssues.length} issues in the last 30 days:</Text>
-                {attendanceIssues.map((record: any, idx) => (
-                  <TouchableOpacity
-                    key={idx}
-                    onPress={() => handleIssueSelect(record)}
-                    className="bg-white border border-gray-200 p-4 rounded-2xl flex-row justify-between items-center shadow-sm"
-                  >
-                    <View className="flex-1">
-                      <Text className="text-gray-900 font-bold">
-                        {new Date(record.date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}
-                      </Text>
-                      <Text className="text-red-500 text-xs mt-1">
-                        {!record.checkIn ? "Missing Check-in" : !record.checkOut ? "Missing Check-out" : record.status}
-                      </Text>
-                    </View>
-                    <Text className="text-gray-400">›</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-          </View>
-        )}
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 15, fontWeight: '700', color: '#1A1D2E' }}>Apply for Leave</Text>
+                  <Text style={{ fontSize: 12, color: '#8890A8', marginTop: 2 }}>Vacation, sick days, or personal time</Text>
+                </View>
+                <ChevronRight size={16} color="#B4BACC" />
+              </TouchableOpacity>
 
-        {/* FORMS */}
-        {mode && !showDateSelection && (
-          <View className="bg-white border border-gray-200 rounded-3xl p-5 shadow-sm">
-            {submitting ? (
-              <View className="py-12 items-center">
-                <ActivityIndicator color="#3b82f6" />
-                <Text className="text-gray-500 mt-4">Submitting request...</Text>
-              </View>
-            ) : (
-              <FormRenderer
-                fields={mode === "leave"
-                  ? leaveFormFields(userData!).map(f => f.name === "availableDays" ? { ...f, externalValue: availableDays } : f)
-                  : regularizationFormFields
-                }
-                submitButton={mode === "leave" ? leaveSubmitButton : regularizationSubmitButton}
-                data={formState}
-                onChange={(data) => setFormState(data)}
-                onSubmit={handleSubmit}
-              />
-            )}
-          </View>
-        )}
+              {/* Regularization card */}
+              <TouchableOpacity
+                onPress={handleRegularizationClick}
+                activeOpacity={0.75}
+                style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center' }}
+              >
+                <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: '#D1FAE5', alignItems: 'center', justifyContent: 'center', marginRight: 14 }}>
+                  <Clock size={20} color="#10B981" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 15, fontWeight: '700', color: '#1A1D2E' }}>Regularization</Text>
+                  <Text style={{ fontSize: 12, color: '#8890A8', marginTop: 2 }}>Correct missing check-ins or check-outs</Text>
+                </View>
+                <ChevronRight size={16} color="#B4BACC" />
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* ══════ DATE SELECTION (REGULARIZATION) ══════ */}
+          {mode === "regularization" && showDateSelection && (
+            <View>
+              {fetchingIssues ? (
+                <View style={{ paddingVertical: 48, alignItems: 'center' }}>
+                  <ActivityIndicator color="#10B981" />
+                  <Text style={{ color: '#8890A8', marginTop: 12, fontSize: 13 }}>Checking attendance records…</Text>
+                </View>
+              ) : attendanceIssues.length === 0 ? (
+                <View style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 28, alignItems: 'center' }}>
+                  <View style={{ width: 52, height: 52, borderRadius: 16, backgroundColor: '#D1FAE5', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+                    <CheckCircle size={24} color="#10B981" />
+                  </View>
+                  <Text style={{ fontSize: 16, fontWeight: '700', color: '#1A1D2E', marginBottom: 6 }}>All Clear!</Text>
+                  <Text style={{ fontSize: 13, color: '#8890A8', textAlign: 'center' }}>
+                    No attendance issues found in the last 30 days.
+                  </Text>
+                  <TouchableOpacity
+                    onPress={resetMode}
+                    style={{ marginTop: 16, paddingVertical: 10, paddingHorizontal: 20, backgroundColor: '#EDE9FE', borderRadius: 10 }}
+                  >
+                    <Text style={{ color: '#7C3AED', fontWeight: '600', fontSize: 13 }}>Go Back</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View>
+                  <Text style={{ fontSize: 12, color: '#8890A8', marginBottom: 10 }}>
+                    Found {attendanceIssues.length} issue{attendanceIssues.length > 1 ? 's' : ''} — select a record to correct
+                  </Text>
+                  <View style={{ backgroundColor: '#FFFFFF', borderRadius: 16, overflow: 'hidden' }}>
+                    {attendanceIssues.map((record: any, idx) => (
+                      <TouchableOpacity
+                        key={idx}
+                        onPress={() => handleIssueSelect(record)}
+                        activeOpacity={0.7}
+                        style={{
+                          flexDirection: 'row', alignItems: 'center', padding: 14,
+                          borderBottomWidth: idx < attendanceIssues.length - 1 ? 1 : 0,
+                          borderBottomColor: '#F1F5F9'
+                        }}
+                      >
+                        <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: '#FEF3C7', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
+                          <AlertTriangle size={16} color="#F59E0B" />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={{ fontSize: 14, fontWeight: '600', color: '#1A1D2E' }}>
+                            {new Date(record.date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}
+                          </Text>
+                          <Text style={{ fontSize: 11, color: '#EF4444', marginTop: 2 }}>
+                            {!record.checkIn ? 'Missing check-in' : !record.checkOut ? 'Missing check-out' : record.status}
+                          </Text>
+                        </View>
+                        <ChevronRight size={14} color="#B4BACC" />
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* ══════ FORMS ══════ */}
+          {mode && !showDateSelection && (
+            <View style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16 }}>
+              {submitting ? (
+                <View style={{ paddingVertical: 48, alignItems: 'center' }}>
+                  <ActivityIndicator color="#7C3AED" />
+                  <Text style={{ color: '#8890A8', marginTop: 12, fontSize: 13 }}>Submitting request…</Text>
+                </View>
+              ) : (
+                <FormRenderer
+                  fields={mode === "leave"
+                    ? leaveFormFields(userData!).map((f: any) =>
+                        f.name === "availableDays" ? { ...f, externalValue: availableDays } : f
+                      )
+                    : regularizationFormFields
+                  }
+                  submitButton={mode === "leave" ? leaveSubmitButton : regularizationSubmitButton}
+                  data={formState}
+                  onChange={(data: any) => setFormState(data)}
+                  onSubmit={handleSubmit}
+                />
+              )}
+            </View>
+          )}
+        </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 

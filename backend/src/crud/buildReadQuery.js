@@ -36,10 +36,10 @@ export default async function buildReadQuery({
   /** -----------------------------------------------
    * 2) Field sanitization (allowed + forbidden)
    * ----------------------------------------------- */
-  if (fields) {  console.log("[buildReadQuery.js:35] Before sanitizeRead - fields:", fields);
+  if (fields) {
     fields = sanitizeRead({ fields, policy }); // returns an array like ["basicInfo.firstName"]
   }
-  
+
   /** -----------------------------------------------
    * 3) Registry execution (populateRef, isSelf, custom)
    * ----------------------------------------------- */
@@ -149,21 +149,21 @@ export default async function buildReadQuery({
 
       if (isRef) {
         let finalSelect = String(selectFields).replace(/,/g, ' ');
-        
+
         // Sanitize populate selection if targetModelName is known
         if (targetModelName && role) {
           const targetPolicy = policy ? getPolicy(role, targetModelName) : null;
           if (targetPolicy) {
-             if (!targetPolicy.permissions?.read) {
-                console.log(`[buildReadQuery] BLOCKED population for: ${path} (No read permission on ${targetModelName})`);
-                return; // skip populate
-             }
-             const safeSelect = sanitizeRead({ fields: finalSelect, policy: targetPolicy });
-             if (safeSelect.length === 0) return;
-             finalSelect = safeSelect.join(' ');
+            if (!targetPolicy.permissions?.read) {
+              console.log(`[buildReadQuery] BLOCKED population for: ${path} (No read permission on ${targetModelName})`);
+              return; // skip populate
+            }
+            const safeSelect = sanitizeRead({ fields: finalSelect, policy: targetPolicy });
+            if (safeSelect.length === 0) return;
+            finalSelect = safeSelect.join(' ');
           }
         }
-        
+
         // console.log(`[buildReadQuery] SUCCESS: Triggering population for: ${path}`);
         query.populate({
           path,

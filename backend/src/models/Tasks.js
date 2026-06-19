@@ -45,11 +45,13 @@ const TaskSchema = new mongoose.Schema({
   
   status: {
     type: String,
-    enum: [
-      "Backlogs", "To Do", "In Progress", "In Review",
-      "Approved", "Rejected", "Completed", "Deleted"
-    ],
     default: "Backlogs",
+    index: true
+  },
+  
+  metaStatus: {
+    type: String,
+    default: 'active',
     index: true
   },
   

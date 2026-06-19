@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { useAnimatedScrollHandler, useSharedValue, useAnimatedStyle, interpolate, Extrapolate } from 'react-native-reanimated';
 import axiosInstance from '@/api/axiosInstance';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -19,25 +20,68 @@ interface Employee {
     lastName: string;
     email: string;
     phone: string;
-    dateOfBirth: string;
     gender: string;
-    address: {
-      street: string;
-      city: string;
-      state: string;
-      zip: string;
+    dob?: string;
+    doa?: string;
+    maritalStatus?: string;
+    fatherName?: string;
+    motherName?: string;
+    profileImage?: string;
+    address?: {
+      street?: string;
+      city?: string;
+      state?: string;
+      zip?: string;
+      country?: string;
     };
   };
   professionalInfo: {
-    employeeId: string;
-    role: string;
-    department: string;
-    joiningDate: string;
-    workType: string;
-    reportingManager: string;
+    empId?: string;
+    employeeId?: string;
+    role?: { name?: string } | any;
+    department?: { name?: string } | any;
+    designation?: { name?: string } | any;
+    joiningDate?: string;
+    workType?: string;
+    reportingManager?: {
+      basicInfo?: {
+        firstName?: string;
+        lastName?: string;
+      };
+    } | any;
+    teamLead?: {
+      basicInfo?: {
+        firstName?: string;
+        lastName?: string;
+      };
+    } | any;
+    level?: string;
+    doj?: string;
+    probationPeriod?: string;
+    confirmDate?: string;
   };
   authInfo: {
     workEmail: string;
+  };
+  accountDetails?: {
+    accountName?: string;
+    accountNo?: string;
+    bankName?: string;
+    branch?: string;
+    ifscCode?: string;
+  };
+  salaryDetails?: {
+    package?: number;
+    basic?: number;
+    ctc?: number;
+    allowances?: number;
+    deductions?: number;
+  };
+  personalDocuments?: {
+    pan?: string;
+    aadhar?: string;
+    esi?: string;
+    pf?: string;
   };
 }
 
@@ -68,7 +112,7 @@ export default function Profile() {
         return;
       }
 
-      const decoded = jwtDecode(token);
+      const decoded = jwtDecode<{ userId?: string; id?: string }>(token);
       const userId = decoded.userId || decoded.id;
 
       if (!userId) {
@@ -161,7 +205,7 @@ export default function Profile() {
     );
   };
 
-  const InfoRow = ({ label, value }: { label: string; value: string }) => (
+  const InfoRow = ({ label, value }: { label: string; value?: string }) => (
     <View className="flex-row justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
       <Text className="text-gray-600 flex-1">{label}</Text>
       <Text className="text-gray-900 font-medium flex-2 text-right">{value || 'N/A'}</Text>
@@ -178,7 +222,13 @@ export default function Profile() {
         scrollEventThrottle={16}
       >
         {/* Profile Header */}
-        <View className="relative h-80 bg-gradient-to-r from-blue-600 to-purple-600 items-center justify-center">
+        <LinearGradient
+          colors={['#6C3DE8', '#C026D3']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ height: 180 }}
+          className="relative items-center justify-center"
+        >
           {employee.basicInfo.profileImage ? (
             <Image
               source={{ uri: `https://tracker-mxp9.onrender.com/api/files/render/profile/${employee.basicInfo.profileImage.split('/').pop()}` }}
@@ -186,18 +236,18 @@ export default function Profile() {
               resizeMode="cover"
             />
           ) : (
-            <Text className="text-6xl font-bold text-white">
+            <Text className="text-5xl font-bold text-white">
               {employee.basicInfo.firstName?.charAt(0)}{employee.basicInfo.lastName?.charAt(0)}
             </Text>
           )}
 
-          <View className="absolute inset-0 bg-black/30" />
+          <View className="absolute inset-0 bg-black/20" />
 
           <View className="absolute bottom-4 left-4 right-4">
-            <Text className="text-white text-2xl font-bold shadow-lg">
+            <Text className="text-white text-xl font-bold shadow-lg">
               {employee.basicInfo.firstName} {employee.basicInfo.lastName}
             </Text>
-            <Text className="text-white/90 text-sm mt-1 shadow-lg">
+            <Text className="text-white/80 text-xs mt-0.5 shadow-lg">
               {employee.professionalInfo.role?.name || 'Employee'}
             </Text>
           </View>
@@ -205,11 +255,11 @@ export default function Profile() {
           {/* Edit Button */}
           <TouchableOpacity
             onPress={() => setShowEditModal(true)}
-            className="absolute top-4 right-4 bg-white/20 backdrop-blur-sm rounded-full p-3"
+            className="absolute top-4 right-4 bg-white/20 backdrop-blur-sm rounded-full p-2.5"
           >
-            <MaterialIcons name="edit" size={20} color="white" />
+            <MaterialIcons name="edit" size={18} color="white" />
           </TouchableOpacity>
-        </View>
+        </LinearGradient>
 
         <View className="px-4 py-4">
           {/* Basic Information */}
@@ -309,7 +359,7 @@ export default function Profile() {
       const token = await AsyncStorage.getItem('auth_token');
       if (!token) return;
 
-      const decoded = jwtDecode(token);
+      const decoded = jwtDecode<{ userId?: string; id?: string }>(token);
       const userId = decoded.userId || decoded.id;
 
       // Create FormData for file upload

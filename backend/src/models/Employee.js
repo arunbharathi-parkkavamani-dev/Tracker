@@ -35,7 +35,9 @@ const EmployeeSchema = new Schema({
   },
   authInfo: {
     workEmail: { type: String, lowercase: true, trim: true, unique: true, validate: { validator: function (v) { return /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(v); }, message: props => `${props.value} is not a valid email!` } },
-    password: { type: String }
+    password: { type: String },
+    passwordResetToken: { type: String },
+    passwordResetExpires: { type: Date }
   },
 
   accountDetails: {

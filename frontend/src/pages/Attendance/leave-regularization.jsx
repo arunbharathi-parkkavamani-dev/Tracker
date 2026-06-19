@@ -5,16 +5,25 @@ import {
   regularizationFormFields,
   regularizationSubmitButton,
 } from "../../constants/regularizationForm";
-import axiosInstance from "../../api/axiosInstance";
+import useGenericAPI from "../../components/useGenericAPI";
 import { useAuth } from "../../context/authProvider";
 import { Calendar, Clock, ChevronLeft, ChevronRight, CheckCircle, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+
+const getLocalDateString = (d = new Date()) => {
+  const date = new Date(d);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 
 const LeaveAndRegularization = ({ onClose, onSuccess, onFailed, defaultType = "" }) => {
   const [formType, setFormType] = useState(defaultType);
   const [showDateSelection, setShowDateSelection] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { read, create } = useGenericAPI();
   const [userData, setUserData] = useState(null);
   const [liveForm, setLiveForm] = useState({});
   const [availableDays, setAvailableDays] = useState(null);
@@ -25,10 +34,10 @@ const LeaveAndRegularization = ({ onClose, onSuccess, onFailed, defaultType = ""
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const res = await axiosInstance.post(`/populate/read/employees/${user.id}`);
-        setUserData(res.data.data);
+        const res = await read('employees', { id: user.id });
+        setUserData(res?.data);
       } catch (error) {
-        console.error("Error fetching user data:", error);
+        // error toast handled by useGenericAPI
       }
     };
     fetchUserData();
@@ -40,26 +49,28 @@ const LeaveAndRegularization = ({ onClose, onSuccess, onFailed, defaultType = ""
       const endDate = new Date();
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - 30);
-      
-      const res = await axiosInstance.post('/populate/read/attendances', {
+
+      const startLocalDate = getLocalDateString(startDate);
+      const endLocalDate = getLocalDateString(endDate);
+
+      const res = await read('attendances', {
         filter: {
           employee: user.id,
           date: {
-            $gte: startDate.toISOString().split('T')[0],
-            $lte: endDate.toISOString().split('T')[0]
+            $gte: `${startLocalDate}T00:00:00.000Z`,
+            $lte: `${endLocalDate}T23:59:59.999Z`
           }
         }
       });
-      
-      const issues = res.data.data?.filter(record => {
-        const hasIssue = !record.checkIn || !record.checkOut || 
-                        record.status === 'Absent' || record.status === 'Half Day';
-        return hasIssue;
-      }) || [];
-      
+
+      const issues = (res?.data || []).filter(record => {
+        return !record.checkIn || !record.checkOut ||
+               record.status === 'Absent' || record.status === 'Half Day';
+      });
+
       setAttendanceIssues(issues);
     } catch (error) {
-      console.error('Error fetching attendance issues:', error);
+      // error toast handled by useGenericAPI
     }
   };
 
@@ -93,15 +104,12 @@ const LeaveAndRegularization = ({ onClose, onSuccess, onFailed, defaultType = ""
 
     const fetchAvailable = async () => {
       try {
-        const res = await axiosInstance.post(
-          `/populate/read/employees/${user.id}`,
-          { filter: leaveTypeId }
-        );
-        const stats = res?.data?.data?.leaveStatus || [];
+        const res = await read('employees', { id: user.id, filter: leaveTypeId });
+        const stats = res?.data?.leaveStatus || [];
         const match = stats.find((l) => l.leaveType === leaveTypeId);
         setAvailableDays(match?.available ?? 0);
       } catch (err) {
-        console.error("Failed fetching availability", err);
+        // error toast handled by useGenericAPI
       }
     };
 
@@ -149,17 +157,9 @@ const LeaveAndRegularization = ({ onClose, onSuccess, onFailed, defaultType = ""
       };
 
       try {
-        await axiosInstance.post("/populate/create/leaves", payload);
-        if (onSuccess) {
-          onSuccess();
-        } else {
-          toast?.success?.("Leave requested successfully!");
-        }
-        if (onClose) {
-          onClose();
-        } else {
-          navigate(-1);
-        }
+        await create('leaves', payload, "Leave requested successfully!");
+        onSuccess?.();
+        onClose ? onClose() : navigate(-1);
       } catch (err) {
         onFailed?.(err);
       }
@@ -181,17 +181,9 @@ const LeaveAndRegularization = ({ onClose, onSuccess, onFailed, defaultType = ""
       };
 
       try {
-        await axiosInstance.post("/populate/create/regularizations", payload);
-        if (onSuccess) {
-          onSuccess();
-        } else {
-          toast?.success?.("Regularization requested successfully!");
-        }
-        if (onClose) {
-          onClose();
-        } else {
-          navigate(-1);
-        }
+        await create('regularizations', payload, "Regularization requested successfully!");
+        onSuccess?.();
+        onClose ? onClose() : navigate(-1);
       } catch (err) {
         onFailed?.(err);
       }

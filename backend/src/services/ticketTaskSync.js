@@ -7,12 +7,17 @@ class TicketTaskSyncService {
       const task = await models.tasks.findById(taskId);
       if (!task || !task.linkedTicketId) return;
       
+      // Task enum:   Backlogs | To Do | In Progress | In Review | Approved | Rejected | Completed | Deleted
+      // Ticket enum: Open | In Progress | Review | Testing | Completed | Closed
       const statusMapping = {
-        'To Do': 'Open',
-        'In Progress': 'In Progress', 
-        'In Review': 'In Progress',
-        'Completed': 'Resolved',
-        'Approved': 'Resolved'
+        'Backlogs':    'Open',
+        'To Do':       'Open',
+        'In Progress': 'In Progress',
+        'In Review':   'Review',
+        'Approved':    'Testing',
+        'Rejected':    'Open',
+        'Completed':   'Completed',
+        'Deleted':     'Closed',
       };
       
       const ticketStatus = statusMapping[newStatus];
@@ -20,14 +25,8 @@ class TicketTaskSyncService {
       
       await models.tickets.findByIdAndUpdate(task.linkedTicketId, {
         status: ticketStatus,
-        ...(ticketStatus === 'Resolved' && { resolvedAt: new Date() }),
-        $push: {
-          comments: {
-            comment: `Task status updated to: ${newStatus}`,
-            commentedBy: updatedBy,
-            commentedAt: new Date()
-          }
-        }
+        ...(ticketStatus === 'Completed' && { resolvedAt: new Date() }),
+        ...(ticketStatus === 'Closed'    && { closedAt:   new Date() }),
       });
       
     } catch (error) {

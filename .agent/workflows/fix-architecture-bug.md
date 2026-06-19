@@ -1,7 +1,7 @@
 ---
 description: Fix Track A (system/architecture) bugs — AI-led with human approval
 version: 1.0
-last_updated: 2026-06-01
+last_updated: 2026-06-07
 tech_stack: React + Vite (Frontend) / Node.js + Express + Mongoose (Backend)
 ---
 
@@ -15,12 +15,12 @@ Fix system/architecture bugs (Track A) — security, query, schema, exception, p
 
 | Category | Examples | AI Confidence |
 |---|---|---|
-| **Security** | Auth bypass, XSS, CSRF, permission gaps | 🟢 Pattern-based |
-| **Query/ORM** | N+1 queries, wrong filters, missing indexes | 🟢 Structural |
-| **Schema** | Missing columns, wrong types, migration issues | 🟡 Needs DB context |
+| **Security** | Auth bypass, XSS, middleware gaps | 🟢 Pattern-based |
+| **Query/Mongoose** | N+1 queries, wrong filters, missing indexes | 🟢 Structural |
+| **Schema** | Missing fields, wrong types, schema changes | 🟡 Needs DB context |
 | **Exception** | Unhandled errors, missing try-catch | 🟢 Pattern-based |
-| **Performance** | Slow queries, large payloads, missing pagination | 🟡 Needs profiling |
-| **AJAX/API** | Wrong status codes, missing error responses | 🟢 Pattern-based |
+| **Performance** | Slow aggregations, large payloads, missing pagination | 🟡 Needs profiling |
+| **API** | Wrong status codes, missing error responses | 🟢 Pattern-based |
 
 ## Steps
 
@@ -29,23 +29,24 @@ Read from execution plan + Module Brain + System Brain.
 
 ### Step 2: Category-Specific Investigation
 
-**For Query/ORM bugs:**
-1. Read the Mongoose query
-2. Check for `select_related` / `prefetch_related`
-3. Use Node.js/Express Debug Toolbar or `EXPLAIN` to analyze
-4. Propose optimized query
+**For Query/Mongoose bugs:**
+1. Read the Mongoose query in the service
+2. Check for missing `.populate()` vs loop queries (N+1)
+3. Check aggregation pipeline for performance issues
+4. Verify indexes exist for filter/sort fields
+5. Propose optimized query
 
 **For Security bugs:**
-1. Check Express permission classes
-2. Verify authentication requirements
-3. Check for object-level permissions
-4. Verify input sanitization in serializers
+1. Check auth middleware on route
+2. Verify JWT verification in agentAuthMiddleware
+3. Check for missing input sanitization
+4. Verify rate limiting on sensitive routes
 
 **For Schema bugs:**
-1. Read current model definition
-2. Generate migration with `--dry-run`
-3. Verify existing data compatibility
-4. Propose ALTER with rollback
+1. Read current Mongoose schema
+2. Verify existing documents are compatible with schema change
+3. Add migration script if needed
+4. Propose schema change with rollback
 
 ### Step 3: Apply Fix (AI-led)
 Apply minimal fix following `/fix-single-bug` Step 4.

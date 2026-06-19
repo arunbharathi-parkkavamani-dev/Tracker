@@ -4,15 +4,17 @@
 This module contains 7 models, 3 services, and 9 frontend files.
 
 ## Backend Models
-| Model | File | Lines | References |
-|---|---|---|---|
-| Attendance | Attendance.js | 46 | employees, leavetypes |
-| DailyActivity | DailyActivity.js | 26 | clients, projecttypes, employees, tasktypes |
-| Leave | Leave.js | 33 | employees, departments, leavetypes |
-| LeavePolicy | LeavePolicy.js | 21 | leavetypes, roles |
-| LeaveTypes | LeaveTypes.js | 23 |  |
-| Regularization | Regularization.js | 46 | employees, departments, attendances |
-| Shift | Shift.js | 43 | Employee, Shift |
+| Model | File | Lines | Key Fields | Notes |
+|---|---|---|---|---|
+| Attendance | Attendance.js | 46 | status | Refs: employees, leavetypes |
+| DailyActivity | DailyActivity.js | 26 | `status` (String, no enum), `metaStatus` (String, default: active) | Status driven by StatusConfig. Refs: clients, projecttypes, employees, tasktypes |
+| Leave | Leave.js | 33 | `status` (String, no enum), `metaStatus` (String, default: active) | Status driven by StatusConfig. Refs: employees, departments, leavetypes |
+| LeavePolicy | LeavePolicy.js | 21 | — | Refs: leavetypes, roles |
+| LeaveTypes | LeaveTypes.js | 23 | — | |
+| Regularization | Regularization.js | 46 | `status` (String, no enum), `metaStatus` (String, default: active) | Status driven by StatusConfig. Refs: employees, departments, attendances |
+| Shift | Shift.js | 43 | — | Refs: Employee, Shift |
+
+> **Dynamic status (as of 2026-06-10)**: Leave, Regularization, DailyActivity — all had hardcoded `enum: ['Pending','Approved','Rejected']` removed. Status values now come from `statusconfigs` collection. `metaStatus` (default: `'active'`) added for record lifecycle tracking.
 
 ## Backend Services (Business Logic Hooks)
 | Service File | Lines | Exported Functions |

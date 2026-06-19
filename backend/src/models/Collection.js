@@ -41,6 +41,9 @@ import products from "./products.js";
 import salarystructures from "./SalaryStructure.js";
 import payrollruns from "./PayrollRun.js";
 import holidays from "./Holiday.js";
+import statusconfigs from "./StatusConfig.js";
+import statusmappings from "./StatusMapping.js";
+import dashboardwidgets from "./DashboardWidget.js";
 
 const models = {
   accesspolicies,
@@ -85,6 +88,9 @@ const models = {
   salarystructures,
   payrollruns,
   holidays,
+  statusconfigs,
+  statusmappings,
+  dashboardwidgets,
 };
 
 export default models;

@@ -64,14 +64,17 @@ const ALL_MODELS = [
   'salarystructures',
   'payrollruns',
   'holidays',
+  'statusconfigs',
+  'statusmappings',
+  'dashboardwidgets',
 ];
 
 const FULL_ACCESS = {
-  permissions:    { read: true, create: true, update: true, delete: true },
-  forbiddenAccess:{ read: [], create: [], update: [], delete: [] },
-  allowAccess:    { read: ['*'], create: ['*'], update: ['*'], delete: ['*'] },
-  registry:       [],
-  conditions:     {},
+  permissions: { read: true, create: true, update: true, delete: true },
+  forbiddenAccess: { read: [], create: [], update: [], delete: [] },
+  allowAccess: { read: ['*'], create: ['*'], update: ['*'], delete: ['*'] },
+  registry: [],
+  conditions: {},
 };
 
 async function seed() {
@@ -86,13 +89,13 @@ async function seed() {
   // Load models so Mongoose registers their schemas
   await import('./src/models/Collection.js');
 
-  const Role        = mongoose.model('roles');
+  const Role = mongoose.model('roles');
   const PolicyModel = mongoose.model('accesspolicies');
   console.log("Available Roles:", await Role.find({}).lean());
 
   // Find the HR Admin role — tries several name variants
   const hrRole = await Role.findOne({
-    name: { $in: ['HR Admin', 'hr admin', 'HR', 'hr', 'Hr Admin', 'HRAdmin'] }
+    name: { $in: ['HR Admin', 'hr admin', 'HR', 'hr', 'Hr Admin', 'HRAdmin', 'Developer', 'developer'] }
   }).lean();
 
   if (!hrRole) {

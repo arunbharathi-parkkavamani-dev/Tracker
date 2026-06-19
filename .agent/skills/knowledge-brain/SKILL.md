@@ -64,7 +64,7 @@ Deep dives: `Core/POPULATE_ENGINE.md`, `Core/FCM_NOTIFICATIONS.md`.
 
 ### 1d. UI / styling tasks
 
-Read `.agent/skills/frontend-ui-tokens/SKILL.md` first. Every page must be **theme-aware** and **responsive**. Then: `design-tokens.md`, `tokens.css`, `uiTokens.js`, `backend/DESIGN.md`.
+Read `.agent/skills/frontend-ui-tokens/SKILL.md` first. Every page must be **theme-aware** and **responsive**. Then: `ux-standards.md`, `design-tokens.md`, `tokens.css`, `uiTokens.js`, `backend/DESIGN.md`.
 
 ## 2. Post-task (write)
 

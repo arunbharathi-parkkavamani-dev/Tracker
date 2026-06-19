@@ -53,15 +53,50 @@ const sortData = (data, key, direction) =>
 
 /* -------------------- Export Helpers -------------------- */
 
-const exportToExcel = (columns, data, title) => {
+const formatValueForExport = (v) => {
+  if (v == null) return "";
+  if (isDateString(v)) return formatIndianDate(v);
+  
+  if (Array.isArray(v)) {
+    return v.map(item => {
+      if (typeof item === "object" && item !== null) {
+        if (item.basicInfo) {
+          const { firstName = "", lastName = "" } = item.basicInfo;
+          return `${firstName} ${lastName}`.trim();
+        }
+        if (item.firstName !== undefined || item.lastName !== undefined) {
+          return `${item.firstName || ""} ${item.lastName || ""}`.trim();
+        }
+        return item.name || item.title || JSON.stringify(item);
+      }
+      return String(item);
+    }).join(", ");
+  }
+
+  if (typeof v === "object" && v !== null) {
+    if (v.basicInfo) {
+      const { firstName = "", lastName = "" } = v.basicInfo;
+      return `${firstName} ${lastName}`.trim();
+    }
+    if (v.firstName !== undefined || v.lastName !== undefined) {
+      return `${v.firstName || ""} ${v.lastName || ""}`.trim();
+    }
+    if (v.name !== undefined) return String(v.name);
+    if (v.title !== undefined) return String(v.title);
+    return JSON.stringify(v);
+  }
+
+  return String(v);
+};
+
+const exportToExcel = (columns, data, title, customExport = {}) => {
   const headers = columns.map(formatColumnName);
   const rows = data.map((row) =>
     columns.map((col) => {
-      const v = row[col];
-      if (v == null) return "";
-      if (isDateString(v)) return formatIndianDate(v);
-      if (typeof v === "object") return JSON.stringify(v);
-      return v;
+      if (customExport && typeof customExport[col] === "function") {
+        return customExport[col](row);
+      }
+      return formatValueForExport(row[col]);
     })
   );
 
@@ -78,16 +113,19 @@ const exportToExcel = (columns, data, title) => {
   URL.revokeObjectURL(url);
 };
 
-const printTable = (columns, data, title) => {
+const printTable = (columns, data, title, customExport = {}) => {
   const headers = columns.map(formatColumnName).map((h) => `<th>${h}</th>`).join("");
   const bodyRows = data
     .map((row) =>
       `<tr>${columns.map((col) => {
-        const v = row[col];
-        if (v == null) return "<td>-</td>";
-        if (isDateString(v)) return `<td>${formatIndianDate(v)}</td>`;
-        if (typeof v === "object") return `<td>${JSON.stringify(v)}</td>`;
-        return `<td>${v}</td>`;
+        let textVal = "";
+        if (customExport && typeof customExport[col] === "function") {
+          textVal = customExport[col](row);
+        } else {
+          textVal = formatValueForExport(row[col]);
+        }
+        if (textVal === "") return "<td>-</td>";
+        return `<td>${String(textVal)}</td>`;
       }).join("")}</tr>`
     )
     .join("");
@@ -124,6 +162,7 @@ const TableGenerator = ({
   enableActions = true,
   onEdit,
   onDelete,
+  customExport = {},
 }) => {
   const [tableData, setTableData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
@@ -184,17 +223,17 @@ const TableGenerator = ({
 
   return (
     <div
-      className="bg-white rounded-[14px] border border-[#E2E5F0]"
+      className="bg-surface rounded-[14px] border border-hairline"
       style={{ fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif", boxShadow: "0 1px 3px rgba(108,61,232,0.06), 0 1px 2px rgba(0,0,0,0.04)" }}
     >
       {/* ── Toolbar ── */}
-      <div className="px-5 py-3.5 border-b border-[#E2E5F0] flex items-center justify-between gap-3 flex-wrap">
+      <div className="px-5 py-3.5 border-b border-hairline flex items-center justify-between gap-3 flex-wrap">
         {/* Left: title */}
         <div>
           {title && (
             <div className="flex items-center gap-2">
               <span className="w-1 h-5 rounded-full bg-[#7C3AED] inline-block" />
-              <h3 className="text-[15px] font-600 text-[#1A1D2E] leading-none">{title}</h3>
+              <h3 className="text-[15px] font-semibold text-ink leading-none">{title}</h3>
             </div>
           )}
         </div>
@@ -203,8 +242,8 @@ const TableGenerator = ({
         <div className="flex items-center gap-2 flex-wrap">
           {/* Print */}
           <button
-            onClick={() => printTable(visibleDataCols, sortedData, title)}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[8px] border border-[#E2E5F0] bg-white text-[13px] font-medium text-[#4B5068] hover:bg-[#EDE9FE] hover:text-[#7C3AED] hover:border-[#7C3AED] transition-colors"
+            onClick={() => printTable(visibleDataCols, sortedData, title, customExport)}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[8px] border border-hairline bg-surface text-[13px] font-medium text-ink-muted hover:bg-[#EDE9FE] hover:text-[#7C3AED] hover:border-[#7C3AED] transition-colors"
             title="Print"
           >
             <Printer size={15} />
@@ -213,8 +252,8 @@ const TableGenerator = ({
 
           {/* Export Excel */}
           <button
-            onClick={() => exportToExcel(visibleDataCols, sortedData, title)}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[8px] border border-[#E2E5F0] bg-white text-[13px] font-medium text-[#4B5068] hover:bg-[#D1FAE5] hover:text-[#059669] hover:border-[#059669] transition-colors"
+            onClick={() => exportToExcel(visibleDataCols, sortedData, title, customExport)}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[8px] border border-hairline bg-surface text-[13px] font-medium text-ink-muted hover:bg-[#D1FAE5] hover:text-[#059669] hover:border-[#059669] transition-colors"
             title="Export to Excel"
           >
             <FileSpreadsheet size={15} />
@@ -246,20 +285,20 @@ const TableGenerator = ({
           <div className="w-12 h-12 rounded-[12px] bg-[#EDE9FE] flex items-center justify-center mx-auto mb-3">
             <span className="text-[24px]">🔍</span>
           </div>
-          <div className="text-[#1A1D2E] text-[15px] font-medium mb-1">No records found</div>
-          <div className="text-[#8890A8] text-[13px]">Try adjusting your search or column filters</div>
+          <div className="text-ink text-[15px] font-medium mb-1">No records found</div>
+          <div className="text-ink-muted text-[13px]">Try adjusting your search or column filters</div>
         </div>
       ) : (
         <>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-[#F0F2FA] border-b border-[#E2E5F0]">
+                <tr className="bg-surface-1 border-b border-hairline">
                   {columns.map((col) => (
                     <th
                       key={col}
                       onClick={() => handleSort(col)}
-                      className="px-5 py-3 text-left text-[11px] font-semibold text-[#4B5068] uppercase tracking-[0.4px] select-none cursor-pointer hover:bg-[#EDE9FE] hover:text-[#7C3AED] transition-colors"
+                      className="px-5 py-3 text-left text-[11px] font-semibold text-ink-muted uppercase tracking-[0.4px] select-none cursor-pointer hover:bg-[#EDE9FE] hover:text-[#7C3AED] transition-colors"
                     >
                       <div className="flex items-center gap-1.5">
                         {col === "__actions" ? "Actions" : formatColumnName(col)}
@@ -273,11 +312,11 @@ const TableGenerator = ({
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-[#E2E5F0]">
+              <tbody className="divide-y divide-hairline-soft">
                 {paginatedData.map((row, i) => (
-                  <tr key={i} className="hover:bg-[#F7F8FC] transition-colors duration-150">
+                  <tr key={i} className="hover:bg-surface-1 transition-colors duration-150">
                     {columns.map((col) => (
-                      <td key={col} className="px-5 py-3 whitespace-nowrap text-[13px] text-[#1A1D2E]">
+                      <td key={col} className="px-5 py-3 whitespace-nowrap text-[13px] text-ink">
                         {col === "__actions" ? (
                           customRender.__actions ? customRender.__actions(row) : (
                             <div className="flex items-center gap-2">
@@ -304,9 +343,9 @@ const TableGenerator = ({
                         ) : customRender[col] ? (
                           customRender[col](row)
                         ) : isDateString(row[col]) ? (
-                          <span className="text-[#4B5068]">{formatIndianDate(row[col])}</span>
+                          <span className="text-ink-muted">{formatIndianDate(row[col])}</span>
                         ) : (
-                          <span>{typeof row[col] === "object" && row[col] !== null ? JSON.stringify(row[col]) : String(row[col] ?? "-")}</span>
+                          <span className="text-ink">{typeof row[col] === "object" && row[col] !== null ? formatValueForExport(row[col]) : String(row[col] ?? "-")}</span>
                         )}
                       </td>
                     ))}
@@ -317,20 +356,20 @@ const TableGenerator = ({
           </div>
 
           {/* Pagination */}
-          <div className="px-5 py-3.5 bg-[#F7F8FC] border-t border-[#E2E5F0] flex items-center justify-between">
-            <div className="text-[13px] text-[#4B5068]">
-              Showing <span className="font-medium text-[#1A1D2E]">{((currentPage - 1) * ROWS_PER_PAGE) + 1}</span>
+          <div className="px-5 py-3.5 bg-surface-1 border-t border-hairline flex items-center justify-between">
+            <div className="text-[13px] text-ink-muted">
+              Showing <span className="font-medium text-ink">{((currentPage - 1) * ROWS_PER_PAGE) + 1}</span>
               {" – "}
-              <span className="font-medium text-[#1A1D2E]">{Math.min(currentPage * ROWS_PER_PAGE, sortedData.length)}</span>
+              <span className="font-medium text-ink">{Math.min(currentPage * ROWS_PER_PAGE, sortedData.length)}</span>
               {" of "}
-              <span className="font-medium text-[#1A1D2E]">{sortedData.length}</span> results
+              <span className="font-medium text-ink">{sortedData.length}</span> results
             </div>
 
             <div className="flex items-center gap-1">
               <button
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((p) => p - 1)}
-                className="inline-flex items-center justify-center w-8 h-8 rounded-[6px] border border-[#E2E5F0] bg-white text-[#4B5068] hover:bg-[#EDE9FE] hover:text-[#7C3AED] hover:border-[#7C3AED] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="inline-flex items-center justify-center w-8 h-8 rounded-[6px] border border-hairline bg-surface text-ink-muted hover:bg-[#EDE9FE] hover:text-[#7C3AED] hover:border-[#7C3AED] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronsLeft size={15} />
               </button>
@@ -343,7 +382,7 @@ const TableGenerator = ({
                     className={`w-8 h-8 rounded-[6px] text-[13px] font-medium transition-colors ${
                       currentPage === i + 1
                         ? "bg-[#7C3AED] text-white shadow-[0_2px_8px_rgba(124,58,237,0.30)]"
-                        : "bg-white border border-[#E2E5F0] text-[#4B5068] hover:bg-[#EDE9FE] hover:text-[#7C3AED] hover:border-[#7C3AED]"
+                        : "bg-surface border border-hairline text-ink-muted hover:bg-[#EDE9FE] hover:text-[#7C3AED] hover:border-[#7C3AED]"
                     }`}
                   >
                     {i + 1}
@@ -354,7 +393,7 @@ const TableGenerator = ({
               <button
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((p) => p + 1)}
-                className="inline-flex items-center justify-center w-8 h-8 rounded-[6px] border border-[#E2E5F0] bg-white text-[#4B5068] hover:bg-[#EDE9FE] hover:text-[#7C3AED] hover:border-[#7C3AED] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="inline-flex items-center justify-center w-8 h-8 rounded-[6px] border border-hairline bg-surface text-ink-muted hover:bg-[#EDE9FE] hover:text-[#7C3AED] hover:border-[#7C3AED] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronsRight size={15} />
               </button>

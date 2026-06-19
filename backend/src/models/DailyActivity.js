@@ -10,7 +10,8 @@ const DailyActivitySchema = new Schema(
     taskType: { type: Schema.Types.ObjectId, ref: "tasktypes" }, // optional link
     activity: { type: String, trim: true }, // description of activity
     assignedTo: { type: Schema.Types.ObjectId, ref: "employees"}, // optional link
-    status: { type: String, enum: ["Pending", "Completed", "In Progress"], default: "Pending" }, // optional link
+    status: { type: String, default: "Pending" }, // driven by StatusConfig
+    metaStatus: { type: String, default: 'active', index: true },
   },
   { timestamps: true }
 );

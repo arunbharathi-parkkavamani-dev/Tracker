@@ -2,28 +2,65 @@ import { io, activeConnections } from "../index.js";
 import notification from "../models/notification.js";
 import session from "../models/Session.js";
 import { sendPush } from "../utils/pushSender.js";
+import NotificationReceptionist from "../models/NotificationReceptionist.js";
 
 // Optimized notification service with memory management
 export const sendNotification = async ({
   receiver,
+  recipient,
   sender,
   message,
+  type = "system",
+  title = "Notification",
   meta,
+  relatedModel,
+  relatedId,
   path,
 }) => {
   try {
+    const finalReceiver = receiver || recipient;
+    if (!finalReceiver) {
+      throw new Error("Receiver/Recipient is required to send notification");
+    }
+
+    // Map custom/legacy types to valid Schema enums:
+    // Schema allows: ['post', 'mention', 'reaction', 'comment', 'ticket', 'task', 'leave', 'system']
+    const TYPE_MAPPING = {
+      'attendance_request': 'system',
+      'regularization_request': 'system',
+      'task_comment': 'comment',
+      'task_mention': 'mention',
+      'leave_request': 'leave',
+      'leave_response': 'leave',
+    };
+
+    let resolvedType = TYPE_MAPPING[type] || type;
+    const ALLOWED_TYPES = ['post', 'mention', 'reaction', 'comment', 'ticket', 'task', 'leave', 'system'];
+    if (!ALLOWED_TYPES.includes(resolvedType)) {
+      resolvedType = 'system';
+    }
+
+    const finalMeta = meta || (relatedModel ? { model: relatedModel, modelId: relatedId } : undefined);
+
     // 1️⃣ Save notification in DB (source of truth)
     const newNotification = await notification.create({
-      sender,
-      receiver,
+      sender: sender || undefined,
+      type: resolvedType,
+      title: title || "New Notification",
       message,
-      meta,
+      meta: finalMeta,
       path,
-      read: false,
     });
 
-    // 2️⃣ Optimized Socket.io delivery
-    const receiverStr = receiver.toString();
+    // 2️⃣ Create receptionist record so it displays in user's inbox
+    const receptionist = await NotificationReceptionist.create({
+      notificationId: newNotification._id,
+      receiver: finalReceiver,
+      isRead: false,
+    });
+
+    // 3️⃣ Optimized Socket.io delivery
+    const receiverStr = finalReceiver.toString();
     const socketsInRoom = await io.in(receiverStr).fetchSockets();
     
     if (socketsInRoom.length > 0) {
@@ -32,29 +69,29 @@ export const sendNotification = async ({
         id: newNotification._id,
         message,
         createdAt: newNotification.createdAt,
-        sender: sender.toString()
+        sender: sender ? sender.toString() : undefined
       });
     }
 
-    // 3️⃣ Optimized push notification (only if user offline)
+    // 4️⃣ Optimized push notification (only if user offline)
     if (socketsInRoom.length === 0) {
       // User is offline, send push notification
       const userSessions = await session.find({
-        userId: receiver,
+        userId: finalReceiver,
         status: "Active",
         fcmToken: { $ne: null },
         lastUsedAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } // Active in last 24h
       }).select('fcmToken').lean();
 
       // Batch push notifications
-      const pushPromises = userSessions.map(session => 
+      const pushPromises = userSessions.map(sessionItem => 
         sendPush({
-          pushToken: session.fcmToken,
-          title: "New Notification",
+          pushToken: sessionItem.fcmToken,
+          title: title || "New Notification",
           body: message,
           data: {
             path,
-            model: meta?.model,
+            model: finalMeta?.model,
             notificationId: newNotification._id.toString()
           },
         })

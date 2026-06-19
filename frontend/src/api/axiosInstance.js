@@ -41,13 +41,15 @@ const forceLogout = async () => {
   Cookies.remove("auth_token");
   Cookies.remove("refresh_token");
   localStorage.removeItem('auth_token');
+  localStorage.removeItem('refresh_token');
+  localStorage.removeItem('device_uuid');
 
   // Reset counter
   failedRequestCount = 0;
 
   // Call auth context logout
   if (authContextLogout) {
-    authContextLogout();
+    authContextLogout(true);
   } else if (typeof window !== 'undefined') {
     window.location.href = "/login";
   }

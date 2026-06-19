@@ -336,6 +336,21 @@
     box-shadow: 0 0 0 3px rgb(139 92 246 / 0.15);
   }
 
+  /* Fix browser autofill override in dark mode */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: var(--tracker-ink) !important;
+    caret-color: var(--tracker-ink) !important;
+    transition: background-color 5000s ease-in-out 0s !important;
+    box-shadow: inset 0 0 0 30px var(--tracker-surface) !important;
+  }
+  input {
+    caret-color: var(--tracker-ink);
+  }
+
   /* Feed post composer — matches create-post reference layout */
   .lmx-feed-composer__dest-pill {
     @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all;

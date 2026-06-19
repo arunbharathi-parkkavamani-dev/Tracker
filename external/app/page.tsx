@@ -16,8 +16,11 @@ export default function HomePage() {
   }, [router]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-lg">Loading...</div>
+    <div className="min-h-screen flex items-center justify-center bg-canvas">
+      <div className="flex flex-col items-center gap-4">
+        <div className="lmx-spinner" />
+        <p className="text-[13px] text-ink-subtle">Loading…</p>
+      </div>
     </div>
   );
 }

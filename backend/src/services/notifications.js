@@ -15,7 +15,10 @@ export default function notificationsService() {
         const targetUserId = new mongoose.Types.ObjectId(targetUser.toString());
         
         // Find all receptionists for this user to get their notification IDs
-        const receptionists = await models.NotificationReceptionist.find({ receiver: targetUserId })
+        const receptionists = await models.NotificationReceptionist.find({ 
+          receiver: targetUserId,
+          isDeleted: { $ne: true }
+        })
           .select('notificationId')
           .sort({ createdAt: -1 })
           .limit(100) // Return up to 100 recent notifications
@@ -83,11 +86,11 @@ export default function notificationsService() {
     },
 
     /**
-     * beforeUpdate: Route updates of `isRead` and `isClicked` to the Receptionist collection,
+     * beforeUpdate: Route updates of `isRead`, `isClicked`, and `isDeleted` to the Receptionist collection,
      * protecting the shared NotificationContent from being mutated.
      */
     async beforeUpdate({ body, docId, userId }) {
-      if (body.isRead !== undefined || body.isClicked !== undefined) {
+      if (body.isRead !== undefined || body.isClicked !== undefined || body.isDeleted !== undefined) {
          const { default: models } = await import('../models/Collection.js');
          
          const updateFields = {};
@@ -99,6 +102,9 @@ export default function notificationsService() {
            updateFields.isClicked = body.isClicked;
            if (body.isClicked) updateFields.clickedAt = new Date();
          }
+         if (body.isDeleted !== undefined) {
+           updateFields.isDeleted = body.isDeleted;
+         }
 
          await models.NotificationReceptionist.updateOne(
            { notificationId: docId, receiver: userId },
@@ -108,6 +114,7 @@ export default function notificationsService() {
          // Prevent these fields from being saved to the main notifications collection
          delete body.isRead;
          delete body.isClicked;
+         delete body.isDeleted;
       }
     }
   };

@@ -1,8 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
-import axiosInstance from "../../api/axiosInstance";
 import { useAuth } from "../../context/authProvider.jsx";
 import { useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
+import useGenericAPI from "../../components/useGenericAPI";
 import {
   LogIn, LogOut, CheckCircle, XCircle,
   Clock, TrendingUp, Zap, ChevronLeft, ChevronRight, Plus,
@@ -33,8 +32,20 @@ const getWeekDays = (offset = 0) => {
   });
 };
 
-const isSameDay = (a, b) =>
-  new Date(a).toDateString() === new Date(b).toDateString();
+const getLocalDateString = (d = new Date()) => {
+  const date = new Date(d);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const isSameDay = (a, b) => {
+  if (!a || !b) return false;
+  const aStr = typeof a === "string" ? a.split("T")[0] : getLocalDateString(a);
+  const bStr = typeof b === "string" ? b.split("T")[0] : getLocalDateString(b);
+  return aStr === bStr;
+};
 
 const isToday = (d) => isSameDay(d, new Date());
 const isFuture = (d) => new Date(d) > new Date() && !isToday(d);
@@ -50,7 +61,7 @@ const Ring = ({ pct, size = 52, sw = 5, color }) => {
   const c = 2 * Math.PI * r;
   return (
     <svg width={size} height={size} style={{ transform: "rotate(-90deg)", flexShrink: 0 }}>
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="currentColor" strokeWidth={sw} className="text-[#ebe7e1]" />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="currentColor" strokeWidth={sw} className="text-hairline-soft" />
       <circle cx={size / 2} cy={size / 2} r={r} fill="none"
         stroke={color} strokeWidth={sw}
         strokeDasharray={c} strokeDashoffset={c - (Math.min(pct, 100) / 100) * c}
@@ -65,6 +76,7 @@ const Ring = ({ pct, size = 52, sw = 5, color }) => {
 ════════════════════════════════ */
 const AttendancePage = () => {
   const { user, loading: authLoading } = useAuth();
+  const { read, create, update, loading: apiLoading } = useGenericAPI();
 
   const [todayRec, setTodayRec]         = useState(null);
   const [weekRecs, setWeekRecs]         = useState([]);
@@ -98,27 +110,29 @@ const AttendancePage = () => {
     if (!user) return;
     try {
       const days   = getWeekDays(weekOffset);
-      const monISO = new Date(days[0]); monISO.setHours(0, 0, 0, 0);
-      const satISO = new Date(days[5]); satISO.setHours(23, 59, 59, 999);
+      const startLocalDate = getLocalDateString(days[0]);
+      const endLocalDate = getLocalDateString(days[5]);
 
-      const filter = JSON.stringify({
-        employee: user.id,
-        date: { $gte: monISO.toISOString(), $lte: satISO.toISOString() },
+      const res = await read('attendances', {
+        filter: {
+          employee: user.id,
+          date: {
+            $gte: `${startLocalDate}T00:00:00.000Z`,
+            $lte: `${endLocalDate}T23:59:59.999Z`
+          },
+        },
       });
-      const res = await axiosInstance.get(
-        `/populate/read/attendances?filter=${encodeURIComponent(filter)}`
-      );
-      const recs = res.data?.data || [];
+      const recs = res?.data || [];
       setWeekRecs(recs);
 
       const todayMatch = recs.find((r) => isSameDay(r.date, new Date()));
       setTodayRec(todayMatch || null);
     } catch (e) {
-      console.error(e);
+      // error toast handled by useGenericAPI
     } finally {
       setPageLoading(false);
     }
-  }, [user, weekOffset]);
+  }, [user, weekOffset, read]);
 
   useEffect(() => {
     if (!user || authLoading) return;
@@ -130,15 +144,15 @@ const AttendancePage = () => {
     if (!user || actionBusy) return;
     setActionBusy(true);
     try {
-      const res = await axiosInstance.post("/populate/create/attendances", {
+      await create('attendances', {
         employee: user.id, employeeName: user.name,
-        date: new Date().toISOString().split("T")[0],
+        date: getLocalDateString(),
         checkIn: new Date().toISOString(), status: "Present",
         managerId: user.managerId, workType: "fixed",
         location: { latitude: 10.9338987, longitude: 76.9839277 },
-      });
-      if (res.data.success) { await fetchAll(); toast.success("Checked in!"); }
-    } catch (e) { toast.error(e.response?.data?.message || "Check-in failed"); }
+      }, "Checked in!");
+      await fetchAll();
+    } catch (e) { /* toast handled by useGenericAPI */ }
     finally { setActionBusy(false); }
   };
 
@@ -147,12 +161,12 @@ const AttendancePage = () => {
     if (!todayRec || actionBusy) return;
     setActionBusy(true);
     try {
-      const res = await axiosInstance.put(`/populate/update/attendances/${todayRec._id}`, {
+      await update('attendances', todayRec._id, {
         checkOut: new Date().toISOString(),
         location: { latitude: 10.9338987, longitude: 76.9839277 },
-      });
-      if (res.data.success) { await fetchAll(); toast.success("Checked out!"); }
-    } catch (e) { toast.error(e.response?.data?.message || "Check-out failed"); }
+      }, "Checked out!");
+      await fetchAll();
+    } catch (e) { /* toast handled by useGenericAPI */ }
     finally { setActionBusy(false); }
   };
 
@@ -186,17 +200,17 @@ const AttendancePage = () => {
   };
 
   const STATUS = {
-    present: { bg: "bg-[#0bdf50]/10", text: "text-[#0bdf50]", label: "P" },
-    absent:  { bg: "bg-[#c41c1c]/10", text: "text-[#c41c1c]", label: "A" },
-    leave:   { bg: "bg-[#ff5600]/10", text: "text-[#ff5600]", label: "L" },
-    weekend: { bg: "bg-[#ebe7e1]", text: "text-[#7b7b78]", label: "—" },
-    future:  { bg: "bg-transparent", text: "text-[#9c9fa5]", label: "·" },
+    present: { bg: "bg-[var(--tracker-success-light)] text-[var(--tracker-success)]", label: "P" },
+    absent:  { bg: "bg-[var(--tracker-danger-light)] text-[var(--tracker-danger)]", label: "A" },
+    leave:   { bg: "bg-[var(--tracker-warning-light)] text-[var(--tracker-warning)]", label: "L" },
+    weekend: { bg: "bg-[var(--tracker-border-soft)] text-[var(--tracker-ink-subtle)]", label: "—" },
+    future:  { bg: "bg-transparent text-[var(--tracker-ink-tertiary)]", label: "·" },
   };
 
   const hasIn  = !!todayRec?.checkIn;
   const hasOut = !!todayRec?.checkOut;
   const pct    = Math.min((activeHours / TARGET) * 100, 100);
-  const ringColor = pct >= 100 ? "#0bdf50" : pct >= 60 ? "#111111" : "#7b7b78";
+  const ringColor = pct >= 100 ? "var(--tracker-success)" : pct >= 60 ? "var(--tracker-ink)" : "var(--tracker-ink-subtle)";
 
   const weekLabel = () => {
     const mon = weekDays[0];
@@ -208,23 +222,23 @@ const AttendancePage = () => {
 
   /* ── loading ── */
   if (pageLoading) return (
-    <div className="flex items-center justify-center h-full bg-[#f5f1ec]">
-      <div className="h-8 w-8 border-4 border-[#ebe7e1] border-t-[#111111] rounded-full animate-spin" />
+    <div className="flex items-center justify-center h-full bg-canvas text-ink">
+      <div className="h-8 w-8 border-4 border-hairline border-t-accent rounded-full animate-spin" />
     </div>
   );
 
   return (
-    <div className="h-full flex flex-col gap-4 p-4 lg:p-6 overflow-y-auto bg-[#f5f1ec]" style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
+    <div data-module="hr" className="h-full flex flex-col gap-4 p-4 lg:p-6 overflow-y-auto bg-canvas text-ink" style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
 
 
       {/* ─── TODAY CARD ─── */}
-      <div className="bg-white rounded-[16px] border border-[#d3cec6] p-5 lg:p-6 flex-shrink-0 shadow-sm">
+      <div className="bg-surface rounded-tracker-card border border-hairline p-5 lg:p-6 flex-shrink-0 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-[#111111]" />
-            <span className="text-[16px] font-medium text-[#111111] leading-tight">Today</span>
+            <Clock className="h-5 w-5 text-ink" />
+            <span className="text-[16px] font-medium text-ink leading-tight">Today</span>
           </div>
-          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-[12px] font-medium ${hasIn ? 'bg-[#0bdf50]/10 text-[#0bdf50]' : 'bg-[#c41c1c]/10 text-[#c41c1c]'}`}>
+          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-[12px] font-medium ${hasIn ? 'bg-[var(--tracker-success-light)] text-[var(--tracker-success)]' : 'bg-[var(--tracker-danger-light)] text-[var(--tracker-danger)]'}`}>
             {hasIn ? <CheckCircle className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
             {hasIn ? "Present" : "Absent"}
           </div>
@@ -234,12 +248,12 @@ const AttendancePage = () => {
         <div className="flex flex-wrap items-center gap-6 sm:gap-10">
           {/* Check In */}
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-[8px] bg-[#f5f1ec] flex items-center justify-center">
-              <LogIn className="h-5 w-5 text-[#111111]" />
+            <div className="h-10 w-10 rounded-[8px] bg-surface-1 flex items-center justify-center">
+              <LogIn className="h-5 w-5 text-ink" />
             </div>
             <div>
-              <p className="text-[12px] text-[#7b7b78] mb-0.5">Check In</p>
-              <p className={`text-[15px] font-medium tabular-nums leading-none ${hasIn ? 'text-[#111111]' : 'text-[#9c9fa5]'}`}>
+              <p className="text-[12px] text-ink-subtle mb-0.5">Check In</p>
+              <p className={`text-[15px] font-medium tabular-nums leading-none ${hasIn ? 'text-ink' : 'text-ink-tertiary'}`}>
                 {hasIn ? fmt12(todayRec.checkIn) : "--:--"}
               </p>
             </div>
@@ -247,12 +261,12 @@ const AttendancePage = () => {
 
           {/* Check Out */}
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-[8px] bg-[#f5f1ec] flex items-center justify-center">
-              <LogOut className="h-5 w-5 text-[#111111]" />
+            <div className="h-10 w-10 rounded-[8px] bg-surface-1 flex items-center justify-center">
+              <LogOut className="h-5 w-5 text-ink" />
             </div>
             <div>
-              <p className="text-[12px] text-[#7b7b78] mb-0.5">Check Out</p>
-              <p className={`text-[15px] font-medium tabular-nums leading-none ${hasOut ? 'text-[#111111]' : 'text-[#9c9fa5]'}`}>
+              <p className="text-[12px] text-ink-subtle mb-0.5">Check Out</p>
+              <p className={`text-[15px] font-medium tabular-nums leading-none ${hasOut ? 'text-ink' : 'text-ink-tertiary'}`}>
                 {hasOut ? fmt12(todayRec.checkOut) : "--:--"}
               </p>
             </div>
@@ -262,13 +276,13 @@ const AttendancePage = () => {
           <div className="flex items-center gap-3">
             <div className="relative inline-flex items-center justify-center">
               <Ring pct={pct} size={44} sw={4} color={ringColor} />
-              <span className="absolute text-[11px] font-medium text-[#111111]">
+              <span className="absolute text-[11px] font-medium text-ink">
                 {Math.floor(activeHours)}h
               </span>
             </div>
             <div>
-              <p className="text-[12px] text-[#7b7b78] mb-0.5">Active</p>
-              <p className="text-[15px] font-medium text-[#111111] leading-none">{fmtHM(activeHours)}</p>
+              <p className="text-[12px] text-ink-subtle mb-0.5">Active</p>
+              <p className="text-[15px] font-medium text-ink leading-none">{fmtHM(activeHours)}</p>
             </div>
           </div>
 
@@ -276,18 +290,18 @@ const AttendancePage = () => {
           <div className="ml-auto flex-shrink-0 mt-2 sm:mt-0">
             {!hasIn ? (
               <button onClick={handleCheckIn} disabled={actionBusy}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-[8px] bg-[#111111] hover:bg-[#313130] text-white text-[14px] font-medium transition-colors cursor-pointer disabled:opacity-50">
+                className="flex items-center gap-2 px-5 py-2.5 tracker-btn-accent cursor-pointer disabled:opacity-50">
                 <LogIn className="h-4 w-4" />
                 {actionBusy ? "..." : "Check In"}
               </button>
             ) : !hasOut ? (
               <button onClick={handleCheckOut} disabled={actionBusy}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-[8px] bg-white border border-[#d3cec6] hover:bg-[#f5f1ec] text-[#111111] text-[14px] font-medium transition-colors cursor-pointer disabled:opacity-50">
+                className="flex items-center gap-2 px-5 py-2.5 tracker-btn-secondary cursor-pointer disabled:opacity-50">
                 <LogOut className="h-4 w-4" />
                 {actionBusy ? "..." : "Check Out"}
               </button>
             ) : (
-              <div className="flex items-center gap-1.5 px-4 py-2.5 rounded-[8px] bg-[#0bdf50]/10 border border-[#0bdf50]/20 text-[#0bdf50] text-[14px] font-medium">
+              <div className="flex items-center gap-1.5 px-4 py-2.5 rounded-[8px] bg-[var(--tracker-success-light)] border border-[var(--tracker-success)]/20 text-[var(--tracker-success)] text-[14px] font-medium">
                 <CheckCircle className="h-4 w-4" />
                 Done — {fmtHM(activeHours)}
               </div>
@@ -305,14 +319,14 @@ const AttendancePage = () => {
       </div>
 
       {/* ─── WEEKLY ATTENDANCE (Horizontal Rows) ─── */}
-      <div className="bg-white rounded-[16px] border border-[#d3cec6] flex-1 min-h-0 flex flex-col shadow-sm">
+      <div className="bg-surface rounded-tracker-card border border-hairline flex-1 min-h-0 flex flex-col shadow-sm">
         {/* Week header with navigation */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#ebe7e1]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-hairline-soft">
           <div className="flex items-center gap-4">
-            <span className="text-[16px] font-medium text-[#111111]">Weekly Attendance</span>
+            <span className="text-[16px] font-medium text-ink">Weekly Attendance</span>
             <button
               onClick={() => navigate('/Attendance/leave-regularization')}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium rounded-[6px] bg-white border border-[#d3cec6] hover:bg-[#ebe7e1] text-[#111111] transition-colors cursor-pointer"
+              className="hidden sm:flex items-center gap-1.5 tracker-btn-secondary cursor-pointer"
             >
               <Plus className="h-3.5 w-3.5" />
               Request Leave
@@ -321,27 +335,27 @@ const AttendancePage = () => {
           <div className="flex items-center gap-1">
             <button
               onClick={() => navigate('/Attendance/leave-regularization')}
-              className="sm:hidden p-1.5 rounded-[6px] bg-[#f5f1ec] text-[#111111] mr-1"
+              className="sm:hidden p-1.5 rounded-[6px] bg-surface-1 text-ink mr-1"
             >
               <Plus className="h-4 w-4" />
             </button>
             <button
               onClick={() => setWeekOffset(prev => prev - 1)}
-              className="p-1.5 rounded-[6px] hover:bg-[#f5f1ec] text-[#626260] transition-colors cursor-pointer"
+              className="p-1.5 rounded-[6px] hover:bg-surface-1 text-ink-muted transition-colors cursor-pointer"
               aria-label="Previous week"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
             <button
               onClick={() => isCurrentWeek ? null : setWeekOffset(0)}
-              className={`px-3 py-1 rounded-[6px] text-[13px] font-medium transition-colors cursor-pointer ${isCurrentWeek ? 'bg-[#f5f1ec] text-[#111111]' : 'text-[#626260] hover:bg-[#f5f1ec]'}`}
+              className={`px-3 py-1 rounded-[6px] text-[13px] font-medium transition-colors cursor-pointer ${isCurrentWeek ? 'bg-surface-1 text-ink' : 'text-ink-muted hover:bg-surface-1'}`}
             >
               {isCurrentWeek ? "This Week" : weekLabel()}
             </button>
             <button
               onClick={() => setWeekOffset(prev => Math.min(prev + 1, 0))}
               disabled={isCurrentWeek}
-              className="p-1.5 rounded-[6px] hover:bg-[#f5f1ec] text-[#626260] transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-default"
+              className="p-1.5 rounded-[6px] hover:bg-surface-1 text-ink-muted transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-default"
               aria-label="Next week"
             >
               <ChevronRight className="h-4 w-4" />
@@ -362,13 +376,13 @@ const AttendancePage = () => {
               <div
                 key={i}
                 className={`
-                  flex items-center gap-4 px-5 py-3.5 border-b border-[#ebe7e1] last:border-0
+                  flex items-center gap-4 px-5 py-3.5 border-b border-hairline-soft last:border-0
                   transition-colors
-                  ${tod ? 'bg-[#f5f1ec]/50' : 'hover:bg-[#f5f1ec]/30'}
+                  ${tod ? 'bg-surface-1/50' : 'hover:bg-surface-1/30'}
                 `}
               >
                 {/* Day label + date */}
-                <div className={`w-16 flex-shrink-0 ${tod ? 'text-[#111111]' : 'text-[#626260]'}`}>
+                <div className={`w-16 flex-shrink-0 ${tod ? 'text-ink' : 'text-ink-muted'}`}>
                   <span className="text-[13px] font-medium">{DAY_LABELS[i]}</span>
                   <span className="text-[12px] ml-1.5 font-normal">{d.getDate()}</span>
                 </div>
@@ -380,16 +394,16 @@ const AttendancePage = () => {
 
                 {/* Check In */}
                 <div className="flex items-center gap-2 w-24 flex-shrink-0">
-                  <LogIn className="h-3.5 w-3.5 text-[#7b7b78] flex-shrink-0" />
-                  <span className={`text-[13px] tabular-nums ${rec?.checkIn ? 'text-[#111111] font-medium' : 'text-[#9c9fa5]'}`}>
+                  <LogIn className="h-3.5 w-3.5 text-ink-subtle flex-shrink-0" />
+                  <span className={`text-[13px] tabular-nums ${rec?.checkIn ? 'text-ink font-medium' : 'text-ink-tertiary'}`}>
                     {rec?.checkIn ? fmt12(rec.checkIn) : "--:--"}
                   </span>
                 </div>
 
                 {/* Check Out */}
                 <div className="flex items-center gap-2 w-24 flex-shrink-0">
-                  <LogOut className="h-3.5 w-3.5 text-[#7b7b78] flex-shrink-0" />
-                  <span className={`text-[13px] tabular-nums ${rec?.checkOut ? 'text-[#111111] font-medium' : 'text-[#9c9fa5]'}`}>
+                  <LogOut className="h-3.5 w-3.5 text-ink-subtle flex-shrink-0" />
+                  <span className={`text-[13px] tabular-nums ${rec?.checkOut ? 'text-ink font-medium' : 'text-ink-tertiary'}`}>
                     {rec?.checkOut ? fmt12(rec.checkOut) : "--:--"}
                   </span>
                 </div>
@@ -398,19 +412,19 @@ const AttendancePage = () => {
                 <div className="flex-1 min-w-0 flex items-center">
                   {hrs != null ? (
                     <div className="flex items-center gap-3 w-full">
-                      <div className="flex-1 h-2 bg-[#ebe7e1] rounded-full overflow-hidden max-w-[140px]">
+                      <div className="flex-1 h-2 bg-hairline rounded-full overflow-hidden max-w-[140px]">
                         <div
                           className="h-full rounded-full transition-all duration-500"
                           style={{
                             width: `${Math.min((hrs / TARGET) * 100, 100)}%`,
-                            background: hrs >= TARGET ? '#0bdf50' : '#111111',
+                            background: hrs >= TARGET ? 'var(--tracker-success)' : 'var(--tracker-ink)',
                           }}
                         />
                       </div>
-                      <span className="text-[13px] font-medium text-[#111111] tabular-nums">{fmtHM(hrs)}</span>
+                      <span className="text-[13px] font-medium text-ink tabular-nums">{fmtHM(hrs)}</span>
                     </div>
                   ) : (
-                    <span className="text-[13px] text-[#9c9fa5]">
+                    <span className="text-[13px] text-ink-tertiary">
                       {st === "weekend" ? "Off" : st === "future" ? "" : "—"}
                     </span>
                   )}
@@ -418,7 +432,7 @@ const AttendancePage = () => {
 
                 {/* Today indicator */}
                 {tod && (
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#111111] flex-shrink-0" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-ink flex-shrink-0" />
                 )}
               </div>
             );
@@ -431,13 +445,13 @@ const AttendancePage = () => {
 
 /* ── Sub Components ── */
 const StatCard = ({ icon: Icon, value, label }) => (
-  <div className="bg-white rounded-[12px] border border-[#d3cec6] p-4 flex items-center gap-3 shadow-sm">
-    <div className={`h-10 w-10 rounded-[8px] bg-[#f5f1ec] flex items-center justify-center flex-shrink-0`}>
-      <Icon className={`h-5 w-5 text-[#111111]`} />
+  <div className="bg-surface rounded-tracker-lg border border-hairline p-4 flex items-center gap-3 shadow-sm">
+    <div className="h-10 w-10 rounded-tracker-md bg-accent-muted flex items-center justify-center flex-shrink-0">
+      <Icon className="h-5 w-5 text-accent" />
     </div>
     <div>
-      <p className="text-[18px] font-medium text-[#111111] leading-[1.20]">{value}</p>
-      <p className="text-[12px] text-[#626260] mt-0.5">{label}</p>
+      <p className="text-[18px] font-semibold text-ink leading-[1.20]">{value}</p>
+      <p className="text-[12px] text-ink-muted mt-0.5">{label}</p>
     </div>
   </div>
 );

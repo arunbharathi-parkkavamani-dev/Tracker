@@ -25,7 +25,7 @@ After every fix, update the knowledge base so the system gets **faster over time
 
 ### Step 0b: Capture Fix Velocity [Antigravity]
 
-Record timing data to `bug_report_AI/FIX_VELOCITY.md`.
+Record timing data to `knowledge_brain/FIX_VELOCITY.md`.
 
 ### Step 1: Update Module Brain [Antigravity]
 

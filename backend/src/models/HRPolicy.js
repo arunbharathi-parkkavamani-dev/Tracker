@@ -11,8 +11,12 @@ const hrPolicySchema = new mongoose.Schema({
   version: { type: String, required: true, default: '1.0' },
   status: { 
     type: String, 
-    enum: ['Draft', 'Active', 'Archived'], 
     default: 'Draft' 
+  },
+  metaStatus: {
+    type: String,
+    default: 'active',
+    index: true
   },
   effectiveDate: { type: Date, required: true },
   expiryDate: { type: Date },

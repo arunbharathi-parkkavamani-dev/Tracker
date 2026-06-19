@@ -1,11 +1,25 @@
 # Master-Data Module Brain
 
 ## Overview
-This module contains 0 models, 0 services, and 15 frontend files.
+This module contains 2 backend models (StatusConfig, StatusMapping), 0 services, and 15+ frontend files including the Status Master UI.
 
 ## Backend Models
-| Model | File | Lines | References |
-|---|---|---|---|
+| Model | File | Lines | Key Fields | Notes |
+|---|---|---|---|---|
+| StatusConfig | StatusConfig.js | ~55 | `modelName`, `label`, `metaStatuses[]`, `workflowStatuses[]` | One doc per workflow model. Seeded via `seedStatusConfigs.js`. No enum — fully dynamic. |
+| StatusMapping | StatusMapping.js | 44 | `sourceModel`, `targetModel`, `linkField`, `reverseLinkField`, `mappings[]`, `isActive` | Defines how one model's status changes propagate to a linked model. Used by `ticketTaskSync.js`. |
+
+### StatusConfig Schema Detail
+```
+metaStatuses[]:   { key, label, color, order, isDefault }  // record lifecycle
+workflowStatuses[]: { key, label, color, order, isDefault, isTerminal }  // operational pipeline
+```
+
+### StatusMapping Schema Detail
+```
+mappings[]: { sourceStatus: String, targetStatus: String }
+// e.g. tasks "Completed" → tickets "Completed"
+```
 
 ## Dynamic API Usage
 | File | Method | URL | Target Model |

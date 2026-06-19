@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 
-export default function TicketList({ onViewTicket, onEditTicket }) {
-  const [tickets, setTickets] = useState([]);
+export default function TicketList({ onViewTicket, onEditTicket }: any) {
+  const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -33,47 +33,44 @@ export default function TicketList({ onViewTicket, onEditTicket }) {
     return matchesSearch && matchesStatus;
   });
 
-  const getStatusColor = (status) => {
-    const colors = {
-      'Task Viewed': 'bg-blue-100 text-blue-800',
-      'Reviewed': 'bg-yellow-100 text-yellow-800',
-      'Moved to Development': 'bg-purple-100 text-purple-800',
-      'Waiting For approval': 'bg-orange-100 text-orange-800',
-      'Updated In staging': 'bg-indigo-100 text-indigo-800',
-      'Completed': 'bg-green-100 text-green-800'
+  const getStatusChipClass = (status: string) => {
+    const map: Record<string, string> = {
+      'Task Viewed': 'lmx-chip-inprogress',
+      'Reviewed': 'lmx-chip-pending',
+      'Moved to Development': 'lmx-chip-inprogress',
+      'Waiting For approval': 'lmx-chip-pending',
+      'Updated In staging': 'lmx-chip-inprogress',
+      'Completed': 'lmx-chip-active',
     };
-    return colors[status] || 'bg-gray-100 text-gray-800';
-  };
-
-  const getPriorityColor = (priority) => {
-    const colors = {
-      'Low': 'text-green-600',
-      'Medium': 'text-yellow-600',
-      'High': 'text-orange-600',
-      'Critical': 'text-red-600'
-    };
-    return colors[priority] || 'text-gray-600';
+    return map[status] || 'lmx-chip-closed';
   };
 
   if (loading) {
-    return <div className="text-center py-8">Loading tickets...</div>;
+    return (
+      <div className="flex justify-center py-16">
+        <div className="lmx-spinner" />
+      </div>
+    );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow">
-      <div className="p-6 border-b">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <input
-            type="text"
-            placeholder="Search tickets..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+    <div className="lmx-table-wrapper">
+      {/* Filters */}
+      <div className="p-5" style={{ borderBottom: '1px solid var(--lmx-border)' }}>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex-1">
+            <input
+              type="text"
+              placeholder="Search tickets…"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="lmx-input"
+            />
+          </div>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="lmx-select sm:w-[200px]"
           >
             <option value="">All Status</option>
             <option value="Task Viewed">Task Viewed</option>
@@ -86,64 +83,61 @@ export default function TicketList({ onViewTicket, onEditTicket }) {
         </div>
       </div>
 
+      {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-gray-50">
+          <thead className="lmx-table-header">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">S. No</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account Manager</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th>S. No</th>
+              <th>Title</th>
+              <th>Type</th>
+              <th>Account Manager</th>
+              <th>Description</th>
+              <th>Start Date</th>
+              <th>Due Date</th>
+              <th>Status</th>
+              <th>Actions</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody>
             {filteredTickets.map((ticket, index) => (
-              <tr key={ticket._id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {index + 1}
+              <tr key={ticket._id} className="lmx-table-row">
+                <td className="text-ink-muted text-[13px]">{index + 1}</td>
+                <td>
+                  <div className="font-medium text-ink text-[14px]">{ticket.title}</div>
+                  <div className="text-ink-subtle text-[12px] mt-0.5">{ticket.ticketId}</div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">{ticket.title}</div>
-                  <div className="text-sm text-gray-500">{ticket.ticketId}</div>
+                <td className="text-[13px]">{ticket.type}</td>
+                <td className="text-[13px]">{ticket.assignedTo?.name || '—'}</td>
+                <td className="max-w-[200px] truncate text-[13px] text-ink-muted">{ticket.description}</td>
+                <td className="text-[13px] text-ink-muted whitespace-nowrap">
+                  {ticket.startDate ? new Date(ticket.startDate).toLocaleDateString() : '—'}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="text-sm text-gray-900">{ticket.type}</span>
+                <td className="text-[13px] text-ink-muted whitespace-nowrap">
+                  {ticket.dueDate ? new Date(ticket.dueDate).toLocaleDateString() : '—'}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {ticket.assignedTo?.name || 'Unassigned'}
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
-                  {ticket.description}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {ticket.startDate ? new Date(ticket.startDate).toLocaleDateString() : '-'}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {ticket.dueDate ? new Date(ticket.dueDate).toLocaleDateString() : '-'}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(ticket.status)}`}>
+                <td>
+                  <span className={`lmx-chip ${getStatusChipClass(ticket.status)}`}>
                     {ticket.status}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                  <button
-                    onClick={() => onViewTicket(ticket)}
-                    className="text-blue-600 hover:text-blue-900"
-                  >
-                    View
-                  </button>
-                  <button
-                    onClick={() => onEditTicket(ticket)}
-                    className="text-indigo-600 hover:text-indigo-900"
-                  >
-                    Edit
-                  </button>
+                <td>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => onViewTicket(ticket)}
+                      className="lmx-btn-ghost text-[12px] px-2 py-1"
+                      style={{ color: 'var(--lmx-accent)' }}
+                    >
+                      View
+                    </button>
+                    <button
+                      onClick={() => onEditTicket(ticket)}
+                      className="lmx-btn-ghost text-[12px] px-2 py-1"
+                      style={{ color: 'var(--lmx-brand-solid)' }}
+                    >
+                      Edit
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -151,9 +145,16 @@ export default function TicketList({ onViewTicket, onEditTicket }) {
         </table>
       </div>
 
-      {filteredTickets.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
-          No tickets found matching your criteria.
+      {/* Empty state */}
+      {filteredTickets.length === 0 && !loading && (
+        <div className="lmx-empty-state">
+          <div className="lmx-empty-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--lmx-accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+          </div>
+          <h3 className="text-[16px] font-semibold text-ink mb-1">No tickets found</h3>
+          <p className="text-[13px] text-ink-muted">No tickets match your search criteria.</p>
         </div>
       )}
     </div>

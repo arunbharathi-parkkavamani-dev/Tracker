@@ -48,7 +48,7 @@ export const NotificationProvider = ({ children }) => {
     const fetchNotifications = async () => {
       try {
         const filter = JSON.stringify({ recipient: user.id });
-        const res = await axiosInstance.get(`/populate/read/notifications?filter=${encodeURIComponent(filter)}&populateFields=${encodeURIComponent(JSON.stringify({ "sender": "basicInfo.firstName,basicInfo.lastName" }))}`);
+        const res = await axiosInstance.get(`/populate/read/notifications?filter=${encodeURIComponent(filter)}&populateFields=${encodeURIComponent(JSON.stringify({ "sender": "basicInfo.firstName,basicInfo.lastName,basicInfo.profileImage" }))}`);
         const data = res.data?.data || [];
         setNotifications(data);
       } catch (error) {
@@ -58,21 +58,21 @@ export const NotificationProvider = ({ children }) => {
     fetchNotifications();
   }, [user?.id]);
 
-  // 4️⃣ Compute unread count
-  const unReadCount = notifications.filter((notif) => !notif.read).length;
+  // 4️⃣ Compute unread count (handling both legacy read and new isRead backend schemas)
+  const unReadCount = notifications.filter((notif) => !(notif.isRead || notif.read)).length;
 
   // 5️⃣ Mark as read
   const markAsRead = async (notificationId) => {
     try {
       const res = await axiosInstance.put(
         `/populate/update/notifications/${notificationId}`,
-        { read: true }
+        { isRead: true }
       );
 
       if (res.data.success) {
         setNotifications((prev) =>
           prev.map((notif) =>
-            notif._id === notificationId ? { ...notif, read: true } : notif
+            notif._id === notificationId ? { ...notif, isRead: true, read: true } : notif
           )
         );
       }
@@ -81,10 +81,39 @@ export const NotificationProvider = ({ children }) => {
     }
   };
 
-  // 6️⃣ Provide context
+  // 6️⃣ Delete / Dismiss a single notification
+  const deleteNotification = async (notificationId) => {
+    try {
+      const res = await axiosInstance.put(
+        `/populate/update/notifications/${notificationId}`,
+        { isDeleted: true }
+      );
+      if (res.data.success) {
+        setNotifications((prev) => prev.filter((notif) => notif._id !== notificationId));
+      }
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+    }
+  };
+
+  // 7️⃣ Clear / Dismiss all notifications
+  const clearAll = async () => {
+    try {
+      await Promise.all(
+        notifications.map((notif) =>
+          axiosInstance.put(`/populate/update/notifications/${notif._id}`, { isDeleted: true })
+        )
+      );
+      setNotifications([]);
+    } catch (error) {
+      console.error("Error clearing notifications:", error);
+    }
+  };
+
+  // 8️⃣ Provide context
   return (
     <NotificationContext.Provider
-      value={{ notifications, markAsRead, unReadCount }}
+      value={{ notifications, markAsRead, unReadCount, deleteNotification, clearAll }}
     >
       {children}
     </NotificationContext.Provider>

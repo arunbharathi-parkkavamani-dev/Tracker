@@ -5,12 +5,14 @@ import { useTheme } from "../context/themeProvider";
 import NotificationDrawer from "../components/Static/NotificationDrawer.jsx";
 import ProfileImage from "../components/Common/ProfileImage.jsx";
 import { useUserProfile } from "../hooks/useUserProfile.js";
+import { useNotification } from "../context/notificationProvider.jsx";
 
 const TopNavBar = ({ onToggleSidebar, sidebarOpen }) => {
   const { user } = useAuth();
   const { profileImage, roleName } = useUserProfile();
   const { theme, toggleTheme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
+  const { unReadCount } = useNotification();
 
   return (
     <header className="lmx-topbar">
@@ -69,7 +71,9 @@ const TopNavBar = ({ onToggleSidebar, sidebarOpen }) => {
           aria-label="Notifications"
         >
           <Bell className="h-4 w-4" />
-          <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-tracker-danger rounded-full ring-2 ring-surface" />
+          {unReadCount > 0 && (
+            <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-tracker-danger rounded-full ring-2 ring-surface animate-pulse" />
+          )}
         </button>
 
         <div className="h-6 w-px bg-hairline-soft hidden sm:block" />

@@ -1,7 +1,7 @@
 ---
 description: Find all bugs in a module through systematic 6-round audit
 version: 1.0
-last_updated: 2026-06-01
+last_updated: 2026-06-07
 tech_stack: React + Vite (Frontend) / Node.js + Express + Mongoose (Backend)
 ---
 
@@ -16,31 +16,31 @@ Systematically find all bugs in a module through 6 rounds of increasingly deep a
 ## Audit Rounds
 
 ### Round 1: Security Scan
-- [ ] Express permission classes on all views
-- [ ] Object-level permissions where needed
-- [ ] Input validation in serializers (no raw `request.data` usage)
-- [ ] CSRF protection on state-changing endpoints
+- [ ] Auth middleware on all mutation routes
+- [ ] JWT validation in agentAuthMiddleware
+- [ ] Input validation in route handlers (no raw `req.body` usage without checks)
+- [ ] Rate limiting on sensitive endpoints
 - [ ] File upload validation (type, size, extension)
 - [ ] XSS vectors (dangerouslySetInnerHTML in React)
 
 ### Round 2: Data Integrity
-- [ ] ORM query correctness (filters, joins, aggregations)
-- [ ] Soft-delete filter consistency (`is_deleted=False`)
-- [ ] Foreign key integrity (orphan record risks)
-- [ ] Transaction wrapping for multi-table writes
-- [ ] Serializer validation completeness
+- [ ] Mongoose query correctness (filters, populate, aggregations)
+- [ ] Soft-delete filter consistency (`isDeleted: false`)
+- [ ] Reference integrity (orphan document risks after delete)
+- [ ] Atomic operations with Mongoose sessions for multi-document writes
+- [ ] Schema validation completeness (required, enum, validate)
 
 ### Round 3: Error Handling
-- [ ] API error responses (proper status codes)
+- [ ] API error responses (proper status codes, consistent format)
 - [ ] React error boundaries
 - [ ] axios interceptor error handling
-- [ ] Missing try/except in views
+- [ ] Missing try/catch in services
 - [ ] Unhandled promise rejections in React
 
 ### Round 4: Performance
-- [ ] N+1 query detection (missing select_related/prefetch_related)
+- [ ] N+1 query detection (missing `.populate()` or loop queries)
 - [ ] Missing pagination on list endpoints
-- [ ] Large queryset loading (no `.all()` without limits)
+- [ ] Large queryset loading (no unbounded `.find({})`)
 - [ ] Missing database indexes
 - [ ] React re-render optimization (useMemo, useCallback)
 
@@ -56,9 +56,8 @@ Systematically find all bugs in a module through 6 rounds of increasingly deep a
 - [ ] WebSocket message handling
 - [ ] File upload/download flow
 - [ ] Cross-module API calls
-- [ ] React Query cache invalidation correctness
+- [ ] Socket event handling correctness
 
 ## Output
-- `bug_report_AI/{module}/CONSOLIDATED_BUG_REPORT.md`
-- `bug_report_AI/{module}/{MODULE}_EXECUTION_PLAN.md`
-- GitHub Issues created via `/bug-intake-triage`
+- `knowledge_brain/{module}/BUGS/CONSOLIDATED_BUG_REPORT.md`
+- `knowledge_brain/{module}/BUGS/{MODULE}_EXECUTION_PLAN.md`

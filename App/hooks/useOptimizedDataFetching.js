@@ -14,7 +14,8 @@ export const useOptimizedDataFetching = (model, options = {}) => {
     initialSort = {},
     enableCache = true,
     backgroundRefresh = true,
-    cacheKey: customCacheKey
+    cacheKey: customCacheKey,
+    enabled = true
   } = options;
 
   const [data, setData] = useState([]);
@@ -115,6 +116,7 @@ export const useOptimizedDataFetching = (model, options = {}) => {
 
   // Fetch data function
   const fetchData = useCallback(async (page, limit, currentFilters, currentSort, useCache = true) => {
+    if (!enabled || !model) return;
     const cacheKey = getCacheKey(page, limit, currentFilters, currentSort);
 
     // Try to get from cache first
@@ -135,7 +137,8 @@ export const useOptimizedDataFetching = (model, options = {}) => {
         filter: currentFilters,
         page,
         limit,
-        sort: currentSort
+        sort: currentSort,
+        ...options
       });
 
       const newData = response.data || [];
@@ -163,16 +166,18 @@ export const useOptimizedDataFetching = (model, options = {}) => {
     } finally {
       setLoading(false);
     }
-  }, [model, readSummary, getCacheKey, getFromCache, setToCache]);
+  }, [model, readSummary, getCacheKey, getFromCache, setToCache, enabled]);
 
   // Initial load
   useEffect(() => {
-    fetchData(pagination.currentPage, pagination.itemsPerPage, filters, sort);
-  }, []);
+    if (enabled && model) {
+      fetchData(pagination.currentPage, pagination.itemsPerPage, filters, sort);
+    }
+  }, [enabled, model]);
 
   // Background refresh
   useEffect(() => {
-    if (!backgroundRefresh) return;
+    if (!backgroundRefresh || !enabled || !model) return;
 
     backgroundRefreshRef.current = setInterval(() => {
       // Only refresh if data is older than half the cache duration
@@ -190,7 +195,7 @@ export const useOptimizedDataFetching = (model, options = {}) => {
         clearInterval(backgroundRefreshRef.current);
       }
     };
-  }, [backgroundRefresh, pagination.currentPage, pagination.itemsPerPage, filters, sort, fetchData, getCacheKey, isCacheValid]);
+  }, [backgroundRefresh, pagination.currentPage, pagination.itemsPerPage, filters, sort, fetchData, getCacheKey, isCacheValid, enabled, model]);
 
   // Page change handler
   const handlePageChange = useCallback((newPage) => {

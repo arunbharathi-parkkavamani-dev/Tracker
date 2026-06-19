@@ -18,12 +18,7 @@ tech_stack: React + Vite (Frontend) / Node.js + Express + Mongoose (Backend)
 git rev-parse --show-toplevel
 ```
 
-#### 0b. Detect PYTHON_PATH
-```powershell
-(Get-Command python -ErrorAction SilentlyContinue).Source
-```
-
-#### 0c. Detect NODE_PATH
+#### 0b. Detect NODE_PATH
 ```powershell
 (Get-Command node -ErrorAction SilentlyContinue).Source
 (Get-Command npm -ErrorAction SilentlyContinue).Source
@@ -37,7 +32,7 @@ git remote -v
 #### 0e. Derive LOCALHOST URLs
 ```
 LOCALHOST_FE = http://localhost:5173
-LOCALHOST_BE = http://localhost:8000
+LOCALHOST_BE = http://localhost:3000
 ```
 
 #### 0f. Write .env File
@@ -47,8 +42,7 @@ Save all detected values to `.agent/.env`.
 ```
 ✅ Environment auto-configured:
    Project root:  {PROJECT_ROOT}
-   Python:        {PYTHON_PATH}
-   Node:          {NODE_PATH}
+    Node:          {NODE_PATH}
    Platform:      {ISSUE_PLATFORM}
    Frontend:      {LOCALHOST_FE}
    Backend:       {LOCALHOST_BE}

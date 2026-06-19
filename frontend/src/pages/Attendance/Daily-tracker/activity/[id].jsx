@@ -1,41 +1,35 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axiosInstance from "../../../../api/axiosInstance";
+import useGenericAPI from "../../../../components/useGenericAPI";
 import Activity from "../Activity";
 import FormPageLayout from "../../../../components/Forms/FormPageLayout";
 
 const ActivityDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { read, loading } = useGenericAPI();
   const [activity, setActivity] = useState(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!id) return;
     const fetchActivity = async () => {
       try {
-        const populateFields = {
-          projectType: "name",
-          activityType: "name",
-          client: "name",
-          user: "basicInfo.firstName,basicInfo.lastName",
-        };
-
-        const response = await axiosInstance.post(`/populate/read/dailyactivities/${id}`, {
-          populateFields,
+        const res = await read("dailyactivities", {
+          id,
+          populateFields: {
+            projectType:  "name",
+            activityType: "name",
+            client:       "name",
+            user:         "basicInfo.firstName,basicInfo.lastName",
+          },
         });
-
-        setActivity(response.data.data);
-      } catch (error) {
-        console.error("Error fetching activity:", error);
-      } finally {
-        setLoading(false);
+        setActivity(res?.data ?? null);
+      } catch {
+        // error toast handled by useGenericAPI
       }
     };
-
-    if (id) fetchActivity();
+    fetchActivity();
   }, [id]);
-
-  const handleClose = () => navigate("/Attendance/Daily-tracker");
 
   if (loading) {
     return (
@@ -54,8 +48,12 @@ const ActivityDetailPage = () => {
   }
 
   return (
-    <FormPageLayout title="Activity details" backTo="/Attendance/Daily-tracker" maxWidth="max-w-4xl">
-      <Activity activity={activity} onClose={handleClose} />
+    <FormPageLayout
+      title="Activity Details"
+      backTo="/Attendance/Daily-tracker"
+      maxWidth="max-w-4xl"
+    >
+      <Activity activity={activity} onClose={() => navigate("/Attendance/Daily-tracker")} />
     </FormPageLayout>
   );
 };

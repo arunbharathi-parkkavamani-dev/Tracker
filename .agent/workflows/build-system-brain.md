@@ -15,18 +15,20 @@ tech_stack: React + Vite (Frontend) / Node.js + Express + Mongoose (Backend)
 ```
 knowledge_brain/_SYSTEM/
 ├── SHARED_COLLECTIONS.md     ← MongoDB collections used by 2+ modules
-├── MODULE_DEPENDENCIES.md    ← Which modules/frontend components depend on each other
-├── SHARED_SCHEMAS.md         ← Shared Mongoose schemas and nested refs — who populates what
-├── CROSS_MODULE_BUGS.md      ← Bugs spanning multiple modules
 ├── SYSTEM_COVERAGE.md        ← Coverage: how many modules have brains
-├── DATA_FLOW_CHAINS.md       ← End-to-end business flows via populate API
-├── VALIDATION_GAPS.md        ← Missing server-side payload/Mongoose validations
-├── CLEANUP_GAPS.md           ← Missing cascades on document delete (Mongoose pre/post hooks)
-├── PERFORMANCE_RISKS.md      ← Missing indexes, unoptimized aggregations, unbounded limits
-├── DIAGNOSTIC_PLAYBOOK.md    ← Symptom→suspect rules (e.g. populateHelper trace)
-├── DANGER_ZONES.md           ← NEVER rules (hard stops, e.g. bypassing role checks)
-└── HANDOFF_AUDIT.md          ← Cross-module contract verification
+├── MODULE_DEPENDENCIES.md    ← (aspirational) Which modules depend on each other
+├── SHARED_SCHEMAS.md         ← (aspirational) Shared Mongoose schemas and nested refs
+├── CROSS_MODULE_BUGS.md      ← (aspirational) Bugs spanning multiple modules
+├── DATA_FLOW_CHAINS.md       ← (aspirational) End-to-end business flows via populate API
+├── VALIDATION_GAPS.md        ← (aspirational) Missing server-side payload/Mongoose validations
+├── CLEANUP_GAPS.md           ← (aspirational) Missing cascades on document delete
+├── PERFORMANCE_RISKS.md      ← (aspirational) Missing indexes, unoptimized aggregations
+├── DIAGNOSTIC_PLAYBOOK.md    ← (aspirational) Symptom→suspect rules
+├── DANGER_ZONES.md           ← (aspirational) NEVER rules (hard stops)
+└── HANDOFF_AUDIT.md          ← (aspirational) Cross-module contract verification
 ```
+
+> **Note**: Only `SHARED_COLLECTIONS.md` and `SYSTEM_COVERAGE.md` exist by default. Create additional docs as needed.
 
 ## Steps
 

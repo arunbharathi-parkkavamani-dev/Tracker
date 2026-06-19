@@ -18,6 +18,7 @@ const notificationReceptionistSchema = new mongoose.Schema({
   readAt: { type: Date },
   isClicked: { type: Boolean, default: false },
   clickedAt: { type: Date },
+  isDeleted: { type: Boolean, default: false, index: true },
   fcmStatus: { 
     type: String, 
     enum: ['pending', 'sent', 'failed'],

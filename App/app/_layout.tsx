@@ -1,30 +1,33 @@
 import "../global.css"
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Slot } from 'expo-router';
-import { AppState, AppStateStatus } from 'react-native';
+import { AppState, AppStateStatus, View } from 'react-native';
 import { AuthProvider } from '@/context/AuthContext';
 import { NotificationProvider } from '@/context/NotificationContext';
+import { NavigationProvider } from '@/context/NavigationContext';
 import { Provider as PaperProvider } from "react-native-paper";
 import Toast from "react-native-toast-message";
 import { checkAndStoreFCMToken } from "@/utils/fcmTokenManager";
 import * as Notifications from "expo-notifications";
+import SplashScreen from "@/components/SplashScreen";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldPlaySound: true,   // sound
-    shouldSetBadge: true,    // badge
-    shouldShowBanner: true,  // banner notification
-    shouldShowList: true,    // show in notification list
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 
+let splashShown = false;
+
 export default function RootLayout() {
+  const [showSplash, setShowSplash] = useState(!splashShown);
 
   useEffect(() => {
-    // Check FCM token on app start
     checkAndStoreFCMToken();
 
-    // Check FCM token when app becomes active
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
       if (nextAppState === 'active') {
         checkAndStoreFCMToken();
@@ -32,19 +35,24 @@ export default function RootLayout() {
     };
 
     const subscription = AppState.addEventListener('change', handleAppStateChange);
-
-    return () => {
-      subscription?.remove();
-    };
+    return () => subscription?.remove();
   }, []);
+
+  const handleSplashFinish = () => {
+    splashShown = true;
+    setShowSplash(false);
+  };
 
   return (
     <AuthProvider>
       <NotificationProvider>
-        <PaperProvider>
-          <Toast />
-          <Slot screenOptions={{ headerShown: false }} />
-        </PaperProvider>
+        <NavigationProvider>
+          <PaperProvider>
+            <Toast />
+            {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
+            {!showSplash && <Slot screenOptions={{ headerShown: false }} />}
+          </PaperProvider>
+        </NavigationProvider>
       </NotificationProvider>
     </AuthProvider>
   );

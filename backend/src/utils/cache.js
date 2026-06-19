@@ -49,7 +49,11 @@ export async function setCache() {
 export function getPolicy(role, modelName) {
     try {
         if (!cacheInitialized) return null;
-        const roleCache = cache.get(role.toString());
+        let roleStr = role.toString();
+        if (roleStr === 'agent') {
+            roleStr = '6a25cbc1cd36294f5e578696';
+        }
+        const roleCache = cache.get(roleStr);
         if (!roleCache) return null;
         if (!modelName) return roleCache;
         return roleCache[modelName] || null;
@@ -63,7 +67,11 @@ export function getPolicy(role, modelName) {
  */
 export function canDo(roleId, capability) {
     if (!cacheInitialized || !roleId) return false;
-    return roleCapabilityCache.get(roleId.toString())?.has(capability) ?? false;
+    let roleStr = roleId.toString();
+    if (roleStr === 'agent') {
+        roleStr = '6a25cbc1cd36294f5e578696';
+    }
+    return roleCapabilityCache.get(roleStr)?.has(capability) ?? false;
 }
 
 export default cache;

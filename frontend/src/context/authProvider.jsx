@@ -32,21 +32,24 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const logout = async () => {
-    try {
-      await axiosInstance.post("/auth/logout", {}, {
-        headers: {
-          'x-device-uuid': getDeviceUUID()
-        }
-      });
-    } catch (err) {
-      // console.log("Logout API error:", err);
+  const logout = async (skipApiCall = false) => {
+    if (!skipApiCall) {
+      try {
+        await axiosInstance.post("/auth/logout", {}, {
+          headers: {
+            'x-device-uuid': getDeviceUUID()
+          }
+        });
+      } catch (err) {
+        // console.log("Logout API error:", err);
+      }
     }
 
     Cookies.remove("auth_token");
     Cookies.remove("refresh_token");
     localStorage.removeItem("auth_token");
     localStorage.removeItem("refresh_token");
+    localStorage.removeItem("device_uuid");
     setUser(null);
   };
 

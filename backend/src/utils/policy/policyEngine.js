@@ -20,7 +20,7 @@ export async function buildQuery({
   populateFields,
   returnFilter = false // New flag for returning just the filter
 }) {
-  if (!role || !modelName) throw new Error("Role and modelName are required");
+  if (!role || !modelName) throw new Error(`Role and modelName are required (role=${role}, modelName=${modelName})`);
 
   const Model = models[modelName];
   if (!Model) throw new Error(`Model "${modelName}" not found`);
@@ -50,7 +50,6 @@ export async function buildQuery({
     policy,
     getPolicy        // <-- important for lookup protection
   });
-  if (safeFields) console.log("[policyEngine.js:72] After validator - safeFields:", safeFields);
 
   // If only filter is requested, return it
   if (returnFilter) {
@@ -74,8 +73,6 @@ export async function buildQuery({
   // --------------------------------------------------
   //  3️⃣ EXECUTE CRUD WITH SAFE DATA ONLY
   // --------------------------------------------------
-  if (safeFields) console.log("[policyEngine.js:89] Passing to buildReadQuery - safeFields:", safeFields);
-  // console.log(`[policyEngine] Final call to crudHandler with populateFields:`, JSON.stringify(populateFields));
   return await crudHandler({
     modelName,
     role,

@@ -40,7 +40,7 @@ Extract action verbs, module keywords, entity references, UI references, busines
 Read MODULE_BRAIN.md, BUSINESS_RULES.md, DATA_FLOW.md, METHOD_INDEX.md, SCHEMA_ANALYSIS.md for the primary module.
 
 ### Step 3: Cross-Module Impact Analysis
-Read CROSS_MODULE_MAP.md, _SYSTEM/MODULE_DEPENDENCIES.md, _SYSTEM/SHARED_TABLES.md.
+Read CROSS_MODULE_MAP.md, _SYSTEM/SHARED_COLLECTIONS.md.
 
 ### Step 4: Generate Structured Requirement
 Output all 6 sections in copyable format.
@@ -49,9 +49,9 @@ Output all 6 sections in copyable format.
 
 | Component | File | What Changes |
 |---|---|---|
-| API Route | `{django_app}/populateHelper.js` | {what changes} |
-| Serializer | `{django_app}/models/*.js` | {what changes} |
-| Model | `{django_app}/models/*.js` | {what changes} |
-| React Page | `{page_dir}/{file}.tsx` | {what changes} |
-| React Component | `{component_dir}/{file}.tsx` | {what changes} |
-| DB Table | `{table}` | {new columns / altered queries} |
+| API Route | `backend/src/routes/{module}Routes.js` | {what changes} |
+| Service | `backend/src/services/{service}.js` | {what changes} |
+| Model | `backend/src/models/{Model}.js` | {what changes} |
+| React Page | `{page_dir}/{file}.jsx` | {what changes} |
+| React Component | `{component_dir}/{file}.jsx` | {what changes} |
+| MongoDB Collection | `{collection}` | {new fields / altered queries} |

@@ -333,6 +333,98 @@ export const storePushToken = async (req, res, next) => {
   }
 };
 
+/* ----------------------------- FORGOT PASSWORD ----------------------------- */
+
+export const forgotPassword = async (req, res, next) => {
+  try {
+    const { workEmail } = req.body;
+    if (!workEmail) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const employee = await Employee.findOne({ "authInfo.workEmail": workEmail });
+    if (!employee) {
+      return res.status(200).json({ message: "If that email exists, a reset link has been sent." });
+    }
+
+    const crypto = await import("crypto");
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const resetTokenHash = crypto.createHash("sha256").update(resetToken).digest("hex");
+
+    employee.authInfo.passwordResetToken = resetTokenHash;
+    employee.authInfo.passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000);
+    await employee.save();
+
+    const resetUrl = `${req.protocol}://${req.get("host")}/reset-password?token=${resetToken}&email=${workEmail}`;
+
+    try {
+      const nodemailer = await import("nodemailer");
+      const transporter = nodemailer.default.createTransport({
+        host: process.env.SMTP_HOST || "smtp.ethereal.email",
+        port: parseInt(process.env.SMTP_PORT || "587"),
+        secure: false,
+        auth: {
+          user: process.env.SMTP_USER || "",
+          pass: process.env.SMTP_PASS || "",
+        },
+      });
+
+      await transporter.sendMail({
+        from: `"Support" <${process.env.SMTP_FROM || "noreply@portal.com"}>`,
+        to: workEmail,
+        subject: "Password Reset Request",
+        html: `
+          <p>You requested a password reset.</p>
+          <p>Click <a href="${resetUrl}">here</a> to reset your password.</p>
+          <p>This link expires in 1 hour.</p>
+          <p>If you didn't request this, ignore this email.</p>
+        `,
+      });
+    } catch (emailErr) {
+      console.error("Email send failed:", emailErr.message);
+    }
+
+    return res.status(200).json({ message: "If that email exists, a reset link has been sent." });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/* ----------------------------- RESET PASSWORD ------------------------------ */
+
+export const resetPassword = async (req, res, next) => {
+  try {
+    const { token, workEmail, password } = req.body;
+    if (!token || !workEmail || !password) {
+      return res.status(400).json({ message: "Token, email, and new password are required" });
+    }
+
+    const crypto = await import("crypto");
+    const resetTokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
+    const employee = await Employee.findOne({
+      "authInfo.workEmail": workEmail,
+      "authInfo.passwordResetToken": resetTokenHash,
+      "authInfo.passwordResetExpires": { $gt: new Date() },
+    });
+
+    if (!employee) {
+      return res.status(400).json({ message: "Invalid or expired reset token" });
+    }
+
+    const bcrypt = await import("bcrypt");
+    const salt = await bcrypt.genSalt(10);
+    employee.authInfo.password = await bcrypt.hash(password, salt);
+    employee.authInfo.passwordResetToken = undefined;
+    employee.authInfo.passwordResetExpires = undefined;
+    await employee.save();
+
+    return res.status(200).json({ message: "Password has been reset successfully. Please log in." });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const sendManualTestNotification = async (req, res) => {
   try {
     const { message, title } = req.body;

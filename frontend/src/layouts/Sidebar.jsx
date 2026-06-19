@@ -145,14 +145,14 @@ const Sidebar = ({ isOpen, onClose, onOpen }) => {
       >
         <div className="flex items-center gap-2.5 overflow-hidden">
           <div className="h-8 w-8 rounded-tracker-md lmx-gradient-hero flex items-center justify-center flex-shrink-0">
-            <span className="text-white font-bold text-xs">L</span>
+            <span className="text-white font-bold text-xs">W</span>
           </div>
           <span
             className={`font-semibold text-sm text-ink tracking-tight whitespace-nowrap transition-opacity duration-300 ${
               isExpandedView ? "opacity-100" : "opacity-0 hidden"
             }`}
           >
-            Logimax
+            WorkHub
           </span>
         </div>
         
@@ -184,7 +184,16 @@ const Sidebar = ({ isOpen, onClose, onOpen }) => {
             <p className={`text-xs text-ink-subtle whitespace-nowrap transition-opacity duration-300 ${isExpandedView ? "opacity-100" : "opacity-0 hidden"}`}>Loading menu…</p>
           </div>
         ) : (
-          navItems.map(item => renderNavItem(item))
+          <>
+            {navItems.map(item => renderNavItem(item))}
+            <div className="my-2 border-t border-hairline-soft mx-2 opacity-50" />
+            {renderNavItem({
+              _id: "api-docs-static",
+              title: "API Docs",
+              mainRoute: "/documentations",
+              iconName: "MdCode"
+            })}
+          </>
         )}
       </nav>
 
@@ -199,7 +208,7 @@ const Sidebar = ({ isOpen, onClose, onOpen }) => {
             isExpandedView ? "opacity-100" : "opacity-0 hidden"
           }`}
         >
-          © {new Date().getFullYear()} Logimax
+          © {new Date().getFullYear()} Portal
         </span>
 
         {!isOpen && !isExpandedView && (

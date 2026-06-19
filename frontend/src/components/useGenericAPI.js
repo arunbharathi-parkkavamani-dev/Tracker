@@ -9,20 +9,26 @@ export const useGenericAPI = () => {
   const handleRequest = useCallback(async (requestFn, successMessage, errorMessage) => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const response = await requestFn();
-      
+
       if (response.data.success) {
         if (successMessage) {
           toast.success(successMessage);
+          const traceId = err.response?.data?.traceId;
+          const message = err.response?.data?.message;
+          console.log(traceId, message)
         }
         return response.data;
       } else {
+        const traceId = err.response?.data?.traceId;
+        const message = err.response?.data?.message;
+        console.log(traceId, message)
         throw new Error(response.data.message || 'Operation failed');
       }
     } catch (err) {
-      const message = err.response?.data?.message || err.message || errorMessage || 'Operation failed';
+      const message = err.response?.data?.message || err.response?.data?.traceId || err.message || errorMessage || 'Operation failed';
       setError(message);
       toast.error(message);
       throw err;
@@ -33,30 +39,30 @@ export const useGenericAPI = () => {
 
   // Enhanced read operation with pagination and optimization support
   const read = useCallback((model, options = {}) => {
-    const { 
-      filter, 
-      fields, 
-      populateFields, 
-      id, 
-      page = 1, 
-      limit = 10, 
+    const {
+      filter,
+      fields,
+      populateFields,
+      id,
+      page = 1,
+      limit = 10,
       sort,
       type, // 1=summary, 2=detailed, 3=statistics
       stages // for aggregation
     } = options;
-    
+
     let url = `/populate/read/${model}`;
-    
+
     if (id) url += `/${id}`;
-    
+
     const payload = {};
-    
+
     // Add pagination parameters
     if (!id) {
       payload.page = page;
       payload.limit = limit;
     }
-    
+
     // Add query parameters as JSON body
     if (filter) payload.filter = filter;
     if (fields) payload.fields = Array.isArray(fields) ? fields.join(',') : fields;
@@ -64,7 +70,7 @@ export const useGenericAPI = () => {
     if (sort) payload.sort = sort;
     if (type) payload.type = type;
     if (stages) payload.stages = stages;
-    
+
     return handleRequest(
       () => axiosInstance.post(url, payload),
       null,
@@ -100,7 +106,7 @@ export const useGenericAPI = () => {
   // Enhanced create with file upload support
   const create = useCallback((model, data, successMessage, options = {}) => {
     const { isFormData = false } = options;
-    
+
     return handleRequest(
       () => {
         const config = isFormData ? {
@@ -116,7 +122,7 @@ export const useGenericAPI = () => {
   // Enhanced update with file upload support
   const update = useCallback((model, id, data, successMessage, options = {}) => {
     const { isFormData = false } = options;
-    
+
     return handleRequest(
       () => {
         const config = isFormData ? {
