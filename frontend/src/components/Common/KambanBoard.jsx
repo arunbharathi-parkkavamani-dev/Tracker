@@ -1,6 +1,8 @@
 import { useState, useMemo } from "react";
 import { Plus, Search, X, ChevronDown, LayoutGrid } from "lucide-react";
 import ProfileImage from "./ProfileImage";
+import InlineEdit from "./InLineEdit";
+import TaskContextMenu from "./TaskContextMenu";
 
 /**
  * Column colour tokens — references CSS vars only, no hardcoded hex.
@@ -71,7 +73,7 @@ const PRIORITY_CELL = {
 };
 
 /* ── Task Card ── */
-const TaskCard = ({ task, groupBy, draggingId, onDragStart, onCardClick }) => {
+const TaskCard = ({ task, groupBy, draggingId, onDragStart, onCardClick, onCardUpdate, onContextMenu }) => {
   const assignees  = task.assignedTo || [];
   const date       = task.endDate || task.dueDate;
   const isOverdue  = date && new Date(date) < new Date() && task.status !== "Completed";
@@ -88,6 +90,7 @@ const TaskCard = ({ task, groupBy, draggingId, onDragStart, onCardClick }) => {
       draggable
       onDragStart={(e) => onDragStart(e, task)}
       onClick={() => onCardClick?.(task)}
+      onContextMenu={(e) => onContextMenu?.(e, task)}
       className="bg-surface border border-hairline cursor-grab active:cursor-grabbing hover:shadow-[var(--tracker-shadow-raised)] transition-all duration-150 select-none"
       style={{ opacity: draggingId === task._id ? 0.25 : 1, borderLeft: "3px solid var(--module-accent)" }}
     >
@@ -103,9 +106,13 @@ const TaskCard = ({ task, groupBy, draggingId, onDragStart, onCardClick }) => {
 
         {/* Title + avatar */}
         <div className="flex items-start justify-between gap-2">
-          <p className="text-[12.5px] font-semibold leading-snug line-clamp-2 text-ink flex-1 min-w-0">
-            {task.title || "Untitled Task"}
-          </p>
+          <div className="text-[12.5px] font-semibold leading-snug text-ink flex-1 min-w-0 break-words line-clamp-3">
+            <InlineEdit
+              value={task.title || "Untitled Task"}
+              canEdit={!!onCardUpdate}
+              onSave={(val) => onCardUpdate?.(task, "title", val)}
+            />
+          </div>
           {assignees[0] && <Avatar person={assignees[0]} size={20} />}
         </div>
 
@@ -181,6 +188,7 @@ const KanbanBoard = ({
   columns = [],
   onCardMove,
   onCardClick,
+  onCardUpdate,
   currentUserId,
   employees = [],
   taskTypes = [],
@@ -194,6 +202,7 @@ const KanbanBoard = ({
   const [draggingCard, setDraggingCard] = useState(null);
   const [overCol, setOverCol]           = useState(null);
   const [filters, setFilters]           = useState({ category: null, priority: null, client: null, follower: null });
+  const [contextMenu, setContextMenu]   = useState({ x: 0, y: 0, task: null, show: false });
 
   const getVal = (obj, path) => {
     const val = path.split(".").reduce((a, k) => (a != null ? a[k] : undefined), obj);
@@ -251,6 +260,11 @@ const KanbanBoard = ({
     setDraggingCard(null); setOverCol(null);
   };
   const clearFilters = () => setFilters({ category: null, priority: null, client: null, follower: null });
+
+  const handleContextMenu = (e, task) => {
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY, task, show: true });
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -358,6 +372,8 @@ const KanbanBoard = ({
                       draggingId={draggingCard?._id}
                       onDragStart={handleDragStart}
                       onCardClick={onCardClick}
+                      onCardUpdate={onCardUpdate}
+                      onContextMenu={handleContextMenu}
                     />
                   ))}
 
@@ -382,6 +398,17 @@ const KanbanBoard = ({
           })}
         </div>
       </div>
+      {contextMenu.show && (
+        <TaskContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          task={contextMenu.task}
+          onClose={() => setContextMenu({ ...contextMenu, show: false })}
+          onEdit={(task) => onCardClick?.(task)}
+          onStatusChange={(task, status) => onCardUpdate?.(task, "status", status)}
+          onPriorityChange={(task, priority) => onCardUpdate?.(task, "priorityLevel", priority)}
+        />
+      )}
     </div>
   );
 };

@@ -13,7 +13,8 @@ export default function InlineEdit({ value, onSave, canEdit }) {
     if (input !== value) await onSave(input);
   };
 
-  const startEdit = () => {
+  const startEdit = (e) => {
+    e.stopPropagation();
     setInput(value || "");
     setEditing(true);
   };
@@ -30,6 +31,7 @@ export default function InlineEdit({ value, onSave, canEdit }) {
       onChange={(e) => setInput(e.target.value)}
       onBlur={save}
       onKeyDown={(e) => e.key === "Enter" && save()}
+      onClick={(e) => e.stopPropagation()}
     />
   ) : (
     <span

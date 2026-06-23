@@ -108,6 +108,16 @@ const MyTasks = () => {
     } catch (e) { console.error(e); }
   };
 
+  const handleCardUpdate = async (task, field, value) => {
+    try {
+      setAllTasks(prev => prev.map(t => t._id === task._id ? { ...t, [field]: value } : t));
+      await axiosInstance.put(`/populate/update/tasks/${task._id}`, { [field]: value });
+    } catch (e) { 
+      console.error(e); 
+      setAllTasks(prev => prev.map(t => t._id === task._id ? { ...t, [field]: task[field] } : t));
+    }
+  };
+
   const filteredTasks = useMemo(() => {
     let d = allTasks;
     if (search) {
@@ -264,6 +274,7 @@ const MyTasks = () => {
           currentUserId={user?.id}
           onCardClick={handleTaskClick}
           onCardMove={handleCardMove}
+          onCardUpdate={handleCardUpdate}
           employees={employees}
           taskTypes={taskTypes}
           showClientFilter={false}

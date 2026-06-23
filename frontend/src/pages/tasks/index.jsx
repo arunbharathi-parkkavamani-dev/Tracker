@@ -88,6 +88,19 @@ const TasksPage = () => {
     } catch (e) { console.error(e); }
   };
 
+  const handleCardUpdate = async (task, field, value) => {
+    try {
+      // Optimistic update
+      setAllTasks(prev => prev.map(t => t._id === task._id ? { ...t, [field]: value } : t));
+      // API call
+      await axiosInstance.put(`/populate/update/tasks/${task._id}`, { [field]: value });
+    } catch (e) { 
+      console.error(e); 
+      // Revert if error
+      setAllTasks(prev => prev.map(t => t._id === task._id ? { ...t, [field]: task[field] } : t));
+    }
+  };
+
   const handleTaskClick = (task) => {
     navigate(`/tasks/${task._id}`);
   };
@@ -340,6 +353,7 @@ const TasksPage = () => {
           currentUserId={user?.id}
           onCardClick={handleTaskClick}
           onCardMove={handleCardMove}
+          onCardUpdate={handleCardUpdate}
           employees={employees}
           taskTypes={taskTypes}
           clients={clients}

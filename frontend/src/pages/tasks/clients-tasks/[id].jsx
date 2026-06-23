@@ -81,6 +81,16 @@ const ClientKanbanPage = () => {
     } catch (e) { console.error(e); }
   };
 
+  const handleCardUpdate = async (task, field, value) => {
+    try {
+      setTasks(prev => prev.map(t => t._id === task._id ? { ...t, [field]: value } : t));
+      await axiosInstance.put(`/populate/update/tasks/${task._id}`, { [field]: value });
+    } catch (e) { 
+      console.error(e); 
+      setTasks(prev => prev.map(t => t._id === task._id ? { ...t, [field]: task[field] } : t));
+    }
+  };
+
   const handleTaskClick = (task) => {
     navigate(`/tasks/${task._id}`);
   };
@@ -166,6 +176,7 @@ const ClientKanbanPage = () => {
           currentUserId={user?.id}
           onCardClick={handleTaskClick}
           onCardMove={handleCardMove}
+          onCardUpdate={handleCardUpdate}
           employees={employees}
           taskTypes={taskTypes}
           showFollowerFilter
