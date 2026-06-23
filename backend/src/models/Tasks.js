@@ -7,11 +7,11 @@ const TaskSchema = new mongoose.Schema({
   taskTypeId: { type: mongoose.Schema.Types.ObjectId, ref: "tasktypes", required: true },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "employees", index: true },
   assignedTo: [{ type: mongoose.Schema.Types.ObjectId, ref: "employees", index: true }],
-  
+
   // Ticket synchronization fields
   linkedTicketId: { type: mongoose.Schema.Types.ObjectId, ref: 'Ticket' },
   isFromTicket: { type: Boolean, default: false },
-  
+
   // Milestone fields (optional)
   milestoneId: { type: mongoose.Schema.Types.ObjectId, ref: "milestones", index: true },
   milestoneStatus: {
@@ -20,45 +20,53 @@ const TaskSchema = new mongoose.Schema({
     default: "Pending",
     index: true
   },
-  
+
   title: { type: String, trim: true, required: true, index: 'text' },
   referenceUrl: { type: String },
   userStory: { type: String, index: 'text' },
   observation: { type: String },
   impacts: { type: String },
   acceptanceCreteria: { type: String },
-  
+
   attachments: [{ type: String, default: null }],
   commentsThread: { type: mongoose.Schema.Types.ObjectId, ref: "commentsthreads" },
-  
+
   startDate: { type: Date, index: true },
   endDate: { type: Date, index: true },
-  
+
   priorityLevel: {
     type: String,
     enum: ["Low", "Medium", "High", "Weekly Priority"],
     default: "Low",
     index: true
   },
-  
+
   tags: [{ type: String }],
-  
+
   status: {
     type: String,
     default: "Backlogs",
     index: true
   },
-  
+
   metaStatus: {
     type: String,
     default: 'active',
     index: true
   },
-  
+
   followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "employees", default: [] }],
   estimatedHours: { type: Number, min: 0 },
   actualHours: { type: Number, min: 0 },
-  progress: { type: Number, min: 0, max: 100, default: 0 }
+  progress: { type: Number, min: 0, max: 100, default: 0 },
+
+  // Stage duration tracking
+  stageHistory: [{
+    stage: String,              // 'backlog', 'assigned', 'in_progress', 'review', 'done'
+    enteredAt: { type: Date, default: Date.now },
+    duration: { type: Number, default: 0 }, // Seconds
+    _id: false
+  }]
 }, { timestamps: true });
 
 // Text search index
