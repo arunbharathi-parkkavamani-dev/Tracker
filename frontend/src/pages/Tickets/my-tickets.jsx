@@ -80,7 +80,7 @@ const MyTickets = () => {
       setLoading(true);
       const res = await axiosInstance.post("/populate/read/tickets", {
         filter: { $or: [{ createdBy: user.id }, { assignedTo: user.id }] },
-        fields: "title,type,priority,status,dueDate,createdAt,assignedTo,createdBy",
+        fields: "title,type,priority,status,dueDate,createdAt,updatedAt,assignedTo,createdBy",
       });
       setTickets(res.data.data || []);
     } catch (e) { console.error(e); } finally { setLoading(false); }
@@ -126,7 +126,7 @@ const MyTickets = () => {
     }
     if (fStatus)   d = d.filter(t => t.status === fStatus);
     if (fPriority) d = d.filter(t => t.priority === fPriority);
-    return d;
+    return [...d].sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt));
   }, [tickets, search, fStatus, fPriority]);
 
   const activeFilters = [fStatus, fPriority].filter(Boolean).length;

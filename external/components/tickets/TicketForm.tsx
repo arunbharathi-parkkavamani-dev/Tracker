@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import FileViewerModal from '../Common/FileViewerModal';
 
 export default function TicketForm({ ticket, onSuccess, onCancel }: any) {
   const [attachments, setAttachments] = useState<File[]>([]);
+  const [viewerFile, setViewerFile] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [clientProducts, setClientProducts] = useState<string[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
@@ -170,7 +172,8 @@ export default function TicketForm({ ticket, onSuccess, onCancel }: any) {
                 name="product"
                 value={formData.product}
                 onChange={handleInputChange}
-                className="lmx-select"
+                disabled={!!ticket}
+                className={`lmx-select ${ticket ? 'opacity-60 cursor-not-allowed bg-gray-100' : ''}`}
               >
                 <option value="">Select a product</option>
                 {clientProducts.map((product, index) => (
@@ -183,8 +186,9 @@ export default function TicketForm({ ticket, onSuccess, onCancel }: any) {
                 name="product"
                 value={formData.product}
                 onChange={handleInputChange}
+                disabled={!!ticket}
                 placeholder="Enter product name"
-                className="lmx-input"
+                className={`lmx-input ${ticket ? 'opacity-60 cursor-not-allowed bg-gray-100' : ''}`}
               />
             )}
           </div>
@@ -196,7 +200,8 @@ export default function TicketForm({ ticket, onSuccess, onCancel }: any) {
               name="priority"
               value={formData.priority}
               onChange={handleInputChange}
-              className="lmx-select"
+              disabled={!!ticket}
+              className={`lmx-select ${ticket ? 'opacity-60 cursor-not-allowed bg-gray-100' : ''}`}
             >
               <option value="Low">Low</option>
               <option value="Medium">Medium</option>
@@ -214,7 +219,8 @@ export default function TicketForm({ ticket, onSuccess, onCancel }: any) {
               name="type"
               value={formData.type}
               onChange={handleInputChange}
-              className="lmx-select"
+              disabled={!!ticket}
+              className={`lmx-select ${ticket ? 'opacity-60 cursor-not-allowed bg-gray-100' : ''}`}
             >
               <option value="Bug">Bug</option>
               <option value="Feature">Feature</option>
@@ -231,7 +237,8 @@ export default function TicketForm({ ticket, onSuccess, onCancel }: any) {
               name="dueDate"
               value={formData.dueDate}
               onChange={handleInputChange}
-              className="lmx-input"
+              disabled={!!ticket}
+              className={`lmx-input ${ticket ? 'opacity-60 cursor-not-allowed bg-gray-100' : ''}`}
             />
           </div>
         </div>
@@ -257,7 +264,13 @@ export default function TicketForm({ ticket, onSuccess, onCancel }: any) {
             <div className="mt-3 space-y-2">
               {attachments.map((file, index) => (
                 <div key={index} className="flex items-center justify-between rounded-lg px-3 py-2" style={{ background: 'var(--lmx-surface-1)' }}>
-                  <span className="text-[13px] text-ink truncate">{file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                  <button 
+                    type="button"
+                    onClick={() => setViewerFile(file)}
+                    className="text-[13px] text-ink truncate text-left hover:underline cursor-pointer flex-1"
+                  >
+                    {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                  </button>
                   <button
                     type="button"
                     onClick={() => removeAttachment(index)}
@@ -350,6 +363,11 @@ export default function TicketForm({ ticket, onSuccess, onCancel }: any) {
             </p>
           </div>
         </div>
+      )}
+
+      {/* File Viewer Modal */}
+      {viewerFile && (
+        <FileViewerModal file={viewerFile} onClose={() => setViewerFile(null)} />
       )}
     </div>
   );

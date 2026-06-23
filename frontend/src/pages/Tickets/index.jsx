@@ -87,6 +87,7 @@ const TicketsPage = () => {
   const [tickets, setTickets]     = useState([]);
   const [loading, setLoading]     = useState(true);
   const [showFilters, setShowFilters] = useState(false);
+  const [currentTab, setCurrentTab] = useState("all");
 
   const [fStatus,    setFStatus]    = useState(null);
   const [fPriority,  setFPriority]  = useState(null);
@@ -101,7 +102,7 @@ const TicketsPage = () => {
     try {
       setLoading(true);
       const tRes = await axiosInstance.post("/populate/read/tickets", {
-        fields: "title,type,priority,status,dueDate,createdAt,updatedAt,isConvertedToTask,userStory,description,ticketId,assignedTo,accountManager,createdBy,linkedTaskId",
+        fields: "title,type,priority,status,dueDate,createdAt,updatedAt,isConvertedToTask,userStory,description,ticketId,assignedTo,accountManager,createdBy,linkedTaskId,unreadCommentsCount",
         populateFields: {
           assignedTo:     "basicInfo.firstName,basicInfo.lastName,basicInfo.profileImage",
           accountManager: "basicInfo.firstName,basicInfo.lastName",
@@ -129,14 +130,32 @@ const TicketsPage = () => {
 
   const displayed = useMemo(() => {
     let d = tickets;
+
+    // Filter by tab segment
+    if (currentTab === "my") {
+      d = d.filter(t => t.assignedTo?.some(a => String(a._id || a) === user.id));
+    } else if (currentTab === "unassigned") {
+      d = d.filter(t => !t.assignedTo || t.assignedTo.length === 0);
+    } else if (currentTab === "waiting_admin") {
+      d = d.filter(t => t.status === "Waiting For Admin");
+    } else if (currentTab === "waiting_client") {
+      d = d.filter(t => t.status === "Waiting For Client");
+    } else if (currentTab === "overdue") {
+      d = d.filter(t => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== "Completed" && t.status !== "Closed");
+    } else if (currentTab === "resolved_today") {
+      d = d.filter(t => t.status === "Completed" && new Date(t.updatedAt).toDateString() === new Date().toDateString());
+    }
+
     if (fStatus)   d = d.filter(t => t.status === fStatus);
     if (fPriority) d = d.filter(t => t.priority === fPriority);
     if (fType)     d = d.filter(t => (t.type?.name || t.type) === fType);
     if (fAssignee) d = d.filter(t => t.assignedTo?.some(a => String(a._id || a) === fAssignee));
     if (fDateFrom) d = d.filter(t => t.createdAt && new Date(t.createdAt) >= new Date(fDateFrom));
     if (fDateTo)   d = d.filter(t => t.createdAt && new Date(t.createdAt) <= new Date(fDateTo + "T23:59:59"));
-    return d;
-  }, [tickets, fStatus, fPriority, fType, fAssignee, fDateFrom, fDateTo]);
+
+    // Sort by updatedAt descending
+    return [...d].sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+  }, [tickets, currentTab, user.id, fStatus, fPriority, fType, fAssignee, fDateFrom, fDateTo]);
 
   const activeFilters = [fStatus, fPriority, fType, fAssignee, fDateFrom, fDateTo].filter(Boolean).length;
 
@@ -145,7 +164,7 @@ const TicketsPage = () => {
     setFType(null); setFAssignee(null); setFDateFrom(""); setFDateTo("");
   };
 
-  // ── Derived stat counts ──────────────────────────────────────────────────────
+  // ── Derived stat counts for tabs & pills ───────────────────────────────────────
 
   const weekAgo       = new Date(Date.now() - 7 * 86400000);
   const openCount     = tickets.filter(t => t.status === "Open").length;
@@ -153,7 +172,12 @@ const TicketsPage = () => {
   const criticalCount = tickets.filter(t => t.priority === "Critical").length;
   const resolvedCount = tickets.filter(t => t.status === "Completed" && new Date(t.updatedAt) > weekAgo).length;
 
-
+  const myCount            = tickets.filter(t => t.assignedTo?.some(a => String(a._id || a) === user.id)).length;
+  const unassignedCount    = tickets.filter(t => !t.assignedTo || t.assignedTo.length === 0).length;
+  const waitingAdminCount  = tickets.filter(t => t.status === "Waiting For Admin").length;
+  const waitingClientCount = tickets.filter(t => t.status === "Waiting For Client").length;
+  const overdueCount       = tickets.filter(t => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== "Completed" && t.status !== "Closed").length;
+  const resolvedTodayCount = tickets.filter(t => t.status === "Completed" && new Date(t.updatedAt).toDateString() === new Date().toDateString()).length;
 
   const statusOptions = STATUSES.map(s => ({
     value: s, label: s,
@@ -169,13 +193,78 @@ const TicketsPage = () => {
 
   const customRender = {
     priority:    t => <PriorityChip value={t.priority} />,
-    status:      t => <StatusChip value={t.status} />,
+    status:      t => {
+      const isWaitingAdmin = t.status === "Waiting For Admin";
+      const isWaitingClient = t.status === "Waiting For Client";
+      return (
+        <span className="flex items-center gap-1.5">
+          {isWaitingAdmin && <span className="w-2 h-2 rounded-full bg-[var(--module-ticket)] animate-pulse" title="Admin Waiting" />}
+          {isWaitingClient && <span className="w-2 h-2 rounded-full bg-[var(--brand-teal)] animate-pulse" title="Client Waiting" />}
+          <StatusChip value={t.status} />
+        </span>
+      );
+    },
     type:        t => <TypeChip value={t.type} />,
+
+    unread: t => {
+      const count = t.unreadCommentsCount || 0;
+      if (count === 0) return <span className="text-ink-subtle text-[11px]">—</span>;
+      return (
+        <span className="inline-flex items-center justify-center bg-[var(--module-ticket)] text-white text-[10px] font-bold rounded-full w-5 h-5">
+          {count}
+        </span>
+      );
+    },
+
+    pendingAction: t => {
+      let actionLabel = "No Action";
+      let badgeCls = "bg-surface-2 text-ink-muted";
+      
+      if (!t.assignedTo || t.assignedTo.length === 0) {
+        actionLabel = "Needs Assignment";
+        badgeCls = "bg-[var(--tracker-danger-light)] text-[var(--tracker-danger)]";
+      } else if (t.status === "Waiting For Admin") {
+        actionLabel = "Needs Reply";
+        badgeCls = "bg-[var(--tracker-warning-light)] text-[var(--tracker-warning)]";
+      } else if (t.status === "Waiting For Client") {
+        actionLabel = "Waiting on Client";
+        badgeCls = "bg-[var(--brand-teal-light)] text-[var(--brand-teal)]";
+      } else if (t.status === "Resolved" || t.status === "Completed") {
+        actionLabel = "Archived";
+      }
+      
+      return (
+        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold ${badgeCls}`}>
+          {actionLabel}
+        </span>
+      );
+    },
+
+    lastResponse: t => {
+      const date = t.updatedAt || t.createdAt;
+      if (!date) return <span className="text-ink-subtle">—</span>;
+      
+      const diffMs = Date.now() - new Date(date).getTime();
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMins / 60);
+      const diffDays = Math.floor(diffHours / 24);
+      
+      let relativeStr = "";
+      if (diffMins < 1) relativeStr = "Just now";
+      else if (diffMins < 60) relativeStr = `${diffMins}m ago`;
+      else if (diffHours < 24) relativeStr = `${diffHours}h ago`;
+      else relativeStr = `${diffDays}d ago`;
+      
+      return (
+        <span className="text-[12px] text-ink-muted" title={new Date(date).toLocaleString()}>
+          {relativeStr}
+        </span>
+      );
+    },
 
     title: t => (
       <span
-        onClick={() => navigate(`/Tickets/${t._id}`)}
-        className="max-w-[260px] truncate block font-medium text-[13px] text-ink hover:text-[var(--module-ticket)] cursor-pointer transition-colors"
+        className="max-w-[260px] truncate block font-medium text-[13px] text-ink"
         title={t.title}
       >
         {t.title || "—"}
@@ -225,7 +314,7 @@ const TicketsPage = () => {
     __actions: ticket => {
       const converted = ticket.isConvertedToTask || Boolean(ticket.linkedTaskId);
       return (
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
           <button onClick={() => handleEdit(ticket)}
             className="inline-flex items-center justify-center w-7 h-7 rounded-tracker-md bg-[var(--module-ticket-light)] text-[var(--module-ticket)] hover:bg-[var(--module-ticket)] hover:text-white transition-colors"
             title="Edit">
@@ -312,6 +401,52 @@ const TicketsPage = () => {
         </div>
       </div>
 
+      {/* ── Tabbed Workspace Segments ── */}
+      <div className="lmx-tab-bar overflow-x-auto min-w-max">
+        <button
+          onClick={() => setCurrentTab("all")}
+          className={`lmx-tab ${currentTab === "all" ? "lmx-tab-active" : ""}`}
+        >
+          All Queue <span className="ml-1 opacity-60 font-normal">({tickets.length})</span>
+        </button>
+        <button
+          onClick={() => setCurrentTab("my")}
+          className={`lmx-tab ${currentTab === "my" ? "lmx-tab-active" : ""}`}
+        >
+          My Tickets <span className="ml-1 opacity-60 font-normal">({myCount})</span>
+        </button>
+        <button
+          onClick={() => setCurrentTab("unassigned")}
+          className={`lmx-tab ${currentTab === "unassigned" ? "lmx-tab-active" : ""}`}
+        >
+          Unassigned <span className="ml-1 opacity-60 font-normal">({unassignedCount})</span>
+        </button>
+        <button
+          onClick={() => setCurrentTab("waiting_admin")}
+          className={`lmx-tab ${currentTab === "waiting_admin" ? "lmx-tab-active" : ""}`}
+        >
+          Waiting For Admin <span className="ml-1 opacity-60 font-normal">({waitingAdminCount})</span>
+        </button>
+        <button
+          onClick={() => setCurrentTab("waiting_client")}
+          className={`lmx-tab ${currentTab === "waiting_client" ? "lmx-tab-active" : ""}`}
+        >
+          Waiting For Client <span className="ml-1 opacity-60 font-normal">({waitingClientCount})</span>
+        </button>
+        <button
+          onClick={() => setCurrentTab("overdue")}
+          className={`lmx-tab ${currentTab === "overdue" ? "lmx-tab-active" : ""}`}
+        >
+          Overdue <span className="ml-1 opacity-60 font-normal">({overdueCount})</span>
+        </button>
+        <button
+          onClick={() => setCurrentTab("resolved_today")}
+          className={`lmx-tab ${currentTab === "resolved_today" ? "lmx-tab-active" : ""}`}
+        >
+          Resolved Today <span className="ml-1 opacity-60 font-normal">({resolvedTodayCount})</span>
+        </button>
+      </div>
+
       {/* ── Filter bar ── */}
       {showFilters && (
         <div className="tracker-card-plain p-3 space-y-2.5 animate-in fade-in slide-in-from-top-1 duration-150">
@@ -372,9 +507,10 @@ const TicketsPage = () => {
           data={displayed}
           customRender={customRender}
           customExport={customExport}
-          customColumns={["title", "type", "priority", "status", "assignedTo", "accountManager", "linkedTaskId", "dueDate", "createdAt"]}
+          customColumns={["unread", "title", "type", "priority", "status", "pendingAction", "assignedTo", "lastResponse"]}
           enableActions
           onEdit={handleEdit}
+          onRowClick={(row) => navigate(`/Tickets/${row._id}`)}
         />
       </div>
     </div>

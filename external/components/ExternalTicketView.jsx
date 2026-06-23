@@ -5,20 +5,45 @@ const ExternalTicketView = () => {
     const { ticketId } = useParams();
     const [ticket, setTicket] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [statusColors, setStatusColors] = useState({});
     useEffect(() => {
         fetchTicket();
     }, [ticketId]);
     const fetchTicket = async () => {
         try {
-            const response = await axiosInstance.get(`/populate/read/tickets/${ticketId}`);
-            setTicket(response.data.data);
+            const [ticketRes, configRes] = await Promise.all([
+                axiosInstance.get(`/populate/read/tickets/${ticketId}`),
+                axiosInstance.post(`/populate/read/statusconfigs`, { filter: { modelName: 'tickets' } })
+            ]);
+            setTicket(ticketRes.data.data);
+            
+            if (configRes.data.data && configRes.data.data.length > 0) {
+                const config = configRes.data.data[0];
+                const colorsMap = {};
+                if (config.metaStatuses) {
+                    config.metaStatuses.forEach(s => colorsMap[s.label] = s.color);
+                }
+                if (config.workflowStatuses) {
+                    config.workflowStatuses.forEach(s => colorsMap[s.label] = s.color);
+                }
+                setStatusColors(colorsMap);
+            }
         } catch (error) {
-            console.error('Error fetching ticket:', error);
+            console.error('Error fetching ticket data:', error);
         } finally {
             setLoading(false);
         }
     };
-    const getStatusColor = (status) => {
+    const getStatusStyle = (status) => {
+        const hexColor = statusColors[status];
+        if (hexColor) {
+            // Convert hex to Tailwind-like styles manually via inline style, but return classes for fallback
+            return {
+                style: { backgroundColor: `${hexColor}20`, color: hexColor, borderColor: `${hexColor}40` },
+                className: 'bg-gray-50 border'
+            };
+        }
+        
         const colors = {
             'Open': 'bg-blue-50 text-blue-700 border-blue-200',
             'In Progress': 'bg-orange-50 text-orange-700 border-orange-200',
@@ -27,7 +52,7 @@ const ExternalTicketView = () => {
             'Completed': 'bg-green-50 text-green-700 border-green-200',
             'Closed': 'bg-gray-50 text-gray-700 border-gray-200'
         };
-        return colors[status] || 'bg-gray-50 text-gray-700 border-gray-200';
+        return { style: {}, className: colors[status] || 'bg-gray-50 text-gray-700 border-gray-200' };
     };
     if (loading) {
         return (
@@ -52,9 +77,17 @@ const ExternalTicketView = () => {
                         <h1 className="text-2xl font-bold text-gray-900">{ticket.title}</h1>
                         <p className="text-sm text-gray-500 mt-1">Ticket #{ticket.ticketId}</p>
                     </div>
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(ticket.status)}`}>
-                        {ticket.status}
-                    </span>
+                    {(() => {
+                        const styleInfo = getStatusStyle(ticket.status);
+                        return (
+                            <span 
+                                className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${styleInfo.className}`}
+                                style={styleInfo.style}
+                            >
+                                {ticket.status}
+                            </span>
+                        );
+                    })()}
                 </div>
             </div>
             {/* Description - Only User Story is visible to external clients */}
