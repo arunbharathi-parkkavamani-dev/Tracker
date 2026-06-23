@@ -56,6 +56,11 @@ const TaskSchema = new mongoose.Schema({
   },
 
   followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "employees", default: [] }],
+  
+  // Dependencies
+  blockedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "tasks", default: [] }],
+  blocking: [{ type: mongoose.Schema.Types.ObjectId, ref: "tasks", default: [] }],
+  
   estimatedHours: { type: Number, min: 0 },
   actualHours: { type: Number, min: 0 },
   progress: { type: Number, min: 0, max: 100, default: 0 },

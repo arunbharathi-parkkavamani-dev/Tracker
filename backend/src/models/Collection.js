@@ -44,6 +44,7 @@ import feedchannels from "./FeedChannel.js";
 import feedposts from "./FeedPost.js";
 import feedcomments from "./FeedComment.js";
 import NotificationReceptionist from "./NotificationReceptionist.js";
+import notificationpreferences from "./NotificationPreference.js";
 import products from "./products.js";
 import salarystructures from "./SalaryStructure.js";
 import payrollruns from "./PayrollRun.js";
@@ -101,6 +102,7 @@ const models = {
   feedposts,
   feedcomments,
   NotificationReceptionist,
+  notificationpreferences,
   products,
   salarystructures,
   payrollruns,

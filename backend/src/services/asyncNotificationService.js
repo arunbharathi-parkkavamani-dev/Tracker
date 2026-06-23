@@ -64,6 +64,24 @@ class AsyncNotificationService {
   // Queue push notification (non-blocking)
   async queuePushNotification(userId, title, body, data = {}, options = {}) {
     try {
+      // Check notification preferences
+      try {
+        const { default: models } = await import('../models/Collection.js');
+        const prefs = await models.notificationpreferences.findOne({ employeeId: userId }).lean();
+        if (prefs) {
+          if (data.type === 'task_status' && prefs.muteTaskStatusChanges) return { success: true, ignored: true };
+          if (data.type === 'task_assignment' && prefs.muteTaskAssignments) return { success: true, ignored: true };
+          if (data.type === 'task_comment') {
+            if (prefs.muteTaskComments) return { success: true, ignored: true };
+            if (prefs.onlyMentions && (!data.mentions || !data.mentions.includes(userId.toString()))) {
+              return { success: true, ignored: true };
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching notification preferences:', err);
+      }
+
       const job = await this.pushQueue.add('send-push', {
         userId,
         title,

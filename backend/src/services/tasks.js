@@ -156,14 +156,31 @@ export default function tasks() {
 
     // ── BEFORE UPDATE ──────────────────────────────────────────────────────
     beforeUpdate: async ({ body, docId }) => {
-      // 1. Stage duration tracking
-      if (body.status) {
-        const { default: models } = await import('../models/Collection.js');
-        const currentTask = await models.tasks.findById(docId).select('status stageHistory createdAt').lean();
-        
-        if (currentTask && currentTask.status !== body.status) {
-          const now = new Date();
-          let newStageHistory = currentTask.stageHistory ? [...currentTask.stageHistory] : [];
+      if (!body.status) return;
+      
+      const { default: models } = await import('../models/Collection.js');
+      const currentTask = await models.tasks.findById(docId).select('status stageHistory createdAt blockedBy').lean();
+      
+      if (!currentTask || currentTask.status === body.status) return;
+
+      // 1. Dependency Validation
+      if (!['Backlogs', 'To Do', 'Rejected'].includes(body.status)) {
+        if (currentTask.blockedBy && currentTask.blockedBy.length > 0) {
+          const blockingTasks = await models.tasks.find({
+            _id: { $in: currentTask.blockedBy },
+            status: { $nin: ['Completed', 'Approved', 'Rejected'] }
+          }).select('title').lean();
+
+          if (blockingTasks.length > 0) {
+            const blockingTitles = blockingTasks.map(t => t.title).join(', ');
+            throw new Error(`Cannot update status to ${body.status}. This task is blocked by: ${blockingTitles}`);
+          }
+        }
+      }
+
+      // 2. Stage duration tracking
+      const now = new Date();
+      let newStageHistory = currentTask.stageHistory ? [...currentTask.stageHistory] : [];
           
           // Calculate duration for the previous stage
           if (newStageHistory.length > 0) {
@@ -189,8 +206,6 @@ export default function tasks() {
           });
           
           body.stageHistory = newStageHistory;
-        }
-      }
     },
 
     // ── AFTER UPDATE ───────────────────────────────────────────────────────
@@ -270,7 +285,7 @@ export default function tasks() {
             await asyncNotificationService.queuePushNotification(
               receiverId, 'Task Comment',
               `${updaterName} commented: ${commentText.substring(0, 50)}...`,
-              { taskId: taskData._id, type: 'task_comment' }
+              { taskId: taskData._id, type: 'task_comment', mentions: mentioned }
             );
           }
           return;
