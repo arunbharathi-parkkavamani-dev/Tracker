@@ -227,3 +227,108 @@ These files appear to be part of an evaluation framework for an AI agent or skil
     *   Defines the evaluation configuration: `name`, `description`, `skill`, `version`, `trials_per_task`, `timeout_seconds`, `parallel`, `executor`, `model`.
     *   Specifies `metrics` (task_completion, efficiency) with weights and thresholds, which is good for quantitative evaluation.
     *   Includes `graders` of type `
+
+
+---
+### 🧠 AI Review (6/23/2026, 10:22:05 AM)
+
+
+### Part 1
+The provided code is a new commit that merges a branch named `feature/attendance-updates`. This commit introduces several new files within the `.agent/` directory, which appears to be related to an AI-assisted development system or agent.
+
+Here's a breakdown of the changes and a review:
+
+**1. `.agent/.env.example`**
+   - **Purpose:** This file serves as a template for environment variables used by the agent system. It includes placeholders for project root, Python/Node/NPM paths, local server URLs, issue tracker details, and tokens.
+   - **Review:**
+     - **Good Practice:** Providing an `.env.example` is excellent for onboarding and ensuring developers know what environment variables are expected.
+     - **Clarity:** The comments `# Local Environment Config Template` and `# Copy this to .env and fill in your values, OR just run /validate-workflows to auto-generate everything.` are very clear and helpful.
+     - **Auto-detection:** The mention of "Auto-Detected Values (filled by Pre-Flight)" and `/validate-workflows` suggests a sophisticated setup process, which is a positive.
+     - **GitHub Token:** The comment `GitHub: NOT needed — uses MCP server (configured in IDE settings)` is important for security and clarifies the authentication mechanism.
+
+**2. `.agent/Claude.md`**
+   - **Purpose:** This is a comprehensive document outlining "Project Rules" for the Logimax ERP Tracker System, specifically for the AI agent (named Claude, presumably). It covers framework standards, API/data flow, frontend/backend conventions, safety guardrails, documentation processes, environment details, and module definitions.
+   - **Review:**
+     - **Excellent Structure:** The document is well-organized with clear headings and subheadings, making it easy to read and understand.
+     - **"STEP ZERO" Enforcement:** The "⛔ STEP ZERO — BEFORE ANY TASK (NON-NEGOTIABLE)" section is crucial. It enforces a mandatory pre-read sequence for skills (`knowledge-brain` and `frontend-ui-tokens`). This is a strong mechanism to ensure the agent operates with the necessary context and adheres to project standards. The "Violation of this order is a rule failure" statement emphasizes its importance.
+     - **Detailed Tech Stack:** The "Framework & Coding Standards" sections for both Frontend (React + Vite + JavaScript) and Backend (Express + Mongoose + MongoDB) are highly detailed. They specify versions, preferred libraries, and coding patterns (e.g., `.jsx` for components, `useGenericAPI.js`, soft-delete pattern). This is invaluable for consistency.
+     - **API & Data Flow:** The standard trace and specific `POST`/`PUT`/`DELETE` endpoints for `populate` routes clearly define the API interaction pattern.
+     - **Conventions:** Both frontend and backend conventions are well-articulated, covering everything from state management to error handling and file organization.
+     - **Safety & Guardrails:** This section is critical. It explicitly lists actions that require approval or should be handled with extreme caution (e.g., destructive DB operations, modifying core files). This demonstrates a strong focus on preventing accidental damage.
+     - **Documentation & Process:** Emphasizing updating `knowledge_brain/`, referencing module brain files, and specific commit message guidelines promotes good documentation habits and traceability.
+     - **Environment & Modules:** The tables for environment variables and module definitions (FE pages, Backend models) provide a quick reference for the project's architecture.
+     - **Clarity on "No TypeScript":** Explicitly stating "No TypeScript, no React Query/TanStack" helps set clear boundaries for technology choices.
+     - **Minor Suggestion:** For the "Modules" table, it might be helpful to add a "Description" column to briefly explain the purpose of each module, especially for less obvious ones like "PlayGround" or "Core".
+
+**3. `.agent/DEVELOPER_GUIDE.md`**
+   - **Purpose:** This file serves as a high-level developer guide for interacting with the AI agent system, providing an overview, tech stack, quick start commands, directory structure, key workflows, and skills.
+   - **Review:**
+     - **Concise Overview:** Provides a good summary of the agent system's purpose and tech stack.
+     - **Quick Start:** The "Quick Start" section with commands like `/validate-workflows`, `/build-module-brain`, and `/fix-single-bug` is very practical and user-friendly.
+     - **Directory Structure:** A clear `tree` representation of the `.agent/` directory is helpful for understanding the system's organization.
+     - **Key Workflows:** The table listing commands and their purposes is excellent for quick reference.
+     - **Skills Section:** Clearly defines the available skills, their location, and when to use them, reinforcing the "STEP ZERO" from `Claude.md`.
+     - **"Adapted From":** The note about being adapted from a Django/MySQL system is interesting context, showing the system's evolution.
+
+**4. `.agent/config.md`**
+   - **Purpose:** This file is described as the "Central Configuration" for the Logimax ERP Tracker System, intended to be referenced by all workflows for project-level values. The snippet provided is incomplete but indicates its role.
+   - **Review:**
+     - **Good Design:** Having a central configuration file that workflows reference is a robust design pattern, promoting consistency and easier updates.
+     - **Clarity on Scope:** The note "> **All workflows reference this file for project-level values.** > **Local/machine-specific values are auto-detected
+
+### Part 2
+The provided code snippet is primarily documentation and configuration for an AI agent's evaluation process. It defines project identity, tech stack, directory structure, module registry, and agent behavioral rules. Following this, it introduces new YAML files for evaluating a `frontend-ui-tokens` skill.
+
+Here's a review focusing on the provided section:
+
+**Overall Impression:**
+
+The documentation section is well-structured, comprehensive, and clear. It provides a solid foundation for understanding the project's setup, technologies, and organizational principles. The agent behavioral rules are particularly valuable for guiding AI agent interactions.
+
+The new YAML files for `frontend-ui-tokens` evaluation are standard for defining evaluation tasks, including positive and negative triggers, which is good practice for testing an agent's ability to correctly identify when to use a specific skill.
+
+**Specific Feedback and Suggestions:**
+
+**1. Documentation Section:**
+
+*   **Clarity and Detail:** Excellent. Each table (Project Identity, Tech Stack, Environment Paths, Directory Structure, Module Registry, Agent Behavioral Rules) is clear, concise, and provides necessary details.
+*   **Consistency:** The use of placeholders like `{PROJECT_ROOT}` and `{FE_ROOT}` is consistent and helpful for understanding relative paths.
+*   **Readability:** Markdown table formatting is used effectively, making the information easy to digest.
+*   **Agent Behavioral Rules:**
+    *   These rules are crucial for guiding the AI agent's behavior and ensuring best practices. They are well-defined and cover important aspects like database interaction, code modification, testing, and environment usage.
+    *   **Suggestion:** Consider adding a rule about code style/linting if there's a specific standard (e.g., "AGENT-011: Adhere to ESLint rules and Prettier formatting.").
+    *   **Suggestion:** Rule AGENT-009 ("No TypeScript — all frontend code is `.jsx`/`.js`") is a strong statement. While clear, it might be worth noting *why* this decision was made if there's a specific architectural or team preference reason, especially as TypeScript is prevalent in modern React development.
+    *   **Suggestion:** Rule AGENT-010 ("API calls must use `useGenericAPI.js` — no raw axios calls in pages") is excellent for enforcing consistency and maintainability.
+*   **Module Registry:**
+    *   This table is very useful for understanding the project's modularity and how backend models map to frontend components/pages.
+    *   The `Status: Active` column is good, but if there were other statuses (e.g., "Planned", "Deprecated"), it would be even more valuable.
+    *   The `[model]` entry is a bit generic. If it's a placeholder for future modules, it's fine, but if it implies a dynamic routing pattern, it could be clarified.
+    *   "Core" and "Common" modules are well-defined, showing how shared functionalities are organized.
+
+**2. `frontend-ui-tokens` Evaluation Files:**
+
+*   **`eval.yaml`:**
+    *   **`name` and `description`:** Clear and follow a good naming convention.
+    *   **`skill`:** Explicitly links to the `frontend-ui-tokens` skill, which is correct.
+    *   **`version`:** Good practice to include.
+    *   **`config`:**
+        *   `trials_per_task`, `timeout_seconds`, `parallel`, `executor`, `model`: Standard and appropriate settings for an evaluation. `claude-sonnet-4.6` is specified, which is good for reproducibility.
+    *   **`metrics`:**
+        *   `task_completion` and `efficiency`: These are good general metrics. The weights and thresholds are reasonable starting points.
+    *   **`graders`:**
+        *   `behavior` grader with `token-budget`: This is a very important grader for controlling AI agent costs and ensuring efficient responses. `max_tokens: 1200` seems like a reasonable budget for this type of skill.
+    *   **`tasks`:** Points to `"tasks/*.yaml"`, which is the correct way to include multiple task definitions.
+
+*   **`negative-trigger-1.yaml`:**
+    *   **`id`, `name`, `description`:** Clear.
+    *   **`tags`:** `negative-trigger` is appropriate.
+    *   **`inputs.prompt`:** A simple, unrelated prompt ("Tell me a short joke about coffee.") is a good choice for a negative trigger.
+    *   **`expected.should_trigger: false`:** Correctly indicates that the skill should *not* be invoked.
+    *   **`graders.text` with `not_contains`:** This is the correct way to verify a negative trigger. It checks that the output does not contain keywords related to the skill, ensuring the agent doesn't falsely activate.
+
+*   **`positive-trigger-1.yaml`:**
+    *   **`id`, `name`, `description`:** Clear.
+    *   **`tags`:** `positive-trigger` is appropriate.
+    *   **`inputs.prompt`:** Explicitly prompts the agent to use the skill ("Use frontend-ui-tokens to help me complete this task"), which is a strong positive trigger.
+    *   **`expected.should_trigger: true`:** Correctly indicates that the skill *should* be invoked.
+    *   **`graders.text` with `contains`:** This
