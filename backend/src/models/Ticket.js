@@ -59,28 +59,29 @@ const ticketSchema = new mongoose.Schema({
     index: true
   },
   
-  attachments: [{
-    filename: String,
-    originalName: String,
-    path: String,
-    mimetype: String,
-    size: Number,
-    uploadedAt: { type: Date, default: Date.now }
-  }],
   dueDate: { type: Date },
   startDate: { type: Date, default: Date.now },
   liveHours: { type: Number, default: 0 },
-  comments: [{
-    comment: String,
-    commentedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'employees' },
-    isPublic: { type: Boolean, default: true }, // public (agent ↔ employee) or internal (employee only)
-    commentedAt: { type: Date, default: Date.now }
-  }],
   resolvedAt: { type: Date },
   closedAt: { type: Date },
   resolution: { type: String }
 }, {
-  timestamps: true
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+// Virtual populate references for comments and attachments
+ticketSchema.virtual('comments', {
+  ref: 'ticket_comments',
+  localField: '_id',
+  foreignField: 'ticketId'
+});
+
+ticketSchema.virtual('attachments', {
+  ref: 'ticket_attachments',
+  localField: '_id',
+  foreignField: 'ticketId'
 });
 
 // Auto-generate ticket ID and handle userStory fallback

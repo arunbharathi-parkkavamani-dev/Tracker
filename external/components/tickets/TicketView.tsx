@@ -1,9 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import FileViewerModal from '../Common/FileViewerModal';
+import CommentThread from './CommentThread';
 
 export default function TicketView({ ticket, onEdit, onBack }: any) {
   const [liveHours, setLiveHours] = useState(ticket.liveHours || 0);
+  const [viewerFile, setViewerFile] = useState<any>(null);
+  const [statusColors, setStatusColors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (ticket.status !== 'Completed') {
@@ -20,7 +24,49 @@ export default function TicketView({ ticket, onEdit, onBack }: any) {
     }
   }, [ticket]);
 
-  const getStatusChipClass = (status: string) => {
+  useEffect(() => {
+    const fetchStatusConfigs = async () => {
+      try {
+        const agentId = localStorage.getItem('agentId') || 'temp-agent-id';
+        const res = await fetch('/api/statusconfigs', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${agentId}`
+          },
+          body: JSON.stringify({ filter: { modelName: 'tickets' } })
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          if (data.data && data.data.length > 0) {
+            const config = data.data[0];
+            const colorsMap: Record<string, string> = {};
+            if (config.metaStatuses) {
+                config.metaStatuses.forEach((s: any) => colorsMap[s.label] = s.color);
+            }
+            if (config.workflowStatuses) {
+                config.workflowStatuses.forEach((s: any) => colorsMap[s.label] = s.color);
+            }
+            setStatusColors(colorsMap);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching status configs:', err);
+      }
+    };
+    
+    fetchStatusConfigs();
+  }, []);
+
+  const getStatusStyle = (status: string) => {
+    const hexColor = statusColors[status];
+    if (hexColor) {
+      return {
+        style: { backgroundColor: `${hexColor}20`, color: hexColor, borderColor: `${hexColor}40`, borderWidth: '1px' },
+        className: 'lmx-chip'
+      };
+    }
     const map: Record<string, string> = {
       'Task Viewed': 'lmx-chip-inprogress',
       'Reviewed': 'lmx-chip-pending',
@@ -29,7 +75,7 @@ export default function TicketView({ ticket, onEdit, onBack }: any) {
       'Updated In staging': 'lmx-chip-inprogress',
       'Completed': 'lmx-chip-active',
     };
-    return map[status] || 'lmx-chip-closed';
+    return { style: {}, className: `lmx-chip ${map[status] || 'lmx-chip-closed'}` };
   };
 
   const getPriorityChipClass = (priority: string) => {
@@ -103,9 +149,14 @@ export default function TicketView({ ticket, onEdit, onBack }: any) {
             </div>
             <div>
               <span className="lmx-label">Status</span>
-              <span className={`lmx-chip ${getStatusChipClass(ticket.status)}`}>
-                {ticket.status}
-              </span>
+              {(() => {
+                const styleInfo = getStatusStyle(ticket.status);
+                return (
+                  <span className={styleInfo.className} style={styleInfo.style}>
+                    {ticket.status}
+                  </span>
+                );
+              })()}
             </div>
           </div>
         </div>
@@ -187,15 +238,13 @@ export default function TicketView({ ticket, onEdit, onBack }: any) {
                   </p>
                 </div>
                 {attachment.path && (
-                  <a
-                    href={`/api/tickets/attachment/${attachment.filename}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    onClick={() => setViewerFile(attachment)}
                     className="lmx-btn-ghost text-[11px] px-2 py-1 shrink-0"
                     style={{ color: 'var(--lmx-accent)' }}
                   >
-                    Download
-                  </a>
+                    View
+                  </button>
                 )}
               </div>
             ))}
@@ -214,6 +263,15 @@ export default function TicketView({ ticket, onEdit, onBack }: any) {
           <p className="text-[14px] text-ink">{new Date(ticket.createdAt).toLocaleString()}</p>
         </div>
       </div>
+
+      {/* Comments Thread */}
+      <div className="mt-8">
+        <CommentThread ticketId={ticket._id || ticket.id || ticket.ticketId} />
+      </div>
+
+      {viewerFile && (
+        <FileViewerModal file={viewerFile} onClose={() => setViewerFile(null)} />
+      )}
     </div>
   );
 }

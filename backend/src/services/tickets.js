@@ -84,12 +84,73 @@ export default function tickets() {
 
         if (!ticket) return;
 
+        // 1. Initialize ticket creator as participant
+        await models.ticket_participants.create({
+          ticketId: docId,
+          userId: ticket.createdBy,
+          userModel: ticket.createdByModel,
+          role: 'creator'
+        });
+
+        // 2. Initialize ticket assignees as participants
+        if (ticket.assignedTo && ticket.assignedTo.length > 0) {
+          // Deduplicate assignees and filter out the creator
+          const uniqueAssignees = [...new Set(ticket.assignedTo.map(uid => uid.toString()))];
+          const otherAssigneeIds = uniqueAssignees.filter(uid => uid !== ticket.createdBy.toString());
+
+          if (otherAssigneeIds.length > 0) {
+            const assigneeOps = otherAssigneeIds.map(uid => ({
+              ticketId: docId,
+              userId: uid,
+              userModel: 'employees',
+              role: 'assignee'
+            }));
+            await models.ticket_participants.insertMany(assigneeOps);
+          }
+
+          const assignmentOps = uniqueAssignees.map(uid => ({
+            ticketId: docId,
+            assignedTo: uid,
+            assignedBy: userId,
+            assignedByModel: ticket.createdByModel
+          }));
+          await models.ticket_assignments.insertMany(assignmentOps);
+
+          // Log assignments in activity log
+          for (const uid of uniqueAssignees) {
+            await models.ticket_activity_logs.create({
+              ticketId: docId,
+              action: 'assigned',
+              performedBy: userId,
+              performedByModel: ticket.createdByModel,
+              details: { assignedTo: uid }
+            });
+          }
+        }
+
+        // 3. Initialize ticket status history log
+        await models.ticket_status_history.create({
+          ticketId: docId,
+          toStatus: ticket.status || 'Open',
+          changedBy: userId,
+          changedByModel: ticket.createdByModel
+        });
+
+        // 4. Log ticket creation activity
+        await models.ticket_activity_logs.create({
+          ticketId: docId,
+          action: 'created',
+          performedBy: userId,
+          performedByModel: ticket.createdByModel,
+          details: { initialStatus: ticket.status || 'Open' }
+        });
+
         const creatorName = `${ticket.createdBy?.basicInfo?.firstName || ''} ${ticket.createdBy?.basicInfo?.lastName || ''}`.trim() || 'Someone';
 
         // Notify all assigned employees
         if (ticket.assignedTo && ticket.assignedTo.length > 0) {
-          await fcmService.dispatchNotification({
-            type: 'ticket_assigned',
+          await fcmService.dispatchTicketNotification({
+            type: 'ticket',
             title: 'New Ticket Assigned',
             message: `${creatorName} assigned you a new ticket: ${ticket.title || ticket.ticketId || 'Untitled'}`,
             sender: userId,
@@ -98,19 +159,44 @@ export default function tickets() {
           });
         }
       } catch (error) {
-        console.error('[tickets service] afterCreate FCM error:', error);
+        console.error('[tickets service] afterCreate error:', error);
       }
     },
 
     // ---------------- Before Update ----------------
-    beforeUpdate: async ({ userId, body, docId }) => {
-      // Handle comment push ($push won't work through buildUpdateQuery's $set wrapper)
+    beforeUpdate: async ({ role, userId, docId, body, existingDoc }) => {
+      // 1. Enforce status transition rules
+      const ALLOWED_TRANSITIONS = {
+        'New': ['Open', 'Cancelled'],
+        'Open': ['In Progress', 'Cancelled'],
+        'In Progress': ['Waiting For Client', 'Waiting For Admin', 'Resolved', 'Cancelled'],
+        'Waiting For Client': ['In Progress', 'Closed'],
+        'Waiting For Admin': ['In Progress', 'Closed'],
+        'Resolved': ['Closed', 'Reopened'],
+        'Reopened': ['In Progress'],
+        'Closed': ['Reopened'],
+        'Cancelled': []
+      };
+
+      if (body.status && existingDoc && body.status !== existingDoc.status) {
+        const allowed = ALLOWED_TRANSITIONS[existingDoc.status] || [];
+        const isSuperAdmin = role && (role.toString() === 'Super Admin' || role.toString() === 'superadmin' || role.toString() === '68d8b85df397d1d97620ba90');
+        if (!allowed.includes(body.status) && !isSuperAdmin) {
+          throw new Error(`⛔ Status transition from "${existingDoc.status}" to "${body.status}" is not allowed.`);
+        }
+      }
+
+      // Handle comment push (for backward compatibility if legacy code attempts to push)
       if (body.$push?.comments) {
         const { default: models } = await import('../models/Collection.js');
-        await models.tickets.updateOne(
-          { _id: docId },
-          { $push: { comments: body.$push.comments } }
-        );
+        const commentBody = body.$push.comments;
+        await models.ticket_comments.create({
+          ticketId: docId,
+          commentedBy: userId,
+          commenterModel: role?.toString() === 'agent' ? 'agents' : 'employees',
+          message: commentBody.message || commentBody.comment || commentBody,
+          isPublic: commentBody.isPublic !== undefined ? commentBody.isPublic : true
+        });
         delete body.$push;
         return { body };
       }
@@ -122,12 +208,11 @@ export default function tickets() {
 
       if (body.pushTaskSync === true) {
         const { default: models } = await import('../models/Collection.js');
-        const existingDoc = await models.tickets.findById(docId);
+        const existingTicket = existingDoc || await models.tickets.findById(docId);
 
-        if (!existingDoc.isConvertedToTask) {
-
+        if (existingTicket && !existingTicket.isConvertedToTask) {
           // Ensure taskTypeId
-          if (!existingDoc.taskTypeId) {
+          if (!existingTicket.taskTypeId) {
             const defaultTaskType = await models.tasktypes.findOne();
             if (!defaultTaskType) {
               throw new Error('No task type available.');
@@ -137,8 +222,8 @@ export default function tickets() {
             });
           }
 
-          // ✅ Ensure projectTypeId
-          if (!existingDoc.projectTypeId) {
+          // Ensure projectTypeId
+          if (!existingTicket.projectTypeId) {
             const defaultProjectType = await models.projecttypes.findOne();
             if (!defaultProjectType) {
               throw new Error('No project type available.');
@@ -156,46 +241,230 @@ export default function tickets() {
     },
 
     // ---------------- After Update ----------------
-    afterUpdate: async ({ userId, docId, body }) => {
-      if (body.pushTaskSync === true) {
+    afterUpdate: async ({ role, userId, docId, data, body, beforeDoc }) => {
+      try {
         const { default: models } = await import('../models/Collection.js');
-        const ticketData = await models.tickets.findById(docId);
+        const { emitTicketEvent } = await import('./ticketSocketEmitter.js');
+        const { default: fcmService } = await import('./fcmService.js');
 
-        if (!ticketData.linkedTaskId) {
-          const taskData = await models.tasks.create({
-            clientId: ticketData.clientId,
-            projectTypeId: ticketData.projectTypeId,
-            taskTypeId: ticketData.taskTypeId,
-            createdBy: ticketData.createdBy,
-            assignedTo: ticketData.assignedTo || [],
-            linkedTicketId: ticketData._id,
-            isFromTicket: true,
-            title: ticketData.title,
-            userStory: ticketData.userStory, // Use userStory field
-            priorityLevel: ticketData.priority,
-            followers: [userId]
+        const commenterModel = role?.toString() === 'agent' ? 'agents' : 'employees';
+
+        // 1. Check if status changed
+        if (data.status && beforeDoc && data.status !== beforeDoc.status) {
+          const oldStatus = beforeDoc.status;
+          const newStatus = data.status;
+
+          // Find the last status history log to update its durationSeconds
+          const lastHistory = await models.ticket_status_history.findOne({ ticketId: docId }).sort({ createdAt: -1 });
+          if (lastHistory) {
+            const durationSeconds = Math.round((Date.now() - new Date(lastHistory.createdAt).getTime()) / 1000);
+            await models.ticket_status_history.findByIdAndUpdate(lastHistory._id, { durationSeconds });
+          }
+
+          // Create new status history record
+          await models.ticket_status_history.create({
+            ticketId: docId,
+            fromStatus: oldStatus,
+            toStatus: newStatus,
+            changedBy: userId,
+            changedByModel: commenterModel
           });
 
-          // Create comment thread
-          const thread = await models.commentsthreads.create({
-            taskId: taskData._id.toString(),
-            comments: [{
-              commentedBy: userId,
-              message: `Task created from ticket conversion`
-            }]
+          // Create activity log
+          await models.ticket_activity_logs.create({
+            ticketId: docId,
+            action: 'status_changed',
+            performedBy: userId,
+            performedByModel: commenterModel,
+            details: { fromStatus: oldStatus, toStatus: newStatus }
           });
 
-          taskData.commentsThread = thread._id;
-          await taskData.save();
-
-          // Update ticket with task link
-          await models.tickets.findByIdAndUpdate(docId, {
-            linkedTaskId: taskData._id
+          // Emit status change socket event
+          await emitTicketEvent(docId, 'status_changed', {
+            oldStatus,
+            newStatus,
+            changedBy: userId,
+            changedByModel: commenterModel
           });
 
-          // Send notifications
-          await notifyTicketConversion(ticketData, taskData, userId);
+          // Notify all participants about status change
+          const participants = await models.ticket_participants.find({ ticketId: docId }).lean();
+          let receiverIds = participants.map(p => p.userId.toString()).filter(id => id !== userId.toString());
+          if (receiverIds.length > 0) {
+            await fcmService.dispatchTicketNotification({
+              type: 'ticket',
+              title: `Ticket Status Updated`,
+              message: `Ticket status has been changed from ${oldStatus} to ${newStatus}`,
+              sender: userId,
+              meta: { model: 'tickets', modelId: docId },
+              receiversArray: receiverIds
+            });
+          }
         }
+
+        // 2. Check if assignees changed
+        if (body.assignedTo) {
+          const oldAssignees = (beforeDoc?.assignedTo || []).map(id => id.toString());
+          const newAssignees = (data.assignedTo || []).map(id => id.toString());
+
+          const added = newAssignees.filter(id => !oldAssignees.includes(id));
+          const removed = oldAssignees.filter(id => !newAssignees.includes(id));
+
+          // Handle removals from participants
+          if (removed.length > 0) {
+            await models.ticket_participants.deleteMany({
+              ticketId: docId,
+              userId: { $in: removed },
+              role: 'assignee'
+            });
+          }
+
+          // Handle additions
+          if (added.length > 0) {
+            for (const uid of added) {
+              // Add to participants as assignee
+              await models.ticket_participants.findOneAndUpdate(
+                { ticketId: docId, userId: uid },
+                {
+                  $setOnInsert: {
+                    userModel: 'employees',
+                    role: 'assignee'
+                  }
+                },
+                { upsert: true }
+              );
+
+              // Log assignment
+              await models.ticket_assignments.create({
+                ticketId: docId,
+                assignedTo: uid,
+                assignedBy: userId,
+                assignedByModel: commenterModel
+              });
+
+              // Create activity log
+              await models.ticket_activity_logs.create({
+                ticketId: docId,
+                action: 'assigned',
+                performedBy: userId,
+                performedByModel: commenterModel,
+                details: { assignedTo: uid }
+              });
+
+              // Dispatch notification to assignee
+              await fcmService.dispatchTicketNotification({
+                type: 'ticket',
+                title: 'New Ticket Assigned',
+                message: `You have been assigned to ticket: ${data.title || data.ticketId}`,
+                sender: userId,
+                meta: { model: 'tickets', modelId: docId },
+                receiversArray: [uid]
+              });
+            }
+          }
+
+          if (added.length > 0 || removed.length > 0) {
+            // Emit updated event via socket
+            await emitTicketEvent(docId, 'ticket_updated', {
+              assignedTo: newAssignees
+            });
+          }
+        }
+
+        // 3. Task sync logic (pushTaskSync)
+        if (body.pushTaskSync === true) {
+          const ticketData = await models.tickets.findById(docId);
+          if (ticketData && !ticketData.linkedTaskId) {
+            const taskData = await models.tasks.create({
+              clientId: ticketData.clientId,
+              projectTypeId: ticketData.projectTypeId,
+              taskTypeId: ticketData.taskTypeId,
+              createdBy: ticketData.createdBy,
+              assignedTo: ticketData.assignedTo || [],
+              linkedTicketId: ticketData._id,
+              isFromTicket: true,
+              title: ticketData.title,
+              userStory: ticketData.userStory,
+              priorityLevel: ticketData.priority,
+              followers: [userId]
+            });
+
+            // Create comment thread
+            const thread = await models.commentsthreads.create({
+              taskId: taskData._id.toString(),
+              comments: [{
+                commentedBy: userId,
+                message: `Task created from ticket conversion`
+              }]
+            });
+
+            taskData.commentsThread = thread._id;
+            await taskData.save();
+
+            // Update ticket with task link
+            await models.tickets.findByIdAndUpdate(docId, {
+              linkedTaskId: taskData._id
+            });
+
+            // Send notifications
+            await notifyTicketConversion(ticketData, taskData, userId);
+          }
+        }
+      } catch (error) {
+        console.error('[tickets service] error in afterUpdate hook:', error);
+      }
+    },
+
+    // ---------------- After Read ----------------
+    afterRead: async ({ role, userId, docId, data }) => {
+      try {
+        if (!data) return data;
+        const { default: models } = await import('../models/Collection.js');
+        const { markCommentsAsRead, getUnreadCommentCount } = await import('./readReceiptsService.js');
+
+        const isAgent = role.toString() === 'agent' || role.toString() === '6a25cbc1cd36294f5e578696';
+        const userModel = isAgent ? 'agents' : 'employees';
+
+        // 1. If fetching single ticket details (indicated by docId)
+        if (docId) {
+          const tickets = Array.isArray(data) ? data : [data];
+          const ticket = tickets[0];
+          if (ticket) {
+            // Mark all comments for this ticket as read for the user
+            await markCommentsAsRead(ticket._id.toString(), userId, userModel);
+
+            // Strip internal comments for agents
+            if (isAgent && ticket.comments) {
+              ticket.comments = ticket.comments.filter(c => c.isPublic === true);
+            }
+
+            ticket.unreadCommentsCount = 0;
+          }
+          return Array.isArray(data) ? [ticket] : ticket;
+        }
+
+        // 2. If fetching a list of tickets (no docId)
+        if (Array.isArray(data)) {
+          const ticketsWithUnread = await Promise.all(data.map(async (ticket) => {
+            const unreadCount = await getUnreadCommentCount(ticket._id, userId, userModel);
+            
+            // Also, strip internal comments for agents!
+            if (isAgent && ticket.comments) {
+              ticket.comments = ticket.comments.filter(c => c.isPublic === true);
+            }
+            
+            return {
+              ...ticket,
+              unreadCommentsCount: unreadCount
+            };
+          }));
+          return ticketsWithUnread;
+        }
+
+        return data;
+      } catch (error) {
+        console.error('[tickets service] afterRead error:', error);
+        return data;
       }
     }
   };

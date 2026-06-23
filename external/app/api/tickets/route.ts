@@ -6,12 +6,18 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const queryString = searchParams.toString();
+    const authHeader = request.headers.get('authorization') || '';
     
-    const response = await fetch(`${BACKEND_URL}/api/tickets${queryString ? `?${queryString}` : ''}`, {
-      method: 'GET',
+    // Proxy to the backend's generic populate endpoint
+    const response = await fetch(`${BACKEND_URL}/api/populate/read/tickets${queryString ? `?${queryString}` : ''}`, {
+      method: 'POST', // Backend populate read endpoint accepts POST
       headers: {
         'Content-Type': 'application/json',
+        'x-source': 'external',
+        'Authorization': authHeader
       },
+      // Pass empty body to retrieve list
+      body: JSON.stringify({ limit: 500 })
     });
 
     if (!response.ok) {
@@ -19,7 +25,7 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json();
-    return NextResponse.json(data);
+    return NextResponse.json(data.data || []); // Return the array of tickets directly
   } catch (error) {
     console.error('Error fetching tickets:', error);
     return NextResponse.json(
@@ -32,12 +38,13 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
+    const authHeader = request.headers.get('authorization') || '';
     
     const response = await fetch(`${BACKEND_URL}/api/populate/create/tickets`, {
       method: 'POST',
       headers: {
         'x-source': 'external',
-        'Authorization': `Bearer temp-external-token`
+        'Authorization': authHeader
       },
       body: formData,
     });

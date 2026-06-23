@@ -1,17 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3000';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const response = await fetch(`${BACKEND_URL}/api/tickets/${params.id}`, {
-      method: 'GET',
+    const authHeader = request.headers.get('authorization') || '';
+    const response = await fetch(`${BACKEND_URL}/api/populate/read/tickets/${params.id}`, {
+      method: 'POST', // Backend populate read accepts POST
       headers: {
         'Content-Type': 'application/json',
+        'x-source': 'external',
+        'Authorization': authHeader
       },
+      body: JSON.stringify({})
     });
 
     if (!response.ok) {
@@ -19,7 +23,7 @@ export async function GET(
     }
 
     const data = await response.json();
-    return NextResponse.json(data);
+    return NextResponse.json(data.data || null);
   } catch (error) {
     console.error('Error fetching ticket:', error);
     return NextResponse.json(
@@ -35,9 +39,14 @@ export async function PUT(
 ) {
   try {
     const formData = await request.formData();
+    const authHeader = request.headers.get('authorization') || '';
     
-    const response = await fetch(`${BACKEND_URL}/api/tickets/${params.id}`, {
+    const response = await fetch(`${BACKEND_URL}/api/populate/update/tickets/${params.id}`, {
       method: 'PUT',
+      headers: {
+        'x-source': 'external',
+        'Authorization': authHeader
+      },
       body: formData,
     });
 
@@ -61,10 +70,13 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const response = await fetch(`${BACKEND_URL}/api/tickets/${params.id}`, {
+    const authHeader = request.headers.get('authorization') || '';
+    const response = await fetch(`${BACKEND_URL}/api/populate/delete/tickets/${params.id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
+        'x-source': 'external',
+        'Authorization': authHeader
       },
     });
 
