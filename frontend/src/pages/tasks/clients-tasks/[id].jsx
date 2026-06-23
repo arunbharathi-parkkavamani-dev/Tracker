@@ -81,13 +81,8 @@ const ClientKanbanPage = () => {
     } catch (e) { console.error(e); }
   };
 
-  const handleTaskClick = async (task) => {
-    try {
-      const res = await axiosInstance.post(`/populate/read/tasks/${task._id}`, {
-        fields: "clientId,projectTypeId,taskTypeId,createdBy,assignedTo",
-      });
-      setSelectedTask(res.data.data);
-    } catch (e) { console.error(e); }
+  const handleTaskClick = (task) => {
+    navigate(`/tasks/${task._id}`);
   };
 
   const columnsMap = {
@@ -178,22 +173,7 @@ const ClientKanbanPage = () => {
         />
       </div>
 
-      {selectedTask && (
-        <div className="fixed inset-0 tracker-overlay z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-surface rounded-tracker-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
-            style={{ boxShadow: "var(--tracker-shadow-overlay)" }}>
-            <div className="flex items-center justify-between px-6 py-4 text-white rounded-t-[16px] bg-gradient-to-br from-[#0369A1] to-[#0EA5E9]">
-              <span className="text-[16px] font-semibold">{client?.name} · Task Detail</span>
-              <button onClick={() => setSelectedTask(null)}
-                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors text-lg font-bold">×</button>
-            </div>
-            <div className="p-6">
-              <TaskModal task={selectedTask} onClose={() => setSelectedTask(null)}
-                onUpdate={() => { fetchData(); setSelectedTask(null); }} />
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 };

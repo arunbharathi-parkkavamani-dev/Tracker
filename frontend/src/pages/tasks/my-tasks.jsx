@@ -96,19 +96,8 @@ const MyTasks = () => {
     } catch (e) { console.error(e); }
   };
 
-  const handleTaskClick = async (task) => {
-    try {
-      const res = await axiosInstance.post(`/populate/read/tasks/${task._id}`, {
-        populateFields: {
-          clientId:      "name",
-          projectTypeId: "name",
-          taskTypeId:    "name",
-          createdBy:     "basicInfo.firstName,basicInfo.lastName,basicInfo.profileImage",
-          assignedTo:    "basicInfo.firstName,basicInfo.lastName,basicInfo.profileImage",
-        },
-      });
-      setSelectedTask(res.data.data);
-    } catch (e) { console.error(e); }
+  const handleTaskClick = (task) => {
+    navigate(`/tasks/${task._id}`);
   };
 
   const handleCardMove = async (task, _from, toCol) => {
@@ -283,31 +272,7 @@ const MyTasks = () => {
         />
       </div>
 
-      {/* ── Task detail modal ── */}
-      {selectedTask && (
-        <div className="fixed inset-0 tracker-overlay z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-surface rounded-tracker-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
-            style={{ boxShadow: "var(--tracker-shadow-overlay)" }}>
-            <div
-              className="flex items-center justify-between px-6 py-4 text-white rounded-t-[16px]"
-              style={{ background: "linear-gradient(135deg, #0369A1 0%, var(--module-project) 100%)" }}
-            >
-              <span className="text-[16px] font-semibold">Task Detail</span>
-              <button onClick={() => setSelectedTask(null)}
-                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors">
-                <X size={18} />
-              </button>
-            </div>
-            <div className="p-6">
-              <TaskModal
-                task={selectedTask}
-                onClose={() => setSelectedTask(null)}
-                onUpdate={() => { fetchMyTasks(); setSelectedTask(null); }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 };
