@@ -53,6 +53,7 @@ import statusmappings from "./StatusMapping.js";
 import dashboardwidgets from "./DashboardWidget.js";
 import approvalworkflows from "./ApprovalWorkflow.js";
 import activitylogs from "./ActivityLog.js";
+import timetrackersessions from "./TimeTrackerSession.js";
 
 const models = {
   accesspolicies,
@@ -109,6 +110,7 @@ const models = {
   dashboardwidgets,
   approvalworkflows,
   activitylogs,
+  timetrackersessions,
 };
 
 export default models;

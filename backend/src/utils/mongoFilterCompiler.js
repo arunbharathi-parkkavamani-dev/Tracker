@@ -13,6 +13,11 @@ export function buildMongoFilter(node) {
   if (!node.operation && node.field && node.operator) {
     let value = node.value;
     
+    // Full text search support
+    if (node.field === '$text' && node.operator === '$search') {
+      return { $text: { $search: value } };
+    }
+    
     // Handle ObjectId fields - prevent empty string casting
     if (node.field === '_id' || node.field.endsWith('._id') || node.field.endsWith('Id') || 
         ['sender', 'receiver', 'recipient', 'employee', 'manager', 'reportingManager'].includes(node.field.split('.').pop())) {

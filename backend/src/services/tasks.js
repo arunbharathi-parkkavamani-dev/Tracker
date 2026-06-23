@@ -16,30 +16,61 @@ async function resolveTicketStatus(taskStatus) {
     }).lean();
     if (mapping?.mappings?.length) {
       const entry = mapping.mappings.find(m => m.sourceStatus === taskStatus);
-      return entry?.targetStatus ?? null;
+      if (entry?.targetStatus) return entry.targetStatus;
     }
   } catch (err) {
     console.error('[TicketSync] resolveTicketStatus error:', err.message);
   }
-  return null;
+
+  // Fallback status mapping
+  const fallbackMapping = {
+    'Backlogs':    'Open',
+    'To Do':       'Open',
+    'In Progress': 'In Progress',
+    'In Review':   'In Progress',
+    'Approved':    'Resolved',
+    'Rejected':    'In Progress',
+    'Completed':   'Resolved',
+    'Closed':      'Closed',
+  };
+  return fallbackMapping[taskStatus] || null;
 }
 
 /**
  * Sync all tickets linked to taskId via linkedTaskId field.
  */
-async function syncLinkedTickets(taskId, taskStatus) {
+async function syncLinkedTickets(taskId, taskStatus, userId) {
   const ticketStatus = await resolveTicketStatus(taskStatus);
   if (!ticketStatus) return;
 
   const { default: models } = await import('../models/Collection.js');
+  const { buildQuery } = await import('../utils/policy/policyEngine.js');
+
+  // Look up Super Admin role dynamically
+  const allRoles = await models.roles.find({}).lean();
+  console.log('[DEBUG-SYNC] Available roles in DB:', allRoles.map(r => `"${r.name}" (${r._id})`));
+  let adminRole = await models.roles.findOne({ name: { $regex: /^(super\s*admin|admin|superadmin)$/i } }).lean();
+  if (!adminRole) {
+    adminRole = await models.roles.findOne({ name: /admin/i }).lean();
+  }
+  const roleId = adminRole ? adminRole._id.toString() : 'Super Admin';
+  console.log('[DEBUG-SYNC] Resolved admin roleId:', roleId);
+
   const tickets = await models.tickets.find({ linkedTaskId: taskId });
 
   for (const ticket of tickets) {
     if (ticketStatus === ticket.status) continue;
-    await models.tickets.findByIdAndUpdate(ticket._id, {
-      status: ticketStatus,
-      ...(ticketStatus === 'Completed' && { resolvedAt: new Date() }),
-      ...(ticketStatus === 'Closed'    && { closedAt:   new Date() }),
+    await buildQuery({
+      role: roleId,
+      userId: userId || '000000000000000000000000',
+      action: 'update',
+      modelName: 'tickets',
+      docId: ticket._id,
+      body: {
+        status: ticketStatus,
+        ...(ticketStatus === 'Resolved' && { resolvedAt: new Date() }),
+        ...(ticketStatus === 'Closed'    && { closedAt:   new Date() }),
+      }
     });
     console.log(`[TicketSync] Ticket ${ticket._id}: ${ticket.status} → ${ticketStatus}`);
   }
@@ -124,10 +155,42 @@ export default function tasks() {
     },
 
     // ── BEFORE UPDATE ──────────────────────────────────────────────────────
-    // Note: beforeDoc is already captured by buildUpdateQuery before calling this.
-    // We don't need to stash _oldStatus here anymore.
     beforeUpdate: async ({ body, docId }) => {
-      // nothing extra needed — beforeDoc passed to afterUpdate by the engine
+      // 1. Stage duration tracking
+      if (body.status) {
+        const { default: models } = await import('../models/Collection.js');
+        const currentTask = await models.tasks.findById(docId).select('status stageHistory createdAt').lean();
+        
+        if (currentTask && currentTask.status !== body.status) {
+          const now = new Date();
+          let newStageHistory = currentTask.stageHistory ? [...currentTask.stageHistory] : [];
+          
+          // Calculate duration for the previous stage
+          if (newStageHistory.length > 0) {
+            const lastStage = newStageHistory[newStageHistory.length - 1];
+            if (lastStage.stage === currentTask.status) {
+              lastStage.duration = Math.max(0, Math.floor((now.getTime() - new Date(lastStage.enteredAt).getTime()) / 1000));
+            }
+          } else {
+            // Seed initial stage if it doesn't exist
+            const enteredAt = currentTask.createdAt || now;
+            newStageHistory.push({
+              stage: currentTask.status,
+              enteredAt,
+              duration: Math.max(0, Math.floor((now.getTime() - new Date(enteredAt).getTime()) / 1000))
+            });
+          }
+          
+          // Push new stage
+          newStageHistory.push({
+            stage: body.status,
+            enteredAt: now,
+            duration: 0
+          });
+          
+          body.stageHistory = newStageHistory;
+        }
+      }
     },
 
     // ── AFTER UPDATE ───────────────────────────────────────────────────────
@@ -137,7 +200,7 @@ export default function tasks() {
 
         // 1. Sync ticket status via linkedTaskId (reverse-lookup on tickets)
         if (updateData.status) {
-          await syncLinkedTickets(taskData._id, updateData.status);
+          await syncLinkedTickets(taskData._id, updateData.status, userId);
         }
 
         // 2. Sync ticket status via linkedTicketId on the task itself
@@ -146,10 +209,23 @@ export default function tasks() {
           if (ticketStatus) {
             const existing = await models.tickets.findById(taskData.linkedTicketId).lean();
             if (existing && existing.status !== ticketStatus) {
-              await models.tickets.findByIdAndUpdate(taskData.linkedTicketId, {
-                status: ticketStatus,
-                ...(ticketStatus === 'Completed' && { resolvedAt: new Date() }),
-                ...(ticketStatus === 'Closed'    && { closedAt:   new Date() }),
+              const { buildQuery } = await import('../utils/policy/policyEngine.js');
+              let adminRole = await models.roles.findOne({ name: { $regex: /^(super\s*admin|admin|superadmin)$/i } }).lean();
+              if (!adminRole) {
+                adminRole = await models.roles.findOne({ name: /admin/i }).lean();
+              }
+              const roleId = adminRole ? adminRole._id.toString() : 'Super Admin';
+              await buildQuery({
+                role: roleId,
+                userId: userId || '000000000000000000000000',
+                action: 'update',
+                modelName: 'tickets',
+                docId: taskData.linkedTicketId,
+                body: {
+                  status: ticketStatus,
+                  ...(ticketStatus === 'Resolved' && { resolvedAt: new Date() }),
+                  ...(ticketStatus === 'Closed'    && { closedAt:   new Date() }),
+                }
               });
               console.log(`[TicketSync] Ticket ${taskData.linkedTicketId}: ${existing.status} → ${ticketStatus}`);
             }
