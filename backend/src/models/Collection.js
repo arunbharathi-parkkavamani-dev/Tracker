@@ -24,13 +24,6 @@ import errorlog from "./ErrorLog.js";
 import expenses from "./Expense.js";
 import payrolls from "./Payroll.js";
 import tickets from "./Ticket.js";
-import ticket_comments from "./TicketComment.js";
-import ticket_comment_reads from "./TicketCommentRead.js";
-import ticket_participants from "./TicketParticipant.js";
-import ticket_activity_logs from "./TicketActivityLog.js";
-import ticket_status_history from "./TicketStatusHistory.js";
-import ticket_assignments from "./TicketAssignment.js";
-import ticket_attachments from "./TicketAttachment.js";
 import shifts from "./Shift.js";
 import hrpolicies from "./HRPolicy.js";
 import agents from "./Agent.js";
@@ -55,6 +48,7 @@ import dashboardwidgets from "./DashboardWidget.js";
 import approvalworkflows from "./ApprovalWorkflow.js";
 import activitylogs from "./ActivityLog.js";
 import timetrackersessions from "./TimeTrackerSession.js";
+
 
 const models = {
   accesspolicies,
@@ -82,13 +76,6 @@ const models = {
   expenses,
   payrolls,
   tickets,
-  ticket_comments,
-  ticket_comment_reads,
-  ticket_participants,
-  ticket_activity_logs,
-  ticket_status_history,
-  ticket_assignments,
-  ticket_attachments,
   shifts,
   hrpolicies,
   agents,
