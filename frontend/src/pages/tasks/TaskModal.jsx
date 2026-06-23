@@ -48,9 +48,9 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
         'assignedTo': 'basicInfo.firstName,basicInfo.lastName,basicInfo.profileImage',
         'createdBy': 'basicInfo.firstName,basicInfo.lastName'
       };
-      const response = await axiosInstance.get(
-        `/populate/read/tasks/${task._id}?populateFields=${encodeURIComponent(JSON.stringify(populateFields))}`
-      );
+      const response = await axiosInstance.post(`/populate/read/tasks/${task._id}`, {
+        populateFields
+      });
 
       let taskData = response.data.data;
 
@@ -59,7 +59,9 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
         const populatedAssignedTo = await Promise.all(
           taskData.assignedTo.map(async (userId) => {
             try {
-              const userResponse = await axiosInstance.get(`/populate/read/employees/${userId}?fields=basicInfo.firstName,basicInfo.lastName,basicInfo.profileImage`);
+              const userResponse = await axiosInstance.post(`/populate/read/employees/${userId}`, {
+                fields: "basicInfo.firstName,basicInfo.lastName,basicInfo.profileImage"
+              });
               return userResponse.data.data;
             } catch (error) {
               console.error('Error fetching user:', error);
@@ -101,16 +103,18 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
       const populateFields = {
         "comments.commentedBy": "basicInfo.firstName,basicInfo.lastName"
       };
-      const url = `/populate/read/commentsthreads/${threadId}?populateFields=${encodeURIComponent(JSON.stringify(populateFields))}`;
+      const url = `/populate/read/commentsthreads/${threadId}`;
 
-      const response = await axiosInstance.get(url);
+      const response = await axiosInstance.post(url, { populateFields });
 
       // If population didn't work, fetch user details manually
       const commentsWithUsers = await Promise.all(
         (response.data.data?.comments || []).map(async (comment) => {
           if (typeof comment.commentedBy === 'string') {
             try {
-              const userResponse = await axiosInstance.get(`/populate/read/employees/${comment.commentedBy}?fields=basicInfo.firstName,basicInfo.lastName`);
+              const userResponse = await axiosInstance.post(`/populate/read/employees/${comment.commentedBy}`, {
+                fields: "basicInfo.firstName,basicInfo.lastName"
+              });
               return {
                 ...comment,
                 commentedBy: userResponse.data.data
@@ -177,7 +181,9 @@ const TaskModal = ({ task, onClose, onUpdate }) => {
       await updateTaskById(task._id, { assignedTo: updatedAssigned });
 
       // Fetch user details and update local state
-      const userResponse = await axiosInstance.get(`/populate/read/employees/${userId}?fields=basicInfo.firstName,basicInfo.lastName,basicInfo.profileImage`);
+      const userResponse = await axiosInstance.post(`/populate/read/employees/${userId}`, {
+        fields: "basicInfo.firstName,basicInfo.lastName,basicInfo.profileImage"
+      });
       const newUser = userResponse.data.data;
 
       setFormData(prev => ({

@@ -53,9 +53,9 @@ const TaskDetailPage = () => {
         assignedTo: "basicInfo.firstName,basicInfo.lastName,basicInfo.profileImage",
         linkedTicketId: "ticketId,title",
       };
-      const res = await axiosInstance.get(
-        `/populate/read/tasks/${id}?populateFields=${encodeURIComponent(JSON.stringify(populateFields))}`
-      );
+      const res = await axiosInstance.post(`/populate/read/tasks/${id}`, {
+        populateFields
+      });
       const taskData = res.data.data;
       setTask(taskData);
       if (taskData.commentsThread) fetchComments(taskData.commentsThread);
@@ -81,9 +81,9 @@ const TaskDetailPage = () => {
     if (!threadId) return;
     try {
       const populateFields = { "comments.commentedBy": "basicInfo.firstName,basicInfo.lastName" };
-      const res = await axiosInstance.get(
-        `/populate/read/commentsthreads/${threadId}?populateFields=${encodeURIComponent(JSON.stringify(populateFields))}`
-      );
+      const res = await axiosInstance.post(`/populate/read/commentsthreads/${threadId}`, {
+        populateFields
+      });
       setComments(res.data.data?.comments || []);
     } catch (e) { console.error(e); }
   };

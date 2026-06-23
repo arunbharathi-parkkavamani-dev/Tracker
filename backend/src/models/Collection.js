@@ -45,7 +45,6 @@ import holidays from "./Holiday.js";
 import statusconfigs from "./StatusConfig.js";
 import statusmappings from "./StatusMapping.js";
 import dashboardwidgets from "./DashboardWidget.js";
-import approvalworkflows from "./ApprovalWorkflow.js";
 import activitylogs from "./ActivityLog.js";
 import timetrackersessions from "./TimeTrackerSession.js";
 
@@ -97,7 +96,6 @@ const models = {
   statusconfigs,
   statusmappings,
   dashboardwidgets,
-  approvalworkflows,
   activitylogs,
   timetrackersessions,
 };

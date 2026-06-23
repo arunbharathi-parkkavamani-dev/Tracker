@@ -21,9 +21,9 @@ export const useUserProfile = () => {
           'professionalInfo.role': 'name'
         };
 
-        const response = await axiosInstance.get(
-          `/populate/read/employees/${user.id}?populateFields=${encodeURIComponent(JSON.stringify(populateFields))}`
-        );
+        const response = await axiosInstance.post(`/populate/read/employees/${user.id}`, {
+          populateFields
+        });
         const employee = response.data.data;
 
         // Set profile image

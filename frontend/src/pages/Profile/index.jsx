@@ -107,7 +107,7 @@ const Profile = () => {
   const fetchProfile = async () => {
     try {
       const pop = { 'professionalInfo.designation': 'title,description', 'professionalInfo.department': 'name,head', 'professionalInfo.role': 'name', 'professionalInfo.reportingManager': 'basicInfo.firstName,basicInfo.lastName,basicInfo.email', 'professionalInfo.teamLead': 'basicInfo.firstName,basicInfo.lastName,basicInfo.email' };
-      const res = await axiosInstance.get(`/populate/read/employees/${user.id}?populateFields=${encodeURIComponent(JSON.stringify(pop))}`);
+      const res = await axiosInstance.post(`/populate/read/employees/${user.id}`, { populateFields: pop });
       let emp = res.data.data;
       if (emp) {
         const p = v => { if (typeof v === 'string' && (v.startsWith('{') || v.startsWith('['))) { try { return JSON.parse(v); } catch { return v; } } return v; };

@@ -6,7 +6,7 @@ import KanbanBoard from "../../../components/Common/KambanBoard";
 import GanttView from "../GanttView";
 import TaskSkeleton from "../../../components/Common/TaskSkeleton";
 import StatCard from "../../../components/Common/StatCard";
-import { ArrowLeft, Building2, LayoutGrid, Clock, CheckCircle2, Plus, CalendarDays } from "lucide-react";
+import { ArrowLeft, Building2, LayoutGrid, Clock, CheckCircle2, Plus, CalendarDays, Download } from "lucide-react";
 
 const STATUS_COLS = [
   { id: "Backlogs",    title: "Backlogs" },
@@ -93,6 +93,24 @@ const ClientKanbanPage = () => {
     }
   };
 
+  const handleExport = async () => {
+    try {
+      const res = await axiosInstance.get("/export/tasks", {
+        params: { client: id },
+        responseType: "blob"
+      });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `client_${id}_tasks_export.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (e) {
+      console.error("Export failed", e);
+    }
+  };
+
   const handleTaskClick = (task) => {
     navigate(`/tasks/${task._id}`);
   };
@@ -160,6 +178,12 @@ const ClientKanbanPage = () => {
                 <CalendarDays size={14} className="mr-1 inline-block" /> Timeline
               </button>
             </div>
+
+            {/* Export Button */}
+            <button onClick={handleExport}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-tracker-md text-[13px] font-medium border border-hairline bg-surface text-ink-muted hover:text-ink hover:border-ink-subtle transition-all duration-150 cursor-pointer ml-2">
+              <Download size={14} /> Export
+            </button>
 
             <button onClick={() => navigate("/tasks/form", { state: { selectedClient: client } })}
               className="tracker-btn-accent flex items-center gap-2">

@@ -8,6 +8,7 @@ const EmployeeSchema = new Schema({
     dob: { type: Date },
     doa: { type: Date },
     maritalStatus: { type: String, enum: ['Single', 'Married', 'Divorced', 'Widowed'] },
+    gender: { type: String, enum: ['male', 'female', 'other'], index: true },
     phone: { type: String, validate: { validator: function (v) { return /^(\+\d{1,3}[- ]?)?\d{10}$/.test(v); }, message: props => `${props.value} is not a valid phone number!` } },
     email: { type: String, lowercase: true, trim: true, index: true, validate: { validator: function (v) { return /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(v); }, message: props => `${props.value} is not a valid email!` } },
     fatherName: { type: String, trim: true },

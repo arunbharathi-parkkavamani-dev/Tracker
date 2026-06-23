@@ -162,6 +162,7 @@ const TableGenerator = ({
   enableActions = true,
   onEdit,
   onDelete,
+  onRowClick,
   customExport = {},
 }) => {
   const [tableData, setTableData] = useState([]);
@@ -314,7 +315,11 @@ const TableGenerator = ({
 
               <tbody className="divide-y divide-hairline-soft">
                 {paginatedData.map((row, i) => (
-                  <tr key={i} className="hover:bg-surface-1 transition-colors duration-150">
+                  <tr
+                    key={i}
+                    onClick={onRowClick ? () => onRowClick(row) : undefined}
+                    className={onRowClick ? "cursor-pointer" : ""}
+                  >
                     {columns.map((col) => (
                       <td key={col} className="px-5 py-3 whitespace-nowrap text-[13px] text-ink">
                         {col === "__actions" ? (

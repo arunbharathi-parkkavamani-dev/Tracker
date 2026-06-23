@@ -15,7 +15,7 @@ export class ErrorBoundary extends React.Component {
   componentDidCatch(error, errorInfo) {
     // Log the error to an error reporting service
     console.error("ErrorBoundary caught an error", error, errorInfo);
-    
+
     // Show toast notification
     toast.error('Something went wrong. Please try refreshing the page.', {
       duration: 5000,
@@ -28,7 +28,7 @@ export class ErrorBoundary extends React.Component {
       if (this.props.fallback) {
         return this.props.fallback;
       }
-      
+
       // Default fallback UI
       return (
         <div className="flex flex-col items-center justify-center min-h-[400px] p-6 text-center bg-canvas rounded-tracker-lg border border-danger-light">
@@ -41,7 +41,7 @@ export class ErrorBoundary extends React.Component {
           <p className="text-ink-subtle mb-6 max-w-md">
             We've encountered an unexpected error. You can try refreshing the page or contact support if the problem persists.
           </p>
-          <button 
+          <button
             onClick={() => window.location.reload()}
             className="tracker-btn-primary"
           >
@@ -51,6 +51,6 @@ export class ErrorBoundary extends React.Component {
       );
     }
 
-    return this.props.children; 
+    return this.props.children;
   }
 }

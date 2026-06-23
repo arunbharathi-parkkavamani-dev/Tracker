@@ -1,0 +1,1709 @@
+{
+  "communities": {
+    "0": [
+      "attendance_index_attendance",
+      "backend_src_middlewares_notificationmessageprasher_js",
+      "backend_src_models_commentsthreads_js",
+      "backend_src_models_leave_js",
+      "backend_src_models_notification_js",
+      "backend_src_models_tasks_js",
+      "backend_src_services_commentthreads_js",
+      "backend_src_services_computationservice_js",
+      "backend_src_services_leaves_js",
+      "backend_src_utils_notificationservice_js",
+      "backend_src_utils_pushsender_js",
+      "frontend_src_components_role_index_js",
+      "middlewares_notificationmessageprasher_generatenotification",
+      "models_commentsthreads_commentschema",
+      "models_commentsthreads_commentsthreadschema",
+      "models_commentsthreads_replyschema",
+      "models_employee_employeeschema",
+      "models_leave_leaveschema",
+      "models_notification_notificationschema",
+      "models_tasks_taskschema",
+      "ref_docs_db_ref_employee_json",
+      "role_rolebasedattendance_employeeattendance",
+      "role_rolebasedattendance_managerattendance",
+      "role_rolebasedattendance_rolebasedattendance",
+      "role_rolebasedexpenses_employeeexpenses",
+      "role_rolebasedexpenses_hrexpenses",
+      "role_rolebasedexpenses_managerexpenses",
+      "role_rolebasedexpenses_rolebasedexpenses",
+      "role_rolebasedtasks_employeetasks",
+      "role_rolebasedtasks_hrtasks",
+      "role_rolebasedtasks_managertasks",
+      "role_rolebasedtasks_rolebasedtasks",
+      "services_computationservice_computationservice_cachecomputationresult",
+      "services_computationservice_computationservice_cleanoldjobs",
+      "services_computationservice_computationservice_computeattendancesummary",
+      "services_computationservice_computationservice_computedashboardstats",
+      "services_computationservice_computationservice_constructor",
+      "services_computationservice_computationservice_formatattendancesummary",
+      "services_computationservice_computationservice_generatemonthlyreport",
+      "services_computationservice_computationservice_getjobstatus",
+      "services_computationservice_computationservice_getqueuestats",
+      "services_computationservice_computationservice_queuedashboardstats",
+      "services_computationservice_computationservice_queuemonthlyreport",
+      "services_computationservice_computationservice_setupeventhandlers",
+      "services_computationservice_computationservice_setupprocessors",
+      "services_computationservice_computationservice_shutdown",
+      "services_employee_employeeservice",
+      "services_leaves_leaves",
+      "utils_notificationservice_notifytaskupdate",
+      "utils_pushsender_processpushqueue",
+      "utils_pushsender_pushqueue",
+      "utils_pushsender_sendpush"
+    ],
+    "1": [
+      "app_package_dependencies",
+      "app_package_dependencies_axios",
+      "app_package_dependencies_expo",
+      "app_package_dependencies_expo_constants",
+      "app_package_dependencies_expo_dev_client",
+      "app_package_dependencies_expo_device",
+      "app_package_dependencies_expo_document_picker",
+      "app_package_dependencies_expo_font",
+      "app_package_dependencies_expo_haptics",
+      "app_package_dependencies_expo_image",
+      "app_package_dependencies_expo_image_picker",
+      "app_package_dependencies_expo_linear_gradient",
+      "app_package_dependencies_expo_linking",
+      "app_package_dependencies_expo_location",
+      "app_package_dependencies_expo_notifications",
+      "app_package_dependencies_expo_router",
+      "app_package_dependencies_expo_splash_screen",
+      "app_package_dependencies_expo_status_bar",
+      "app_package_dependencies_expo_symbols",
+      "app_package_dependencies_expo_system_ui",
+      "app_package_dependencies_expo_updates",
+      "app_package_dependencies_expo_vector_icons",
+      "app_package_dependencies_expo_web_browser",
+      "app_package_dependencies_jwt_decode",
+      "app_package_dependencies_lucide_react_native",
+      "app_package_dependencies_nativewind",
+      "app_package_dependencies_prettier_plugin_tailwindcss",
+      "app_package_dependencies_react",
+      "app_package_dependencies_react_dom",
+      "app_package_dependencies_react_native",
+      "app_package_dependencies_react_native_async_storage_async_storage",
+      "app_package_dependencies_react_native_community_datetimepicker",
+      "app_package_dependencies_react_native_dropdown_picker",
+      "app_package_dependencies_react_native_gesture_handler",
+      "app_package_dependencies_react_native_keyboard_aware_scroll_view",
+      "app_package_dependencies_react_native_paper",
+      "app_package_dependencies_react_native_reanimated",
+      "app_package_dependencies_react_native_safe_area_context",
+      "app_package_dependencies_react_native_screens",
+      "app_package_dependencies_react_native_toast_message",
+      "app_package_dependencies_react_native_worklets",
+      "app_package_dependencies_react_navigation_bottom_tabs",
+      "app_package_dependencies_react_navigation_drawer",
+      "app_package_dependencies_react_navigation_elements",
+      "app_package_dependencies_react_navigation_native",
+      "app_package_dependencies_socket_io_client",
+      "app_package_dependencies_tailwindcss"
+    ],
+    "2": [
+      "backend_package_author",
+      "backend_package_dependencies",
+      "backend_package_dependencies_archiver",
+      "backend_package_dependencies_aws_sdk_client_s3",
+      "backend_package_dependencies_bcrypt",
+      "backend_package_dependencies_bull",
+      "backend_package_dependencies_cookie_parser",
+      "backend_package_dependencies_cors",
+      "backend_package_dependencies_country_state_city",
+      "backend_package_dependencies_crypto",
+      "backend_package_dependencies_dayjs",
+      "backend_package_dependencies_dotenv",
+      "backend_package_dependencies_express",
+      "backend_package_dependencies_express_fileupload",
+      "backend_package_dependencies_ioredis",
+      "backend_package_dependencies_jsonwebtoken",
+      "backend_package_dependencies_mongodb",
+      "backend_package_dependencies_mongoose",
+      "backend_package_dependencies_multer",
+      "backend_package_dependencies_node_cron",
+      "backend_package_dependencies_node_fetch",
+      "backend_package_dependencies_nodemailer",
+      "backend_package_dependencies_nodemon",
+      "backend_package_dependencies_redis",
+      "backend_package_dependencies_socket_io",
+      "backend_package_dependencies_ua_parser_js",
+      "backend_package_dependencies_uuid",
+      "backend_package_description",
+      "backend_package_json",
+      "backend_package_keywords",
+      "backend_package_license",
+      "backend_package_main",
+      "backend_package_name",
+      "backend_package_scripts",
+      "backend_package_scripts_backup",
+      "backend_package_scripts_cron_stats",
+      "backend_package_scripts_db_analyze",
+      "backend_package_scripts_db_reindex",
+      "backend_package_scripts_dev",
+      "backend_package_scripts_dev_monitor",
+      "backend_package_scripts_queue_health",
+      "backend_package_scripts_start",
+      "backend_package_scripts_test",
+      "backend_package_scripts_test_security",
+      "backend_package_type",
+      "backend_package_version"
+    ],
+    "3": [
+      "backend_src_models_auditlog_js",
+      "backend_src_models_collection_js",
+      "backend_src_models_dailyactivity_js",
+      "backend_src_models_expense_js",
+      "backend_src_models_hrpolicy_js",
+      "backend_src_models_leadtype_js",
+      "backend_src_models_milestone_js",
+      "backend_src_models_payroll_js",
+      "backend_src_models_role_js",
+      "backend_src_models_ticket_js",
+      "backend_src_models_todo_js",
+      "backend_src_services_tasks_js",
+      "backend_src_services_tickettasksync_js",
+      "departments_index_departments",
+      "designations_index_designations",
+      "leave_types_index_leavetypes",
+      "models_auditlog_auditlogschema",
+      "models_collection_models",
+      "models_dailyactivity_dailyactivityschema",
+      "models_department_departmentschema",
+      "models_designation_designationschema",
+      "models_expense_expenseitemschema",
+      "models_expense_expenseschema",
+      "models_hrpolicy_hrpolicyschema",
+      "models_leadtype_leadtypeschema",
+      "models_leavepolicy_leavepolicyschema",
+      "models_leavetypes_leavetypeschema",
+      "models_milestone_milestoneschema",
+      "models_payroll_payrollschema",
+      "models_role_roleschema",
+      "models_tasktype_tasktypeschema",
+      "models_ticket_ticketschema",
+      "models_todo_todoschema",
+      "ref_docs_db_ref_leavepolicy_json",
+      "ref_docs_db_ref_tasktype_json",
+      "services_tasks_aftercreate",
+      "services_tasks_afterupdate",
+      "services_tasks_beforecreate",
+      "services_tasks_beforeupdate",
+      "services_tasks_syncmilestonestatus",
+      "services_tasks_updatelinkedticketstatus",
+      "services_tickettasksync_tickettasksyncservice",
+      "services_tickettasksync_tickettasksyncservice_getsyncstatus",
+      "services_tickettasksync_tickettasksyncservice_synctaskassignmenttoticket",
+      "services_tickettasksync_tickettasksyncservice_synctaskstatustoticket"
+    ],
+    "4": [
+      "app_app_adaptiveicon_backgroundimage",
+      "app_app_adaptiveicon_foregroundimage",
+      "app_app_adaptiveicon_monochromeimage",
+      "app_app_android_adaptiveicon",
+      "app_app_android_edgetoedgeenabled",
+      "app_app_android_googleservicesfile",
+      "app_app_android_package",
+      "app_app_android_permissions",
+      "app_app_android_predictivebackgestureenabled",
+      "app_app_android_usenextnotificationsapi",
+      "app_app_eas_projectid",
+      "app_app_experiments_reactcompiler",
+      "app_app_experiments_typedroutes",
+      "app_app_expo",
+      "app_app_expo_android",
+      "app_app_expo_experiments",
+      "app_app_expo_extra",
+      "app_app_expo_icon",
+      "app_app_expo_ios",
+      "app_app_expo_name",
+      "app_app_expo_newarchenabled",
+      "app_app_expo_orientation",
+      "app_app_expo_plugins",
+      "app_app_expo_runtimeversion",
+      "app_app_expo_scheme",
+      "app_app_expo_slug",
+      "app_app_expo_splash",
+      "app_app_expo_updates",
+      "app_app_expo_userinterfacestyle",
+      "app_app_expo_version",
+      "app_app_expo_web",
+      "app_app_extra_eas",
+      "app_app_extra_router",
+      "app_app_ios_bundleidentifier",
+      "app_app_ios_supportstablet",
+      "app_app_json",
+      "app_app_runtimeversion_policy",
+      "app_app_splash_backgroundcolor",
+      "app_app_splash_image",
+      "app_app_splash_resizemode",
+      "app_app_updates_url",
+      "app_app_web_bundler",
+      "app_app_web_favicon",
+      "app_app_web_output"
+    ],
+    "5": [
+      "attendance_index_attendancepage",
+      "common_addcomment_addcomment",
+      "common_kambanboard_kanbanboard",
+      "components_usesocket_usesocket",
+      "context_authcontext_authprovider",
+      "context_authprovider_authcontext",
+      "context_authprovider_useauth",
+      "daily_tracker_add_daily_activity_adddailyentry",
+      "frontend_src_components_common_kambanboard_jsx",
+      "frontend_src_constants_activityentryfrom_js",
+      "frontend_src_layouts_baselayouts_jsx",
+      "frontend_src_pages_attendance_daily_tracker_add_daily_activity_jsx",
+      "frontend_src_pages_attendance_daily_tracker_index_jsx",
+      "frontend_src_pages_attendance_daily_tracker_index_jsx_daily_tracker_index_dailytracker",
+      "frontend_src_pages_attendance_index_jsx",
+      "frontend_src_pages_login_jsx",
+      "frontend_src_pages_logout_jsx",
+      "frontend_src_pages_tasks_index_jsx",
+      "frontend_src_pages_tasks_my_tasks_jsx",
+      "frontend_src_pages_tasks_task_jsx",
+      "frontend_src_pages_teams_jsx",
+      "frontend_src_pages_tickets_index_jsx",
+      "frontend_src_pages_tickets_my_tickets_jsx",
+      "frontend_src_pages_travel_expenses_index_jsx",
+      "hooks_useuserprofile_useuserprofile",
+      "layouts_baselayouts_baselayout",
+      "layouts_topnavbar_topnavbar",
+      "pages_login_login",
+      "pages_logout_logoutpage",
+      "pages_teams_teams",
+      "tasks_createtaskmodal_createtaskmodal",
+      "tasks_index_taskspage",
+      "tasks_my_tasks_mytasks",
+      "tasks_task_task",
+      "tickets_index_ticketspage",
+      "tickets_my_tickets_mytickets",
+      "travel_expenses_index_expensetracker"
+    ],
+    "6": [
+      "app_eslint_config_defineconfig",
+      "app_eslint_config_expoconfig",
+      "app_eslint_config_js",
+      "app_package_devdependencies",
+      "app_package_devdependencies_eslint",
+      "app_package_devdependencies_types_react",
+      "app_package_devdependencies_typescript",
+      "external_package_dependencies",
+      "external_package_dependencies_next",
+      "external_package_dependencies_react",
+      "external_package_dependencies_react_dom",
+      "external_package_devdependencies",
+      "external_package_devdependencies_eslint",
+      "external_package_devdependencies_tailwindcss",
+      "external_package_devdependencies_tailwindcss_postcss",
+      "external_package_devdependencies_types_node",
+      "external_package_devdependencies_types_react",
+      "external_package_devdependencies_typescript",
+      "external_package_json",
+      "external_package_name",
+      "external_package_private",
+      "external_package_scripts",
+      "external_package_scripts_build",
+      "external_package_scripts_dev",
+      "external_package_scripts_lint",
+      "external_package_scripts_start",
+      "external_package_version",
+      "frontend_package_devdependencies",
+      "frontend_package_devdependencies_eslint",
+      "frontend_package_devdependencies_eslint_js",
+      "frontend_package_devdependencies_eslint_plugin_react_hooks",
+      "frontend_package_devdependencies_eslint_plugin_react_refresh",
+      "frontend_package_devdependencies_globals",
+      "frontend_package_devdependencies_types_react",
+      "frontend_package_devdependencies_vite",
+      "frontend_package_devdependencies_vite_plugin_pages",
+      "frontend_package_devdependencies_vitejs_plugin_react_swc"
+    ],
+    "7": [
+      "frontend_package_dependencies",
+      "frontend_package_dependencies_ant_design_icons",
+      "frontend_package_dependencies_axios",
+      "frontend_package_dependencies_date_fns",
+      "frontend_package_dependencies_emotion_react",
+      "frontend_package_dependencies_emotion_styled",
+      "frontend_package_dependencies_file_saver",
+      "frontend_package_dependencies_heroicons_react",
+      "frontend_package_dependencies_js_cookie",
+      "frontend_package_dependencies_jwt_decode",
+      "frontend_package_dependencies_lucide_react",
+      "frontend_package_dependencies_mui_lab",
+      "frontend_package_dependencies_mui_material",
+      "frontend_package_dependencies_mui_x_date_pickers",
+      "frontend_package_dependencies_react",
+      "frontend_package_dependencies_react_calendar",
+      "frontend_package_dependencies_react_dom",
+      "frontend_package_dependencies_react_hot_toast",
+      "frontend_package_dependencies_react_icons",
+      "frontend_package_dependencies_react_router_dom",
+      "frontend_package_dependencies_socket_io_client",
+      "frontend_package_dependencies_tailwind_scrollbar_hide",
+      "frontend_package_dependencies_tailwindcss",
+      "frontend_package_dependencies_tailwindcss_line_clamp",
+      "frontend_package_dependencies_tailwindcss_vite",
+      "frontend_package_dependencies_xlsx",
+      "frontend_package_json",
+      "frontend_package_name",
+      "frontend_package_private",
+      "frontend_package_scripts",
+      "frontend_package_scripts_build",
+      "frontend_package_scripts_dev",
+      "frontend_package_scripts_lint",
+      "frontend_package_scripts_preview",
+      "frontend_package_type",
+      "frontend_package_version"
+    ],
+    "8": [
+      "architecture_attendance_service",
+      "backend_src_cron_attendancecron_js",
+      "backend_src_routes_cronroutes_js",
+      "backend_src_services_jobqueue_js",
+      "cron_attendancecron_cronmonitor",
+      "cron_attendancecron_cronmonitor_constructor",
+      "cron_attendancecron_cronmonitor_endrun",
+      "cron_attendancecron_cronmonitor_getstats",
+      "cron_attendancecron_cronmonitor_startrun",
+      "cron_attendancecron_cronstats",
+      "cron_attendancecron_hour",
+      "cron_attendancecron_memusage",
+      "cron_attendancecron_monitor",
+      "cron_attendancecron_queuestats",
+      "cron_attendancecron_rundata",
+      "routes_cronroutes_cronstats",
+      "routes_cronroutes_issues",
+      "routes_cronroutes_memusage",
+      "routes_cronroutes_queuestats",
+      "routes_cronroutes_router",
+      "services_attendanceservice_attendanceservice_bulkupdateattendance",
+      "services_attendanceservice_attendanceservice_constructor",
+      "services_attendanceservice_attendanceservice_determineattendancestatus",
+      "services_attendanceservice_attendanceservice_getqueuestats",
+      "services_attendanceservice_attendanceservice_processdailyattendance",
+      "services_attendanceservice_attendanceservice_processemployeeattendance",
+      "services_attendanceservice_attendanceservice_processweekendattendance",
+      "services_jobqueue_jobqueue",
+      "services_jobqueue_jobqueue_add",
+      "services_jobqueue_jobqueue_addbatch",
+      "services_jobqueue_jobqueue_constructor",
+      "services_jobqueue_jobqueue_executejob",
+      "services_jobqueue_jobqueue_getstats",
+      "services_jobqueue_jobqueue_process"
+    ],
+    "9": [
+      "backend_src_middlewares_auth_js",
+      "backend_src_middlewares_performancemiddleware_js",
+      "backend_src_models_session_js",
+      "backend_src_services_asyncnotificationservice_js",
+      "backend_src_utils_sessioncleanup_js",
+      "middlewares_auth_authenticatetoken",
+      "middlewares_performancemiddleware_asyncprocessingmiddleware",
+      "middlewares_performancemiddleware_cacheinvalidationmiddleware",
+      "middlewares_performancemiddleware_cachemiddleware",
+      "middlewares_performancemiddleware_compressionmiddleware",
+      "middlewares_performancemiddleware_ratelimitmiddleware",
+      "middlewares_performancemiddleware_smartcachemiddleware",
+      "models_session_sessionsschema",
+      "ref_docs_db_ref_tickets_json",
+      "services_asyncnotificationservice_asyncnotificationservice_cleanoldjobs",
+      "services_asyncnotificationservice_asyncnotificationservice_constructor",
+      "services_asyncnotificationservice_asyncnotificationservice_getqueuestats",
+      "services_asyncnotificationservice_asyncnotificationservice_processbatchpush",
+      "services_asyncnotificationservice_asyncnotificationservice_processemail",
+      "services_asyncnotificationservice_asyncnotificationservice_processpushnotification",
+      "services_asyncnotificationservice_asyncnotificationservice_queuebatchnotifications",
+      "services_asyncnotificationservice_asyncnotificationservice_queueemail",
+      "services_asyncnotificationservice_asyncnotificationservice_queuepushnotification",
+      "services_asyncnotificationservice_asyncnotificationservice_sendpushtoprovider",
+      "services_asyncnotificationservice_asyncnotificationservice_setupeventhandlers",
+      "services_asyncnotificationservice_asyncnotificationservice_setupprocessors",
+      "services_asyncnotificationservice_asyncnotificationservice_shutdown",
+      "services_tickets_checksyncstatus",
+      "services_tickets_getexpectedticketstatus",
+      "services_tickets_getticketwithtask",
+      "services_tickets_notifyticketconversion",
+      "services_tickets_tickets",
+      "utils_sessioncleanup_cleanupstalesessions",
+      "utils_sessioncleanup_deactivateusersessions"
+    ],
+    "10": [
+      "attendance_pending_approvals_pendingapprovals",
+      "common_floatingcard_floatingcard",
+      "common_formrenderer_formrenderer",
+      "common_tablegenerator_formatcolumnname",
+      "common_tablegenerator_formatindiandate",
+      "common_tablegenerator_isdatestring",
+      "common_tablegenerator_normalizedata",
+      "common_tablegenerator_sortdata",
+      "common_tablegenerator_tablegenerator",
+      "constants_sidebarfrom_sidebarform",
+      "contacts_index_crmcontacts",
+      "employees_index_employees",
+      "frontend_src_components_common_formrenderer_jsx",
+      "frontend_src_constants_sidebarfrom_js",
+      "frontend_src_pages_crm_contacts_index_jsx",
+      "frontend_src_pages_master_data_departments_index_jsx",
+      "frontend_src_pages_master_data_employees_index_jsx",
+      "frontend_src_pages_master_data_hr_policies_index_jsx",
+      "frontend_src_pages_master_data_leave_policies_index_jsx",
+      "frontend_src_pages_master_data_leave_types_index_jsx",
+      "frontend_src_pages_master_data_project_types_index_jsx",
+      "frontend_src_pages_master_data_roles_index_jsx",
+      "frontend_src_pages_master_data_shifts_index_jsx",
+      "frontend_src_pages_master_data_task_types_index_jsx",
+      "frontend_src_pages_settings_menu_index_jsx",
+      "hr_policies_index_hrpolicies",
+      "leave_policies_index_leavepolicies",
+      "menu_index_menu",
+      "roles_index_roles",
+      "shifts_index_shifts",
+      "task_types_index_tasktypes",
+      "ui_floatingcard_floatingcard",
+      "ui_floatingcard_floatingcardprops"
+    ],
+    "11": [
+      "backend_src_controller_authcontroller_js",
+      "backend_src_middlewares_multerconfig_js",
+      "backend_src_routes_authroutes_js",
+      "backend_src_routes_populateroutes_js",
+      "backend_src_utils_deviceinfo_js",
+      "backend_src_utils_tokengenrator_js",
+      "controller_authcontroller_authmiddleware",
+      "controller_authcontroller_login",
+      "controller_authcontroller_logout",
+      "controller_authcontroller_refresh",
+      "controller_authcontroller_sendmanualtestnotification",
+      "controller_authcontroller_sendtestnotification",
+      "controller_authcontroller_storepushtoken",
+      "middlewares_multerconfig_cleanuptempfiles",
+      "middlewares_multerconfig_createdirectories",
+      "middlewares_multerconfig_dirname",
+      "middlewares_multerconfig_filefilter",
+      "middlewares_multerconfig_filename",
+      "middlewares_multerconfig_generatesecurefilename",
+      "middlewares_multerconfig_getdatepath",
+      "middlewares_multerconfig_handlefileupload",
+      "middlewares_multerconfig_storage",
+      "middlewares_multerconfig_upload",
+      "routes_authroutes_router",
+      "routes_populateroutes_router",
+      "utils_deviceinfo_getdeviceinfo",
+      "utils_tokengenrator_generatejti",
+      "utils_tokengenrator_generatesecret"
+    ],
+    "12": [
+      "app_app_modal_tsx",
+      "app_components_parallax_scroll_view_tsx",
+      "app_components_themed_text_tsx",
+      "app_components_themed_view_tsx",
+      "app_components_ui_collapsible_tsx",
+      "app_components_ui_icon_symbol_ios_tsx",
+      "app_constants_theme_ts",
+      "app_hooks_use_color_scheme_ts",
+      "app_hooks_use_color_scheme_web_ts",
+      "app_hooks_use_theme_color_ts",
+      "app_modal_modalscreen",
+      "app_modal_styles",
+      "components_parallax_scroll_view_props",
+      "components_parallax_scroll_view_styles",
+      "components_themed_text_styles",
+      "components_themed_text_themedtext",
+      "components_themed_text_themedtextprops",
+      "components_themed_view_themedviewprops",
+      "constants_theme_colors",
+      "constants_theme_fonts",
+      "ui_collapsible_collapsible",
+      "ui_collapsible_styles",
+      "ui_icon_symbol_iconmapping",
+      "ui_icon_symbol_iconsymbol",
+      "ui_icon_symbol_iconsymbolname",
+      "ui_icon_symbol_mapping"
+    ],
+    "13": [
+      "backend_src_routes_fileroutes_js",
+      "routes_fileroutes_chunkpath",
+      "routes_fileroutes_combinechunks",
+      "routes_fileroutes_dirname",
+      "routes_fileroutes_ext",
+      "routes_fileroutes_filebuffer",
+      "routes_fileroutes_filename",
+      "routes_fileroutes_filepath",
+      "routes_fileroutes_formatfilesize",
+      "routes_fileroutes_getstoragestats",
+      "routes_fileroutes_hash",
+      "routes_fileroutes_mimetypes",
+      "routes_fileroutes_month",
+      "routes_fileroutes_parts",
+      "routes_fileroutes_pipeline",
+      "routes_fileroutes_resolvedpath",
+      "routes_fileroutes_router",
+      "routes_fileroutes_start",
+      "routes_fileroutes_stat",
+      "routes_fileroutes_stats",
+      "routes_fileroutes_stream",
+      "routes_fileroutes_tempdir",
+      "routes_fileroutes_today",
+      "routes_fileroutes_uploaddir",
+      "routes_fileroutes_year"
+    ],
+    "14": [
+      "architecture_audit_logger",
+      "backend_src_crud_buildcreatequery_js",
+      "backend_src_crud_builddeletequery_js",
+      "backend_src_crud_buildreadquery_js",
+      "backend_src_crud_buildupdatequery_js",
+      "backend_src_utils_cache_js",
+      "backend_src_utils_mongofiltercompiler_js",
+      "backend_src_utils_registryexecutor_js",
+      "backend_src_utils_validatefieldupdaterules_js",
+      "utils_auditlogger_saveauditlog",
+      "utils_auditlogger_toplainobject",
+      "utils_cache_cache",
+      "utils_cache_getpolicy",
+      "utils_mongofiltercompiler_buildmongofilter",
+      "utils_registryexecutor_runregistry",
+      "utils_sanitizeread_matchfield",
+      "utils_sanitizeread_sanitizeread",
+      "utils_servicescache_getallservices",
+      "utils_servicescache_getservice",
+      "utils_servicescache_loadservices",
+      "utils_servicescache_refreshservicescache",
+      "utils_servicescache_services_dir",
+      "utils_servicescache_servicescache",
+      "utils_validatefieldupdaterules_match"
+    ],
+    "15": [
+      "backend_src_utils_queryoptimizer_js",
+      "services_queryoptimizer_queryoptimizer_batchload",
+      "services_queryoptimizer_queryoptimizer_buildoptimizedpipeline",
+      "services_queryoptimizer_queryoptimizer_clearcache",
+      "services_queryoptimizer_queryoptimizer_constructor",
+      "services_queryoptimizer_queryoptimizer_getcachestats",
+      "services_queryoptimizer_queryoptimizer_getcollectionname",
+      "services_queryoptimizer_queryoptimizer_getoptimalfields",
+      "services_queryoptimizer_queryoptimizer_optimizepopulation",
+      "services_queryoptimizer_queryoptimizer_paginatedquery",
+      "services_queryoptimizer_queryoptimizer_parseselectfields",
+      "utils_queryoptimizer_queryoptimizer_aggregatedpaginatedquery",
+      "utils_queryoptimizer_queryoptimizer_clearcache",
+      "utils_queryoptimizer_queryoptimizer_constructor",
+      "utils_queryoptimizer_queryoptimizer_executewithtiming",
+      "utils_queryoptimizer_queryoptimizer_getcache",
+      "utils_queryoptimizer_queryoptimizer_getcachekey",
+      "utils_queryoptimizer_queryoptimizer_getcollectionname",
+      "utils_queryoptimizer_queryoptimizer_getoptimizedfields",
+      "utils_queryoptimizer_queryoptimizer_paginatedquery",
+      "utils_queryoptimizer_queryoptimizer_regularpaginatedquery",
+      "utils_queryoptimizer_queryoptimizer_setcache"
+    ],
+    "16": [
+      "external_tsconfig_compileroptions",
+      "external_tsconfig_compileroptions_allowjs",
+      "external_tsconfig_compileroptions_esmoduleinterop",
+      "external_tsconfig_compileroptions_incremental",
+      "external_tsconfig_compileroptions_isolatedmodules",
+      "external_tsconfig_compileroptions_jsx",
+      "external_tsconfig_compileroptions_lib",
+      "external_tsconfig_compileroptions_module",
+      "external_tsconfig_compileroptions_moduleresolution",
+      "external_tsconfig_compileroptions_noemit",
+      "external_tsconfig_compileroptions_paths",
+      "external_tsconfig_compileroptions_plugins",
+      "external_tsconfig_compileroptions_resolvejsonmodule",
+      "external_tsconfig_compileroptions_skiplibcheck",
+      "external_tsconfig_compileroptions_strict",
+      "external_tsconfig_compileroptions_target",
+      "external_tsconfig_exclude",
+      "external_tsconfig_include",
+      "external_tsconfig_json",
+      "external_tsconfig_paths"
+    ],
+    "17": [
+      "api_axiosinstance_token",
+      "components_usegenericapi_usegenericapi",
+      "crm_index_crm",
+      "frontend_src_api_axiosinstance_js",
+      "frontend_src_api_axiosinstance_js_api_axiosinstance_forcelogout",
+      "frontend_src_api_axiosinstance_js_api_axiosinstance_getdeviceuuid",
+      "frontend_src_api_axiosinstance_js_api_axiosinstance_incrementfailedcount",
+      "frontend_src_api_axiosinstance_js_api_axiosinstance_resetfailedcount",
+      "frontend_src_api_axiosinstance_js_api_axiosinstance_setauthlogout",
+      "frontend_src_layouts_sidebar_jsx",
+      "frontend_src_pages_crm_index_jsx",
+      "frontend_src_pages_settings_sidebarpolicy_jsx",
+      "frontend_src_pages_tasks_reports_jsx",
+      "frontend_src_pages_tickets_reports_jsx",
+      "layouts_sidebar_sidebar",
+      "settings_roleaccesspolicy_roleaccesspolicy",
+      "settings_sidebarpolicy_sidebarpolicy",
+      "tasks_reports_taskreports",
+      "tickets_reports_ticketreports"
+    ],
+    "18": [
+      "app_components_roles_hr_hrdashboard_tsx",
+      "common_actioncard_actioncard",
+      "components_statcard_statcardprops",
+      "employee_dashboard_employeedashboard",
+      "employee_employeedashboard_employeedashboardstats",
+      "employee_employeedashboard_getstatuscolor",
+      "employee_employeedashboard_props",
+      "employee_employeedashboard_statcard",
+      "external_app_client_tickets_page_tsx",
+      "external_components_externalticketview_jsx",
+      "hr_hrdashboard_actioncard",
+      "hr_hrdashboard_hrdashboard",
+      "hr_hrdashboard_hrdashboardstats",
+      "hr_hrdashboard_props",
+      "hr_hrdashboard_statcard",
+      "tickets_page_ticketspage",
+      "tickets_ticketform_ticketform",
+      "tickets_ticketlist_ticketlist",
+      "tickets_ticketview_ticketview"
+    ],
+    "19": [
+      "architecture_policy_engine",
+      "architecture_registry_system",
+      "backend_src_routes_configroutes_js",
+      "backend_src_utils_policy_registry_index_js",
+      "backend_src_utils_securityintegrationtest_js",
+      "helper_populatehelper_handleagentclientproducts",
+      "models_accesspolicies_accesspolicyschema",
+      "policy_policyengine_buildquery",
+      "policy_policyengine_capitalize",
+      "ref_docs_db_ref_accesspolicies_json",
+      "registry_index_getregistry",
+      "registry_index_listregistries",
+      "registry_index_registry",
+      "routes_configroutes_modelnames",
+      "routes_configroutes_router",
+      "utils_cache_setcache",
+      "utils_securityintegrationtest_runsecuritytests",
+      "utils_securityintegrationtest_testregistry"
+    ],
+    "20": [
+      "architecture_employee_model",
+      "architecture_express_api",
+      "architecture_jwt_auth",
+      "architecture_mobile_client",
+      "architecture_mongodb",
+      "architecture_populate_helper",
+      "architecture_socket_io",
+      "architecture_web_client",
+      "backend_src_config_defaultpopulatefields_js",
+      "backend_src_crud_buildreportquery_js",
+      "config_defaultpopulatefields_getdefaultpopulatefields",
+      "crud_buildreportquery_getmodelforfield",
+      "helper_populatehelper_getdetailedfields",
+      "helper_populatehelper_getdetailedpopulate",
+      "helper_populatehelper_getsummaryfields",
+      "helper_populatehelper_getsummarypopulate"
+    ],
+    "21": [
+      "app_eas_android_buildtype",
+      "app_eas_build",
+      "app_eas_build_development",
+      "app_eas_build_preview",
+      "app_eas_build_production",
+      "app_eas_cli",
+      "app_eas_cli_appversionsource",
+      "app_eas_cli_version",
+      "app_eas_development_developmentclient",
+      "app_eas_json",
+      "app_eas_preview_distribution",
+      "app_eas_production_android",
+      "app_eas_production_autoincrement",
+      "app_eas_submit"
+    ],
+    "22": [
+      "app_app_protectedroute_daily_tracker_index_tsx",
+      "app_app_protectedroute_daily_tracker_index_tsx_daily_tracker_index_dailytracker",
+      "app_app_protectedroute_tasks_client_id_tsx",
+      "client_id_clienttasks",
+      "client_id_projecttype",
+      "client_id_task",
+      "daily_tracker_index_activity",
+      "daily_tracker_index_client",
+      "daily_tracker_index_tasktype",
+      "models_projecttype_projecttypeschema",
+      "project_tasks_projecttype_prioritycolors",
+      "project_tasks_projecttype_projecttasks",
+      "project_tasks_projecttype_statuscolors",
+      "project_tasks_projecttype_task"
+    ],
+    "23": [
+      "app_app_layout_tsx",
+      "app_app_layout_tsx_app_layout_rootlayout",
+      "app_app_protectedroute_layout_tsx",
+      "app_components_appheader_tsx",
+      "app_components_notificationdrawer_tsx",
+      "app_context_notificationcontext_tsx",
+      "components_notificationdrawer_width",
+      "frontend_src_context_notificationprovider_jsx",
+      "protectedroute_layout_customdrawercontent",
+      "protectedroute_layout_drawerlayout",
+      "protectedroute_layout_getpagetitle",
+      "protectedroute_layout_sidebaritem",
+      "static_notificationindicator_notificationindicator",
+      "utils_notificationservice_sendnotification"
+    ],
+    "24": [
+      "backend_src_index_js",
+      "backend_src_utils_socket_js",
+      "config_connectdb_connectdb",
+      "middlewares_requesttracer_requesttracer",
+      "src_index_allowedorigins",
+      "src_index_connection",
+      "src_index_io",
+      "src_index_memusage",
+      "src_index_now",
+      "src_index_socket",
+      "src_index_userrooms",
+      "utils_socket_emitnotification"
+    ],
+    "25": [
+      "common_prioritytasks_prioritytasks",
+      "common_statcard_statcard",
+      "frontend_src_components_common_statcard_jsx",
+      "frontend_src_components_role_hr_dashboard_jsx",
+      "frontend_src_hooks_useuserrole_js",
+      "frontend_src_hooks_useuserrole_js_hooks_useuserrole_useuserrole",
+      "frontend_src_pages_dashboard_index_jsx",
+      "role_rolebasedreports_employeereports",
+      "role_rolebasedreports_hrreports",
+      "role_rolebasedreports_managerreports",
+      "role_rolebasedreports_rolebasedreports",
+      "role_rolebasedreports_superadminreports"
+    ],
+    "26": [
+      "backend_src_middlewares_agentauthmiddleware_js",
+      "backend_src_models_agent_js",
+      "backend_src_models_client_js",
+      "backend_src_routes_agentroutes_js",
+      "models_agent_agentschema",
+      "models_client_clientschema",
+      "routes_agentroutes_agent",
+      "routes_agentroutes_router",
+      "routes_agentroutes_sendagentcredentials",
+      "routes_agentroutes_temppassword",
+      "routes_agentroutes_token"
+    ],
+    "27": [
+      "app_app_authroute_layout_tsx",
+      "app_app_protectedroute_attendance_index_tsx",
+      "app_app_protectedroute_dashboard_index_tsx",
+      "app_app_protectedroute_logout_tsx",
+      "app_context_authcontext_js",
+      "app_hooks_useuserrole_ts",
+      "app_hooks_useuserrole_ts_hooks_useuserrole_useuserrole",
+      "authroute_layout_authlayout",
+      "context_authcontext_authcontext",
+      "hooks_useuserrole_role_mapping",
+      "protectedroute_logout_logoutscreen"
+    ],
+    "28": [
+      "app_app_protectedroute_me_index_tsx",
+      "app_components_ui_formrenderer_tsx",
+      "app_constants_forms_profileform_js",
+      "forms_profileform_profileformfields",
+      "forms_profileform_profilesubmitbutton",
+      "me_index_employee",
+      "me_index_profile",
+      "ui_formrenderer_formfield",
+      "ui_formrenderer_formrenderer",
+      "ui_formrenderer_formrendererprops"
+    ],
+    "29": [
+      "backend_src_utils_filterparser_js",
+      "utils_filterparser_buildast",
+      "utils_filterparser_normalizenode",
+      "utils_filterparser_parsefilter",
+      "utils_filterparser_tokenize",
+      "utils_parseexpr_convertvalue",
+      "utils_parseexpr_isidfield",
+      "utils_parseexpr_lookslikeobjectid",
+      "utils_parseexpr_op_map",
+      "utils_parseexpr_parseexpr"
+    ],
+    "30": [
+      "documentation_diagrams_concept",
+      "google_c2pa_core_tsa_ica",
+      "google_c2pa_media_services_ica",
+      "google_c2pa_root_ca",
+      "request_lifecycle_c2pa_metadata",
+      "request_lifecycle_diagram",
+      "request_lifecycle_google_generative_ai",
+      "ticket_task_conversion_c2pa_metadata",
+      "ticket_task_conversion_diagram",
+      "ticket_task_conversion_google_generative_ai"
+    ],
+    "31": [
+      "backend_data_ticketssidebar_json",
+      "data_ticketssidebar_icon",
+      "data_ticketssidebar_icon_iconname",
+      "data_ticketssidebar_icon_iconpackage",
+      "data_ticketssidebar_id",
+      "data_ticketssidebar_permissions",
+      "data_ticketssidebar_roles",
+      "data_ticketssidebar_route",
+      "data_ticketssidebar_title"
+    ],
+    "32": [
+      "backend_src_routes_agentinviteroutes_js",
+      "backend_src_services_agentinviteservice_js",
+      "backend_src_services_agents_js",
+      "routes_agentinviteroutes_router",
+      "services_agentinviteservice_agentinviteservice_sendinvite",
+      "services_agentinviteservice_agentinviteservice_sendinviteemail",
+      "services_agentinviteservice_agentinviteservice_setpassword",
+      "services_agentinviteservice_agentinviteservice_verifyinvitetoken",
+      "services_agents_agentservice"
+    ],
+    "33": [
+      "app_app_protectedroute_tasks_task_detail_taskid_tsx",
+      "app_components_inlineedit_tsx",
+      "common_inlineedit_inlineedit",
+      "components_inlineedit_inlineedit",
+      "components_inlineedit_inlineeditprops",
+      "task_detail_taskid_statuscolors",
+      "task_detail_taskid_task",
+      "task_detail_taskid_taskdetail"
+    ],
+    "34": [
+      "app_app_protectedroute_tasks_index_tsx",
+      "app_hooks_useoptimizedapi_js",
+      "app_hooks_useoptimizeddatafetching_js",
+      "hooks_useoptimizeddatafetching_memorycache",
+      "tasks_index_client",
+      "tasks_index_tasks",
+      "ui_optimizedlist_optimizedlist",
+      "ui_optimizedlist_styles"
+    ],
+    "35": [
+      "backend_src_services_databaseindexer_js",
+      "services_databaseindexer_databaseindexer_analyzequeryperformance",
+      "services_databaseindexer_databaseindexer_constructor",
+      "services_databaseindexer_databaseindexer_createoptimalindexes",
+      "services_databaseindexer_databaseindexer_createttlindexes",
+      "services_databaseindexer_databaseindexer_dropunusedindexes",
+      "services_databaseindexer_databaseindexer_getindexedmodels",
+      "services_databaseindexer_databaseindexer_indexmodel"
+    ],
+    "36": [
+      "src_index_activeconnections",
+      "utils_memorymonitor_memorymonitor",
+      "utils_memorymonitor_memorymonitor_checkmemoryhealth",
+      "utils_memorymonitor_memorymonitor_constructor",
+      "utils_memorymonitor_memorymonitor_forcegarbagecollection",
+      "utils_memorymonitor_memorymonitor_gethealthendpoint",
+      "utils_memorymonitor_memorymonitor_getmemorystats",
+      "utils_memorymonitor_memorymonitor_startmonitoring"
+    ],
+    "37": [
+      "common_profileimage_profileimage",
+      "constants_profileform_profileformfields",
+      "constants_profileform_profilesubmitbutton",
+      "employee_recentactivity_recentactivity",
+      "frontend_src_components_common_profileimage_jsx",
+      "frontend_src_constants_profileform_js",
+      "frontend_src_pages_profile_index_jsx",
+      "profile_index_profile"
+    ],
+    "38": [
+      "common_themetoggler_themetoggler",
+      "context_authprovider_authprovider",
+      "context_themeprovider_themecontext",
+      "context_themeprovider_themeprovider",
+      "context_themeprovider_usetheme",
+      "frontend_src_app_jsx",
+      "frontend_src_main_jsx",
+      "src_app_app"
+    ],
+    "39": [
+      "backend_src_services_milestoneservice_js",
+      "services_milestoneservice_createmilestonetask",
+      "services_milestoneservice_getdefaulttasktype",
+      "services_milestoneservice_gettasksbytype",
+      "services_milestoneservice_getticketsbytype",
+      "services_milestoneservice_ismilestonebased",
+      "services_milestoneservice_syncmilestonetotasksandtickets",
+      "services_milestoneservice_updateclientmilestone"
+    ],
+    "40": [
+      "app_firebase_google_services_json",
+      "firebase_google_services_client",
+      "firebase_google_services_configuration_version",
+      "firebase_google_services_project_info",
+      "firebase_google_services_project_info_project_id",
+      "firebase_google_services_project_info_project_number",
+      "firebase_google_services_project_info_storage_bucket"
+    ],
+    "41": [
+      "app_package_scripts",
+      "app_package_scripts_android",
+      "app_package_scripts_ios",
+      "app_package_scripts_lint",
+      "app_package_scripts_reset_project",
+      "app_package_scripts_start",
+      "app_package_scripts_web"
+    ],
+    "42": [
+      "app_tsconfig_compileroptions",
+      "app_tsconfig_compileroptions_paths",
+      "app_tsconfig_compileroptions_strict",
+      "app_tsconfig_extends",
+      "app_tsconfig_include",
+      "app_tsconfig_json",
+      "app_tsconfig_paths"
+    ],
+    "43": [
+      "backend_server_getlocalip",
+      "backend_server_getpublicip",
+      "backend_server_initialstats",
+      "backend_server_js",
+      "backend_server_localip",
+      "src_index_app",
+      "src_index_server"
+    ],
+    "44": [
+      "backend_src_controller_agentauthcontroller_js",
+      "backend_src_models_agenttoken_js",
+      "backend_src_routes_agentauth_js",
+      "controller_agentauthcontroller_agentlogin",
+      "controller_agentauthcontroller_agentlogout",
+      "models_agenttoken_agenttokenschema",
+      "routes_agentauth_router"
+    ],
+    "45": [
+      "app_constants_forms_leaveform_js",
+      "attendance_leave_regularization_leaveandregularization",
+      "backend_src_models_regularization_js",
+      "forms_leaveform_leaveformfields",
+      "forms_leaveform_leavesubmitbutton",
+      "forms_regularizationform_regularizationformfields",
+      "forms_regularizationform_regularizationsubmitbutton"
+    ],
+    "46": [
+      "app_app_authroute_login_tsx",
+      "app_utils_fcmtokenmanager_js",
+      "app_utils_registerpushtoken_js",
+      "authroute_login_login",
+      "utils_fcmtokenmanager_checkandstorefcmtoken",
+      "utils_fcmtokenmanager_storefcmtoken",
+      "utils_registerpushtoken_registerforpushnotifications"
+    ],
+    "47": [
+      "frontend_src_pages_tasks_id_jsx",
+      "frontend_src_pages_tasks_taskmodal_jsx",
+      "frontend_src_utils_sharebutton_jsx",
+      "tasks_id_taskdetailpage",
+      "tasks_taskmodal_taskmodal",
+      "tasks_updatetaskbyid_updatetaskbyid",
+      "utils_sharebutton_sharebutton"
+    ],
+    "48": [
+      "constants_leaveform_leaveformfields",
+      "constants_leaveform_leavesubmitbutton",
+      "constants_regularizationform_regularizationformfields",
+      "constants_regularizationform_regularizationsubmitbutton",
+      "frontend_src_constants_leaveform_js",
+      "frontend_src_constants_regularizationform_js",
+      "frontend_src_pages_attendance_leave_regularization_jsx"
+    ],
+    "49": [
+      "utils_validator_aggregatevalidator",
+      "utils_validator_bodyvalidator",
+      "utils_validator_conditionsvalidator",
+      "utils_validator_fieldsvalidator",
+      "utils_validator_filtervalidator",
+      "utils_validator_resolveconditions",
+      "utils_validator_validator"
+    ],
+    "50": [
+      "app_app_protectedroute_tasks_add_task_tsx",
+      "tasks_add_task_addtask",
+      "tasks_add_task_client",
+      "tasks_add_task_employee",
+      "tasks_add_task_projecttype",
+      "tasks_add_task_tasktype"
+    ],
+    "51": [
+      "app_api_axiosinstance_js",
+      "app_api_axiosinstance_js_api_axiosinstance_forcelogout",
+      "app_api_axiosinstance_js_api_axiosinstance_getdeviceuuid",
+      "app_api_axiosinstance_js_api_axiosinstance_incrementfailedcount",
+      "app_api_axiosinstance_js_api_axiosinstance_resetfailedcount",
+      "app_api_axiosinstance_js_api_axiosinstance_setauthlogout"
+    ],
+    "52": [
+      "backend_src_models_referencetype_js",
+      "constants_referencetypeform_referencetypeformfields",
+      "constants_referencetypeform_referencetypesubmitbutton",
+      "frontend_src_pages_master_data_reference_types_index_jsx",
+      "models_referencetype_referencetypeschema",
+      "reference_types_index_referencetypes"
+    ],
+    "53": [
+      "backend_src_services_sidebars_js",
+      "services_sidebars_deptfilter",
+      "services_sidebars_desigfilter",
+      "services_sidebars_isarray",
+      "services_sidebars_policy",
+      "services_sidebars_route_model_map"
+    ],
+    "54": [
+      "app_package_json",
+      "app_package_main",
+      "app_package_name",
+      "app_package_private",
+      "app_package_version"
+    ],
+    "55": [
+      "backend_src_routes_locationroutes_js",
+      "routes_locationroutes_cities",
+      "routes_locationroutes_countries",
+      "routes_locationroutes_router",
+      "routes_locationroutes_states"
+    ],
+    "56": [
+      "clients_index_clients",
+      "constants_clientform_clientformfields",
+      "constants_clientform_clientsubmitbutton",
+      "frontend_src_constants_clientform_js",
+      "frontend_src_pages_master_data_clients_index_jsx"
+    ],
+    "57": [
+      "constants_leadtypeform_leadtypeformfields",
+      "constants_leadtypeform_leadtypesubmitbutton",
+      "frontend_src_constants_leadtypeform_js",
+      "frontend_src_pages_master_data_lead_types_index_jsx",
+      "lead_types_index_leadtypes"
+    ],
+    "58": [
+      "constants_milestoneform_milestoneformfields",
+      "constants_milestoneform_milestonesubmitbutton",
+      "frontend_src_constants_milestoneform_js",
+      "frontend_src_pages_master_data_milestones_index_jsx",
+      "milestones_index_milestones"
+    ],
+    "59": [
+      "app_layout_geistmono",
+      "app_layout_geistsans",
+      "app_layout_metadata",
+      "external_app_layout_tsx",
+      "external_app_layout_tsx_app_layout_rootlayout"
+    ],
+    "60": [
+      "manager_managerdashboard_actioncard",
+      "manager_managerdashboard_managerdashboard",
+      "manager_managerdashboard_managerdashboardstats",
+      "manager_managerdashboard_props",
+      "manager_managerdashboard_statcard"
+    ],
+    "61": [
+      "backend_src_models_shift_js",
+      "models_shift_shift",
+      "models_shift_shiftassignment",
+      "models_shift_shiftassignmentschema",
+      "models_shift_shiftschema"
+    ],
+    "62": [
+      "superadmin_superadmindashboard_actioncard",
+      "superadmin_superadmindashboard_props",
+      "superadmin_superadmindashboard_statcard",
+      "superadmin_superadmindashboard_superadmindashboard",
+      "superadmin_superadmindashboard_superadmindashboardstats"
+    ],
+    "63": [
+      "app_vscode_settings_json",
+      "vscode_settings_editor_codeactionsonsave",
+      "vscode_settings_editor_codeactionsonsave_source_fixall",
+      "vscode_settings_editor_codeactionsonsave_source_organizeimports",
+      "vscode_settings_editor_codeactionsonsave_source_sortmembers"
+    ],
+    "64": [
+      "app_metro_config_config",
+      "app_metro_config_getdefaultconfig",
+      "app_metro_config_js",
+      "app_metro_config_withnativewind"
+    ],
+    "65": [
+      "backend_src_controller_index_js",
+      "controller_index_getregistry",
+      "controller_index_listregistries",
+      "controller_index_registrystore"
+    ],
+    "66": [
+      "agents_index_agentmanagement",
+      "common_searchbar_searchbar",
+      "frontend_src_components_common_searchbar_jsx",
+      "frontend_src_pages_master_data_agents_index_jsx"
+    ],
+    "67": [
+      "constants_designationform_designationformfields",
+      "constants_designationform_designationsubmitbutton",
+      "frontend_src_constants_designationform_js",
+      "frontend_src_pages_master_data_designations_index_jsx"
+    ],
+    "68": [
+      "frontend_src_pages_attendance_leaves_id_jsx",
+      "frontend_src_pages_attendance_leaves_model_jsx",
+      "leaves_id_detailmodalroute",
+      "leaves_model_genericdetailpage"
+    ],
+    "69": [
+      "activity_id_activitydetailpage",
+      "daily_tracker_activity_activity",
+      "frontend_src_pages_attendance_daily_tracker_activity_id_jsx",
+      "frontend_src_pages_attendance_daily_tracker_activity_jsx"
+    ],
+    "70": [
+      "external_app_api_tickets_id_route_ts",
+      "id_route_delete",
+      "id_route_get",
+      "id_route_put"
+    ],
+    "71": [
+      "backend_playground_populate_js",
+      "playground_populate_app",
+      "playground_populate_sampledata",
+      "playground_populate_server"
+    ],
+    "72": [
+      "backend_src_models_errorlog_js",
+      "middlewares_errorhandler_errorhandler",
+      "models_errorlog_errorlogschema"
+    ],
+    "73": [
+      "backend_src_models_apihitlog_js",
+      "middlewares_apihitlogger_apihitlogger",
+      "models_apihitlog_apihitlogschema"
+    ],
+    "74": [
+      "backend_src_routes_bankroutes_js",
+      "routes_bankroutes_ifscbankmap",
+      "routes_bankroutes_router"
+    ],
+    "75": [
+      "backend_test_deps_dependencies",
+      "backend_test_deps_js",
+      "backend_test_deps_testdependencies"
+    ],
+    "76": [
+      "backend_test_deps_v2_dependencies",
+      "backend_test_deps_v2_js",
+      "backend_test_deps_v2_testdependencies"
+    ],
+    "77": [
+      "external_app_api_tickets_route_ts",
+      "tickets_route_get",
+      "tickets_route_post"
+    ],
+    "78": [
+      "constants_agentform_agentformfields",
+      "constants_agentform_agentsubmitbutton",
+      "frontend_src_constants_agentform_js"
+    ],
+    "79": [
+      "constants_agentfrom_agentfromfields",
+      "constants_agentfrom_agentsubmitbutton",
+      "frontend_src_constants_agentfrom_js"
+    ],
+    "80": [
+      "frontend_src_pages_playground_index_jsx",
+      "playground_index_columnvisibility",
+      "playground_index_excelcolumnextractor"
+    ],
+    "81": [
+      "backend_src_utils_sanitizepopulated_js",
+      "utils_sanitizepopulated_readnested",
+      "utils_sanitizepopulated_writenested"
+    ],
+    "82": [
+      "email_config_index_emailconfig",
+      "frontend_src_pages_settings_email_config_index_jsx",
+      "models_emailconfig_emailconfigschema"
+    ],
+    "83": [
+      "models_sidebar_iconschema",
+      "models_sidebar_sidebarschema",
+      "ref_docs_db_ref_sidebar_json"
+    ],
+    "84": [
+      "backend_src_utils_safeaggregator_js",
+      "utils_safeaggregator_getschemaawarefallback",
+      "utils_safeaggregator_safeaggregate"
+    ],
+    "85": [
+      "backend_src_utils_sanitizeupdate_js",
+      "utils_sanitizeupdate_matchnested",
+      "utils_sanitizeupdate_sanitizesingle"
+    ],
+    "86": [
+      "utils_sanitizewrite_matchnested",
+      "utils_sanitizewrite_sanitizesingle",
+      "utils_sanitizewrite_sanitizewrite"
+    ],
+    "87": [
+      "ref_docs_study_ref_dynamic_router_checklist_js",
+      "study_ref_dynamic_router_checklist_checklistprogress",
+      "study_ref_dynamic_router_checklist_futurechecklist"
+    ],
+    "88": [
+      "vscode_settings_cspell_words",
+      "vscode_settings_json",
+      "vscode_settings_postman_settings_dotenv_detection_notification_visibility"
+    ],
+    "89": [
+      "app_app_protectedroute_attendance_layout_tsx",
+      "attendance_layout_attendancelayout"
+    ],
+    "90": [
+      "app_app_protectedroute_me_layout_tsx",
+      "me_layout_melayout"
+    ],
+    "91": [
+      "app_app_protectedroute_salary_expense_index_tsx",
+      "salary_expense_index_salaryexpences"
+    ],
+    "92": [
+      "app_app_protectedroute_tasks_layout_tsx",
+      "tasks_layout_taskslayout"
+    ],
+    "93": [
+      "app_components_ui_swipeableprofileimage_tsx",
+      "ui_swipeableprofileimage_width_screenwidth_height_screenheight"
+    ],
+    "94": [
+      "app_page_homepage",
+      "external_app_page_tsx"
+    ],
+    "95": [
+      "backend_src_utils_policy_registry_ishr_js",
+      "registry_ishr_ishr"
+    ],
+    "96": [
+      "backend_src_utils_policy_registry_isself_js",
+      "registry_isself_isself"
+    ],
+    "97": [
+      "common_pagination_pagination",
+      "frontend_src_components_common_pagination_jsx"
+    ],
+    "98": [
+      "app_components_external_link_tsx",
+      "components_external_link_props"
+    ],
+    "99": [
+      "constants_taskform_taskform",
+      "frontend_src_constants_taskform_js"
+    ],
+    "100": [
+      "client_products_route_get",
+      "external_app_api_client_products_route_ts"
+    ],
+    "101": [
+      "dashboard_page_dashboardpage",
+      "external_app_dashboard_page_tsx"
+    ],
+    "102": [
+      "external_postcss_config_config",
+      "external_postcss_config_mjs"
+    ],
+    "103": [
+      "external_app_login_page_tsx",
+      "login_page_loginpage"
+    ],
+    "104": [
+      "app_app_protectedroute_index_tsx",
+      "protectedroute_index_protectedindex"
+    ],
+    "105": [
+      "backend_src_utils_policy_registry_isref_js",
+      "registry_isref_isref"
+    ],
+    "106": [
+      "backend_src_utils_policy_registry_issender_js",
+      "registry_issender_issender"
+    ],
+    "107": [
+      "external_app_agent_setup_page_tsx",
+      "setup_page_agentsetup"
+    ],
+    "108": [
+      "ref_docs_study_ref_dynamic_router_roadmap_js",
+      "study_ref_dynamic_router_roadmap_apiroadmap"
+    ],
+    "109": [
+      "app_app_protectedroute_travel_expenses_index_tsx",
+      "travel_expenses_index_travelexpense"
+    ],
+    "110": [
+      "app_vscode_extensions_json",
+      "vscode_extensions_recommendations"
+    ],
+    "111": [
+      "app_babel_config_js"
+    ],
+    "112": [
+      "app_nativewind_env_d_ts"
+    ],
+    "113": [
+      "app_tailwind_config_js"
+    ],
+    "114": [
+      "app_components_haptic_tab_tsx"
+    ],
+    "115": [
+      "app_components_hello_wave_tsx"
+    ],
+    "116": [
+      "backend_test_import_js"
+    ],
+    "117": [
+      "backend_src_services_agent_js"
+    ],
+    "118": [
+      "backend_src_utils_policy_index_js"
+    ],
+    "119": [
+      "backend_src_utils_policy_todos_js"
+    ],
+    "120": [
+      "registry_isassigned_isassigned"
+    ],
+    "121": [
+      "registry_iscreatedby_iscreatedby"
+    ],
+    "122": [
+      "registry_ismanager_ismanager"
+    ],
+    "123": [
+      "registry_isrecipient_isrecipient"
+    ],
+    "124": [
+      "registry_isteammember_isteammember"
+    ],
+    "125": [
+      "external_next_config_ts"
+    ],
+    "126": [
+      "external_app_client_layout_tsx"
+    ],
+    "127": [
+      "external_app_protuctedroute_layout_tsx"
+    ],
+    "128": [
+      "frontend_eslint_config_js"
+    ],
+    "129": [
+      "frontend_tailwind_config_js"
+    ],
+    "130": [
+      "frontend_vite_config_js"
+    ],
+    "131": [
+      "common_modernloader_modernloader"
+    ],
+    "132": [
+      "frontend_src_pages_model_id_jsx"
+    ],
+    "133": [
+      "ref_docs_db_ref_access_json"
+    ],
+    "134": [
+      "ref_docs_db_ref_agentpolicies_json"
+    ],
+    "135": [
+      "ref_docs_db_ref_client_json"
+    ],
+    "136": [
+      "ref_docs_db_ref_common_readonly_policies_json"
+    ],
+    "137": [
+      "ref_docs_db_ref_complete_access_policies_json"
+    ],
+    "138": [
+      "ref_docs_db_ref_roles_json"
+    ],
+    "139": [
+      "ref_docs_db_ref_sidebaraddons_json"
+    ],
+    "140": [
+      "ref_docs_db_ref_status_json"
+    ],
+    "141": [
+      "ref_docs_db_ref_statusgroup_json"
+    ],
+    "142": [
+      "ref_docs_db_ref_tracker_leavepolicies_json"
+    ],
+    "143": [
+      "ref_docs_study_ref_phase_structure_js"
+    ]
+  },
+  "cohesion": {
+    "0": 0.05203619909502263,
+    "1": 0.0425531914893617,
+    "2": 0.043478260869565216,
+    "3": 0.05353535353535353,
+    "4": 0.046511627906976744,
+    "5": 0.11261261261261261,
+    "6": 0.05555555555555555,
+    "7": 0.05555555555555555,
+    "8": 0.06951871657754011,
+    "9": 0.0659536541889483,
+    "10": 0.10037878787878787,
+    "11": 0.11904761904761904,
+    "12": 0.11384615384615385,
+    "13": 0.08333333333333333,
+    "14": 0.17391304347826086,
+    "15": 0.10822510822510822,
+    "16": 0.1,
+    "17": 0.11695906432748537,
+    "18": 0.10526315789473684,
+    "19": 0.1503267973856209,
+    "20": 0.13333333333333333,
+    "21": 0.16483516483516483,
+    "22": 0.14285714285714285,
+    "23": 0.21978021978021978,
+    "24": 0.18181818181818182,
+    "25": 0.18181818181818182,
+    "26": 0.18181818181818182,
+    "27": 0.2727272727272727,
+    "28": 0.24444444444444444,
+    "29": 0.3333333333333333,
+    "30": 0.3111111111111111,
+    "31": 0.2222222222222222,
+    "32": 0.2777777777777778,
+    "33": 0.25,
+    "34": 0.32142857142857145,
+    "35": 0.32142857142857145,
+    "36": 0.2857142857142857,
+    "37": 0.35714285714285715,
+    "38": 0.2857142857142857,
+    "39": 0.32142857142857145,
+    "40": 0.2857142857142857,
+    "41": 0.2857142857142857,
+    "42": 0.2857142857142857,
+    "43": 0.2857142857142857,
+    "44": 0.38095238095238093,
+    "45": 0.47619047619047616,
+    "46": 0.47619047619047616,
+    "47": 0.38095238095238093,
+    "48": 0.47619047619047616,
+    "49": 0.3333333333333333,
+    "50": 0.3333333333333333,
+    "51": 0.4666666666666667,
+    "52": 0.4666666666666667,
+    "53": 0.3333333333333333,
+    "54": 0.4,
+    "55": 0.4,
+    "56": 0.6,
+    "57": 0.6,
+    "58": 0.6,
+    "59": 0.4,
+    "60": 0.4,
+    "61": 0.4,
+    "62": 0.4,
+    "63": 0.4,
+    "64": 0.5,
+    "65": 0.5,
+    "66": 0.5,
+    "67": 0.8333333333333334,
+    "68": 0.5,
+    "69": 0.5,
+    "70": 0.5,
+    "71": 0.5,
+    "72": 0.6666666666666666,
+    "73": 0.6666666666666666,
+    "74": 0.6666666666666666,
+    "75": 0.6666666666666666,
+    "76": 0.6666666666666666,
+    "77": 0.6666666666666666,
+    "78": 0.6666666666666666,
+    "79": 0.6666666666666666,
+    "80": 0.6666666666666666,
+    "81": 0.6666666666666666,
+    "82": 0.6666666666666666,
+    "83": 0.6666666666666666,
+    "84": 1.0,
+    "85": 0.6666666666666666,
+    "86": 0.6666666666666666,
+    "87": 0.6666666666666666,
+    "88": 0.6666666666666666,
+    "89": 1.0,
+    "90": 1.0,
+    "91": 1.0,
+    "92": 1.0,
+    "93": 1.0,
+    "94": 1.0,
+    "95": 1.0,
+    "96": 1.0,
+    "97": 1.0,
+    "98": 1.0,
+    "99": 1.0,
+    "100": 1.0,
+    "101": 1.0,
+    "102": 1.0,
+    "103": 1.0,
+    "104": 1.0,
+    "105": 1.0,
+    "106": 1.0,
+    "107": 1.0,
+    "108": 1.0,
+    "109": 1.0,
+    "110": 1.0,
+    "111": 1.0,
+    "112": 1.0,
+    "113": 1.0,
+    "114": 1.0,
+    "115": 1.0,
+    "116": 1.0,
+    "117": 1.0,
+    "118": 1.0,
+    "119": 1.0,
+    "120": 1.0,
+    "121": 1.0,
+    "122": 1.0,
+    "123": 1.0,
+    "124": 1.0,
+    "125": 1.0,
+    "126": 1.0,
+    "127": 1.0,
+    "128": 1.0,
+    "129": 1.0,
+    "130": 1.0,
+    "131": 1.0,
+    "132": 1.0,
+    "133": 1.0,
+    "134": 1.0,
+    "135": 1.0,
+    "136": 1.0,
+    "137": 1.0,
+    "138": 1.0,
+    "139": 1.0,
+    "140": 1.0,
+    "141": 1.0,
+    "142": 1.0,
+    "143": 1.0
+  },
+  "gods": [
+    {
+      "id": "context_authprovider_useauth",
+      "label": "useAuth()",
+      "degree": 50
+    },
+    {
+      "id": "context_authcontext_authprovider",
+      "label": "AuthProvider()",
+      "degree": 36
+    },
+    {
+      "id": "common_tablegenerator_tablegenerator",
+      "label": "TableGenerator()",
+      "degree": 28
+    },
+    {
+      "id": "ui_floatingcard_floatingcard",
+      "label": "FloatingCard()",
+      "degree": 23
+    },
+    {
+      "id": "app_app_expo",
+      "label": "expo",
+      "degree": 18
+    },
+    {
+      "id": "external_tsconfig_compileroptions",
+      "label": "compilerOptions",
+      "degree": 16
+    },
+    {
+      "id": "architecture_populate_helper",
+      "label": "populateHelper",
+      "degree": 16
+    },
+    {
+      "id": "attendance_leave_regularization_leaveandregularization",
+      "label": "LeaveAndRegularization()",
+      "degree": 13
+    },
+    {
+      "id": "architecture_policy_engine",
+      "label": "Policy Engine",
+      "degree": 13
+    },
+    {
+      "id": "architecture_attendance_service",
+      "label": "Attendance Service",
+      "degree": 13
+    }
+  ],
+  "surprises": [
+    {
+      "source": "populateHelper",
+      "target": "Employee Model",
+      "source_files": [
+        "backend/documentation/backend_Technical_Architecture_Documentation.md",
+        "Architecture.md"
+      ],
+      "confidence": "INFERRED",
+      "relation": "references",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; peripheral node `Employee Model` unexpectedly reaches hub `populateHelper`"
+    },
+    {
+      "source": "populateHelper",
+      "target": "Attendance Service",
+      "source_files": [
+        "backend/documentation/backend_Technical_Architecture_Documentation.md",
+        "Task.md"
+      ],
+      "confidence": "INFERRED",
+      "relation": "calls",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; bridges separate communities"
+    },
+    {
+      "source": "TicketView()",
+      "target": "getStatusColor()",
+      "source_files": [
+        "external/components/tickets/TicketView.tsx",
+        "App/components/roles/employee/EmployeeDashboard.tsx"
+      ],
+      "confidence": "INFERRED",
+      "relation": "calls",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories"
+    },
+    {
+      "source": "populateHelper",
+      "target": "handleAgentClientProducts()",
+      "source_files": [
+        "backend/documentation/backend_Technical_Architecture_Documentation.md",
+        "backend/src/helper/populateHelper.js"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "crosses file types (code \u2194 doc); bridges separate communities"
+    },
+    {
+      "source": "aggregateValidator()",
+      "target": "getPolicy()",
+      "source_files": [
+        "backend/src/utils/Validator.js",
+        "backend/src/utils/cache.js"
+      ],
+      "confidence": "INFERRED",
+      "relation": "calls",
+      "why": "inferred connection - not explicitly stated in source; bridges separate communities; peripheral node `aggregateValidator()` unexpectedly reaches hub `getPolicy()`"
+    }
+  ],
+  "tokens": {
+    "input": 24944,
+    "output": 1814
+  }
+}

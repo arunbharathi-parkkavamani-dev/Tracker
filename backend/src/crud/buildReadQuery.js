@@ -138,14 +138,33 @@ export default async function buildReadQuery({
     Object.entries(populateFields).forEach(([path, selectFields]) => {
       if (!selectFields) return;
 
-      // Check if path exists in schema (handles both direct and nested paths)
-      const schemaPath = Model.schema.path(path) || Model.schema.path(`${path}.$`);
+      let targetModelName = null;
+      let isRef = false;
+      let actualSchemaPath = null;
 
-      // Check if it's a direct ref OR an array of refs
-      const targetModelName = schemaPath?.options?.ref || schemaPath?.caster?.options?.ref;
-      const isRef = targetModelName ||
-        (schemaPath?.instance === 'ObjectID') || // Some schemas might use this
-        (!schemaPath && !path.includes('.')); // Fallback for top-level fields even if path detection fails
+      if (path.includes('.')) {
+        // Handle 1-level nested population (e.g. comments.attachments)
+        const [parentPath, childPath] = path.split('.');
+        const parentSchemaPath = Model.schema.path(parentPath) || Model.schema.path(`${parentPath}.$`) || Model.schema.virtualpath(parentPath);
+        const parentModelName = parentSchemaPath?.options?.ref || parentSchemaPath?.caster?.options?.ref;
+        if (parentModelName && models[parentModelName]) {
+          const ParentModel = models[parentModelName];
+          actualSchemaPath = ParentModel.schema.path(childPath) || ParentModel.schema.path(`${childPath}.$`) || ParentModel.schema.virtualpath(childPath);
+        }
+      } else {
+        // Direct field
+        actualSchemaPath = Model.schema.path(path) || Model.schema.path(`${path}.$`) || Model.schema.virtualpath(path);
+      }
+
+      if (actualSchemaPath) {
+        targetModelName = actualSchemaPath.options?.ref || actualSchemaPath.caster?.options?.ref;
+        const hasRefPath = !!(actualSchemaPath.options?.refPath || actualSchemaPath.caster?.options?.refPath);
+        const isObjectId = actualSchemaPath.instance === 'ObjectID' || actualSchemaPath.instance === 'ObjectId';
+        isRef = !!targetModelName || hasRefPath || isObjectId;
+      } else {
+        // Fallback for paths that couldn't be detected in schema but might be valid virtuals or top-level
+        isRef = !path.includes('.');
+      }
 
       if (isRef) {
         let finalSelect = String(selectFields).replace(/,/g, ' ');

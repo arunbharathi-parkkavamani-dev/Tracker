@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import KanbanBoard from "../../components/Common/KambanBoard";
 import GanttView from "./GanttView";
 import TaskSkeleton from "../../components/Common/TaskSkeleton";
-import { User, Plus, Search, X, ChevronDown, SlidersHorizontal, LayoutGrid, CalendarDays } from "lucide-react";
+import { User, Plus, Search, X, ChevronDown, SlidersHorizontal, LayoutGrid, CalendarDays, Download } from "lucide-react";
 
 const STATUS_COLS = [
   { id: "Backlogs",    title: "Backlogs" },
@@ -120,6 +120,24 @@ const MyTasks = () => {
     }
   };
 
+  const handleExport = async () => {
+    try {
+      const res = await axiosInstance.get("/export/tasks", {
+        params: { status: fStatus, priority: fPriority },
+        responseType: "blob"
+      });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "my_tasks_export.csv");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (e) {
+      console.error("Export failed", e);
+    }
+  };
+
   const filteredTasks = useMemo(() => {
     let d = allTasks;
     if (search) {
@@ -186,6 +204,12 @@ const MyTasks = () => {
               <CalendarDays size={13} className="mr-1 inline-block" /> Timeline
             </button>
           </div>
+
+          {/* Export Button */}
+          <button onClick={handleExport}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-tracker-md text-[12px] font-semibold border border-hairline bg-surface text-ink-muted hover:text-ink hover:border-ink-subtle transition-all duration-150 cursor-pointer">
+            <Download size={13} /> Export
+          </button>
 
           <button onClick={() => navigate("/tasks/form")}
             className="tracker-btn-accent flex items-center gap-1.5 text-[12px] px-3 py-1.5">

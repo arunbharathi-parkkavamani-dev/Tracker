@@ -7,7 +7,7 @@ import GanttView from "./GanttView";
 import TaskSkeleton from "../../components/Common/TaskSkeleton";
 import FormDraftBanner from "../../components/Forms/FormDraftBanner";
 import FilterDropdown from "../../components/Common/FilterDropdown";
-import { FolderKanban, Plus, Search, X, ChevronDown, SlidersHorizontal, LayoutGrid, CalendarDays } from "lucide-react";
+import { FolderKanban, Plus, Search, X, ChevronDown, SlidersHorizontal, LayoutGrid, CalendarDays, Download } from "lucide-react";
 
 const STATUS_COLS = [
   { id: "Backlogs",    title: "Backlogs" },
@@ -100,6 +100,24 @@ const TasksPage = () => {
       console.error(e); 
       // Revert if error
       setAllTasks(prev => prev.map(t => t._id === task._id ? { ...t, [field]: task[field] } : t));
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      const res = await axiosInstance.get("/export/tasks", {
+        params: { status: fStatus, priority: fPriority, client: fClient },
+        responseType: "blob"
+      });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "tasks_export.csv");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (e) {
+      console.error("Export failed", e);
     }
   };
 
@@ -275,6 +293,12 @@ const TasksPage = () => {
           >
             <SlidersHorizontal size={13} />
             Filters {activeFilters > 0 && <span className="ml-0.5 bg-[var(--module-project)] text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center font-bold">{activeFilters}</span>}
+          </button>
+
+          {/* Export Button */}
+          <button onClick={handleExport}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-tracker-md text-[12px] font-semibold border border-hairline bg-surface text-ink-muted hover:text-ink hover:border-ink-subtle transition-all duration-150 cursor-pointer">
+            <Download size={13} /> Export
           </button>
 
           <button onClick={() => navigate("/tasks/form")}

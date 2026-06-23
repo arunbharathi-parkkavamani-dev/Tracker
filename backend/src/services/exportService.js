@@ -1,4 +1,4 @@
-import { db } from "../config/db.js";
+import models from "../models/Collection.js";
 
 /**
  * Escapes a string for CSV formatting
@@ -17,7 +17,7 @@ const escapeCSV = (str) => {
  * Generates a CSV export of Tasks based on a query filter.
  */
 export const generateTaskCSV = async (filter = {}) => {
-  const collection = db.collection("tasks");
+  const collection = models.tasks;
 
   // Fetch tasks with populated references using aggregation
   const pipeline = [
@@ -70,7 +70,7 @@ export const generateTaskCSV = async (filter = {}) => {
   // CSV Rows
   const rows = tasks.map(task => {
     const client = task.clientDoc?.[0]?.name || "-";
-    const creator = task.creatorDoc?.[0]?.basicInfo?.firstName 
+    const creator = task.creatorDoc?.[0]?.basicInfo?.firstName
       ? `${task.creatorDoc[0].basicInfo.firstName} ${task.creatorDoc[0].basicInfo.lastName || ""}`.trim()
       : "System";
     const category = task.categoryDoc?.[0]?.name || "-";
