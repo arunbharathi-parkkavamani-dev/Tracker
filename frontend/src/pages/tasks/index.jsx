@@ -10,46 +10,46 @@ import FilterDropdown from "../../components/Common/FilterDropdown";
 import { FolderKanban, Plus, Search, X, ChevronDown, SlidersHorizontal, LayoutGrid, CalendarDays, Download } from "lucide-react";
 
 const STATUS_COLS = [
-  { id: "Backlogs",    title: "Backlogs" },
-  { id: "To Do",       title: "To Do" },
+  { id: "Backlogs", title: "Backlogs" },
+  { id: "To Do", title: "To Do" },
   { id: "In Progress", title: "In Progress" },
-  { id: "In Review",   title: "In Review" },
-  { id: "Approved",    title: "Approved" },
-  { id: "Completed",   title: "Completed" },
+  { id: "In Review", title: "In Review" },
+  { id: "Approved", title: "Approved" },
+  { id: "Completed", title: "Completed" },
 ];
 const PRIORITY_COLS = [
-  { id: "Low",             title: "Low" },
-  { id: "Medium",          title: "Medium" },
-  { id: "High",            title: "High" },
+  { id: "Low", title: "Low" },
+  { id: "Medium", title: "Medium" },
+  { id: "High", title: "High" },
   { id: "Weekly Priority", title: "Weekly Priority" },
 ];
 
 const PRIORITIES = ["Low", "Medium", "High", "Weekly Priority"];
-const STATUSES   = ["Backlogs", "To Do", "In Progress", "In Review", "Approved", "Completed"];
+const STATUSES = ["Backlogs", "To Do", "In Progress", "In Review", "Approved", "Completed"];
 
 const TasksPage = () => {
-  const { user }  = useAuth();
-  const navigate  = useNavigate();
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
-  const [allTasks, setAllTasks]         = useState([]);
-  const [employees, setEmployees]       = useState([]);
-  const [taskTypes, setTaskTypes]       = useState([]);
-  const [clients, setClients]           = useState([]);
-  const [loading, setLoading]           = useState(true);
-  const [groupBy, setGroupBy]           = useState("status");
-  const [viewMode, setViewMode]         = useState("board"); // 'board' or 'gantt'
+  const [allTasks, setAllTasks] = useState([]);
+  const [employees, setEmployees] = useState([]);
+  const [taskTypes, setTaskTypes] = useState([]);
+  const [clients, setClients] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [groupBy, setGroupBy] = useState("status");
+  const [viewMode, setViewMode] = useState("board"); // 'board' or 'gantt'
   const [selectedTask, setSelectedTask] = useState(null);
-  const [showFilters, setShowFilters]   = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
   // Filter state
   const [searchVal, setSearchVal] = useState("");
-  const [fStatus,   setFStatus]   = useState(null);
+  const [fStatus, setFStatus] = useState(null);
   const [fPriority, setFPriority] = useState(null);
   const [fAssignee, setFAssignee] = useState(null);
-  const [fClient,   setFClient]   = useState(null);
+  const [fClient, setFClient] = useState(null);
   const [fCategory, setFCategory] = useState(null);
   const [fDateFrom, setFDateFrom] = useState("");
-  const [fDateTo,   setFDateTo]   = useState("");
+  const [fDateTo, setFDateTo] = useState("");
 
   useEffect(() => { fetchAll(); }, []);
 
@@ -59,11 +59,11 @@ const TasksPage = () => {
       const [tR, eR, tyR, cR] = await Promise.all([
         axiosInstance.post("/populate/read/tasks", {
           populateFields: {
-            clientId:      "name",
+            clientId: "name",
             projectTypeId: "name",
-            taskTypeId:    "name",
-            createdBy:     "basicInfo.firstName,basicInfo.lastName,basicInfo.profileImage",
-            assignedTo:    "basicInfo.firstName,basicInfo.lastName,basicInfo.profileImage",
+            taskTypeId: "name",
+            createdBy: "basicInfo.firstName,basicInfo.lastName,basicInfo.profileImage",
+            assignedTo: "basicInfo.firstName,basicInfo.lastName,basicInfo.profileImage",
             linkedTicketId: "title",
           },
           limit: 1000,
@@ -96,8 +96,8 @@ const TasksPage = () => {
       setAllTasks(prev => prev.map(t => t._id === task._id ? { ...t, [field]: value } : t));
       // API call
       await axiosInstance.put(`/populate/update/tasks/${task._id}`, { [field]: value });
-    } catch (e) { 
-      console.error(e); 
+    } catch (e) {
+      console.error(e);
       // Revert if error
       setAllTasks(prev => prev.map(t => t._id === task._id ? { ...t, [field]: task[field] } : t));
     }
@@ -137,10 +137,10 @@ const TasksPage = () => {
         (t.linkedTicketId?.title || "").toLowerCase().includes(q)
       );
     }
-    if (fStatus)   d = d.filter(t => t.status === fStatus);
+    if (fStatus) d = d.filter(t => t.status === fStatus);
     if (fPriority) d = d.filter(t => t.priorityLevel === fPriority);
     if (fAssignee) d = d.filter(t => t.assignedTo?.some(a => String(a._id || a) === fAssignee));
-    if (fClient)   d = d.filter(t => {
+    if (fClient) d = d.filter(t => {
       const cid = typeof t.clientId === "object" ? t.clientId?._id : t.clientId;
       return String(cid) === String(fClient);
     });
@@ -149,7 +149,7 @@ const TasksPage = () => {
       return catName === fCategory;
     });
     if (fDateFrom) d = d.filter(t => t.createdAt && new Date(t.createdAt) >= new Date(fDateFrom));
-    if (fDateTo)   d = d.filter(t => t.createdAt && new Date(t.createdAt) <= new Date(fDateTo + "T23:59:59"));
+    if (fDateTo) d = d.filter(t => t.createdAt && new Date(t.createdAt) <= new Date(fDateTo + "T23:59:59"));
     return d;
   }, [allTasks, searchVal, fStatus, fPriority, fAssignee, fClient, fCategory, fDateFrom, fDateTo]);
 
@@ -190,19 +190,19 @@ const TasksPage = () => {
       const count = allTasks.filter(t => (groupBy === "status" ? t.status : t.priorityLevel) === col.id).length;
       const colorCls = groupBy === "status"
         ? {
-            "Backlogs":    "bg-surface-2 text-ink-muted",
-            "To Do":       "bg-[var(--tracker-warning-light)] text-[var(--tracker-warning)]",
-            "In Progress": "bg-[var(--module-project-light)] text-[var(--module-project)]",
-            "In Review":   "bg-[var(--module-hr-light)] text-[var(--module-hr)]",
-            "Approved":    "bg-[var(--tracker-success-light)] text-[var(--tracker-success)]",
-            "Completed":   "bg-[var(--tracker-success-light)] text-[var(--tracker-success)]",
-          }[col.id]
+          "Backlogs": "bg-surface-2 text-ink-muted",
+          "To Do": "bg-[var(--tracker-warning-light)] text-[var(--tracker-warning)]",
+          "In Progress": "bg-[var(--module-project-light)] text-[var(--module-project)]",
+          "In Review": "bg-[var(--module-hr-light)] text-[var(--module-hr)]",
+          "Approved": "bg-[var(--tracker-success-light)] text-[var(--tracker-success)]",
+          "Completed": "bg-[var(--tracker-success-light)] text-[var(--tracker-success)]",
+        }[col.id]
         : {
-            "Low":             "bg-[var(--tracker-success-light)] text-[var(--tracker-success)]",
-            "Medium":          "bg-[var(--tracker-warning-light)] text-[var(--tracker-warning)]",
-            "High":            "bg-[var(--tracker-danger-light)] text-[var(--tracker-danger)]",
-            "Weekly Priority": "bg-[var(--module-hr-light)] text-[var(--module-hr)]",
-          }[col.id];
+          "Low": "bg-[var(--tracker-success-light)] text-[var(--tracker-success)]",
+          "Medium": "bg-[var(--tracker-warning-light)] text-[var(--tracker-warning)]",
+          "High": "bg-[var(--tracker-danger-light)] text-[var(--tracker-danger)]",
+          "Weekly Priority": "bg-[var(--module-hr-light)] text-[var(--module-hr)]",
+        }[col.id];
       return { label: col.title, count, colorCls };
     }).filter(p => p.count > 0);
   }, [allTasks, groupBy]);
@@ -213,97 +213,97 @@ const TasksPage = () => {
     <div className="flex flex-col h-full bg-canvas" data-module="project">
 
       {/* ── Page header ── */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-hairline-soft pb-4 mb-4">
-        <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 flex-1 min-w-0">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#e2e8f0] pb-1 mb-2">
+
+        {/* Left: Title & Subtitle */}
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-[#f8fafc] border border-[#e2e8f0] flex items-center justify-center text-[#0ea5e9] shadow-sm">
+            <FolderKanban size={18} />
+          </div>
           <div>
-            <p className="lmx-page-eyebrow mb-0.5">PROJECTS</p>
-            <h1 className="text-[20px] font-semibold text-ink flex items-center gap-2 tracking-tight">
-              <FolderKanban size={18} style={{ color: "var(--module-project)" }} />
+            <h1 className="text-[18px] font-bold text-[#1e293b] tracking-tight leading-tight">
               All Tasks
             </h1>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="text-[12px] font-medium text-[#64748b]">
+                {allTasks.length} total tasks
+              </span>
+              {activeFilters > 0 && (
+                <>
+                  <span className="w-1 h-1 rounded-full bg-[#cbd5e1]"></span>
+                  <span className="text-[12px] font-bold text-[#0ea5e9]">
+                    {filteredTasks.length} filtered
+                  </span>
+                </>
+              )}
+            </div>
             <FormDraftBanner model="tasks" formPath="/tasks/form" label="task" />
-          </div>
-          {/* Vertical divider on larger screens */}
-          <div className="hidden md:block w-px h-6 bg-hairline-soft self-center mt-3" />
-          
-          {/* Stat pills row (Status/Priority counts) on the first row */}
-          <div className="flex flex-wrap items-center gap-2 mt-1 md:mt-3">
-            {statPills.map(p => (
-              <span key={p.label} className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold ${p.colorCls}`}>
-                <span className="font-bold">{p.count}</span>
-                <span className="opacity-75">{p.label}</span>
-              </span>
-            ))}
-            <span className="text-[11px] text-ink-subtle pl-1 self-center">{allTasks.length} total</span>
-            {activeFilters > 0 && (
-              <span className="text-[11px] text-[var(--module-project)] font-semibold pl-2 animate-in fade-in duration-200">
-                ({filteredTasks.length} filtered)
-              </span>
-            )}
           </div>
         </div>
 
-        <div className="flex items-center gap-2 self-start lg:self-center shrink-0 lg:mt-3">
-          {/* Always-visible search input next to Filters */}
-          <div className="relative w-48">
-            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-subtle pointer-events-none" />
+        {/* Right: Controls & Actions */}
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+
+          {/* Search */}
+          <div className="relative">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8] pointer-events-none" />
             <input
               value={searchVal}
               onChange={e => setSearchVal(e.target.value)}
               placeholder="Search tasks..."
-              className="lmx-input pl-8 pr-8 py-1.5 text-[12px]"
+              className="pl-8 pr-8 py-1.5 w-[200px] text-[12.5px] font-medium text-[#334155] placeholder-[#94a3b8] bg-white border border-[#e2e8f0] rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] focus:border-transparent transition-all"
             />
             {searchVal && (
               <button onClick={() => setSearchVal("")} className="absolute right-2.5 top-1/2 -translate-y-1/2">
-                <X size={12} className="text-ink-subtle" />
+                <X size={12} className="text-[#94a3b8] hover:text-[#64748b]" />
               </button>
             )}
           </div>
 
-          {/* Group-by toggle — uses tab pattern per DESIGN.md */}
-          <div className="lmx-tab-bar !p-0.5 !gap-0.5">
+          {/* Filters Button */}
+          <button
+            onClick={() => setShowFilters(v => !v)}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12.5px] font-bold border transition-all duration-150 cursor-pointer shadow-sm ${showFilters || activeFilters > 0
+                ? "border-[#0ea5e9] bg-[#f0f9ff] text-[#0ea5e9]"
+                : "border-[#e2e8f0] bg-white text-[#64748b] hover:text-[#334155] hover:border-[#cbd5e1] hover:bg-[#f8fafc]"
+              }`}
+          >
+            <SlidersHorizontal size={14} />
+            Filters {activeFilters > 0 && <span className="ml-1 bg-[#0ea5e9] text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center">{activeFilters}</span>}
+          </button>
+
+          {/* Group-by toggle (Segmented Control) */}
+          <div className="flex items-center p-0.5 bg-[#f1f5f9] border border-[#e2e8f0] rounded-lg">
             {[{ id: "status", label: "Status" }, { id: "priorityLevel", label: "Priority" }].map(g => (
               <button key={g.id} onClick={() => setGroupBy(g.id)}
-                className={`lmx-tab text-[11px] px-3 py-1.5 ${groupBy === g.id ? "lmx-tab-active" : ""}`}>
+                className={`text-[11.5px] font-bold px-3 py-1 rounded-md transition-all ${groupBy === g.id ? "bg-white text-[#1e293b] shadow-sm" : "text-[#64748b] hover:text-[#334155]"}`}>
                 {g.label}
               </button>
             ))}
           </div>
 
-          {/* View mode toggle */}
-          <div className="lmx-tab-bar !p-0.5 !gap-0.5 mr-2">
+          {/* View mode toggle (Segmented Control) */}
+          <div className="flex items-center p-0.5 bg-[#f1f5f9] border border-[#e2e8f0] rounded-lg">
             <button onClick={() => setViewMode("board")}
-              className={`lmx-tab text-[11px] px-3 py-1.5 ${viewMode === "board" ? "lmx-tab-active" : ""}`}>
-              <LayoutGrid size={13} className="mr-1 inline-block" /> Board
+              className={`flex items-center gap-1.5 text-[11.5px] font-bold px-3 py-1 rounded-md transition-all ${viewMode === "board" ? "bg-white text-[#1e293b] shadow-sm" : "text-[#64748b] hover:text-[#334155]"}`}>
+              <LayoutGrid size={13} /> Board
             </button>
             <button onClick={() => setViewMode("gantt")}
-              className={`lmx-tab text-[11px] px-3 py-1.5 ${viewMode === "gantt" ? "lmx-tab-active" : ""}`}>
-              <CalendarDays size={13} className="mr-1 inline-block" /> Timeline
+              className={`flex items-center gap-1.5 text-[11.5px] font-bold px-3 py-1 rounded-md transition-all ${viewMode === "gantt" ? "bg-white text-[#1e293b] shadow-sm" : "text-[#64748b] hover:text-[#334155]"}`}>
+              <CalendarDays size={13} /> Timeline
             </button>
           </div>
 
-          {/* Toggle advanced filters */}
-          <button
-            onClick={() => setShowFilters(v => !v)}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-tracker-md text-[12px] font-semibold border transition-all duration-150 cursor-pointer ${
-              showFilters || activeFilters > 0
-                ? "border-[var(--module-project)] bg-[var(--module-project-light)] text-[var(--module-project)]"
-                : "border-hairline bg-surface text-ink-muted hover:text-ink hover:border-ink-subtle"
-            }`}
-          >
-            <SlidersHorizontal size={13} />
-            Filters {activeFilters > 0 && <span className="ml-0.5 bg-[var(--module-project)] text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center font-bold">{activeFilters}</span>}
-          </button>
-
           {/* Export Button */}
           <button onClick={handleExport}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-tracker-md text-[12px] font-semibold border border-hairline bg-surface text-ink-muted hover:text-ink hover:border-ink-subtle transition-all duration-150 cursor-pointer">
-            <Download size={13} /> Export
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12.5px] font-bold border border-[#e2e8f0] bg-white text-[#64748b] hover:text-[#334155] hover:border-[#cbd5e1] hover:bg-[#f8fafc] transition-all duration-150 cursor-pointer shadow-sm">
+            <Download size={14} /> Export
           </button>
 
+          {/* New Task Button */}
           <button onClick={() => navigate("/tasks/form")}
-            className="tracker-btn-accent flex items-center gap-1.5 text-[12px] px-3 py-1.5">
-            <Plus size={13} /> New Task
+            className="flex items-center gap-1.5 text-[12.5px] font-bold px-4 py-1.5 rounded-lg bg-[#8b5cf6] hover:bg-[#7c3aed] text-white shadow-sm transition-colors">
+            <Plus size={14} /> New Task
           </button>
         </div>
       </div>
@@ -397,9 +397,9 @@ const TasksPage = () => {
             onNewTask={() => navigate("/tasks/form")}
           />
         ) : (
-          <GanttView 
-            data={filteredTasks} 
-            onTaskClick={handleTaskClick} 
+          <GanttView
+            data={filteredTasks}
+            onTaskClick={handleTaskClick}
           />
         )}
       </div>

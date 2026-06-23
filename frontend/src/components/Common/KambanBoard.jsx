@@ -78,12 +78,19 @@ const TaskCard = ({ task, groupBy, draggingId, onDragStart, onCardClick, onCardU
   const date       = task.endDate || task.dueDate;
   const isOverdue  = date && new Date(date) < new Date() && task.status !== "Completed";
   const priority   = task.priorityLevel;
-  const pCell      = PRIORITY_CELL[priority];
   const typeName   = task.taskTypeId?.name || task.type?.name || "";
   const typeAbbr   = typeName.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
   const category   = task.projectTypeId?.name || "";
-  /* detect if task was recently assigned (createdAt within last 48h) */
   const isNew      = task.createdAt && (Date.now() - new Date(task.createdAt).getTime()) < 48 * 3600 * 1000;
+
+  // Exact matching for priority colors
+  const pCell = {
+    Critical: { bg: "#fef2f2", text: "#dc2626", dot: "🔴" },
+    High:     { bg: "#fff7ed", text: "#ea580c", dot: "🟠" },
+    Medium:   { bg: "#fefce8", text: "#ca8a04", dot: "🟡" },
+    Low:      { bg: "#f0fdf4", text: "#16a34a", dot: "🟢" },
+    "Weekly Priority": { bg: "#faf5ff", text: "#9333ea", dot: "🟣" }
+  }[priority] || { bg: "#f8fafc", text: "#64748b", dot: "⚪" };
 
   return (
     <div
@@ -91,83 +98,83 @@ const TaskCard = ({ task, groupBy, draggingId, onDragStart, onCardClick, onCardU
       onDragStart={(e) => onDragStart(e, task)}
       onClick={() => onCardClick?.(task)}
       onContextMenu={(e) => onContextMenu?.(e, task)}
-      className="bg-surface border border-hairline cursor-grab active:cursor-grabbing hover:shadow-[var(--tracker-shadow-raised)] transition-all duration-150 select-none"
-      style={{ opacity: draggingId === task._id ? 0.25 : 1, borderLeft: "3px solid var(--module-accent)" }}
+      className="bg-white rounded-md border border-[#e2e8f0] shadow-sm cursor-grab active:cursor-grabbing hover:shadow-md transition-all duration-200 select-none flex flex-col overflow-hidden mx-1.5 mt-2 mb-1"
+      style={{ opacity: draggingId === task._id ? 0.4 : 1 }}
     >
-      <div className="p-3 space-y-2">
-
-        {/* Newly assigned badge */}
-        {isNew && (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide"
-            style={{ background: "var(--tracker-warning-light)", color: "var(--tracker-warning)", border: "1px solid var(--tracker-warning)" }}>
-            🆕 Newly Assigned
-          </span>
-        )}
-
-        {/* Title + avatar */}
-        <div className="flex items-start justify-between gap-2">
-          <div className="text-[12.5px] font-semibold leading-snug text-ink flex-1 min-w-0 break-words line-clamp-3">
+      <div className="p-3.5 pb-3 flex-1 space-y-2.5">
+        {/* Header: Title + Avatar */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="text-[13.5px] font-semibold leading-snug text-[#1e293b] flex-1 min-w-0">
+            {isNew && (
+              <span className="inline-block px-1.5 py-0.5 mr-1.5 rounded bg-[#fefce8] text-[#ca8a04] border border-[#fef08a] text-[9px] font-bold uppercase tracking-wider">
+                New
+              </span>
+            )}
             <InlineEdit
               value={task.title || "Untitled Task"}
               canEdit={!!onCardUpdate}
               onSave={(val) => onCardUpdate?.(task, "title", val)}
             />
           </div>
-          {assignees[0] && <Avatar person={assignees[0]} size={20} />}
+          <div className="flex-shrink-0 mt-0.5">
+            {assignees[0] ? <Avatar person={assignees[0]} size={26} /> : <div className="w-6 h-6 rounded-full bg-[#f1f5f9] border border-[#cbd5e1] border-dashed"></div>}
+          </div>
         </div>
 
-        {/* User story preview — 2 lines */}
+        {/* User Story / Description */}
         {(task.userStory || task.description) && (
-          <p className="text-[11px] leading-relaxed line-clamp-2 text-ink-muted">
+          <p className="text-[11.5px] leading-relaxed line-clamp-2 text-[#64748b]">
             {task.userStory || task.description}
           </p>
         )}
+        
+        {/* Subtle Divider */}
+        <div className="w-8 border-t border-[#e2e8f0] pt-2"></div>
 
-        {/* Client chip */}
-        {(task.clientId?.name || (typeof task.clientId === "string" && task.clientId)) && (
-          <span className="inline-block text-[10px] px-2 py-0.5 rounded-full bg-surface-2 text-ink-subtle">
-            {task.clientId?.name || "Client"}
-          </span>
-        )}
+        {/* Pills Row (Priority, Type, Category) */}
+        <div className="flex items-center gap-2.5 flex-wrap justify-between w-full">
+          {/* Priority Pill */}
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded text-[11px] font-bold tracking-wide"
+               style={{ background: pCell.bg, color: pCell.text }}>
+            <span className="text-[9px]">{pCell.dot}</span>
+            {priority || "Priority"}
+          </div>
 
-        {/* Comments + due date row */}
-        <div className="flex items-center justify-between">
-          <span className="text-[11px] text-ink-subtle">{ /* placeholder for comment count if available */ }</span>
-          {date && (
-            <span className={`text-[11px] font-semibold ${
-              isOverdue ? "text-[var(--tracker-danger)]" : "text-ink-subtle"
-            }`}>
-              {isOverdue && "⚠️ "}
-              {new Date(date).toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" })}
+          {/* Type Pill */}
+          {typeAbbr && (
+            <div className="flex items-center px-3 py-1 rounded text-[11px] font-bold tracking-wide bg-[#f5f3ff] text-[#7c3aed]" title={typeName}>
+              {typeAbbr}
+            </div>
+          )}
+
+          {/* Category / Client Pill */}
+          {(category || task.clientId?.name) && (
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded text-[11px] font-bold tracking-wide bg-[#ecfdf5] text-[#059669] truncate max-w-[120px]">
+              <span className="text-[10px]">☑</span>
+              <span className="truncate">{category || task.clientId?.name}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Footer / Due Date Indicator */}
+        <div className="flex items-center justify-between pt-1">
+          <div></div>
+          {date && !isOverdue && (
+            <span className="text-[10px] font-medium text-ink-subtle">
+              {new Date(date).toLocaleDateString("en-GB")}
             </span>
           )}
         </div>
       </div>
 
-      {/* Footer bar: priority | type abbr | category — 3-col grid */}
-      <div className="grid grid-cols-3 border-t border-hairline-soft overflow-hidden rounded-b">
-        {/* Priority */}
-        <div className="flex items-center justify-center px-1 py-1.5 border-r border-hairline-soft"
-          style={{ background: pCell?.bg || "var(--tracker-surface-1)" }}>
-          {pCell ? (
-            <span className="text-[10px] font-semibold" style={{ color: pCell.text }}>
-              {pCell.dot} {priority}
-            </span>
-          ) : <span className="text-[10px] text-ink-subtle">—</span>}
+      {/* Overdue Banner at the bottom */}
+      {isOverdue && (
+        <div className="bg-[#fef2f2] border-t border-[#fecaca] py-1.5 px-3 text-center">
+          <span className="text-[10.5px] font-bold text-[#ef4444] tracking-widest uppercase">
+            Overdue
+          </span>
         </div>
-        {/* Type abbreviation */}
-        <div className="flex items-center justify-center px-1 py-1.5 border-r border-hairline-soft text-[10px] font-bold truncate"
-          style={{ background: "var(--module-accent-light)", color: "var(--module-accent)" }}
-          title={typeName}>
-          {typeAbbr || "—"}
-        </div>
-        {/* Category / stage */}
-        <div className="flex items-center justify-center px-1 py-1.5 text-[10px] font-semibold truncate"
-          style={{ background: "var(--tracker-surface-1)", color: "var(--tracker-ink-muted)" }}
-          title={category}>
-          {category ? `✅ ${category}` : "—"}
-        </div>
-      </div>
+      )}
     </div>
   );
 };
@@ -331,39 +338,33 @@ const KanbanBoard = ({
             return (
               <div
                 key={col.id}
-                className={`flex flex-col rounded-tracker-card flex-1 border border-hairline transition-colors duration-150 overflow-hidden ${isOver ? token.bg : "bg-surface-1"}`}
-                style={{ minWidth: 280 }}
+                className={`flex flex-col flex-1 transition-colors duration-150 overflow-hidden ${isOver ? token.bg : "bg-transparent"}`}
+                style={{ minWidth: 320, maxWidth: 360 }}
                 onDragOver={(e) => { e.preventDefault(); setOverCol(col.id); }}
                 onDrop={() => handleDrop(col.id)}
                 onDragLeave={() => setOverCol(null)}
               >
-                {/* Column header — solid colour, white text */}
-                <div className="px-3 py-2.5 text-white flex-shrink-0" style={{ backgroundColor: ({
-                    "Backlogs":         "var(--tracker-ink-subtle)",
-                    "To Do":            "var(--tracker-warning)",
-                    "In Progress":      "var(--module-project)",
-                    "In Review":        "var(--module-hr)",
-                    "Approved":         "var(--tracker-success)",
-                    "Completed":        "var(--tracker-success)",
-                    "Low":              "var(--tracker-success)",
-                    "Medium":           "var(--tracker-warning)",
-                    "High":             "var(--tracker-danger)",
-                    "Weekly Priority":  "var(--module-hr)",
+                {/* Column header — exact match to screenshot */}
+                <div className="px-4 py-3.5 text-white flex-shrink-0 flex items-center justify-between rounded-t-lg" style={{ backgroundColor: ({
+                    "Backlogs":         "#8b94a8",
+                    "To Do":            "#f59e0b",
+                    "In Progress":      "#0ea5e9",
+                    "In Review":        "#8b5cf6",
+                    "Approved":         "#10b981",
+                    "Completed":        "#f59e0b",
+                    "Low":              "#10b981",
+                    "Medium":           "#f59e0b",
+                    "High":             "#ef4444",
+                    "Weekly Priority":  "#8b5cf6",
                   })[col.id] || "var(--module-accent)" }}>
-                  <div className="flex items-center justify-between mb-0.5">
-                    <span className="text-[12px] font-semibold">{col.title}</span>
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: "rgba(255,255,255,0.2)" }}>
-                      {colTasks.length} item{colTasks.length !== 1 ? "s" : ""}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-[10px] opacity-80">
-                    <span>Tasks</span>
-                    <span>⚡ {colTasks.length} total</span>
-                  </div>
+                  <span className="text-[14.5px] font-bold tracking-wide">{col.title}</span>
+                  <span className="text-[11.5px] font-bold px-2.5 py-0.5 rounded-full" style={{ background: "rgba(0,0,0,0.15)" }}>
+                    {colTasks.length} items
+                  </span>
                 </div>
 
-                {/* Cards */}
-                <div className="flex-1 overflow-y-auto p-2 space-y-2 scrollbar-hide" style={{ minHeight: 200, maxHeight: "calc(100vh - 220px)" }}>
+                {/* Cards Container */}
+                <div className="flex-1 overflow-y-auto pb-4 scrollbar-hide bg-[#f8fafc] rounded-b-lg border border-t-0 border-[#e2e8f0]" style={{ minHeight: 200, maxHeight: "calc(100vh - 220px)" }}>
                   {colTasks.map((task) => (
                     <TaskCard
                       key={task._id}

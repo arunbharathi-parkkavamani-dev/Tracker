@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "../api/axiosInstance";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import * as MD from "react-icons/md";
 import { ChevronsLeft, ChevronsRight } from "lucide-react";
 
@@ -76,38 +76,55 @@ const Sidebar = ({ isOpen, onClose, onOpen }) => {
     const isExpanded = expandedItems.has(item._id);
     const hasChildren = item.children && item.children.length > 0;
 
+    const contentClass = `
+      flex items-center gap-2.5 px-2.5 py-2 rounded-tracker-md cursor-pointer
+      transition-colors duration-150 mx-2
+      ${isChild ? "ml-7 text-xs" : "text-sm"}
+      ${isActive ? "font-semibold text-[var(--module-accent)]" : "text-ink-muted hover:text-ink"}
+    `;
+
+    const contentStyle = isActive ? { backgroundColor: "var(--module-accent-light)" } : undefined;
+
+    const InnerContent = (
+      <>
+        <Icon
+          className={`flex-shrink-0 ${isChild ? "text-sm" : "text-lg"}`}
+          style={{ color: isActive ? "var(--module-accent)" : "var(--tracker-ink-subtle)" }}
+        />
+        
+        {/* Text and chevron only visible when expanded */}
+        <div className={`flex items-center flex-1 overflow-hidden transition-all duration-300 ${isExpandedView ? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>
+          <span className="flex-1 truncate whitespace-nowrap">{item.title}</span>
+          {hasChildren && (
+            <MD.MdExpandMore
+              className={`text-base flex-shrink-0 transition-transform duration-200 text-ink-subtle ${isExpanded ? "rotate-180" : ""}`}
+            />
+          )}
+        </div>
+      </>
+    );
+
     return (
       <div key={item._id} className="w-full">
-        <div
-          onClick={() => handleNavigation(item)}
-          title={!isExpandedView ? item.title : undefined}
-          className={`
-            flex items-center gap-2.5 px-2.5 py-2 rounded-tracker-md cursor-pointer
-            transition-colors duration-150 mx-2
-            ${isChild ? "ml-7 text-xs" : "text-sm"}
-            ${
-              isActive
-                ? "font-semibold text-[var(--module-accent)]"
-                : "text-ink-muted hover:text-ink"
-            }
-          `}
-          style={isActive ? { backgroundColor: "var(--module-accent-light)" } : undefined}
-        >
-          <Icon
-            className={`flex-shrink-0 ${isChild ? "text-sm" : "text-lg"}`}
-            style={{ color: isActive ? "var(--module-accent)" : "var(--tracker-ink-subtle)" }}
-          />
-          
-          {/* Text and chevron only visible when expanded */}
-          <div className={`flex items-center flex-1 overflow-hidden transition-all duration-300 ${isExpandedView ? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>
-            <span className="flex-1 truncate whitespace-nowrap">{item.title}</span>
-            {hasChildren && (
-              <MD.MdExpandMore
-                className={`text-base flex-shrink-0 transition-transform duration-200 text-ink-subtle ${isExpanded ? "rotate-180" : ""}`}
-              />
-            )}
+        {hasChildren ? (
+          <div
+            onClick={() => handleNavigation(item)}
+            title={!isExpandedView ? item.title : undefined}
+            className={contentClass}
+            style={contentStyle}
+          >
+            {InnerContent}
           </div>
-        </div>
+        ) : (
+          <Link
+            to={item.mainRoute || '#'}
+            title={!isExpandedView ? item.title : undefined}
+            className={contentClass}
+            style={contentStyle}
+          >
+            {InnerContent}
+          </Link>
+        )}
 
         {/* Submenu */}
         <div

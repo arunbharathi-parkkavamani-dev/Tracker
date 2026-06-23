@@ -279,9 +279,9 @@ class RateLimiter {
 
 // Global rate limiter instance
 const rateLimiter = new RateLimiter({
-  requestsPerSecond: 10,
-  requestsPerMinute: 300,
-  requestsPerHour: 3600,
+  requestsPerSecond: 30, // Increased to support SPA concurrent requests on load
+  requestsPerMinute: 600,
+  requestsPerHour: 5000,
   burstAllowance: 1.5,
   routeOverrides: {
     'auth/login': { requestsPerSecond: 2, requestsPerMinute: 20 },
@@ -298,7 +298,12 @@ export const rateLimitMiddleware = (options = {}) => {
   const {
     enabled = true,
     keyGenerator = (req) => getFingerprintKey(req),
-    routeKeyGenerator = (req) => req.params.action || 'default',
+    routeKeyGenerator = (req) => {
+      if (req.originalUrl && req.originalUrl.includes('/auth/login')) return 'auth/login';
+      if (req.originalUrl && req.originalUrl.includes('/auth/register')) return 'auth/register';
+      if (req.originalUrl && req.originalUrl.includes('/bulk-upsert')) return 'bulk-upsert';
+      return req.params.action || 'default';
+    },
     skipCondition = (req) => false,
     onLimitExceeded = (req, res, limitStatus) => {
       // Default: return 429 Too Many Requests

@@ -49,6 +49,15 @@ import activitylogs from "./ActivityLog.js";
 import timetrackersessions from "./TimeTrackerSession.js";
 import approvalWorkflow from "./ApprovalWorkflow.js";
 
+// Ticket Sub-entities
+import ticket_comments from "./TicketComment.js";
+import ticket_comment_reads from "./TicketCommentRead.js";
+import ticket_attachments from "./TicketAttachment.js";
+import ticket_activity_logs from "./TicketActivityLog.js";
+import ticket_assignments from "./TicketAssignment.js";
+import ticket_participants from "./TicketParticipant.js";
+import ticket_status_history from "./TicketStatusHistory.js";
+
 
 const models = {
   accesspolicies,
@@ -100,6 +109,13 @@ const models = {
   activitylogs,
   timetrackersessions,
   approvalWorkflow,
+  ticket_comments,
+  ticket_comment_reads,
+  ticket_attachments,
+  ticket_activity_logs,
+  ticket_assignments,
+  ticket_participants,
+  ticket_status_history,
 };
 
 export default models;

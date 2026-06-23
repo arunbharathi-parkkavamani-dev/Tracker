@@ -348,24 +348,24 @@ const TicketsPage = () => {
   );
 
   return (
-    <div className="space-y-5" data-module="ticket">
+    <div className="space-y-3" data-module="ticket">
       <FormDraftBanner model="tickets" formPath={entityFormPath("/Tickets")} label="ticket" />
 
       {/* ── Page header & Inline stats ── */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-hairline-soft pb-4">
-        <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 flex-1 min-w-0">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-hairline-soft pb-2">
+        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 flex-1 min-w-0">
           <div>
-            <p className="lmx-page-eyebrow mb-0.5">SUPPORT TICKETS</p>
-            <h1 className="text-[20px] font-semibold text-ink flex items-center gap-2 tracking-tight">
+            <p className="lmx-page-eyebrow mb-0">SUPPORT TICKETS</p>
+            <h1 className="text-[18px] font-semibold text-ink flex items-center gap-2 tracking-tight">
               <TicketCheck size={18} style={{ color: "var(--module-ticket)" }} />
               Ticket Queue
             </h1>
           </div>
           {/* Vertical divider on larger screens */}
-          <div className="hidden md:block w-px h-6 bg-hairline-soft self-center mt-3" />
+          <div className="hidden md:block w-px h-5 bg-hairline-soft self-center mt-2" />
           
           {/* Stat pills */}
-          <div className="flex flex-wrap items-center gap-2 mt-1 md:mt-3">
+          <div className="flex flex-wrap items-center gap-1.5 mt-1 md:mt-2">
             <StatPill label="Open"        value={openCount}     cls="bg-[var(--tracker-info-light)]    text-[var(--tracker-info)]" />
             <StatPill label="In Progress" value={inProgCount}   cls="bg-[var(--tracker-warning-light)] text-[var(--tracker-warning)]" />
             <StatPill label="Critical"    value={criticalCount} cls="bg-[var(--tracker-danger-light)]  text-[var(--tracker-danger)]" />
