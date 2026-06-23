@@ -44,7 +44,9 @@ export default function attendances() {
         // Normal attendance logic
         if (body.workType === "fixed") {
           const checkIn = new Date(body.checkIn);
-          const checkInMinutes = checkIn.getHours() * 60 + checkIn.getMinutes();
+          // Convert to IST offset (+5.5 hours) for timezone-independent local check
+          const istTime = new Date(checkIn.getTime() + (330 * 60 * 1000));
+          const checkInMinutes = istTime.getUTCHours() * 60 + istTime.getUTCMinutes();
           const cutOff = 10 * 60 + 20; // 10:20 AM
           body.status = checkInMinutes > cutOff ? "Late Entry" : "Present";
         } else {
@@ -95,13 +97,19 @@ export default function attendances() {
       const checkOut = body.checkOut ? new Date(body.checkOut) : null;
       if (!checkOut) throw new Error("Check-out time required");
 
-      const isMale = attendanceDoc.gender === "male";
+      // Resolve employee gender dynamically from Database
+      const { default: Employee } = await import("../models/Employee.js");
+      const employee = await Employee.findById(attendanceDoc.employee).lean();
+      const isMale = employee?.basicInfo?.gender === "male";
+      
       const workedMinutes = (checkOut - checkIn) / (1000 * 60);
 
       const femaleWorkingTime = workedMinutes >= 7.5 * 60;
       const maleWorkingTime = workedMinutes >= 8.5 * 60;
 
-      const checkOutMinutes = checkOut.getHours() * 60 + checkOut.getMinutes();
+      // Convert check-out time to IST offset (+5.5 hours) for timezone-independent check
+      const checkOutIst = new Date(checkOut.getTime() + (330 * 60 * 1000));
+      const checkOutMinutes = checkOutIst.getUTCHours() * 60 + checkOutIst.getUTCMinutes();
       const femaleCutOff = 18 * 60 + 30; // 6:30 PM
       const maleCutOff = 19 * 60 + 30; // 7:30 PM
 

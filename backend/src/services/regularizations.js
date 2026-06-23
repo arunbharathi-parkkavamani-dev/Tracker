@@ -1,5 +1,4 @@
 // services/regularizations.js
-import asyncNotificationService from './asyncNotificationService.js';
 import { sendNotification } from '../utils/notificationService.js';
 
 export default function regularizations() {
@@ -47,94 +46,50 @@ export default function regularizations() {
     afterCreate: async ({ docId, userId }) => {
       const { default: models } = await import('../models/Collection.js');
 
-      const regularization = await models.regularizations.findById(docId)
-        .populate('employeeId', 'basicInfo.firstName basicInfo.lastName')
-        .populate('managerId', 'basicInfo.firstName basicInfo.lastName');
+      const regularization = await models.regularizations.findById(docId);
+      if (!regularization) return;
 
-      if (!regularization || !regularization.managerId) return;
-
-      // Notify manager (Push)
-      await asyncNotificationService.queuePushNotification(
-        regularization.managerId._id,
-        'Regularization Request',
-        `${regularization.employeeName} requested attendance regularization for ${new Date(regularization.requestDate).toLocaleDateString()}`,
-        { regularizationId: docId, type: 'regularization_request' }
-      );
-
-      // Notify manager (In-app)
-      await sendNotification({
-        sender: userId,
-        receiver: regularization.managerId._id,
-        message: `${regularization.employeeName} requested attendance regularization for ${new Date(regularization.requestDate).toLocaleDateString()}`,
-        meta: {
-          model: 'regularizations',
-          modelId: docId,
-          type: 'regularization_request'
-        },
-        path: '/attendance/regularizations' // Path for manager to review
-      });
+      // Initialize sequential workflow
+      const approvalEngine = (await import('../utils/approval/approvalEngine.js')).default;
+      await approvalEngine.initializeWorkflow('regularizations', regularization);
     },
 
     // ---------------- Before Update ----------------
     beforeUpdate: async ({ body, docId, userId }) => {
       const { default: models } = await import('../models/Collection.js');
-
+      const old = await models.regularizations.findById(docId).lean();
+      body._oldStatus = old?.status;
       body.updatedBy = userId;
-
-      // Handle approval/rejection
-      if (body.status === 'Approved') {
-        body.approvedBy = userId;
-        body.approvedAt = new Date();
-      } else if (body.status === 'Rejected') {
-        body.rejectedBy = userId;
-        body.rejectedAt = new Date();
-      }
     },
 
     // ---------------- After Update ----------------
     afterUpdate: async ({ docId, body, userId }) => {
       const { default: models } = await import('../models/Collection.js');
 
-      if (body.status === 'Approved' || body.status === 'Rejected') {
-        const regularization = await models.regularizations.findById(docId)
-          .populate('employeeId', 'basicInfo.firstName basicInfo.lastName')
-          .populate('approvedBy rejectedBy', 'basicInfo.firstName basicInfo.lastName');
+      const regularization = await models.regularizations.findById(docId);
+      if (!regularization) return;
 
-        if (!regularization) return;
+      const prevStatus = body._oldStatus || 'Pending';
+      const newStatus = regularization.status;
 
-        // Update attendance record if approved
-        if (body.status === 'Approved') {
+      // Intercept and route approvals through workflow engine
+      if (prevStatus === 'Pending' && (newStatus === 'Approved' || newStatus === 'Rejected')) {
+        const approvalEngine = (await import('../utils/approval/approvalEngine.js')).default;
+        const result = await approvalEngine.advanceWorkflow(
+          regularization, 
+          userId, 
+          newStatus, 
+          body.approverComment || body.managerComments || ''
+        );
+
+        // Apply attendance adjustment only on final step approval
+        if (result.finalized && result.status === 'Approved') {
           await models.attendances.findByIdAndUpdate(regularization.attendanceId, {
             checkIn: regularization.requestedCheckIn,
             checkOut: regularization.requestedCheckOut,
             status: 'Present'
           });
         }
-
-        // Notify employee
-        const actionBy = regularization.approvedBy || regularization.rejectedBy;
-        const actionByName = actionBy ? `${actionBy.basicInfo.firstName} ${actionBy.basicInfo.lastName}` : 'Manager';
-
-        // Notify employee (Push)
-        await asyncNotificationService.queuePushNotification(
-          regularization.employeeId._id,
-          `Regularization ${body.status}`,
-          `Your regularization request for ${new Date(regularization.requestDate).toLocaleDateString()} has been ${body.status.toLowerCase()} by ${actionByName}`,
-          { regularizationId: docId, type: 'regularization_response' }
-        );
-
-        // Notify employee (In-app)
-        await sendNotification({
-          sender: userId,
-          receiver: regularization.employeeId._id,
-          message: `Your regularization request for ${new Date(regularization.requestDate).toLocaleDateString()} has been ${body.status.toLowerCase()} by ${actionByName}`,
-          meta: {
-            model: 'regularizations',
-            modelId: docId,
-            type: 'regularization_response'
-          },
-          path: '/attendance/leave-and-regularization' // Path for employee to see their requests
-        });
       }
     }
   };
