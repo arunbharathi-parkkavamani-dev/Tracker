@@ -13,6 +13,16 @@ const LeaveSchema = new mongoose.Schema({
   reason: { type: String, maxLength: 500, minLength: 5, trim: true },
   status: { type: String, default: 'Pending', index: true },
   metaStatus: { type: String, default: 'active', index: true },
+  currentStepIndex: { type: Number, default: 0 },
+  workflowId: { type: mongoose.Schema.Types.ObjectId, ref: 'approvalworkflows', index: true },
+  approvals: [{
+    stepIndex: { type: Number },
+    approverId: { type: mongoose.Schema.Types.ObjectId, ref: 'employees' },
+    approverType: { type: String },
+    status: { type: String, enum: ['Pending', 'Approved', 'Rejected', 'Escalated'], default: 'Pending' },
+    comment: { type: String },
+    actionedAt: { type: Date }
+  }],
   managerId: { type: mongoose.Schema.Types.ObjectId, ref: "employees", index: true },
   managerComments: { type: String, maxLength: 500, minLength: 5, trim: true },
   approvedAt: { type: Date },

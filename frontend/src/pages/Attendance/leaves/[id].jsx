@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useState } from "react";
-import FloatingCard from "../../components/Common/FloatingCard.jsx";
+import FloatingCard from "../../../components/Common/FloatingCard.jsx";
 import GenericDetailPage from "./model.jsx";
 import toast, { Toaster } from "react-hot-toast";
 

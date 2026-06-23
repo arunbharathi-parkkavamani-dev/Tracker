@@ -1,51 +1,113 @@
 import Leave from "../models/Leave.js";
 import Employee from "../models/Employee.js";
 import Attendance from "../models/Attendance.js";
-import fcmService from "./fcmService.js";
-import { generateNotification } from "../middlewares/notificationMessagePrasher.js";
 
 export default function leaves() {
   return {
-    // AFTER CREATE  ➝ Triggered once leave request is newly submitted
+    // BEFORE CREATE ➝ Validations (balance, overlaps) + auto-initialize bucket
+    beforeCreate: async ({ role, userId, body }) => {
+      const start = new Date(body.startDate);
+      const end = new Date(body.endDate);
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        throw new Error("Invalid start or end date.");
+      }
+      if (end < start) {
+        throw new Error("End date must be on or after start date.");
+      }
+
+      const empId = body.employeeId || userId;
+
+      // Check for overlapping leaves (Active or Pending)
+      const existingOverlap = await Leave.findOne({
+        employeeId: empId,
+        status: { $in: ['Pending', 'Approved'] },
+        metaStatus: 'active',
+        $or: [
+          { startDate: { $gte: body.startDate, $lte: body.endDate } },
+          { endDate: { $gte: body.startDate, $lte: body.endDate } },
+          { startDate: { $lte: body.startDate }, endDate: { $gte: body.endDate } }
+        ]
+      });
+
+      if (existingOverlap) {
+        throw new Error("Overlapping leave request already exists for this date range.");
+      }
+
+      // Calculate totalDays
+      const totalDays = Math.round((end - start) / (24 * 60 * 60 * 1000)) + 1;
+      body.totalDays = totalDays;
+
+      // Resolve employee and check balance
+      const employee = await Employee.findById(empId);
+      if (!employee) throw new Error("Employee profile not found.");
+
+      let bucket = employee.leaveStatus.find(
+        (i) => i.leaveType.toString() === body.leaveTypeId.toString()
+      );
+
+      if (!bucket) {
+        // Auto-initialize bucket from Department's Leave Policy
+        const deptId = body.departmentId || employee.professionalInfo?.department;
+        if (deptId) {
+          const { default: models } = await import('../models/Collection.js');
+          const dept = await models.departments.findById(deptId)
+            .populate('leavePolicy')
+            .lean();
+          const policy = dept?.leavePolicy;
+          if (policy && Array.isArray(policy.leaves)) {
+            const policyLeaf = policy.leaves.find(l => l.leaveType.toString() === body.leaveTypeId.toString());
+            if (policyLeaf) {
+              employee.leaveStatus.push({
+                leaveType: body.leaveTypeId,
+                usedThisMonth: 0,
+                usedThisYear: 0,
+                carriedForward: 0,
+                available: policyLeaf.maxDaysPerYear || 0
+              });
+              await employee.save();
+              
+              // Refetch bucket reference
+              bucket = employee.leaveStatus.find(
+                (i) => i.leaveType.toString() === body.leaveTypeId.toString()
+              );
+            }
+          }
+        }
+      }
+
+      if (!bucket) {
+        throw new Error("Insufficient Leave Balance. Leave type is not configured under your policy.");
+      }
+
+      if (bucket.available < totalDays) {
+        throw new Error(`Insufficient Leave Balance. Required: ${totalDays} days, Available: ${bucket.available} days.`);
+      }
+
+      return body;
+    },
+
+    // AFTER CREATE ➝ Triggered once leave request is newly submitted
     afterCreate: async ({ modelName, docId, userId }) => {
       const leaveDoc = await Leave.findById(docId);
       if (!leaveDoc) return;
 
-      // Notification body for manager
-      const requestDetails = {
-        leaveName: leaveDoc.leaveName,
-        leaveReason: leaveDoc.reason,
-      };
-
-      const message = generateNotification(
-        leaveDoc.employeeName,
-        requestDetails,
-        modelName
-      );
-
-      // Send notification → Employee ➝ Manager
-      await fcmService.dispatchNotification({
-        type: 'leave_request',
-        title: 'Leave Request',
-        message,
-        sender: userId,
-        meta: { model: 'leaves', modelId: leaveDoc._id },
-        receiversArray: [leaveDoc.managerId]
-      });
+      // Initialize dynamic approval workflow
+      const approvalEngine = (await import('../utils/approval/approvalEngine.js')).default;
+      await approvalEngine.initializeWorkflow('leaves', leaveDoc);
     },
 
-    // BEFORE UPDATE  ➝ Store old status to compare after update
+    // BEFORE UPDATE ➝ Store old status to compare after update
     beforeUpdate: async ({ body, docId }) => {
       if (!docId) return;
 
       // Fetch previous leave document BEFORE the update happens
       const oldLeave = await Leave.findById(docId).lean();
 
-      // Store old status (Pending → Approved / Approved → Rejected etc.)
+      // Store old status (Pending ➔ Approved etc.)
       body._oldStatus = oldLeave.status;
     },
 
-    // AFTER UPDATE  ➝ Notification + Leave Deduction + Attendance Creation
+    // AFTER UPDATE ➝ Advance workflow and trigger side effects on final approval/rejection
     afterUpdate: async ({ modelName, userId, docId, body }) => {
       if (!docId) return;
 
@@ -53,70 +115,57 @@ export default function leaves() {
       const prevStatus = body._oldStatus;
       const newStatus = leaveDoc.status;
 
-      // 🔔 Send notification to employee on every update
-      const statusDetails = {
-        leaveName: leaveDoc.leaveName,
-        leaveStatus: leaveDoc.status,
-      };
-
-      const message = generateNotification(
-        leaveDoc.employeeName,
-        statusDetails,
-        modelName
-      );
-
-      await fcmService.dispatchNotification({
-        type: 'leave_status',
-        title: 'Leave Status Update',
-        message,
-        sender: userId,
-        meta: { model: 'leaves', modelId: docId },
-        receiversArray: [leaveDoc.employeeId]
-      });
-
-      // CASE 1: Pending/Rejected → Approved (NORMAL APPROVAL FLOW)
-      if (prevStatus !== "Approved" && newStatus === "Approved") {
-        const employee = await Employee.findById(leaveDoc.employeeId);
-
-        const bucket = employee.leaveStatus.find(
-          (i) => i.leaveType.toString() === leaveDoc.leaveTypeId.toString()
+      // Check if status is progressing (from Pending to Approved/Rejected)
+      if (prevStatus === 'Pending' && (newStatus === 'Approved' || newStatus === 'Rejected')) {
+        const approvalEngine = (await import('../utils/approval/approvalEngine.js')).default;
+        const result = await approvalEngine.advanceWorkflow(
+          leaveDoc, 
+          userId, 
+          newStatus, 
+          body.approverComment || body.managerComments || ''
         );
 
-        // Calculate no. of leave days
-        const start = new Date(leaveDoc.startDate);
-        const end = new Date(leaveDoc.endDate);
-        const oneDay = 24 * 60 * 60 * 1000;
-        const totalDays = Math.round((end - start) / oneDay) + 1;
+        // Deduct balance and create attendance only when approved at final step
+        if (result.finalized && result.status === 'Approved') {
+          const employee = await Employee.findById(leaveDoc.employeeId);
+          const bucket = employee.leaveStatus.find(
+            (i) => i.leaveType.toString() === leaveDoc.leaveTypeId.toString()
+          );
 
-        if (bucket) {
-          bucket.usedThisMonth += totalDays;
-          bucket.usedThisYear += totalDays;
-          bucket.available = Math.max(bucket.available - totalDays, 0); // never negative
+          // Calculate no. of leave days
+          const start = new Date(leaveDoc.startDate);
+          const end = new Date(leaveDoc.endDate);
+          const oneDay = 24 * 60 * 60 * 1000;
+          const totalDays = Math.round((end - start) / oneDay) + 1;
+
+          if (bucket) {
+            bucket.usedThisMonth += totalDays;
+            bucket.usedThisYear += totalDays;
+            bucket.available = Math.max(bucket.available - totalDays, 0); // never negative
+          }
+          await employee.save();
+
+          // Add attendance for ALL leave days
+          const attendance = [];
+          let current = new Date(start);
+          while (current <= end) {
+            attendance.push({
+              employee: leaveDoc.employeeId,
+              employeeName: leaveDoc.employeeName,
+              date: new Date(current),
+              status: "Leave",
+              leaveType: leaveDoc.leaveType || leaveDoc.leaveTypeId,
+              managerId: userId,
+            });
+            current.setDate(current.getDate() + 1);
+          }
+          await Attendance.insertMany(attendance);
         }
-        await employee.save();
-
-        // Add attendance for ALL leave days
-        const attendance = [];
-        let current = new Date(start);
-        while (current <= end) {
-          attendance.push({
-            employee: leaveDoc.employeeId,
-            employeeName: leaveDoc.employeeName,
-            date: new Date(current),
-            status: "Leave",
-            leaveType: leaveDoc.leaveType,
-            managerId: userId,
-          });
-          current.setDate(current.getDate() + 1);
-        }
-        await Attendance.insertMany(attendance);
-        return;
-      }
-
-      // CASE 2: Approved → Rejected/Cancelled (ROLLBACK FLOW)
-      if (prevStatus === "Approved" && newStatus === "Rejected") {
+      } 
+      
+      // CASE: Approved ➔ Rejected (ROLLBACK FLOW)
+      else if (prevStatus === "Approved" && newStatus === "Rejected") {
         const employee = await Employee.findById(leaveDoc.employeeId);
-
         const bucket = employee.leaveStatus.find(
           (i) => i.leaveType.toString() === leaveDoc.leaveTypeId.toString()
         );
@@ -141,12 +190,7 @@ export default function leaves() {
           date: { $gte: leaveDoc.startDate, $lte: leaveDoc.endDate },
           status: "Leave",
         });
-
-        return;
       }
-
-      // For other status changes → no action
-      return;
     }
   };
 }
