@@ -12,7 +12,9 @@ export const useSocket = () => {
         withCredentials: true
       });
 
-      socketRef.current.emit('join', user.id);
+      socketRef.current.on('connect', () => {
+        socketRef.current.emit('join', user.id);
+      });
 
       socketRef.current.on('notification', (notification) => {
         if (Notification.permission === 'granted') {
