@@ -47,6 +47,7 @@ import statusmappings from "./StatusMapping.js";
 import dashboardwidgets from "./DashboardWidget.js";
 import activitylogs from "./ActivityLog.js";
 import timetrackersessions from "./TimeTrackerSession.js";
+import approvalWorkflow from "./ApprovalWorkflow.js";
 
 
 const models = {
@@ -98,6 +99,7 @@ const models = {
   dashboardwidgets,
   activitylogs,
   timetrackersessions,
+  approvalWorkflow,
 };
 
 export default models;

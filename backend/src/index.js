@@ -27,8 +27,8 @@ import cookieParser from "cookie-parser";
 import databaseIndexer from "./services/databaseIndexer.js";
 
 import "./cron/AttendanceCron.js";
-// import "./cron/LeaveAccrualCron.js"; // missing file
-// import "./cron/EscalationCron.js"; // missing file
+import "./cron/LeaveAccrualCron.js";
+import "./cron/EscalationCron.js";
 
 // Memory optimization
 process.env.NODE_OPTIONS = '--max-old-space-size=4096'; // 4GB heap
