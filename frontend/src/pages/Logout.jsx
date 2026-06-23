@@ -19,26 +19,15 @@ const LogoutPage = () => {
     } catch (error) {
       console.error("Logout API error:", error);
     } finally {
-      // Clear all auth data and device_uuid
+      // Clear all auth data and device_uuid selectively (keep theme preference)
       Cookies.remove("auth_token");
       Cookies.remove("refresh_token");
-      localStorage.clear(); // Clear entire localStorage to ensure device_uuid is removed
       localStorage.removeItem('auth_token');
-      localStorage.removeItem('device_uuid');
       localStorage.removeItem('refresh_token');
+      localStorage.removeItem('device_uuid');
       
-      // Verify device_uuid is cleared
-      if (localStorage.getItem('device_uuid')) {
-        console.warn('device_uuid still exists after clear, forcing removal');
-        Object.keys(localStorage).forEach(key => {
-          if (key.includes('device') || key.includes('uuid')) {
-            localStorage.removeItem(key);
-          }
-        });
-      }
-      
-      // Clear context and redirect
-      await logout();
+      // Clear context (passing true to skip the duplicate logout API call)
+      await logout(true);
       
       // Small delay to ensure storage operations complete
       await new Promise(resolve => setTimeout(resolve, 100));

@@ -105,7 +105,15 @@ Import `MODULES` from `constants/uiTokens.js`. **Error handling:** If importing 
 - ❌ Fixed px widths without mobile fallback
 - ❌ Light-only colors with no `.dark` token
 
+## Page-level UX Standards
+
+For page structure, layout patterns (login, dashboard, splash), mobile equivalents, and loading/empty states, reference:
+
+- **UX Standards**: `.agent/skills/knowledge-brain/ux-standards.md`
+- **Design Tokens**: `.agent/skills/knowledge-brain/design-tokens.md`
+
 ## Related
 
 - Full spec: `backend/DESIGN.md`
 - Brain overview: `.agent/skills/knowledge-brain/design-tokens.md`
+- UX patterns: `.agent/skills/knowledge-brain/ux-standards.md`

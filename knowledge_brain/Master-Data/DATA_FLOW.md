@@ -78,3 +78,22 @@ Extracted from React Components targeting the generic API endpoint.
 - **index.jsx** -> `PUT /populate/update/tasktypes/${row._id}`
 - **index.jsx** -> `PUT /populate/update/tasktypes/${editingItem._id}`
 - **index.jsx** -> `POST /populate/create/tasktypes`
+
+## Status-Master UI (added 2026-06-10)
+
+The Status Master page (`frontend/src/pages/Master-Data/Status-Master/index.jsx`) manages two collections:
+
+### StatusConfig Panel
+| Component | Method | URL | Payload |
+|---|---|---|---|
+| StatusConfigPanel | GET | `/api/config/status-configs` | — returns all StatusConfig docs |
+| StatusConfigPanel | PUT | `/api/config/status-configs/:modelName` | `{ metaStatuses[], workflowStatuses[] }` (strip `_id`, `__v`, timestamps before send) |
+
+### StatusMapping Panel
+| Component | Method | URL | Payload |
+|---|---|---|---|
+| StatusMappingPanel | GET | `/api/config/status-mappings` | — returns all StatusMapping docs |
+| StatusMappingPanel | PUT | `/api/config/status-mappings/:id` | `{ sourceModel, targetModel, linkField, reverseLinkField, mappings[], isActive }` (strip `_id`, `__v`, timestamps before send) |
+
+> ⚠️ **Known gotcha**: `_id` must be deleted from the payload before PUT or Mongoose throws `Field "_id" cannot be modified`. This was fixed in the Status-Master save handlers (2026-06-10).
+

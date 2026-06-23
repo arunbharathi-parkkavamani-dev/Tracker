@@ -73,8 +73,8 @@ Test-Path "{PROJECT_ROOT}\knowledge_brain\{MODULE_NAME}\MODULE_BRAIN.md"
    - **Backend Layer**: 
      - Mongoose Schemas inside `{BE_ROOT}/src/models/` related to this module
      - Any custom Express routes or helper logic (`populateHelper.js` interactions)
-   - **React Pages**: `{FE_PAGE_DIR}/` — list all `.jsx`/`.tsx` page files
-   - **React Components**: `{FE_COMPONENT_DIR}/` — list all `.jsx`/`.tsx` component files
+   - **React Pages**: `{FE_PAGE_DIR}/` — list all `.jsx` page files
+   - **React Components**: `{FE_COMPONENT_DIR}/` — list all `.jsx` component files
    - **API Layer**: `useGenericAPI.js`, `axiosInstance.js`, and form configuration constants.
    - **Hooks**: relevant hooks in `{FE_HOOKS}/`
 

@@ -4,13 +4,15 @@ import { Drawer } from "expo-router/drawer";
 import { DrawerContentScrollView, DrawerItem } from "@react-navigation/drawer";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router, useSegments } from "expo-router";
-import { ActivityIndicator, View, Text, Animated, TouchableOpacity } from "react-native";
+import { ActivityIndicator, View, Text, Animated, TouchableOpacity, Image } from "react-native";
+import { LinearGradient } from 'expo-linear-gradient';
 import { AuthContext } from "@/context/AuthContext";
 import AppHeader from "@/components/AppHeader";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import NotificationDrawer from '@/components/NotificationDrawer';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useNavigation, SidebarItem } from "@/context/NavigationContext";
 
 import {
   LayoutDashboard, Calendar, CalendarCheck, User, Users, DollarSign,
@@ -19,227 +21,139 @@ import {
   ShieldCheck, Landmark, FileText, Receipt, Briefcase, Bell
 } from 'lucide-react-native';
 
-// ... existing imports ...
-
-type SidebarItem = {
-  _id: string;
-  title: string;
-  mainRoute: string;
-  parentId?: string;
-  hasChildren?: boolean;
-  isParent?: boolean;
-  children?: SidebarItem[];
-  icon?: {
-    iconName: string;
-  };
-};
-
 function CustomDrawerContent() {
-  const [navItems, setNavItems] = useState<SidebarItem[]>([]);
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(true);
-  const { logout } = useContext(AuthContext);
+  const { logout, user } = useContext(AuthContext);
+  const { navItems, isActive: checkActive, navigateTo, badges } = useNavigation();
   const insets = useSafeAreaInsets();
+  const segments = useSegments();
 
-  useEffect(() => {
-    const fetchNavBar = async () => {
-      try {
-        const response = await axiosInstance.get("/populate/read/sidebars");
-        const items = response?.data?.data || [];
+  // Find active segment, e.g. segments[1] matches screen names
+  const currentSegment = segments[1] || '';
 
-        // Build hierarchical structure
-        const parents = items.filter((item: SidebarItem) => item.isParent || !item.parentId);
-        const children = items.filter((item: SidebarItem) => item.parentId);
-
-        const hierarchical = parents.map((parent: SidebarItem) => {
-          // Normalize parent route for comparison (remove leading slash)
-          const parentRouteId = parent.mainRoute?.replace(/^\//, '');
-
-          const itemChildren = children.filter((child: SidebarItem) => {
-            const childParentId = String(child.parentId);
-            return childParentId === String(parent._id) || childParentId === parentRouteId;
-          });
-
-          return {
-            ...parent,
-            children: itemChildren,
-            // Only set hasChildren if it's not already true or if we found children
-            hasChildren: parent.hasChildren || itemChildren.length > 0 || parent.isParent
-          };
-        });
-
-        setNavItems(hierarchical);
-      } catch (err: any) {
-        // ... defaultRoutes ...
-        const defaultRoutes = [
-          { _id: '1', title: 'Dashboard', mainRoute: '/dashboard', icon: { iconName: 'MdDashboard' } },
-          { _id: '2', title: 'Daily Tracker', mainRoute: '/daily-tracker', icon: { iconName: 'MdToday' } },
-          { _id: '3', title: 'Tasks', mainRoute: '/tasks', icon: { iconName: 'MdTask' } },
-          { _id: '4', title: 'Attendance', mainRoute: '/attendance', icon: { iconName: 'MdSchedule' } },
-          { _id: '5', title: 'Profile', mainRoute: '/me', icon: { iconName: 'MdPerson' } },
-          { _id: '6', title: 'Salary Expense', mainRoute: '/salary-expense', icon: { iconName: 'MdMoney' } },
-          { _id: '7', title: 'Travel Expenses', mainRoute: '/travel-expenses', icon: { iconName: 'MdFlight' } }
-        ];
-        setNavItems(defaultRoutes);
-
-        if (err?.response?.status === 401) {
-          await AsyncStorage.multiRemove(["auth_token", "refresh_token"]);
-          return router.replace("/Login");
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchNavBar();
-  }, []);
-
-  const toggleExpanded = (itemId: string) => {
-    const newExpanded = new Set(expandedItems);
-    if (newExpanded.has(itemId)) {
-      newExpanded.delete(itemId);
-    } else {
-      newExpanded.add(itemId);
+  const getNavItemIcon = (iconName: string, color: string, size = 20) => {
+    switch (iconName) {
+      case 'dashboard':
+        return <LayoutDashboard size={size} color={color} />;
+      case 'attendance':
+        return <Calendar size={size} color={color} />;
+      case 'tasks':
+        return <CalendarCheck size={size} color={color} />;
+      case 'daily-tracker':
+        return <Clock size={size} color={color} />;
+      case 'tickets':
+        return <Ticket size={size} color={color} />;
+      case 'salary-expense':
+        return <DollarSign size={size} color={color} />;
+      case 'travel-expenses':
+        return <Plane size={size} color={color} />;
+      case 'me':
+        return <User size={size} color={color} />;
+      default:
+        return <HelpCircle size={size} color={color} />;
     }
-    setExpandedItems(newExpanded);
   };
 
   const handleNavigation = (item: SidebarItem) => {
-    const isParent = item.isParent || item.hasChildren || (item.children && item.children.length > 0);
-    if (isParent) {
-      toggleExpanded(item._id);
-    } else {
-      // Ensure the route is valid for router.push
-      const route = item.mainRoute.startsWith('/') ? item.mainRoute : `/${item.mainRoute}`;
-      router.push(route as any);
-    }
+    navigateTo(item.route);
   };
-
-  // ... getIcon and getIconByRoute ...
-
-  const getIcon = (iconName: string, size = 20, color = "#4B5563") => {
-    const lowerName = iconName?.toLowerCase() || '';
-    if (lowerName.includes('dashboard')) return <LayoutDashboard size={size} color={color} />;
-    if (lowerName.includes('rss') || lowerName.includes('feed')) return <Rss size={size} color={color} />;
-    if (lowerName.includes('time') || lowerName.includes('clock') || lowerName.includes('schedule')) return <Clock size={size} color={color} />;
-    if (lowerName.includes('task')) return <CalendarCheck size={size} color={color} />;
-    if (lowerName.includes('attendance') || lowerName.includes('calendar')) return <Calendar size={size} color={color} />;
-    if (lowerName.includes('person') || lowerName.includes('profile') || lowerName.includes('user')) return <User size={size} color={color} />;
-    if (lowerName.includes('money') || lowerName.includes('salary') || lowerName.includes('pay')) return <DollarSign size={size} color={color} />;
-    if (lowerName.includes('travel') || lowerName.includes('flight') || lowerName.includes('plane')) return <Plane size={size} color={color} />;
-    if (lowerName.includes('people') || lowerName.includes('team') || lowerName.includes('crm')) return <Users size={size} color={color} />;
-    if (lowerName.includes('ticket') || lowerName.includes('confirmation')) return <Ticket size={size} color={color} />;
-    if (lowerName.includes('assessment') || lowerName.includes('report') || lowerName.includes('list')) return <ClipboardList size={size} color={color} />;
-    if (lowerName.includes('history') || lowerName.includes('log')) return <History size={size} color={color} />;
-    if (lowerName.includes('track') || lowerName.includes('activity')) return <Target size={size} color={color} />;
-    if (lowerName.includes('policy') || lowerName.includes('security')) return <ShieldCheck size={size} color={color} />;
-    if (lowerName.includes('account') || lowerName.includes('bank') || lowerName.includes('balance')) return <Landmark size={size} color={color} />;
-    if (lowerName.includes('description') || lowerName.includes('file')) return <FileText size={size} color={color} />;
-    if (lowerName.includes('receipt') || lowerName.includes('expense')) return <Receipt size={size} color={color} />;
-    return <HelpCircle size={size} color={color} />;
-  };
-
-  const getIconByRoute = (route: string, size = 20, color = "#9CA3AF") => {
-    const r = route.toLowerCase();
-    if (r.includes('dashboard')) return <LayoutDashboard size={size} color={color} />;
-    if (r.includes('tasks')) return <CalendarCheck size={size} color={color} />;
-    if (r.includes('attendance')) return <Calendar size={size} color={color} />;
-    if (r.includes('me') || r.includes('profile')) return <User size={size} color={color} />;
-    if (r.includes('salary')) return <DollarSign size={size} color={color} />;
-    if (r.includes('travel')) return <Plane size={size} color={color} />;
-    return <HelpCircle size={size} color={color} />;
-  };
-
-  const renderNavItem = (item: SidebarItem, isChild = false) => {
-    const isExpanded = expandedItems.has(item._id);
-    const hasChildren = (item.children && item.children.length > 0) || item.hasChildren;
-    const isActive = false;
-
-    return (
-      <View key={item._id} className="mb-1">
-        <View className="relative">
-          <DrawerItem
-            label={({ focused, color }) => (
-              <Text className={`${isChild ? 'text-sm' : 'text-base font-medium'} text-gray-700 dark:text-gray-200`}>
-                {item.title}
-              </Text>
-            )}
-            style={{
-              backgroundColor: isActive ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
-              borderRadius: 8,
-              marginLeft: isChild ? 16 : 0,
-              paddingRight: hasChildren ? 40 : 0, // Make room for chevron
-            }}
-            icon={({ size, color }) => (
-              <View style={{ flexDirection: 'row', alignItems: 'center', width: 24 }}>
-                {item.icon?.iconName
-                  ? getIcon(item.icon.iconName, 20, '#4B5563')
-                  : getIconByRoute(item.mainRoute, 20, '#4B5563')}
-              </View>
-            )}
-            onPress={() => handleNavigation(item)}
-          />
-          {hasChildren && (
-            <TouchableOpacity
-              activeOpacity={0.7}
-              className="absolute right-0 w-12 h-full justify-center items-center"
-              onPress={() => toggleExpanded(item._id)}
-            >
-              {isExpanded ? <ChevronDown size={18} color="#4B5563" /> : <ChevronRight size={18} color="#4B5563" />}
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {hasChildren && isExpanded && (
-          <View className="ml-2 border-l-2 border-gray-100 dark:border-gray-800">
-            {item.children?.map(child => renderNavItem(child, true))}
-          </View>
-        )}
-      </View>
-    );
-  };
-
-  if (loading) {
-    return (
-      <View className="flex-1 justify-center items-center bg-gray-50 dark:bg-gray-900">
-        <ActivityIndicator size="large" color="#3B82F6" />
-      </View>
-    );
-  }
 
   return (
     <View className="flex-1 bg-white dark:bg-gray-950" style={{ paddingTop: insets.top }}>
+      {/* Brand Header with LinearGradient */}
+      <LinearGradient
+        colors={['#6C3DE8', '#8B5CF6', '#C026D3']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{ padding: 18, borderBottomLeftRadius: 20, borderBottomRightRadius: 20, marginBottom: 12 }}
+      >
+        <Text className="text-xl font-bold text-white mb-4">
+          Work<Text className="font-light text-fuchsia-200">Hub</Text>
+        </Text>
+
+        {user && (
+          <View className="flex-row items-center">
+            {user.avatar ? (
+              <Image
+                source={{ uri: user.avatar }}
+                style={{ width: 44, height: 44, borderRadius: 22, marginRight: 12, borderWidth: 1.5, borderColor: '#fff' }}
+              />
+            ) : (
+              <View className="bg-white/20 items-center justify-center" style={{ width: 44, height: 44, borderRadius: 22, marginRight: 12 }}>
+                <User size={20} color="#fff" />
+              </View>
+            )}
+            <View className="flex-1">
+              <Text className="text-white font-bold text-[14px]" numberOfLines={1}>
+                {user.name || 'User'}
+              </Text>
+              <Text className="text-white/80 text-[11px]" numberOfLines={1}>
+                {user.email || 'Employee'}
+              </Text>
+            </View>
+          </View>
+        )}
+      </LinearGradient>
+
       <DrawerContentScrollView contentContainerStyle={{ paddingTop: 0, paddingHorizontal: 12 }}>
+        {navItems.map((item) => {
+          // Check if item's route is current active route
+          const isActive = checkActive(item.route);
+          const activeColor = item.accentColor;
+          const iconColor = isActive ? activeColor : '#4B5068';
+          const textColor = isActive ? activeColor : '#1A1D2E';
+          
+          const badgeCount = badges[item.id] || 0;
 
-        {/* Header/Brand */}
-        <View className="px-4 py-4 mb-2 border-b border-gray-100 dark:border-gray-800">
-          <Text className="text-xl font-bold text-gray-900 dark:text-white">
-            LMX<Text className="text-blue-600 font-light">Tracker</Text>
-          </Text>
-        </View>
+          return (
+            <TouchableOpacity
+              key={item.id}
+              activeOpacity={0.7}
+              onPress={() => handleNavigation(item)}
+              className="flex-row items-center px-4 py-3 rounded-xl mb-1.5"
+              style={{
+                backgroundColor: isActive ? item.bgColor : 'transparent',
+              }}
+            >
+              <View className="mr-3">
+                {getNavItemIcon(item.icon, iconColor)}
+              </View>
+              <Text
+                className={`text-[14px] flex-1 ${isActive ? 'font-semibold' : 'font-medium'}`}
+                style={{ color: textColor }}
+              >
+                {item.title}
+              </Text>
+              {badgeCount > 0 && (
+                <View className="bg-red-500 rounded-full px-2 py-0.5 min-w-[20] items-center justify-center">
+                  <Text className="text-white text-[10px] font-bold">{badgeCount}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          );
+        })}
 
-        {navItems
-          .filter(item => item.mainRoute !== '/logout' && item.mainRoute !== 'logout')
-          .map((item) => renderNavItem(item))}
+        <View className="h-[1px] bg-gray-100 dark:bg-gray-800 my-2 mx-2" />
 
-        <View className="h-[1px] bg-gray-100 dark:bg-gray-800 my-2 mx-4" />
-
-        <DrawerItem
-          label="Logout"
-          labelStyle={{ color: '#EF4444', fontWeight: '500' }}
-          icon={({ size }) => (
-            <LogOut size={20} color="#EF4444" />
-          )}
+        <TouchableOpacity
+          activeOpacity={0.7}
           onPress={async () => {
             await logout();
             router.replace("/Login");
           }}
-        />
+          className="flex-row items-center px-4 py-3 rounded-xl mb-2"
+        >
+          <View className="mr-3">
+            <LogOut size={20} color="#EF4444" />
+          </View>
+          <Text className="text-[14px] font-semibold text-red-500">
+            Logout
+          </Text>
+        </TouchableOpacity>
       </DrawerContentScrollView>
 
       {/* Footer */}
       <View className="p-4 border-t border-gray-100 dark:border-gray-800">
-        <Text className="text-xs text-center text-gray-400">© 2024 LMX</Text>
+        <Text className="text-xs text-center text-gray-400">© {new Date().getFullYear()} WorkHub</Text>
       </View>
     </View>
   );
@@ -325,7 +239,9 @@ function getPageTitle(routeName: string) {
     'me/index': 'Profile',
     'daily-tracker/index': 'Daily Tracker',
     'salary-expense/index': 'Salary Expense',
-    'travel-expenses/index': 'Travel Expenses'
+    'travel-expenses/index': 'Travel Expenses',
+    'tickets/index': 'Tickets',
+    'tickets/[id]': 'Ticket Details'
   };
   return titleMap[routeName] || 'App';
 }

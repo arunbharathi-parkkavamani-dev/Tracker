@@ -6,7 +6,9 @@ const TaskTypeSchema = new mongoose.Schema({
   description: { type: String, trim: true },
   isActive: { type: Boolean, default: true, index: true },
   estimatedHours: { type: Number, min: 0 },
-  category: { type: String, enum: ['Development', 'Testing', 'Design', 'Documentation', 'Meeting'], default: 'Development', index: true }
+  category: { type: String, enum: ['Development', 'Testing', 'Design', 'Documentation', 'Meeting'], default: 'Development', index: true },
+  icon: { type: String },
+  color: { type: String }
 }, { timestamps: true });
 
 // Compound indexes

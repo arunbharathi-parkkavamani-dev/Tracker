@@ -33,8 +33,8 @@ export const TICKET_FORM_TABS = [
 export const clientFormFields = [
   {
     id: "client",
+    name: "clientName",
     label: "Client",
-    fieldNames: ["clientName"],
     type: "AutoComplete",
     source: "/populate/read/clients",
     placeholder: "Select Client",
@@ -44,8 +44,8 @@ export const clientFormFields = [
   },
   {
     id: "product",
+    name: "product",
     label: "Product",
-    fieldNames: ["product"],
     type: "AutoComplete",
     source: "/populate/read/products",
     placeholder: "Select Product",

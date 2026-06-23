@@ -95,12 +95,11 @@ The `BaseLayout` component acts as the central auth guard:
 - If `path === /login` → render `<Login />` (no sidebar/topnav)
 - Otherwise → render sidebar + topnav + page content
 
-### 3.3 File-Based Routing (`vite-plugin-pages`)
-Routes are auto-generated from the `pages/` directory structure. Example:
-- `pages/login.jsx` → `/login`
-- `pages/Dashboard/index.jsx` → `/dashboard`
-- `pages/tasks/index.jsx` → `/tasks`
-- `pages/[model]/index.jsx` → `/:model` (dynamic catch-all)
+### 3.3 File-Based Routing (react-pages via vite-plugin-pages)
+Routes are automatically generated from the file/folder structure inside the `src/pages/` directory:
+- Creating a React component file directly (e.g., `pages/login.jsx` or `pages/ForgotPassword.jsx`) or a subdirectory with an `index.jsx` (e.g., `pages/Dashboard/index.jsx`) automatically registers a route.
+- The resulting route paths match the folder/file names (including camelCase naming, e.g., `forgotPassword.jsx` maps to `/forgotPassword`).
+- Dynamic routes use square brackets (e.g., `pages/[model]/index.jsx` maps to `/:model` as a dynamic route parameter).
 
 ### 3.4 API Layer (`axiosInstance.js`)
 - Single pre-configured Axios instance

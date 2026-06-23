@@ -7,14 +7,14 @@ import TicketView from '../../../components/tickets/TicketView';
 
 export default function TicketsPage() {
   const [activeTab, setActiveTab] = useState('list');
-  const [selectedTicket, setSelectedTicket] = useState(null);
+  const [selectedTicket, setSelectedTicket] = useState<any>(null);
 
-  const handleViewTicket = (ticket) => {
+  const handleViewTicket = (ticket: any) => {
     setSelectedTicket(ticket);
     setActiveTab('view');
   };
 
-  const handleEditTicket = (ticket) => {
+  const handleEditTicket = (ticket: any) => {
     setSelectedTicket(ticket);
     setActiveTab('form');
   };
@@ -25,47 +25,49 @@ export default function TicketsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto overflow-auto">
+    <div className="min-h-screen bg-canvas">
+      <div className="max-w-[1200px] mx-auto px-6 py-8">
+        {/* Page header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Support Tickets</h1>
-          <div className="mt-4 flex space-x-4">
-            <button
-              onClick={() => setActiveTab('list')}
-              className={`px-4 py-2 rounded-lg ${
-                activeTab === 'list' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 border'
-              }`}
-            >
-              Ticket List
-            </button>
-            <button
-              onClick={() => { setActiveTab('form'); setSelectedTicket(null); }}
-              className={`px-4 py-2 rounded-lg ${
-                activeTab === 'form' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 border'
-              }`}
-            >
-              Create Ticket
-            </button>
+          <p className="lmx-eyebrow mb-1">SUPPORT TICKETS</p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <h1 className="text-[28px] font-semibold text-ink tracking-tight">Support Tickets</h1>
+            {/* Tab bar */}
+            <div className="lmx-tab-bar">
+              <button
+                onClick={() => setActiveTab('list')}
+                className={activeTab === 'list' ? 'lmx-tab-active' : 'lmx-tab'}
+              >
+                Ticket List
+              </button>
+              <button
+                onClick={() => { setActiveTab('form'); setSelectedTicket(null); }}
+                className={activeTab === 'form' ? 'lmx-tab-active' : 'lmx-tab'}
+              >
+                Create Ticket
+              </button>
+            </div>
           </div>
         </div>
 
+        {/* Content */}
         {activeTab === 'list' && (
-          <TicketList 
+          <TicketList
             onViewTicket={handleViewTicket}
             onEditTicket={handleEditTicket}
           />
         )}
-        
+
         {activeTab === 'form' && (
-          <TicketForm 
+          <TicketForm
             ticket={selectedTicket}
             onSuccess={refreshTickets}
             onCancel={() => setActiveTab('list')}
           />
         )}
-        
+
         {activeTab === 'view' && selectedTicket && (
-          <TicketView 
+          <TicketView
             ticket={selectedTicket}
             onEdit={() => handleEditTicket(selectedTicket)}
             onBack={() => setActiveTab('list')}

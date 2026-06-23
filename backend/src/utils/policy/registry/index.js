@@ -1,4 +1,12 @@
-import AccessPolicies from "../../../models/AccessPolicies.js";
+import isSelf from "./isSelf.js";
+import isTeamMember from "./isTeamMember.js";
+import isAssigned from "./isAssigned.js";
+import isCreatedBy from "./isCreatedBy.js";
+import isRecipient from "./isRecipient.js";
+import isRef from "./isRef.js";
+import isSender from "./isSender.js";
+import populateRef from "./populateRef.js";
+import isSameClient from "./isSameClient.js";
 
 // Registry of reusable logic functions for policies
 // Each function behaves like a "Computed Filter" or "Runtime Check"
@@ -8,27 +16,16 @@ import AccessPolicies from "../../../models/AccessPolicies.js";
 // - If it returns an Object: It's treated as a Mongo query filter (used for list/find queries)
 
 const registry = {
-  isSelf: (user, record, context) => {
-    // Check if the record belongs to the user
-    // For queries, return filter: { _id: user.id } or { userId: user.id }
-    // context.modelName can help decide which field to check
-    if (!user) return false;
-
-    // If we are checking a specific record (record is populated)
-    if (record) {
-      return record._id.toString() === user.id || record.userId?.toString() === user.id;
-    }
-
-    // If we are building a query filter
-    return {
-      $or: [
-        { _id: user.id },
-        { userId: user.id },
-        { employee: user.id } // For attendance/leaves
-      ]
-    };
-  },
-
+  isSelf,
+  isTeamMember,
+  isAssigned,
+  isCreatedBy,
+  isRecipient,
+  isRef,
+  isSender,
+  populateRef,
+  isSameClient,
+  
   isManager: (user, record, context) => {
     // Check if user is a manager (logic depends on your hierarchy)
     if (!user) return false;
@@ -40,12 +37,6 @@ const registry = {
         { "professionalInfo.reportingManager": user.id }
       ]
     };
-  },
-
-  isTeamMember: (user, record, context) => {
-    // Check if user is a member of the record's team
-    // Implementation depends on specific data structure
-    return true;
   },
 
   // Dynamic Sidebar Visibility (Dept + Designation)

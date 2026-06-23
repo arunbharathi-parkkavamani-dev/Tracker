@@ -30,8 +30,13 @@ const ExpenseSchema = new mongoose.Schema({
   
   status: { 
     type: String, 
-    enum: ["pending", "approved", "rejected"], 
     default: "pending",
+    index: true
+  },
+  
+  metaStatus: {
+    type: String,
+    default: 'active',
     index: true
   },
   

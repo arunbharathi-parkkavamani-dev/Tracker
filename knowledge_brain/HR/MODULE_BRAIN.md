@@ -4,13 +4,17 @@
 This module contains 5 models, 3 services, and 0 frontend files.
 
 ## Backend Models
-| Model | File | Lines | References |
-|---|---|---|---|
-| Agent | Agent.js | 40 | clients, departments |
-| Department | Department.js | 26 | leavepolicies |
-| Designation | Designation.js | 20 |  |
-| Employee | Employee.js | 93 | designations, departments, roles, employees, leavetypes |
-| Role | Role.js | 34 |  |
+| Model | File | Lines | Key Fields | Notes |
+|---|---|---|---|---|
+| Agent | Agent.js | 40 | — | Refs: clients, departments |
+| Department | Department.js | 26 | — | Refs: leavepolicies |
+| Designation | Designation.js | 20 | — | |
+| Employee | Employee.js | 93 | status (enum: Active/Inactive/Terminated) | Refs: designations, departments, roles, employees, leavetypes. Note: Employee.status is NOT dynamic — intentionally kept as fixed enum. |
+| HRPolicy | HRPolicy.js | 57 | `status` (String, no enum), `metaStatus` (String, default: active) | Status driven by StatusConfig (`modelName: 'hrpolicies'`). Refs: Employee, Department. |
+| Role | Role.js | 34 | — | |
+
+> **Dynamic status (as of 2026-06-10)**: HRPolicy — `enum: ['Draft','Active','Archived']` removed from `status`. Values now from `statusconfigs.workflowStatuses`. `metaStatus` added (default: `'active'`).
+> Employee.status remains a fixed enum — it is a system field, not a user-configurable workflow.
 
 ## Backend Services (Business Logic Hooks)
 | Service File | Lines | Exported Functions |

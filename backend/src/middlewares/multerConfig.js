@@ -97,6 +97,14 @@ const fileFilter = (req, file, cb) => {
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document': { maxSize: 25 * 1024 * 1024, category: 'document' },
     'application/vnd.ms-excel': { maxSize: 25 * 1024 * 1024, category: 'document' },
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': { maxSize: 25 * 1024 * 1024, category: 'document' },
+    'text/plain': { maxSize: 10 * 1024 * 1024, category: 'document' },
+    'text/csv': { maxSize: 25 * 1024 * 1024, category: 'document' },
+
+    // Videos
+    'video/mp4': { maxSize: 100 * 1024 * 1024, category: 'video' },
+    'video/webm': { maxSize: 100 * 1024 * 1024, category: 'video' },
+    'video/ogg': { maxSize: 100 * 1024 * 1024, category: 'video' },
+    'video/quicktime': { maxSize: 100 * 1024 * 1024, category: 'video' },
 
     // Archives
     'application/zip': { maxSize: 100 * 1024 * 1024, category: 'archive' }, // 100MB

@@ -3,9 +3,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import axiosInstance from "../../../api/axiosInstance";
 import { useAuth } from "../../../context/authProvider";
 import KanbanBoard from "../../../components/Common/KambanBoard";
-import TaskModal from "../TaskModal";
+import GanttView from "../GanttView";
+import TaskSkeleton from "../../../components/Common/TaskSkeleton";
 import StatCard from "../../../components/Common/StatCard";
-import { ArrowLeft, Building2, LayoutGrid, Clock, CheckCircle2, Plus } from "lucide-react";
+import { ArrowLeft, Building2, LayoutGrid, Clock, CheckCircle2, Plus, CalendarDays, Download } from "lucide-react";
 
 const STATUS_COLS = [
   { id: "Backlogs",    title: "Backlogs" },
@@ -39,6 +40,7 @@ const ClientKanbanPage = () => {
   const [taskTypes, setTaskTypes]       = useState([]);
   const [loading, setLoading]           = useState(true);
   const [groupBy, setGroupBy]           = useState("projectTypeId.name");
+  const [viewMode, setViewMode]         = useState("board");
   const [selectedTask, setSelectedTask] = useState(null);
 
   useEffect(() => { fetchData(); }, [id]);
@@ -81,13 +83,36 @@ const ClientKanbanPage = () => {
     } catch (e) { console.error(e); }
   };
 
-  const handleTaskClick = async (task) => {
+  const handleCardUpdate = async (task, field, value) => {
     try {
-      const res = await axiosInstance.post(`/populate/read/tasks/${task._id}`, {
-        fields: "clientId,projectTypeId,taskTypeId,createdBy,assignedTo",
+      setTasks(prev => prev.map(t => t._id === task._id ? { ...t, [field]: value } : t));
+      await axiosInstance.put(`/populate/update/tasks/${task._id}`, { [field]: value });
+    } catch (e) { 
+      console.error(e); 
+      setTasks(prev => prev.map(t => t._id === task._id ? { ...t, [field]: task[field] } : t));
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      const res = await axiosInstance.get("/export/tasks", {
+        params: { client: id },
+        responseType: "blob"
       });
-      setSelectedTask(res.data.data);
-    } catch (e) { console.error(e); }
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `client_${id}_tasks_export.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (e) {
+      console.error("Export failed", e);
+    }
+  };
+
+  const handleTaskClick = (task) => {
+    navigate(`/tasks/${task._id}`);
   };
 
   const columnsMap = {
@@ -100,12 +125,7 @@ const ClientKanbanPage = () => {
   const inProgress = tasks.filter((t) => t.status === "In Progress").length;
   const completed  = tasks.filter((t) => t.status === "Completed").length;
 
-  if (loading)
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 rounded-full border-2 border-[var(--module-accent)] border-t-transparent animate-spin" />
-      </div>
-    );
+  if (loading) return <TaskSkeleton />;
 
   return (
     <div className="flex flex-col h-full bg-canvas" data-module="project">
@@ -147,6 +167,24 @@ const ClientKanbanPage = () => {
               ))}
             </div>
 
+            {/* View mode toggle */}
+            <div className="flex items-center gap-1 p-1 rounded-tracker-lg bg-surface-2 ml-2">
+              <button onClick={() => setViewMode("board")}
+                className={`px-3 py-1.5 rounded-tracker-md text-[13px] font-medium transition-all ${viewMode === "board" ? "bg-[var(--module-accent)] text-white shadow-sm" : "text-ink-muted hover:text-ink"}`}>
+                <LayoutGrid size={14} className="mr-1 inline-block" /> Board
+              </button>
+              <button onClick={() => setViewMode("gantt")}
+                className={`px-3 py-1.5 rounded-tracker-md text-[13px] font-medium transition-all ${viewMode === "gantt" ? "bg-[var(--module-accent)] text-white shadow-sm" : "text-ink-muted hover:text-ink"}`}>
+                <CalendarDays size={14} className="mr-1 inline-block" /> Timeline
+              </button>
+            </div>
+
+            {/* Export Button */}
+            <button onClick={handleExport}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-tracker-md text-[13px] font-medium border border-hairline bg-surface text-ink-muted hover:text-ink hover:border-ink-subtle transition-all duration-150 cursor-pointer ml-2">
+              <Download size={14} /> Export
+            </button>
+
             <button onClick={() => navigate("/tasks/form", { state: { selectedClient: client } })}
               className="tracker-btn-accent flex items-center gap-2">
               <Plus size={15} /> New Task
@@ -162,38 +200,31 @@ const ClientKanbanPage = () => {
         </div>
       </div>
 
-      {/* ── Board ── */}
+      {/* ── Board / Timeline ── */}
       <div className="flex-1 overflow-hidden px-6 pb-6">
-        <KanbanBoard
-          data={tasks}
-          groupBy={groupBy}
-          columns={columnsMap[groupBy]}
-          currentUserId={user?.id}
-          onCardClick={handleTaskClick}
-          onCardMove={handleCardMove}
-          employees={employees}
-          taskTypes={taskTypes}
-          showFollowerFilter
-          onNewTask={() => navigate("/tasks/form", { state: { selectedClient: client } })}
-        />
+        {viewMode === "board" ? (
+          <KanbanBoard
+            data={tasks}
+            groupBy={groupBy}
+            columns={columnsMap[groupBy]}
+            currentUserId={user?.id}
+            onCardClick={handleTaskClick}
+            onCardMove={handleCardMove}
+            onCardUpdate={handleCardUpdate}
+            employees={employees}
+            taskTypes={taskTypes}
+            showFollowerFilter
+            onNewTask={() => navigate("/tasks/form", { state: { selectedClient: client } })}
+          />
+        ) : (
+          <GanttView 
+            data={tasks} 
+            onTaskClick={handleTaskClick} 
+          />
+        )}
       </div>
 
-      {selectedTask && (
-        <div className="fixed inset-0 tracker-overlay z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-surface rounded-tracker-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
-            style={{ boxShadow: "var(--tracker-shadow-overlay)" }}>
-            <div className="flex items-center justify-between px-6 py-4 text-white rounded-t-[16px] bg-gradient-to-br from-[#0369A1] to-[#0EA5E9]">
-              <span className="text-[16px] font-semibold">{client?.name} · Task Detail</span>
-              <button onClick={() => setSelectedTask(null)}
-                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors text-lg font-bold">×</button>
-            </div>
-            <div className="p-6">
-              <TaskModal task={selectedTask} onClose={() => setSelectedTask(null)}
-                onUpdate={() => { fetchData(); setSelectedTask(null); }} />
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 };

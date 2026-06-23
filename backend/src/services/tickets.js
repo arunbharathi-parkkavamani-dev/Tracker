@@ -2,10 +2,35 @@ export default function tickets() {
   return {
     // ---------------- Before Create ----------------
     beforeCreate: async ({ body, userId }) => {
+      const { default: models } = await import('../models/Collection.js');
+
+      // Auto-set default task type if not provided
+      if (!body.type) {
+        const defaultTaskType = await models.tasktypes.findOne();
+        if (defaultTaskType) {
+          body.type = defaultTaskType._id;
+        }
+      }
+
+      // Resolve status defaults dynamically from DB config
+      try {
+        const config = await models.statusconfigs.findOne({ modelName: 'tickets' }).lean();
+        if (config) {
+          if (!body.status && config.workflowStatuses?.length) {
+            const defWorkflow = config.workflowStatuses.find(s => s.isDefault);
+            if (defWorkflow) body.status = defWorkflow.key;
+          }
+          if (!body.metaStatus && config.metaStatuses?.length) {
+            const defMeta = config.metaStatuses.find(s => s.isDefault);
+            if (defMeta) body.metaStatus = defMeta.key;
+          }
+        }
+      } catch (err) {
+        console.error('[TicketService] beforeCreate config error:', err.message);
+      }
+
       // Handle agent ticket creation
       if (body.agentId) {
-        const { default: models } = await import('../models/Collection.js');
-
         // Get agent and set client info
         const agent = await models.agents.findById(body.agentId).populate('client');
         if (agent && agent.client) {
@@ -16,7 +41,35 @@ export default function tickets() {
 
         // Remove agentId from body as it's not a ticket field
         delete body.agentId;
+        return;
       }
+
+      // Handle employee-created tickets from the web dashboard
+      // Map form objects to model field names
+      if (body.clientName?._id) body.clientId = body.clientName._id;
+      if (body.product?._id) body.productId = body.product._id;
+      if (body.type?._id) body.type = body.type._id;
+      if (body.priority?._id) body.priority = body.priority._id || body.priority.name;
+
+      // Extract ObjectIds from assignedTo array
+      if (Array.isArray(body.assignedTo)) {
+        body.assignedTo = body.assignedTo.map(a => a._id || a);
+      }
+
+      // Set createdBy info from session if not already set as agent
+      if (body.createdByModel !== 'agents') {
+        body.createdBy = userId;
+        body.createdByModel = 'employees';
+      }
+
+      // description is required in model; fall back to userStory
+      if (!body.description && body.userStory) {
+        body.description = body.userStory;
+      }
+
+      // Clean up mapped fields
+      delete body.clientName;
+      delete body.product;
     },
 
     // ---------------- After Create ----------------
@@ -51,6 +104,22 @@ export default function tickets() {
 
     // ---------------- Before Update ----------------
     beforeUpdate: async ({ userId, body, docId }) => {
+      // Handle comment push ($push won't work through buildUpdateQuery's $set wrapper)
+      if (body.$push?.comments) {
+        const { default: models } = await import('../models/Collection.js');
+        await models.tickets.updateOne(
+          { _id: docId },
+          { $push: { comments: body.$push.comments } }
+        );
+        delete body.$push;
+        return { body };
+      }
+
+      // Map assignedTo array of IDs (from detail page assign dropdown)
+      if (Array.isArray(body.assignedTo)) {
+        body.assignedTo = body.assignedTo.map(a => a._id || a);
+      }
+
       if (body.pushTaskSync === true) {
         const { default: models } = await import('../models/Collection.js');
         const existingDoc = await models.tickets.findById(docId);
@@ -104,7 +173,6 @@ export default function tickets() {
             title: ticketData.title,
             userStory: ticketData.userStory, // Use userStory field
             priorityLevel: ticketData.priority,
-            status: 'To Do',
             followers: [userId]
           });
 

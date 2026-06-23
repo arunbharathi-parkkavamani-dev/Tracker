@@ -13,6 +13,22 @@ export async function populateHelper(req, res, next) {
     const { action, model, id } = req.params;
     const user = req.user;
 
+    // Ensure user has a role — fallback: fetch from DB if missing from JWT (e.g. old tokens)
+    if (!user?.role) {
+      try {
+        const { default: Employee } = await import('../models/Employee.js');
+        const { default: Role } = await import('../models/Role.js');
+        const emp = await Employee.findById(user?.id).select('professionalInfo.role').lean();
+        if (emp?.professionalInfo?.role) {
+          user.role = emp.professionalInfo.role;
+        } else {
+          return res.status(403).json({ success: false, message: 'User has no role assigned' });
+        }
+      } catch {
+        return res.status(500).json({ success: false, message: 'Failed to resolve user role' });
+      }
+    }
+
     // For read actions, parameters are sent in the JSON payload (req.body). For others, they might still be in req.query.
     const isReadAction = ['read', 'statistics'].includes(action) || !['create', 'update', 'bulk-upsert', 'bulk-create', 'bulk-update', 'delete', 'bulk-delete'].includes(action);
     const optionsSource = isReadAction ? { ...req.query, ...req.body } : req.query;

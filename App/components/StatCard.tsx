@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, useColorScheme } from 'react-native';
 import { LucideIcon } from 'lucide-react-native';
 
 interface StatCardProps {
@@ -56,6 +56,7 @@ function useAnimatedCounter(target: number | string, duration = 800) {
 const StatCard: React.FC<StatCardProps> = ({ title, value, icon: Icon, color, trend, loading }) => {
     const animatedValue = useAnimatedCounter(loading ? 0 : value);
     const isNumeric = typeof value === 'number' || (!isNaN(Number(value)) && value !== '');
+    const isDarkMode = useColorScheme() === 'dark';
 
     const getBorderColor = (colorName: string) => {
         switch (colorName) {
@@ -68,14 +69,14 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon: Icon, color, tr
         }
     };
 
-    const getIconColorClass = (colorName: string) => {
+    const getIconColor = (colorName: string, isDark: boolean) => {
         switch (colorName) {
-            case 'blue': return 'text-blue-600 dark:text-blue-400';
-            case 'green': return 'text-emerald-600 dark:text-emerald-400';
-            case 'yellow': return 'text-amber-600 dark:text-amber-400';
-            case 'purple': return 'text-violet-600 dark:text-violet-400';
-            case 'red': return 'text-rose-600 dark:text-rose-400';
-            default: return 'text-gray-600 dark:text-gray-400';
+            case 'blue': return isDark ? '#60a5fa' : '#2563eb';
+            case 'green': return isDark ? '#34d399' : '#059669';
+            case 'yellow': return isDark ? '#fbbf24' : '#d97706';
+            case 'purple': return isDark ? '#a78bfa' : '#7c3aed';
+            case 'red': return isDark ? '#f87171' : '#e11d48';
+            default: return isDark ? '#9ca3af' : '#4b5563';
         }
     };
 
@@ -97,7 +98,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon: Icon, color, tr
         >
             <View className="flex-row justify-between items-start mb-3">
                 <View className={`p-2.5 rounded-xl ${getBgClass(color)}`}>
-                    <Icon size={18} className={getIconColorClass(color)} strokeWidth={2.5} />
+                    <Icon size={18} color={getIconColor(color, isDarkMode)} strokeWidth={2.5} />
                 </View>
                 {trend && (
                     <View className={`px-2 py-0.5 rounded-full ${trend.startsWith('+') ? 'bg-emerald-50 dark:bg-emerald-950/30' : 'bg-rose-50 dark:bg-rose-950/30'}`}>

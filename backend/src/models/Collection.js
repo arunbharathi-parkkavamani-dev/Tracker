@@ -37,10 +37,17 @@ import feedchannels from "./FeedChannel.js";
 import feedposts from "./FeedPost.js";
 import feedcomments from "./FeedComment.js";
 import NotificationReceptionist from "./NotificationReceptionist.js";
+import notificationpreferences from "./NotificationPreference.js";
 import products from "./products.js";
 import salarystructures from "./SalaryStructure.js";
 import payrollruns from "./PayrollRun.js";
 import holidays from "./Holiday.js";
+import statusconfigs from "./StatusConfig.js";
+import statusmappings from "./StatusMapping.js";
+import dashboardwidgets from "./DashboardWidget.js";
+import activitylogs from "./ActivityLog.js";
+import timetrackersessions from "./TimeTrackerSession.js";
+
 
 const models = {
   accesspolicies,
@@ -81,10 +88,16 @@ const models = {
   feedposts,
   feedcomments,
   NotificationReceptionist,
+  notificationpreferences,
   products,
   salarystructures,
   payrollruns,
   holidays,
+  statusconfigs,
+  statusmappings,
+  dashboardwidgets,
+  activitylogs,
+  timetrackersessions,
 };
 
 export default models;

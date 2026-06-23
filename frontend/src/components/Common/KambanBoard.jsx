@@ -1,6 +1,8 @@
 import { useState, useMemo } from "react";
 import { Plus, Search, X, ChevronDown, LayoutGrid } from "lucide-react";
 import ProfileImage from "./ProfileImage";
+import InlineEdit from "./InLineEdit";
+import TaskContextMenu from "./TaskContextMenu";
 
 /**
  * Column colour tokens — references CSS vars only, no hardcoded hex.
@@ -71,7 +73,7 @@ const PRIORITY_CELL = {
 };
 
 /* ── Task Card ── */
-const TaskCard = ({ task, groupBy, draggingId, onDragStart, onCardClick }) => {
+const TaskCard = ({ task, groupBy, draggingId, onDragStart, onCardClick, onCardUpdate, onContextMenu }) => {
   const assignees  = task.assignedTo || [];
   const date       = task.endDate || task.dueDate;
   const isOverdue  = date && new Date(date) < new Date() && task.status !== "Completed";
@@ -88,6 +90,7 @@ const TaskCard = ({ task, groupBy, draggingId, onDragStart, onCardClick }) => {
       draggable
       onDragStart={(e) => onDragStart(e, task)}
       onClick={() => onCardClick?.(task)}
+      onContextMenu={(e) => onContextMenu?.(e, task)}
       className="bg-surface border border-hairline cursor-grab active:cursor-grabbing hover:shadow-[var(--tracker-shadow-raised)] transition-all duration-150 select-none"
       style={{ opacity: draggingId === task._id ? 0.25 : 1, borderLeft: "3px solid var(--module-accent)" }}
     >
@@ -103,9 +106,13 @@ const TaskCard = ({ task, groupBy, draggingId, onDragStart, onCardClick }) => {
 
         {/* Title + avatar */}
         <div className="flex items-start justify-between gap-2">
-          <p className="text-[12.5px] font-semibold leading-snug line-clamp-2 text-ink flex-1 min-w-0">
-            {task.title || "Untitled Task"}
-          </p>
+          <div className="text-[12.5px] font-semibold leading-snug text-ink flex-1 min-w-0 break-words line-clamp-3">
+            <InlineEdit
+              value={task.title || "Untitled Task"}
+              canEdit={!!onCardUpdate}
+              onSave={(val) => onCardUpdate?.(task, "title", val)}
+            />
+          </div>
           {assignees[0] && <Avatar person={assignees[0]} size={20} />}
         </div>
 
@@ -181,6 +188,7 @@ const KanbanBoard = ({
   columns = [],
   onCardMove,
   onCardClick,
+  onCardUpdate,
   currentUserId,
   employees = [],
   taskTypes = [],
@@ -188,11 +196,13 @@ const KanbanBoard = ({
   onNewTask,
   showClientFilter = false,
   showFollowerFilter = false,
+  hideHeader = false,
 }) => {
   const [search, setSearch]             = useState("");
   const [draggingCard, setDraggingCard] = useState(null);
   const [overCol, setOverCol]           = useState(null);
   const [filters, setFilters]           = useState({ category: null, priority: null, client: null, follower: null });
+  const [contextMenu, setContextMenu]   = useState({ x: 0, y: 0, task: null, show: false });
 
   const getVal = (obj, path) => {
     const val = path.split(".").reduce((a, k) => (a != null ? a[k] : undefined), obj);
@@ -251,58 +261,64 @@ const KanbanBoard = ({
   };
   const clearFilters = () => setFilters({ category: null, priority: null, client: null, follower: null });
 
+  const handleContextMenu = (e, task) => {
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY, task, show: true });
+  };
+
   return (
     <div className="flex flex-col h-full">
 
       {/* ── Stat strip + filter bar ── */}
-      <div className="flex flex-col gap-1.5 pb-3">
+      {!hideHeader && (
+        <div className="flex flex-col gap-1.5 pb-3">
+          {/* Stat pills row */}
+          <div className="flex items-center gap-1 flex-wrap">
+            {statPills.map((p) => (
+              <StatPill key={p.label} label={p.label} count={p.count} tokenClass={p.tokenClass} />
+            ))}
+            <span className="ml-auto text-[11px] font-medium text-ink-subtle">
+              {data.length} total
+            </span>
+          </div>
 
-        {/* Stat pills row */}
-        <div className="flex items-center gap-1 flex-wrap">
-          {statPills.map((p) => (
-            <StatPill key={p.label} label={p.label} count={p.count} tokenClass={p.tokenClass} />
-          ))}
-          <span className="ml-auto text-[11px] font-medium text-ink-subtle">
-            {data.length} total
-          </span>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {/* Search */}
+            <div className="relative flex-1 min-w-[160px] max-w-[220px]">
+              <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-subtle pointer-events-none" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search…"
+                className="lmx-input pl-7 pr-7 py-1 text-[11px]"
+              />
+              {search && (
+                <button onClick={() => setSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2">
+                  <X size={11} className="text-ink-subtle" />
+                </button>
+              )}
+            </div>
+
+            <FilterSelect label="Category" value={filters.category} onChange={(v) => setFilters((p) => ({ ...p, category: v }))} options={categoryOptions} />
+            <FilterSelect label="Priority"  value={filters.priority}  onChange={(v) => setFilters((p) => ({ ...p, priority: v }))}  options={priorityOptions} />
+            {showClientFilter   && <FilterSelect label="Client"   value={filters.client}   onChange={(v) => setFilters((p) => ({ ...p, client: v }))}   options={clientOptions} />}
+            {showFollowerFilter && <FilterSelect label="Follower" value={filters.follower} onChange={(v) => setFilters((p) => ({ ...p, follower: v }))} options={followerOptions} />}
+
+            {activeFilterCount > 0 && (
+              <button onClick={clearFilters}
+                className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-tracker-md bg-[var(--tracker-danger-light)] text-[var(--tracker-danger)]">
+                <X size={10} /> Clear
+              </button>
+            )}
+
+            {(search || activeFilterCount > 0) && (
+              <span className="ml-auto text-[12px] font-medium text-ink-subtle">
+                {displayData.length} shown
+              </span>
+            )}
+          </div>
         </div>
-
-      <div className="flex items-center gap-1.5 flex-wrap">
-        {/* Search */}
-        <div className="relative flex-1 min-w-[160px] max-w-[220px]">
-          <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-subtle pointer-events-none" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search…"
-            className="lmx-input pl-7 pr-7 py-1 text-[11px]"
-          />
-          {search && (
-            <button onClick={() => setSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2">
-              <X size={11} className="text-ink-subtle" />
-            </button>
-          )}
-        </div>
-
-        <FilterSelect label="Category" value={filters.category} onChange={(v) => setFilters((p) => ({ ...p, category: v }))} options={categoryOptions} />
-        <FilterSelect label="Priority"  value={filters.priority}  onChange={(v) => setFilters((p) => ({ ...p, priority: v }))}  options={priorityOptions} />
-        {showClientFilter   && <FilterSelect label="Client"   value={filters.client}   onChange={(v) => setFilters((p) => ({ ...p, client: v }))}   options={clientOptions} />}
-        {showFollowerFilter && <FilterSelect label="Follower" value={filters.follower} onChange={(v) => setFilters((p) => ({ ...p, follower: v }))} options={followerOptions} />}
-
-        {activeFilterCount > 0 && (
-          <button onClick={clearFilters}
-            className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-tracker-md bg-[var(--tracker-danger-light)] text-[var(--tracker-danger)]">
-            <X size={10} /> Clear
-          </button>
-        )}
-
-        {(search || activeFilterCount > 0) && (
-          <span className="ml-auto text-[12px] font-medium text-ink-subtle">
-            {displayData.length} shown
-          </span>
-        )}
-      </div>
-      </div>
+      )}
 
       {/* ── Columns ── */}
       <div className="flex-1 overflow-x-auto pb-2 scrollbar-hide">
@@ -356,6 +372,8 @@ const KanbanBoard = ({
                       draggingId={draggingCard?._id}
                       onDragStart={handleDragStart}
                       onCardClick={onCardClick}
+                      onCardUpdate={onCardUpdate}
+                      onContextMenu={handleContextMenu}
                     />
                   ))}
 
@@ -380,6 +398,17 @@ const KanbanBoard = ({
           })}
         </div>
       </div>
+      {contextMenu.show && (
+        <TaskContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          task={contextMenu.task}
+          onClose={() => setContextMenu({ ...contextMenu, show: false })}
+          onEdit={(task) => onCardClick?.(task)}
+          onStatusChange={(task, status) => onCardUpdate?.(task, "status", status)}
+          onPriorityChange={(task, priority) => onCardUpdate?.(task, "priorityLevel", priority)}
+        />
+      )}
     </div>
   );
 };

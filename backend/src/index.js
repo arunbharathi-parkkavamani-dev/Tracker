@@ -12,8 +12,10 @@ import locationRoutes from "./routes/locationRoutes.js";
 import bankRoutes from "./routes/bankRoutes.js";
 import configRoutes from "./routes/configRoutes.js";
 import adminSystemRoutes from "./routes/adminSystemRoutes.js";
+import exportRoutes from "./routes/exportRoutes.js";
 
 import { apiHitLogger } from "./middlewares/apiHitLogger.js";
+import { authMiddleware } from "./Controller/AuthController.js";
 import { agentAuthMiddleware } from "./middlewares/agentAuthMiddleware.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import { requestTracer } from "./middlewares/requestTracer.js";
@@ -25,6 +27,8 @@ import cookieParser from "cookie-parser";
 import databaseIndexer from "./services/databaseIndexer.js";
 
 import "./cron/AttendanceCron.js";
+// import "./cron/LeaveAccrualCron.js"; // missing file
+// import "./cron/EscalationCron.js"; // missing file
 
 // Memory optimization
 process.env.NODE_OPTIONS = '--max-old-space-size=4096'; // 4GB heap
@@ -79,11 +83,12 @@ app.use("/api/agent", agentRoutes);
 app.use("/api/agent-invite", agentInviteRoutes);
 app.use("/api/auth", AuthRouter);
 app.use("/api/populate", populateHelper);
-app.use("/api/files", fileRoutes);
+app.use("/api/files", authMiddleware, fileRoutes);
 app.use("/api", locationRoutes);
 app.use("/api", bankRoutes);
 app.use("/api/config", configRoutes);
 app.use("/api/admin", adminSystemRoutes);
+app.use("/api/export", exportRoutes);
 
 app.use(errorHandler);
 
@@ -119,6 +124,26 @@ io.on("connection", (socket) => {
     previousRooms.forEach(room => socket.leave(room));
     socket.join(userId);
     userRooms.set(socket.id, [userId]);
+  });
+
+  socket.on("ticket_typing", async ({ ticketId, isTyping }) => {
+    try {
+      const connection = activeConnections.get(socket.id);
+      if (!connection?.userId) return;
+      const { default: models } = await import("./models/Collection.js");
+      const participants = await models.ticket_participants.find({ ticketId }).lean();
+      if (!participants) return;
+      participants.forEach(p => {
+        if (p.userId.toString() === connection.userId.toString()) return;
+        io.to(p.userId.toString()).emit("ticket_typing", {
+          ticketId,
+          userId: connection.userId,
+          isTyping
+        });
+      });
+    } catch (e) {
+      console.error("Error in ticket_typing socket:", e);
+    }
   });
 
   socket.on('activity', () => {

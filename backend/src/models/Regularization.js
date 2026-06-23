@@ -17,7 +17,8 @@ const RegularizationSchema = new mongoose.Schema({
   requestedCheckOut: { type: Date, required: true },
   
   reason: { type: String, required: true, maxLength: 500, minLength: 5, trim: true },
-  status: { type: String, enum: ['Pending', 'Approved', 'Rejected'], default: 'Pending', index: true },
+  status: { type: String, default: 'Pending', index: true },
+  metaStatus: { type: String, default: 'active', index: true },
   
   // Approval workflow
   managerId: { type: mongoose.Schema.Types.ObjectId, ref: "employees", index: true },

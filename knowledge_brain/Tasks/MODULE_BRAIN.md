@@ -1,11 +1,15 @@
 # tasks Module Brain
 
 ## Overview
-This module contains 0 models, 0 services, and 8 frontend files.
+This module contains 1 model (Tasks), 1 service, and 8 frontend files.
 
 ## Backend Models
-| Model | File | Lines | References |
-|---|---|---|---|
+| Model | File | Lines | Key Fields | Notes |
+|---|---|---|---|---|
+| Tasks | Tasks.js | 81 | `status` (String, no enum), `metaStatus` (String, default: active) | Status is fully dynamic — values driven by StatusConfig. `metaStatus` tracks record lifecycle. |
+
+> **status field (as of 2026-06-10)**: No enum. Default: `"Backlogs"`. Workflow options defined in `statusconfigs` collection (`modelName: 'tasks'`, `workflowStatuses`).
+> **metaStatus field**: Default: `"active"`. Lifecycle options: active / inactive / draft / archive / deleted (from `statusconfigs.metaStatuses`).
 
 ## Dynamic API Usage
 | File | Method | URL | Target Model |

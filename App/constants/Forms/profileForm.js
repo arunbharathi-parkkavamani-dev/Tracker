@@ -4,7 +4,7 @@ export const profileFormFields = (userData) => [
     name: "basicInfo.profileImage",
     label: "Profile Image",
     type: "file",
-    accept: "image/*",
+    accept: ["image/*"],
     orderKey: 0,
   },
 

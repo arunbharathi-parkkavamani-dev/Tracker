@@ -1,170 +1,440 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "../../../api/axiosInstance.js";
+import useGenericAPI from "../../../components/useGenericAPI";
 import { useAuth } from "../../../context/authProvider.jsx";
-import { MdAdd, MdRefresh, MdCalendarToday, MdAccessTime } from "react-icons/md";
+import {
+  Plus, RefreshCw, CalendarDays, Clock, ChevronRight, Briefcase,
+} from "lucide-react";
 
+/* ─── Design tokens — HR Tracker (DESIGN.md v2) ─── */
+const T = {
+  canvas:        "#F7F8FC",
+  surface0:      "#FFFFFF",
+  surface1:      "#F0F2FA",
+  border:        "#E2E5F0",
+  borderSoft:    "#ECEEF7",
+  ink:           "#1A1D2E",
+  inkMuted:      "#4B5068",
+  inkSubtle:     "#8890A8",
+  inkTertiary:   "#B4BACC",
+  hrAccent:      "#7C3AED",
+  hrAccentLight: "#EDE9FE",
+  hrAccentMid:   "#A78BFA",
+  success:       "#10B981",
+  successLight:  "#D1FAE5",
+  cardShadow:    "0 1px 3px rgba(108,61,232,0.06), 0 1px 2px rgba(0,0,0,0.04)",
+};
+
+/* ─── Helpers ─── */
+const formatDate = (d) =>
+  new Date(d).toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+
+/* ─── Activity card ─── */
+const ActivityCard = ({ activity, onClick }) => {
+  const acts = activity.activities || [];
+  const totalHours =
+    activity.totalHours ??
+    acts.reduce((s, a) => s + (a.hours || 0), 0);
+
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        background: T.surface0,
+        border: `1px solid ${T.border}`,
+        borderRadius: 14,
+        boxShadow: T.cardShadow,
+        borderLeft: `4px solid ${T.hrAccent}`,
+        padding: "16px 20px",
+        cursor: "pointer",
+        transition: "box-shadow 0.15s, border-color 0.15s",
+        display: "flex",
+        alignItems: "flex-start",
+        gap: 14,
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.boxShadow =
+          "0 4px 12px rgba(108,61,232,0.12), 0 2px 4px rgba(0,0,0,0.06)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = T.cardShadow;
+      }}
+    >
+      {/* Icon tile */}
+      <div
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: 8,
+          background: T.hrAccentLight,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+          marginTop: 2,
+        }}
+      >
+        <Briefcase size={18} color={T.hrAccent} strokeWidth={1.8} />
+      </div>
+
+      {/* Content */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        {/* Date + total hours */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 8,
+            marginBottom: 10,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <CalendarDays size={13} color={T.inkSubtle} strokeWidth={1.8} />
+            <span style={{ fontSize: 12, color: T.inkMuted }}>
+              {formatDate(activity.date)}
+            </span>
+          </div>
+
+          {/* Total hours chip */}
+          <span
+            style={{
+              fontSize: 12,
+              fontWeight: 700,
+              color: T.hrAccent,
+              background: T.hrAccentLight,
+              borderRadius: 9999,
+              padding: "2px 10px",
+            }}
+          >
+            {totalHours}h total
+          </span>
+        </div>
+
+        {/* Sub-activities */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {acts.slice(0, 3).map((act, i) => (
+            <div
+              key={i}
+              style={{
+                background: T.surface1,
+                borderRadius: 8,
+                padding: "8px 12px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 8,
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: T.ink,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {act.description || "No description"}
+              </span>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                  flexShrink: 0,
+                }}
+              >
+                <Clock size={12} color={T.inkSubtle} strokeWidth={1.8} />
+                <span style={{ fontSize: 12, color: T.inkMuted }}>
+                  {act.hours || 0}h
+                </span>
+              </div>
+            </div>
+          ))}
+          {acts.length > 3 && (
+            <span style={{ fontSize: 12, color: T.inkSubtle, paddingLeft: 4 }}>
+              +{acts.length - 3} more
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Chevron */}
+      <ChevronRight
+        size={16}
+        color={T.inkTertiary}
+        strokeWidth={1.8}
+        style={{ flexShrink: 0, marginTop: 12 }}
+      />
+    </div>
+  );
+};
+
+/* ══════════════════════════════════════
+   MAIN COMPONENT
+══════════════════════════════════════ */
 const DailyTracker = () => {
   const [data, setData] = useState([]);
-  const [error, setError] = useState(null);
   const [refresh, setRefresh] = useState(false);
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { read, loading } = useGenericAPI();
 
   useEffect(() => {
     if (!user?.id) return;
     const fetchData = async () => {
       try {
-        setLoading(true);
-        const response = await axiosInstance.post('/populate/read/dailyactivities', {
+        const res = await read("dailyactivities", {
           filter: { employee: user.id },
-          populateFields: { 'employee': 'basicInfo.firstName,basicInfo.lastName' },
-          sort: { date: -1 }
+          populateFields: { employee: "basicInfo.firstName,basicInfo.lastName" },
+          sort: { date: -1 },
         });
-        
-        if (response.data.success) {
-          setData(response.data.data || []);
-          setError(null);
-        } else {
-          throw new Error(response.data.message || "Failed to fetch activities");
-        }
-      } catch (err) {
-        console.error("Failed to fetch activities:", err);
-        setError(err.response?.data?.message || err.message || "Failed to load activities");
-      } finally {
-        setLoading(false);
+        setData(res?.data || []);
+      } catch {
+        // error toast handled by useGenericAPI
       }
     };
     fetchData();
   }, [refresh, user]);
 
-  const handleRefresh = () => setRefresh((prev) => !prev);
-
-  const handleActivityClick = (activity) => {
-    navigate(`/Attendance/Daily-tracker/activity/${activity._id}`);
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      weekday: 'short',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
-  const formatHours = (hours) => {
-    return `${hours}h`;
-  };
-
-  if (loading) return (
-    <div className="flex items-center justify-center h-64">
-      <div className="text-lg">Loading activities...</div>
-    </div>
-  );
-  
-  if (error) return (
-    <div className="flex items-center justify-center h-64">
-      <div className="bg-red-50 border border-red-200 rounded-xl p-6 max-w-md">
-        <div className="flex items-center">
-          <svg className="w-6 h-6 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <p className="text-red-700 font-medium">Error: {error}</p>
-        </div>
+  /* ── Loading ── */
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100%",
+          background: T.canvas,
+        }}
+      >
+        <div
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: "50%",
+            border: `3px solid ${T.hrAccentLight}`,
+            borderTopColor: T.hrAccent,
+            animation: "spin 0.8s linear infinite",
+          }}
+        />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
-    </div>
-  );
+    );
+  }
 
   return (
-    <div className="h-full flex flex-col p-6">
-      
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Daily Activities</h1>
-        
-        <div className="flex gap-3">
-          <button
-            onClick={handleRefresh}
-            className="p-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg transition-all duration-200"
+    <div
+      style={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        background: T.canvas,
+        fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
+        overflow: "hidden",
+      }}
+    >
+      {/* ── Header ── */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "20px 24px 16px",
+          flexShrink: 0,
+        }}
+      >
+        <div>
+          <p
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: "1px",
+              textTransform: "uppercase",
+              color: T.hrAccent,
+              marginBottom: 2,
+            }}
           >
-            <MdRefresh size={20} />
+            HR TRACKER
+          </p>
+          <h1
+            style={{
+              fontSize: 22,
+              fontWeight: 600,
+              color: T.ink,
+              letterSpacing: "-0.3px",
+            }}
+          >
+            Daily Activities
+          </h1>
+        </div>
+
+        <div style={{ display: "flex", gap: 8 }}>
+          {/* Refresh */}
+          <button
+            onClick={() => setRefresh((p) => !p)}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 8,
+              border: `1px solid ${T.border}`,
+              background: T.surface0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              transition: "background 0.15s",
+            }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.background = T.surface1)
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.background = T.surface0)
+            }
+            title="Refresh"
+          >
+            <RefreshCw size={15} color={T.inkMuted} strokeWidth={1.8} />
           </button>
+
+          {/* Add Activity */}
           <button
-            onClick={() => navigate("/Attendance/Daily-tracker/add-daily-activity")}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+            onClick={() =>
+              navigate("/Attendance/Daily-tracker/add-daily-activity")
+            }
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "0 16px",
+              height: 36,
+              borderRadius: 8,
+              background: T.hrAccent,
+              border: "none",
+              color: "#FFFFFF",
+              fontSize: 14,
+              fontWeight: 500,
+              cursor: "pointer",
+              boxShadow: "0 2px 8px rgba(124,58,237,0.30)",
+              transition: "opacity 0.15s",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.88")}
+            onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
           >
-            <MdAdd size={20} />
+            <Plus size={16} strokeWidth={2} />
             Add Activity
           </button>
         </div>
       </div>
 
-      {/* Activities List */}
-      <div className="flex-1 bg-white rounded-lg shadow overflow-hidden">
-        <div className="p-4 border-b">
-          <h3 className="font-semibold">My Activities ({data.length})</h3>
-        </div>
-        
-        <div className="overflow-y-auto h-full">
-          {data.length > 0 ? (
-            <div className="divide-y">
-              {data.map((activity) => (
-                <div
-                  key={activity._id}
-                  onClick={() => handleActivityClick(activity)}
-                  className="p-4 hover:bg-gray-50 cursor-pointer transition-colors"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <MdCalendarToday className="w-4 h-4 text-gray-500" />
-                        <span className="text-sm text-gray-600">
-                          {formatDate(activity.date)}
-                        </span>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        {activity.activities && activity.activities.map((act, index) => (
-                          <div key={index} className="bg-gray-50 rounded-lg p-3">
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="font-medium text-gray-800">
-                                {act.description || 'No description'}
-                              </span>
-                              <div className="flex items-center gap-1 text-sm text-gray-600">
-                                <MdAccessTime className="w-4 h-4" />
-                                {formatHours(act.hours || 0)}
-                              </div>
-                            </div>
-                            {act.remarks && (
-                              <p className="text-sm text-gray-600">{act.remarks}</p>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div className="ml-4 text-right">
-                      <div className="text-lg font-semibold text-blue-600">
-                        {formatHours(activity.totalHours || 0)}
-                      </div>
-                      <div className="text-sm text-gray-500">Total</div>
-                    </div>
-                  </div>
-                </div>
-              ))}
+      {/* ── List ── */}
+      <div
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          padding: "0 24px 24px",
+          display: "flex",
+          flexDirection: "column",
+          gap: 12,
+        }}
+      >
+        {data.length > 0 ? (
+          <>
+            <p
+              style={{
+                fontSize: 12,
+                color: T.inkSubtle,
+                marginBottom: 4,
+              }}
+            >
+              {data.length} record{data.length !== 1 ? "s" : ""}
+            </p>
+            {data.map((activity) => (
+              <ActivityCard
+                key={activity._id}
+                activity={activity}
+                onClick={() =>
+                  navigate(
+                    `/Attendance/Daily-tracker/activity/${activity._id}`
+                  )
+                }
+              />
+            ))}
+          </>
+        ) : (
+          /* ── Empty state ── */
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              padding: "48px 24px",
+            }}
+          >
+            <div
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: 12,
+                background: T.hrAccentLight,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: 16,
+              }}
+            >
+              <Briefcase size={26} color={T.hrAccent} strokeWidth={1.6} />
             </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-64 text-gray-500">
-              <MdCalendarToday className="w-16 h-16 mb-4 text-gray-300" />
-              <p className="text-lg font-medium mb-2">No activities found</p>
-              <p className="text-sm">Start by adding your first daily activity</p>
-            </div>
-          )}
-        </div>
+            <p
+              style={{
+                fontSize: 15,
+                fontWeight: 600,
+                color: T.ink,
+                marginBottom: 6,
+              }}
+            >
+              No activities yet
+            </p>
+            <p
+              style={{ fontSize: 13, color: T.inkMuted, marginBottom: 20 }}
+            >
+              Start by logging your first daily activity
+            </p>
+            <button
+              onClick={() =>
+                navigate("/Attendance/Daily-tracker/add-daily-activity")
+              }
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "10px 20px",
+                borderRadius: 8,
+                background: T.hrAccent,
+                border: "none",
+                color: "#FFFFFF",
+                fontSize: 14,
+                fontWeight: 500,
+                cursor: "pointer",
+                boxShadow: "0 2px 8px rgba(124,58,237,0.30)",
+              }}
+            >
+              <Plus size={16} strokeWidth={2} />
+              Add Activity
+            </button>
+          </div>
+        )}
       </div>
-
     </div>
   );
 };

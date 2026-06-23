@@ -1,7 +1,7 @@
 ---
 description: Initialize or update the common bug patterns library for React + Node.js/Express stack
 version: 1.0
-last_updated: 2026-06-01
+last_updated: 2026-06-07
 tech_stack: React + Vite (Frontend) / Node.js + Express + Mongoose (Backend)
 ---
 
@@ -12,32 +12,31 @@ Initialize or update the pattern library with React + Node.js/Express specific b
 
 ## Seed Patterns (React + Vite + Node.js/Express)
 
-### Backend (Node.js/Express + Express)
+### Backend (Express + Mongoose)
 
 | ID | Pattern | Detection | Fix Template |
 |---|---|---|---|
-| PAT-SEC-001 | Missing permission class on ViewSet | `grep -rn "class.*ViewSet" --include="populateHelper.js"` then check for `permission_classes` | Add `permission_classes = [IsAuthenticated]` |
-| PAT-SEC-002 | Raw SQL in ORM context | `grep -rn "raw\|extra\|RawSQL" --include="*.py"` | Rewrite using Mongoose |
-| PAT-QRY-001 | N+1 query (missing select_related) | `grep -rn "\.objects\." --include="populateHelper.js"` without `select_related` | Add `select_related`/`prefetch_related` |
-| PAT-QRY-002 | Missing pagination on list views | Check ViewSets missing `pagination_class` | Add `pagination_class` |
-| PAT-VAL-001 | No serializer validation | `request.data` used directly without serializer | Route through serializer |
-| PAT-TXN-001 | Missing transaction wrapper | Multi-model writes without `@transaction.atomic` | Wrap in `transaction.atomic()` |
-| PAT-DEL-001 | Hard delete without cascade check | `Model.objects.delete()` without checking related | Add soft-delete or cascade cleanup |
-| PAT-FLT-001 | Missing is_deleted filter | `Model.objects.all()` without `is_deleted=False` | Add filter or custom manager |
-| PAT-ERR-001 | Bare except clause | `except:` or `except Exception` without logging | Add specific exception + logging |
+| PAT-SEC-001 | Missing auth middleware on route | Check route definition for `agentAuthMiddleware` | Add `agentAuthMiddleware` to route |
+| PAT-SEC-002 | No input sanitization | `req.body` used directly without validation | Add Joi/express-validator or Mongoose schema validation |
+| PAT-QRY-001 | N+1 query (missing `.populate()`) | Service makes multiple DB calls in loop | Use Mongoose `.populate()` or aggregation |
+| PAT-QRY-002 | Missing pagination on list endpoint | Service returns all documents without `page`/`limit` | Add pagination with `page` and `limit` params |
+| PAT-VAL-001 | Missing Mongoose schema validation | Schema field has no `required`, `enum`, or `validate` | Add proper schema validation to Mongoose model |
+| PAT-TXN-001 | Missing atomic operation | Multi-document writes without session | Wrap in `Mongoose.startSession()` + `session.withTransaction()` |
+| PAT-DEL-001 | Hard delete without cascade | `deleteOne` without cleaning related documents | Use soft delete (`isDeleted: true`) or cascade via pre-hook |
+| PAT-FLT-001 | Missing isDeleted filter | Query missing `{ isDeleted: false }` | Always filter `isDeleted: false` in service queries |
+| PAT-ERR-001 | Bare catch without logging | `catch(err)` without error logging | Add `ErrorLog` model write or console.error with context |
 
-### Frontend (React + TypeScript)
+### Frontend (React + JavaScript)
 
 | ID | Pattern | Detection | Fix Template |
 |---|---|---|---|
-| PAT-TSX-001 | Missing error handling in API call | `axios.` without `.catch` or try/catch | Add error handling + toast |
-| PAT-TSX-002 | Using `any` type | `grep -rn ": any" --include="*.tsx"` | Define proper TypeScript interface |
-| PAT-TSX-003 | Missing React Query invalidation | `useMutation` without `onSuccess` invalidation | Add `queryClient.invalidateQueries` |
-| PAT-TSX-004 | Stale closure in useEffect | State variable in dependency-less useEffect | Add deps or use useCallback |
-| PAT-TSX-005 | Missing loading/error states | Component with useQuery but no isLoading/isError checks | Add loading spinner + error UI |
-| PAT-TSX-006 | Direct DOM manipulation | `document.getElementById` in React | Use refs or state |
-| PAT-TSX-007 | Missing key prop in list | `.map()` without `key` prop | Add unique `key` prop |
-| PAT-TSX-008 | useEffect cleanup missing | Subscriptions/timers without cleanup return | Add cleanup function |
+| PAT-JSX-001 | Missing error handling in API call | `useGenericAPI` call without try/catch | Wrap API call in try/catch + toast.error |
+| PAT-JSX-002 | Missing loading state | `useGenericAPI` without checking `loading` | Add loading spinner while API call is in flight |
+| PAT-JSX-003 | Stale closure in useEffect | State variable in dependency-less useEffect | Add deps or use useCallback |
+| PAT-JSX-004 | Direct DOM manipulation | `document.getElementById` in React | Use refs or state |
+| PAT-JSX-005 | Missing key prop in list | `.map()` without `key` prop | Add unique `key` prop |
+| PAT-JSX-006 | useEffect cleanup missing | Subscriptions/timers without cleanup return | Add cleanup function |
+| PAT-JSX-007 | Missing data-module attribute | Page wrapper missing `data-module` | Add `data-module="hr|project|ticket|payroll"` for accent colors |
 
 ## Output
-`bug_report_AI/COMMON_BUG_PATTERNS.md`
+`knowledge_brain/Common/COMMON_BUG_PATTERNS.md`

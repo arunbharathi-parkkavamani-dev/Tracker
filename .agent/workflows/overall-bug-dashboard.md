@@ -16,7 +16,7 @@ last_updated: 2026-06-01
 4. Pull live GitHub status
 5. Build developer attribution table
 6. Generate dashboard report
-7. Save report to `bug_report_AI/DASHBOARD_REPORTS/`
+7. Save report to `knowledge_brain/DASHBOARD_REPORTS/`
 8. Present to user
 
 ## Dashboard includes:

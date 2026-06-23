@@ -85,14 +85,15 @@ export default async function buildUpdateQuery({
    * 6) EXECUTE UPDATE — PARTIAL UPDATE (PATCH) SAFE
    * ----------------------------------------------- */
   let updatedDoc;
+  const updateBody = flattenObject(body);
 
   if (docId) {
-    updatedDoc = await Model.findByIdAndUpdate(docId, { $set: body }, {
+    updatedDoc = await Model.findByIdAndUpdate(docId, { $set: updateBody }, {
       new: true,
       runValidators: true
     });
   } else {
-    updatedDoc = await Model.findOneAndUpdate(filter, { $set: body }, {
+    updatedDoc = await Model.findOneAndUpdate(filter, { $set: updateBody }, {
       new: true,
       runValidators: true
     });
@@ -129,4 +130,28 @@ export default async function buildUpdateQuery({
   });
 
   return cleanDoc;
+}
+
+function isPlainObject(val) {
+  if (!val || typeof val !== 'object') return false;
+  if (Array.isArray(val) || val instanceof Date) return false;
+  if (val.constructor?.name === 'ObjectID' || val.constructor?.name === 'ObjectId' || val._bsontype === 'ObjectID') return false;
+  const proto = Object.getPrototypeOf(val);
+  return proto === null || proto === Object.prototype;
+}
+
+function flattenObject(obj, prefix = '') {
+  const flattened = {};
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      const val = obj[key];
+      const newKey = prefix ? `${prefix}.${key}` : key;
+      if (isPlainObject(val)) {
+        Object.assign(flattened, flattenObject(val, newKey));
+      } else {
+        flattened[newKey] = val;
+      }
+    }
+  }
+  return flattened;
 }

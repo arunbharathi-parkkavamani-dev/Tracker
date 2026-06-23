@@ -3,6 +3,8 @@ version: 2.0
 name: Logimax-ERP-design-system
 description: "A vibrant, module-aware enterprise design system for Logimax ERP — covering HR Tracker, Project Management, Ticket System, and Payroll. Built on a soft warm-white canvas (#f7f8fc) with a rich violet-to-indigo gradient as the primary brand surface. Each module carries its own accent hue, tinted surface, and colorful icon to give users instant spatial orientation. Cards float as white tiles with soft coloured left-bar accents. Type is set in Inter (weight 400–600). The system reads as friendly-professional: colourful enough to navigate with confidence, restrained enough for 8-hour workday use."
 
+# CRITICAL MANDATE: Any UI design MUST NOT be planned, proposed, or implemented without first reading and validating this DESIGN.md file. This is a mandatory pre-step for all UI-related tasks.
+
 # ─── GLOBAL PALETTE ──────────────────────────────────────────────────────────
 
 colors:
@@ -197,29 +199,57 @@ typography:
 
 
 # ─── RADIUS ──────────────────────────────────────────────────────────────────
+# CONCISE: prefer rounded-lg (12px) for cards, rounded-md (8px) for buttons/inputs.
+# Avoid rounded-2xl (16px+) and rounded-3xl on standard components.
 
 rounded:
   xs:   4px
   sm:   6px
-  md:   8px
-  lg:   12px
-  xl:   16px
-  xxl:  20px
-  card: 14px    # default card radius — softer than plain md
+  md:   8px      # buttons, inputs, badges, tabs
+  lg:   12px     # cards, panels, dropdowns (DEFAULT for containers)
+  xl:   16px     # hero headers, modal — large containers only
+  xxl:  20px     # reserved for hero/page-level wrapping (rare)
+  card: 12px     # ← changed from 14px — concise card radius
   pill: 9999px
 
 
 # ─── SPACING ─────────────────────────────────────────────────────────────────
+# CONCISE DENSITY: prefer compact spacing (xs–md) for all UI.
+# Reserve lg+ only for page-level padding and hero sections.
+# Goal: clear visual separation without wasteful whitespace.
 
 spacing:
-  xxs:     4px
-  xs:      8px
-  sm:      12px
-  md:      16px
-  lg:      24px
-  xl:      32px
-  xxl:     48px
-  section: 64px
+  xxs:     2px      # micro gaps (inline icon spacing)
+  xs:      4px      # tight inner gaps
+  sm:      8px      # default inner padding, element gaps
+  md:      12px     # card padding, section gaps
+  lg:      16px     # page-level content padding
+  xl:      24px     # hero/header internal padding (max for components)
+  xxl:     32px     # page outer padding on large screens only
+  section: 48px     # between major page sections (rare)
+
+  # ── CONCISE SPACING GUIDELINES ────────────────────────────────────────────
+  # These are the ENFORCED defaults for all new UI components:
+  density: "compact"
+  rules:
+    page-padding:        "p-4 (16px) on mobile, p-5 (20px) on lg+"
+    page-gap:            "gap-3 (12px) between top-level sections"
+    card-padding:        "p-4 (16px) — never p-6 or p-8"
+    card-gap:            "gap-3 (12px) between cards"
+    table-cell-px:       "px-2 to px-4 — never px-6+"
+    table-cell-py:       "py-2 to py-3 — never py-4+"
+    button-padding:      "px-4 py-2 (default), px-6 py-2.5 (primary CTA)"
+    input-padding:       "px-3 py-2 to px-4 py-2.5 — never py-3.5+"
+    badge-padding:       "px-3 py-1 to px-3.5 py-1.5"
+    tab-bar-padding:     "p-1 (4px) with gap-1.5 between tabs"
+    tab-button-padding:  "px-4 py-2"
+    hero-header-padding: "p-5 (20px) default, p-6 (24px) on lg+ — never p-8+"
+    save-bar-gap:        "pt-3, gap-3"
+    role-pill-padding:   "px-4 py-2 with gap-2"
+    toggle-size:         "40×22px (not 52×28)"
+    icon-sizes:          "w-4 h-4 (inline), w-5 h-5 (input prefix), w-6 h-6 (hero)"
+    empty-state-py:      "py-10 to py-12 — never py-16+"
+    empty-state-icon:    "w-12 h-12 — never w-16+"
 
 
 # ─── ELEVATION ───────────────────────────────────────────────────────────────
@@ -269,7 +299,7 @@ components:
     textColor:    "{colors.on-brand}"
     typography:   "{typography.button}"
     rounded:      "{rounded.md}"
-    padding:      "10px 20px"
+    padding:      "8px 16px"       # ← concise: was 10px 20px
     shadow:       "0 2px 8px rgba(108,61,232,0.30)"
     # Hover: lift shadow + 10% brightness
     # Active: scale 0.98
@@ -278,7 +308,7 @@ components:
     # Inherits button-primary shape; background swaps to module accent
     # HR → #7C3AED, Project → #0EA5E9, Ticket → #E11D48, Payroll → #059669
     rounded:      "{rounded.md}"
-    padding:      "10px 20px"
+    padding:      "8px 16px"       # ← concise: was 10px 20px
     shadow:       "0 2px 8px rgba(0,0,0,0.15)"
 
   button-secondary:
@@ -287,14 +317,14 @@ components:
     border:       "1px solid {colors.border}"
     typography:   "{typography.button}"
     rounded:      "{rounded.md}"
-    padding:      "10px 20px"
+    padding:      "8px 16px"       # ← concise: was 10px 20px
 
   button-ghost:
     background:   "transparent"
     textColor:    "{colors.ink-muted}"
     typography:   "{typography.button}"
     rounded:      "{rounded.md}"
-    padding:      "10px 20px"
+    padding:      "8px 16px"       # ← concise: was 10px 20px
     # Hover: background {colors.surface-1}
 
   button-danger:
@@ -302,7 +332,7 @@ components:
     textColor:    "#FFFFFF"
     typography:   "{typography.button}"
     rounded:      "{rounded.md}"
-    padding:      "10px 20px"
+    padding:      "8px 16px"       # ← concise: was 10px 20px
 
   button-icon:
     background:   "{colors.surface-1}"
@@ -339,23 +369,24 @@ components:
   tab-bar:
     background:   "{colors.surface-0}"
     border:       "1px solid {colors.border}"
-    rounded:      "{rounded.card}"
-    padding:      "4px"
+    rounded:      "{rounded.lg}"    # ← concise: was rounded.card (14px)
+    padding:      "4px"             # p-1 (4px) container
+    gap:          "6px"             # gap-1.5 between tabs
     # Tab items sit inside this container
   tab-item-default:
     background:   "transparent"
     textColor:    "{colors.ink-muted}"
     typography:   "{typography.button}"
-    rounded:      "{rounded.md}"
-    padding:      "8px 18px"
-    icon:         "at ink-subtle"
+    rounded:      "{rounded.md}"    # 8px
+    padding:      "8px 16px"        # ← concise: was 8px 18px
+    icon:         "at ink-subtle, w-4 h-4"
   tab-item-active:
     # HR screen → violet; Project → blue; Ticket → rose; Payroll → green
     background:   "module-accent-light"
     textColor:    "module-accent"
     typography:   "{typography.heading-sm}"
     rounded:      "{rounded.md}"
-    padding:      "8px 18px"
+    padding:      "8px 16px"        # ← concise: was 8px 18px
     iconColor:    "module-accent"
     indicator:    "2px bottom bar in module-accent"
   # Specific module tab mappings:
@@ -368,8 +399,8 @@ components:
   section-card:
     background:   "{colors.surface-0}"
     border:       "1px solid {colors.border}"
-    rounded:      "{rounded.card}"
-    padding:      "24px"
+    rounded:      "{rounded.card}"  # 12px
+    padding:      "16px"            # ← concise: was 24px (use p-4)
     shadow:       "{elevation.card}"
     # Left accent bar — 4px wide, full card height, in module accent colour
     accentBar:    "4px solid module-accent"
@@ -379,13 +410,13 @@ components:
     iconContainer: "icon-container in module-accent colours"
     titleTypo:    "{typography.heading-md}"
     titleColor:   "{colors.ink}"
-    padding:      "0 0 16px 0"
+    padding:      "0 0 12px 0"     # ← concise: was 16px bottom
     borderBottom: "1px solid {colors.border-soft}"
 
   # ── Data Rows ──────────────────────────────────────────────────────────────
   data-row:
     background:   "transparent"
-    padding:      "12px 0"
+    padding:      "8px 0"           # ← concise: was 12px 0
     borderBottom: "1px solid {colors.border-soft}"
     label:
       typography: "{typography.label}"
@@ -405,7 +436,7 @@ components:
     background:   "{colors.surface-0}"
     border:       "1px solid {colors.border}"
     rounded:      "{rounded.card}"
-    padding:      "20px 24px"
+    padding:      "16px 20px"       # ← concise: was 20px 24px
     shadow:       "{elevation.card}"
     iconContainer: "icon-container-lg in module accent"
     valueTypo:    "{typography.heading-xl}"
@@ -509,7 +540,7 @@ components:
     placeholder:  "{colors.ink-subtle}"
     typography:   "{typography.body}"
     rounded:      "{rounded.md}"
-    padding:      "10px 14px"
+    padding:      "8px 12px"        # ← concise: was 10px 14px
   text-input-focused:
     border:       "1.5px solid {colors.border-focus}"
     shadow:       "0 0 0 3px rgba(139,92,246,0.15)"
@@ -536,12 +567,12 @@ components:
     background:      "{colors.surface-1}"
     textColor:       "{colors.ink-muted}"
     typography:      "{typography.label}"
-    padding:         "12px 16px"
+    padding:         "10px 14px"     # ← concise: was 12px 16px
     borderBottom:    "1px solid {colors.border}"
   table-row:
     textColor:       "{colors.ink}"
     typography:      "{typography.body}"
-    padding:         "14px 16px"
+    padding:         "10px 14px"     # ← concise: was 14px 16px
     borderBottom:    "1px solid {colors.border-soft}"
     hoverBackground: "{colors.surface-1}"
   table-row-selected:
@@ -561,17 +592,17 @@ components:
     background:     "{colors.surface-0}"
     rounded:        "{rounded.xl}"
     shadow:         "{elevation.overlay}"
-    padding:        "32px"
+    padding:        "24px"           # ← concise: was 32px
     header:
       titleTypo:    "{typography.heading-lg}"
       titleColor:   "{colors.ink}"
       closeIcon:    "X at {colors.ink-muted}"
       borderBottom: "1px solid {colors.border}"
-      padding:      "0 0 20px 0"
+      padding:      "0 0 16px 0"     # ← concise: was 20px
     footer:
       borderTop:    "1px solid {colors.border}"
-      padding:      "20px 0 0 0"
-      buttonGap:    "12px"
+      padding:      "16px 0 0 0"     # ← concise: was 20px
+      buttonGap:    "8px"            # ← concise: was 12px
 
   drawer:
     width:          "480px"
@@ -738,7 +769,7 @@ layout:
     content-area:
       marginLeft:  "240px"
       paddingTop:  "60px"
-      padding:     "24px 32px"
+      padding:     "16px 20px"      # ← concise: was 24px 32px
       background:  "{colors.canvas}"
       maxWidth:    "1440px"
 
@@ -755,7 +786,7 @@ layout:
     marginBottom:  "24px"
 
   card-grid:
-    gap:         "20px"
+    gap:         "12px"             # ← concise: was 20px
     "4-up":      "repeat(4, 1fr)"  # stat cards
     "3-up":      "repeat(3, 1fr)"  # feature cards
     "2-up":      "repeat(2, 1fr)"  # section cards (Basic Info + Family side by side)
@@ -773,6 +804,10 @@ layout:
 rules:
 
   do:
+    - "ALWAYS read and validate against this DESIGN.md file before planning, proposing, or implementing any UI changes."
+    - "ALWAYS use CONCISE DENSITY spacing — see spacing.rules. p-4 cards, gap-3 sections, py-2 table cells. This is non-negotiable."
+    - "Prefer compact controls: px-4 py-2 buttons, px-3.5 py-1.5 badges, p-1 tab containers."
+    - "Use rounded-lg (12px) for cards, rounded-md (8px) for buttons/inputs, rounded-xl (16px) only for hero headers."
     - "Use the module accent colour as the left-border bar on every section-card."
     - "Always tint active tab backgrounds with module-accent-light, not pure white."
     - "Use colourful icon containers (icon-bg per module) on every section header and nav item."
@@ -785,7 +820,15 @@ rules:
     - "Profile completion rings always use {colors.brand-teal} fill on {colors.border} track."
 
   dont:
-    - "Don't use plain black (#000) or pure white (#FFF) as the only UI surfaces — that's the pain you're fixing."
+    - "NEVER plan or propose any UI design or layout without first reading and validating it against this DESIGN.md file."
+    - "NEVER use p-6, p-8, p-10 on cards or panels — maximum card padding is p-4 (16px). This is ENFORCED."
+    - "NEVER use gap-5, gap-6+ between sections — use gap-3 (12px) as default section gap."
+    - "NEVER use py-4+, px-6+ on table cells — maximum is py-3, px-4."
+    - "NEVER use px-10, py-3.5+ on buttons — maximum CTA button is px-6 py-2.5."
+    - "NEVER use rounded-2xl (16px) or rounded-3xl (24px) on cards/panels — rounded-xl (12px) is the max for cards."
+    - "NEVER use w-16+ h-16+ for empty state icons — maximum is w-12 h-12."
+    - "NEVER use py-16+ for empty state vertical padding — maximum is py-12."
+    - "Don't use plain black (#000) or pure white (#FFF) as the only UI surfaces."
     - "Don't use module accent colours as full card backgrounds — only as left bars, icon containers, and chip fills."
     - "Don't mix module accents within a single screen — one screen = one module accent."
     - "Don't use the brand gradient as a repeated body background — it's reserved for hero/header areas."
@@ -805,19 +848,24 @@ agent-instructions:
     Claude Code, Cursor, GitHub Copilot Workspace) generating Flutter or
     React screens for the Logimax ERP application. Follow these rules exactly.
 
+    CRITICAL MANDATE: No UI design or interface implementation should be planned
+    or proposed before reading and validating this DESIGN.md file first.
+
   step-by-step:
-    1: "Identify the module: HR Tracker | Project Management | Ticket System | Payroll."
-    2: "Read the module block under `modules:` and note: accent, accent-light, icon, icon-bg, header-gradient."
-    3: "Wrap the screen in the app-shell layout (sidebar + top-bar + content-area)."
-    4: "Render a page-header with: eyebrow in module-accent, title in ink, right-aligned CTA."
-    5: "If the screen has a profile/hero area, apply the header-gradient as the banner background."
-    6: "Build section-cards with: white background, 1px border, card shadow, and 4px left-accent bar in module-accent."
-    7: "Every section-card header: icon-container (icon-bg + icon-color from module) + heading-md title."
-    8: "Tabs: tab-bar container + tab-item-active in the module's tab-active token."
-    9: "Status chips: always use chip-status with semantic colour pairs — not module accents."
-    10: "Charts: always use chart-* palette tokens, never raw module accents."
-    11: "All icon sizes: sm (16px) for inline, md (20px) for nav, lg (24px) for card headers, xl (32px) for stat cards."
-    12: "Empty states: icon-container-lg + heading-md + body (ink-muted) + button-primary-module."
+    0: "MANDATORY PRE-STEP — DESIGN VALIDATION: You MUST read and validate this entire DESIGN.md file first. Any UI design must not be planned or proposed before validating against this design system."
+    1: "CRITICAL — CONCISE DENSITY: Read spacing.rules FIRST. All components MUST use compact spacing (p-4 cards, gap-3 sections, py-2 tables, px-4 py-2 buttons). Oversized spacing (p-6+, gap-5+, py-4+ cells) is a BLOCKER defect."
+    2: "Identify the module: HR Tracker | Project Management | Ticket System | Payroll."
+    3: "Read the module block under `modules:` and note: accent, accent-light, icon, icon-bg, header-gradient."
+    4: "Wrap the screen in the app-shell layout (sidebar + top-bar + content-area at p-4 lg:p-5)."
+    5: "Render a page-header with: eyebrow in module-accent, title in ink, right-aligned CTA."
+    6: "If the screen has a profile/hero area, apply the header-gradient as the banner background (p-5 lg:p-6 max)."
+    7: "Build section-cards with: white bg, 1px border, card shadow, 4px left-accent bar, padding p-4, rounded-xl."
+    8: "Every section-card header: icon-container (icon-bg + icon-color from module) + heading-md title."
+    9: "Tabs: tab-bar container (p-1, gap-1.5) + tab-item-active (px-4 py-2) in module's tab-active token."
+    10: "Status chips: always use chip-status with semantic colour pairs — not module accents."
+    11: "Charts: always use chart-* palette tokens, never raw module accents."
+    12: "All icon sizes: sm (16px) for inline, md (20px) for nav, lg (24px) for card headers, xl (32px) for stat cards."
+    13: "Empty states: icon w-12 h-12 + heading-md + body (ink-muted) + button-primary-module. Max py-12."
 
   flutter-notes:
     - "Use BoxDecoration with LinearGradient for gradient surfaces."
@@ -856,6 +904,7 @@ quick-ref:
 
   icon-library:       "Lucide React / lucide_flutter"
   font:               "Inter (Google Fonts)"
-  base-radius:        "14px (rounded.card) for cards; 8px (rounded.md) for inputs/buttons"
-  base-spacing:       "8px unit"
+  base-radius:        "12px (rounded.card) for cards; 8px (rounded.md) for inputs/buttons"
+  base-spacing:       "4px unit (concise density)"
+  density:            "compact — p-4 cards, gap-3 sections, py-2 cells, px-4 py-2 buttons"
   gradient:           "linear-gradient(135deg, #6C3DE8 0%, #8B5CF6 50%, #C026D3 100%)"

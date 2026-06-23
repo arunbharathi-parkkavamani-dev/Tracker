@@ -10,7 +10,7 @@ last_updated: 2026-06-01
 
 ## Steps
 
-1. Scan all audit data in `bug_report_AI/`
+1. Scan all audit data in `knowledge_brain/`
 2. Scan pattern library for systemic patterns
 3. Generate risk heatmap with module breakdown
 4. Identify unaudited modules and estimate risk

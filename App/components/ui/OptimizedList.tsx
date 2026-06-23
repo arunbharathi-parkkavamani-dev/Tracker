@@ -12,10 +12,31 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useOptimizedDataFetching } from '../../hooks/useOptimizedDataFetching';
 
-const OptimizedList = ({
+interface OptimizedListProps<T = any> {
+  model: string;
+  data?: T[];
+  renderItem: ({ item, index }: { item: T; index: number }) => React.ReactElement | null;
+  keyExtractor?: (item: T, index: number) => string;
+  title?: string;
+  searchable?: boolean;
+  refreshable?: boolean;
+  pagination?: boolean;
+  itemsPerPage?: number;
+  filters?: Record<string, any>;
+  sort?: Record<string, number>;
+  onItemPress?: (item: T) => void;
+  emptyMessage?: string;
+  style?: any;
+  contentContainerStyle?: any;
+  onRefresh?: () => void;
+  loading?: boolean;
+}
+
+const OptimizedList = <T = any,>({
   model,
+  data: dataProp,
   renderItem,
-  keyExtractor = (item) => item._id || item.id,
+  keyExtractor = (item: any) => item._id || item.id,
   title,
   searchable = true,
   refreshable = true,
@@ -26,30 +47,44 @@ const OptimizedList = ({
   onItemPress,
   emptyMessage = 'No items found',
   style,
-  contentContainerStyle
-}) => {
+  contentContainerStyle,
+  onRefresh,
+  loading: loadingProp
+}: OptimizedListProps<T>) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showSearch, setShowSearch] = useState(false);
 
+  const hasExternalData = dataProp !== undefined;
+
   const {
-    data,
-    loading,
+    data: fetchedData,
+    loading: fetchLoading,
     error,
     pagination: paginationInfo,
     handlePageChange,
     handleFilterChange,
-    handleRefresh
+    handleRefresh: fetchHandleRefresh
   } = useOptimizedDataFetching(model, {
     initialLimit: itemsPerPage,
     initialFilters: filters,
     initialSort: sort,
     enableCache: true,
-    backgroundRefresh: true
+    backgroundRefresh: true,
+    enabled: !hasExternalData
   });
 
+  const data = hasExternalData ? dataProp : fetchedData;
+  const loading = hasExternalData ? (loadingProp || false) : fetchLoading;
+  const handleRefresh = hasExternalData ? (onRefresh || (() => {})) : fetchHandleRefresh;
+
+  const activePaginationInfo = hasExternalData
+    ? { currentPage: 1, totalPages: 1, totalItems: dataProp.length, itemsPerPage: dataProp.length }
+    : paginationInfo;
+
   // Handle search with debouncing
-  const handleSearch = useCallback((text) => {
+  const handleSearch = useCallback((text: string) => {
     setSearchTerm(text);
+    if (hasExternalData) return; // Ignore if external data is handling search
 
     const searchFilters = text ? {
       ...filters,
@@ -61,17 +96,18 @@ const OptimizedList = ({
     } : filters;
 
     handleFilterChange(searchFilters);
-  }, [filters, handleFilterChange]);
+  }, [filters, handleFilterChange, hasExternalData]);
 
   // Load more data for pagination
   const handleLoadMore = useCallback(() => {
-    if (!loading && paginationInfo.currentPage < paginationInfo.totalPages) {
-      handlePageChange(paginationInfo.currentPage + 1);
+    if (hasExternalData) return;
+    if (!loading && activePaginationInfo.currentPage < activePaginationInfo.totalPages) {
+      handlePageChange(activePaginationInfo.currentPage + 1);
     }
-  }, [loading, paginationInfo, handlePageChange]);
+  }, [loading, activePaginationInfo, handlePageChange, hasExternalData]);
 
   // Enhanced render item with press handling
-  const enhancedRenderItem = useCallback(({ item, index }) => {
+  const enhancedRenderItem = useCallback(({ item, index }: { item: T; index: number }) => {
     const itemComponent = renderItem({ item, index });
 
     if (onItemPress) {
@@ -87,7 +123,7 @@ const OptimizedList = ({
 
   // Footer component for pagination
   const renderFooter = useCallback(() => {
-    if (!pagination || paginationInfo.currentPage >= paginationInfo.totalPages) {
+    if (!pagination || activePaginationInfo.currentPage >= activePaginationInfo.totalPages) {
       return null;
     }
 
@@ -102,7 +138,7 @@ const OptimizedList = ({
         )}
       </View>
     );
-  }, [loading, pagination, paginationInfo, handleLoadMore]);
+  }, [loading, pagination, activePaginationInfo, handleLoadMore]);
 
   // Empty component
   const renderEmpty = useCallback(() => {
@@ -144,8 +180,8 @@ const OptimizedList = ({
         {title && (
           <View style={styles.titleContainer}>
             <Text style={styles.title}>{title}</Text>
-            {paginationInfo.totalItems > 0 && (
-              <Text style={styles.count}>({paginationInfo.totalItems})</Text>
+            {activePaginationInfo.totalItems > 0 && (
+              <Text style={styles.count}>({activePaginationInfo.totalItems})</Text>
             )}
           </View>
         )}
@@ -182,10 +218,10 @@ const OptimizedList = ({
         )}
       </View>
     );
-  }, [title, searchable, showSearch, searchTerm, paginationInfo.totalItems, handleSearch]);
+  }, [title, searchable, showSearch, searchTerm, activePaginationInfo.totalItems, handleSearch]);
 
   return (
-    <View style={[styles.container, style]}>
+    <View style={StyleSheet.flatten([styles.container, style])}>
       {renderHeader}
       <FlatList
         data={data}
@@ -194,7 +230,7 @@ const OptimizedList = ({
         refreshControl={
           refreshable ? (
             <RefreshControl
-              refreshing={loading && paginationInfo.currentPage === 1}
+              refreshing={loading && activePaginationInfo.currentPage === 1}
               onRefresh={handleRefresh}
               tintColor="#007AFF"
             />
@@ -204,10 +240,10 @@ const OptimizedList = ({
         ListFooterComponent={renderFooter}
         onEndReached={pagination ? handleLoadMore : undefined}
         onEndReachedThreshold={0.1}
-        contentContainerStyle={[
-          data.length === 0 && styles.emptyContainer,
+        contentContainerStyle={StyleSheet.flatten([
+          data.length === 0 ? styles.emptyContainer : null,
           contentContainerStyle
-        ]}
+        ])}
         showsVerticalScrollIndicator={false}
       />
     </View>

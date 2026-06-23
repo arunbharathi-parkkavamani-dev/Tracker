@@ -187,7 +187,12 @@ export default function validator({
     return { filter: filter || {}, fields, body };
   }
 
-  if (String(policy.role) !== String(role)) {
+  let resolvedRole = role;
+  if (role === 'agent') {
+    resolvedRole = '6a25cbc1cd36294f5e578696';
+  }
+
+  if (String(policy.role) !== String(resolvedRole)) {
     // console.log('Role mismatch debug:');
     // console.log('Policy role:', policy.role);
     // console.log('User role:', role);
@@ -202,8 +207,6 @@ export default function validator({
   const context = {
     isSelf: docId && String(docId) === String(userId),
     isLeave: body?.status === "Leave" || filter?.status === "Leave",
-    isHR: role === '68d8b980f397d1d97620ba96', // Use actual HR role ID
-    isManager: role === '68d8b8caf397d1d97620ba93', // Use actual Manager role ID
     isPopulate: !!fields,
     isSalary: fields?.includes("salary") || body?.salary != null,
     isTeamMember: false, // This needs to be determined by registry

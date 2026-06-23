@@ -1,106 +1,407 @@
 import React from "react";
+import {
+  Building2,
+  FolderKanban,
+  User,
+  Clock,
+  Calendar,
+  FileText,
+  Briefcase,
+} from "lucide-react";
 
-const Activity = ({ activity, onClose }) => {
+/* ─── Design tokens (DESIGN.md v2 — HR Tracker module) ─── */
+const T = {
+  canvas:       "#F7F8FC",
+  surface0:     "#FFFFFF",
+  surface1:     "#F0F2FA",
+  border:       "#E2E5F0",
+  borderSoft:   "#ECEEF7",
+  ink:          "#1A1D2E",
+  inkMuted:     "#4B5068",
+  inkSubtle:    "#8890A8",
+  inkTertiary:  "#B4BACC",
+  hrAccent:     "#7C3AED",
+  hrAccentLight:"#EDE9FE",
+  hrAccentMid:  "#A78BFA",
+  success:      "#10B981",
+  successLight: "#D1FAE5",
+  warning:      "#F59E0B",
+  warningLight: "#FEF3C7",
+  cardShadow:   "0 1px 3px rgba(108,61,232,0.06), 0 1px 2px rgba(0,0,0,0.04)",
+};
+
+/* ─── Helpers ─── */
+const fmt = (d) =>
+  d
+    ? new Date(d).toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      })
+    : null;
+
+const fmtDate = (d) =>
+  d
+    ? new Date(d).toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : "—";
+
+/* ─── Icon tile ─── */
+const IconTile = ({ icon: Icon, color = T.hrAccent, bg = T.hrAccentLight }) => (
+  <div
+    style={{
+      width: 40,
+      height: 40,
+      borderRadius: 8,
+      background: bg,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      flexShrink: 0,
+    }}
+  >
+    <Icon size={18} color={color} strokeWidth={1.8} />
+  </div>
+);
+
+/* ─── Data row ─── */
+const DataRow = ({ label, value, last = false }) => (
+  <div
+    style={{
+      display: "flex",
+      flexDirection: "column",
+      gap: 3,
+      paddingBottom: last ? 0 : 14,
+      marginBottom: last ? 0 : 14,
+      borderBottom: last ? "none" : `1px solid ${T.borderSoft}`,
+    }}
+  >
+    <span
+      style={{
+        fontSize: 11,
+        fontWeight: 600,
+        letterSpacing: "0.4px",
+        textTransform: "uppercase",
+        color: T.inkSubtle,
+      }}
+    >
+      {label}
+    </span>
+    <span
+      style={{
+        fontSize: 14,
+        fontWeight: 400,
+        color: value ? T.ink : T.inkTertiary,
+        lineHeight: 1.55,
+      }}
+    >
+      {value || "—"}
+    </span>
+  </div>
+);
+
+/* ─── Section card ─── */
+const SectionCard = ({ icon, title, children }) => (
+  <div
+    style={{
+      background: T.surface0,
+      border: `1px solid ${T.border}`,
+      borderRadius: 14,
+      boxShadow: T.cardShadow,
+      overflow: "hidden",
+    }}
+  >
+    {/* Left accent bar + header */}
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        padding: "16px 20px",
+        borderBottom: `1px solid ${T.borderSoft}`,
+        borderLeft: `4px solid ${T.hrAccent}`,
+      }}
+    >
+      <IconTile icon={icon} />
+      <span
+        style={{
+          fontSize: 15,
+          fontWeight: 600,
+          color: T.ink,
+          letterSpacing: "-0.1px",
+        }}
+      >
+        {title}
+      </span>
+    </div>
+    <div style={{ padding: "20px 20px 20px 24px" }}>{children}</div>
+  </div>
+);
+
+/* ─── Activity hours row ─── */
+const ActivityRow = ({ act, index, last }) => (
+  <div
+    style={{
+      display: "flex",
+      alignItems: "flex-start",
+      gap: 12,
+      paddingBottom: last ? 0 : 16,
+      marginBottom: last ? 0 : 16,
+      borderBottom: last ? "none" : `1px solid ${T.borderSoft}`,
+    }}
+  >
+    {/* Index badge */}
+    <div
+      style={{
+        width: 26,
+        height: 26,
+        borderRadius: "50%",
+        background: T.hrAccentLight,
+        color: T.hrAccent,
+        fontSize: 12,
+        fontWeight: 700,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0,
+        marginTop: 2,
+      }}
+    >
+      {index + 1}
+    </div>
+
+    <div style={{ flex: 1, minWidth: 0 }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 8,
+          marginBottom: act.remarks ? 6 : 0,
+        }}
+      >
+        <span
+          style={{
+            fontSize: 14,
+            fontWeight: 500,
+            color: T.ink,
+            lineHeight: 1.4,
+          }}
+        >
+          {act.description || "No description"}
+        </span>
+
+        {/* Hours chip */}
+        <span
+          style={{
+            fontSize: 12,
+            fontWeight: 600,
+            color: T.hrAccent,
+            background: T.hrAccentLight,
+            borderRadius: 9999,
+            padding: "2px 10px",
+            whiteSpace: "nowrap",
+            flexShrink: 0,
+          }}
+        >
+          {act.hours || 0}h
+        </span>
+      </div>
+
+      {act.remarks && (
+        <p
+          style={{
+            fontSize: 13,
+            color: T.inkMuted,
+            lineHeight: 1.55,
+            margin: 0,
+          }}
+        >
+          {act.remarks}
+        </p>
+      )}
+    </div>
+  </div>
+);
+
+/* ══════════════════════════════════════
+   MAIN COMPONENT
+══════════════════════════════════════ */
+const Activity = ({ activity }) => {
   if (!activity) return null;
 
+  const totalHours = activity.activities?.reduce(
+    (sum, a) => sum + (a.hours || 0),
+    0
+  ) ?? 0;
+
+  const employeeName =
+    activity.user?.basicInfo
+      ? `${activity.user.basicInfo.firstName ?? ""} ${
+          activity.user.basicInfo.lastName ?? ""
+        }`.trim()
+      : null;
+
   return (
-    <div className="w-full max-w-2xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center space-x-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-            <span className="text-white font-bold text-lg">
-              {activity.user?.basicInfo?.firstName?.[0] || 'A'}
-            </span>
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
-              {activity.activityType?.name || 'Activity Details'}
-            </h1>
-            <p className="text-gray-600 dark:text-gray-300">
-              {new Date(activity.date).toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}
-            </p>
-          </div>
+    <div
+      style={{
+        fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
+        display: "flex",
+        flexDirection: "column",
+        gap: 20,
+      }}
+    >
+      {/* ── Hero summary bar ── */}
+      <div
+        style={{
+          background: `linear-gradient(135deg, ${T.hrAccent} 0%, #A855F7 100%)`,
+          borderRadius: 14,
+          padding: "24px 28px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 16,
+          flexWrap: "wrap",
+          boxShadow: "0 4px 12px rgba(108,61,232,0.25)",
+        }}
+      >
+        <div>
+          <p
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: "1px",
+              textTransform: "uppercase",
+              color: "rgba(255,255,255,0.7)",
+              marginBottom: 4,
+            }}
+          >
+            DAILY ACTIVITY
+          </p>
+          <h2
+            style={{
+              fontSize: 20,
+              fontWeight: 600,
+              color: "#FFFFFF",
+              margin: 0,
+              lineHeight: 1.25,
+            }}
+          >
+            {activity.activityType?.name || "Activity Details"}
+          </h2>
+          <p
+            style={{
+              fontSize: 13,
+              color: "rgba(255,255,255,0.75)",
+              marginTop: 4,
+            }}
+          >
+            {fmtDate(activity.date)}
+          </p>
+        </div>
+
+        {/* Total hours badge */}
+        <div
+          style={{
+            background: "rgba(255,255,255,0.18)",
+            border: "1px solid rgba(255,255,255,0.30)",
+            borderRadius: 12,
+            padding: "14px 22px",
+            textAlign: "center",
+          }}
+        >
+          <p
+            style={{
+              fontSize: 28,
+              fontWeight: 700,
+              color: "#FFFFFF",
+              lineHeight: 1,
+              margin: 0,
+            }}
+          >
+            {totalHours}h
+          </p>
+          <p
+            style={{
+              fontSize: 11,
+              color: "rgba(255,255,255,0.7)",
+              marginTop: 4,
+              letterSpacing: "0.4px",
+              textTransform: "uppercase",
+              fontWeight: 600,
+            }}
+          >
+            Total Hours
+          </p>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Left Column */}
-        <div className="space-y-6">
-          <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 rounded-2xl p-6 border border-blue-200 dark:border-blue-700">
-            <div className="flex items-center mb-3">
-              <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-              <h3 className="font-semibold text-blue-800 dark:text-blue-200">Client</h3>
-            </div>
-            <p className="text-blue-700 dark:text-blue-300 font-medium">{activity.client?.name}</p>
-          </div>
+      {/* ── Info grid ── */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+          gap: 16,
+        }}
+      >
+        {/* Assignment */}
+        <SectionCard icon={User} title="Assignment">
+          <DataRow label="Employee" value={employeeName} />
+          <DataRow label="Activity Type" value={activity.activityType?.name} last />
+        </SectionCard>
 
-          <div className="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900 dark:to-purple-800 rounded-2xl p-6 border border-purple-200 dark:border-purple-700">
-            <div className="flex items-center mb-3">
-              <svg className="w-5 h-5 text-purple-600 dark:text-purple-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-              <h3 className="font-semibold text-purple-800 dark:text-purple-200">Project</h3>
-            </div>
-            <p className="text-purple-700 dark:text-purple-300 font-medium">{activity.projectType?.name}</p>
-          </div>
-        </div>
-
-        {/* Right Column */}
-        <div className="space-y-6">
-          <div className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 rounded-2xl p-6 border border-green-200 dark:border-green-700">
-            <div className="flex items-center mb-3">
-              <svg className="w-5 h-5 text-green-600 dark:text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              <h3 className="font-semibold text-green-800 dark:text-green-200">Assigned To</h3>
-            </div>
-            <p className="text-green-700 dark:text-green-300 font-medium">
-              {activity.user?.basicInfo?.firstName} {activity.user?.basicInfo?.lastName}
-            </p>
-          </div>
-
-          <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900 dark:to-orange-800 rounded-2xl p-6 border border-orange-200 dark:border-orange-700">
-            <div className="flex items-center mb-3">
-              <svg className="w-5 h-5 text-orange-600 dark:text-orange-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <h3 className="font-semibold text-orange-800 dark:text-orange-200">Time</h3>
-            </div>
-            <p className="text-orange-700 dark:text-orange-300 font-medium">
-              {new Date(activity.date).toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true
-              })}
-            </p>
-          </div>
-        </div>
+        {/* Project */}
+        <SectionCard icon={FolderKanban} title="Project">
+          <DataRow label="Client" value={activity.client?.name} />
+          <DataRow label="Project Type" value={activity.projectType?.name} last />
+        </SectionCard>
       </div>
 
-      {/* Description */}
+      {/* ── Date & time ── */}
+      <SectionCard icon={Calendar} title="Date & Time">
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
+          <DataRow label="Date" value={fmtDate(activity.date)} />
+          <DataRow
+            label="Recorded At"
+            value={fmt(activity.date)}
+            last
+          />
+        </div>
+      </SectionCard>
+
+      {/* ── Activity breakdown ── */}
+      {activity.activities && activity.activities.length > 0 && (
+        <SectionCard icon={Briefcase} title="Activity Breakdown">
+          {activity.activities.map((act, idx) => (
+            <ActivityRow
+              key={idx}
+              act={act}
+              index={idx}
+              last={idx === activity.activities.length - 1}
+            />
+          ))}
+        </SectionCard>
+      )}
+
+      {/* ── Description / notes ── */}
       {activity.activity && (
-        <div className="mt-8">
-          <div className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 rounded-2xl p-6 border border-gray-200 dark:border-gray-600">
-            <div className="flex items-center mb-4">
-              <svg className="w-5 h-5 text-gray-600 dark:text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <h3 className="font-semibold text-gray-800 dark:text-gray-200">Activity Description</h3>
-            </div>
-            <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-              {activity.activity}
-            </p>
-          </div>
-        </div>
+        <SectionCard icon={FileText} title="Notes">
+          <p
+            style={{
+              fontSize: 14,
+              color: T.inkMuted,
+              lineHeight: 1.65,
+              margin: 0,
+              whiteSpace: "pre-wrap",
+            }}
+          >
+            {activity.activity}
+          </p>
+        </SectionCard>
       )}
     </div>
   );

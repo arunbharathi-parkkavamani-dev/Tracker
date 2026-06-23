@@ -4,11 +4,14 @@
 This module contains 3 models, 3 services, and 3 frontend files.
 
 ## Backend Models
-| Model | File | Lines | References |
-|---|---|---|---|
-| CommentsThreads | CommentsThreads.js | 46 | employees, tasks |
-| Ticket | Ticket.js | 107 | projecttypes, Client, TaskType, employees, Department, tasks, milestones |
-| Todo | Todo.js | 51 | employees |
+| Model | File | Lines | Key Fields | Notes |
+|---|---|---|---|---|
+| CommentsThreads | CommentsThreads.js | 46 | — | Refs: employees, tasks |
+| Ticket | Ticket.js | 107 | `status` (String, no enum), `metaStatus` (String, default: active) | Status dynamic via StatusConfig. `metaStatus` tracks record lifecycle. Refs: projecttypes, Client, TaskType, employees, Department, tasks, milestones |
+| Todo | Todo.js | 51 | — | Refs: employees |
+
+> **status field (as of 2026-06-10)**: No enum. Default: `"Open"`. Workflow options from `statusconfigs` (`modelName: 'tickets'`, `workflowStatuses`).
+> **metaStatus field**: Default: `"active"`. Lifecycle options from `statusconfigs.metaStatuses`.
 
 ## Backend Services (Business Logic Hooks)
 | Service File | Lines | Exported Functions |

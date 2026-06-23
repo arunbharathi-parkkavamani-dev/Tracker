@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, TextInput, Modal, FlatList } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import {
+  X,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  Plus,
+  Search,
+  Clock,
+  Briefcase,
+  AlertCircle
+} from 'lucide-react-native';
 import axiosInstance from '@/api/axiosInstance';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { jwtDecode } from 'jwt-decode';
@@ -74,7 +84,7 @@ export default function DailyTracker() {
       const token = await AsyncStorage.getItem('auth_token');
       if (!token) return;
 
-      const decoded = jwtDecode(token);
+      const decoded = jwtDecode<{ userId?: string; id?: string }>(token);
       const userId = decoded.userId || decoded.id;
 
       // Fetch clients with project types
@@ -107,7 +117,7 @@ export default function DailyTracker() {
       const activitiesData = activitiesResponse.data.data || [];
 
       // Since backend filter is not working, filter on frontend
-      const filteredActivities = activitiesData.filter(activity => {
+      const filteredActivities = activitiesData.filter((activity: any) => {
         // Check user match
         const userMatch = activity.user?._id === userId;
 
@@ -147,7 +157,7 @@ export default function DailyTracker() {
       const token = await AsyncStorage.getItem('auth_token');
       if (!token) return;
 
-      const decoded = jwtDecode(token);
+      const decoded = jwtDecode<{ userId?: string; id?: string }>(token);
       const userId = decoded.userId || decoded.id;
 
       await axiosInstance.post('/populate/create/dailyactivities', {
@@ -220,34 +230,34 @@ export default function DailyTracker() {
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-50">
-        <ActivityIndicator size="large" color="#3B82F6" />
-        <Text className="mt-4 text-gray-600">Loading daily tracker...</Text>
+      <View className="flex-1 justify-center items-center bg-[#F7F8FC]">
+        <ActivityIndicator size="large" color="#7C3AED" />
+        <Text className="mt-4 text-gray-500 text-sm">Loading daily tracker...</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView className="flex-1 bg-gray-50">
+    <ScrollView className="flex-1 bg-[#F7F8FC]">
       {/* Header with Date Selector */}
-      <View className="bg-white px-4 py-4 border-b border-gray-200">
+      <View className="bg-white px-4 py-3 border-b border-gray-100 shadow-sm">
 
         {/* Date Navigation */}
-        <View className="flex-row items-center justify-between mt-3">
+        <View className="flex-row items-center justify-between mt-1">
           <TouchableOpacity
             onPress={() => {
               const prevDate = new Date(selectedDate);
               prevDate.setDate(prevDate.getDate() - 1);
               setSelectedDate(prevDate.toISOString().split('T')[0]);
             }}
-            className="p-2"
+            className="p-2 bg-violet-50 rounded-xl"
           >
-            <MaterialIcons name="chevron-left" size={24} color="#3B82F6" />
+            <ChevronLeft size={20} color="#7C3AED" />
           </TouchableOpacity>
 
-          <Text className="text-lg font-semibold text-gray-900">
+          <Text className="text-[14px] font-bold text-[#1A1D2E]">
             {formatDate(selectedDate)} - {new Date(selectedDate).toLocaleDateString('en-US', {
-              weekday: 'long', month: 'short', day: 'numeric'
+              weekday: 'short', month: 'short', day: 'numeric'
             })}
           </Text>
 
@@ -259,65 +269,64 @@ export default function DailyTracker() {
                 setSelectedDate(nextDate.toISOString().split('T')[0]);
               }
             }}
-            className="p-2"
+            className="p-2 bg-violet-50 rounded-xl"
             disabled={selectedDate >= new Date().toISOString().split('T')[0]}
+            style={{ opacity: selectedDate >= new Date().toISOString().split('T')[0] ? 0.3 : 1 }}
           >
-            <MaterialIcons
-              name="chevron-right"
-              size={24}
-              color={selectedDate >= new Date().toISOString().split('T')[0] ? "#D1D5DB" : "#3B82F6"}
-            />
+            <ChevronRight size={20} color="#7C3AED" />
           </TouchableOpacity>
         </View>
       </View>
 
       <View className="px-4 py-4">
         {/* Add Activity Form */}
-        <View className="bg-white rounded-lg p-4 mb-6 shadow-sm border border-gray-200">
-          <Text className="text-lg font-semibold text-gray-900 mb-4">Add New Activity</Text>
+        <View className="bg-white rounded-2xl p-4 mb-6 shadow-sm border border-gray-100">
+          <Text className="text-base font-bold text-[#1A1D2E] mb-4">Add New Activity</Text>
 
           {/* Client Selection with Autocomplete */}
-          <Text className="text-sm font-medium text-gray-700 mb-2">Select Client</Text>
+          <Text className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Select Client</Text>
           <TouchableOpacity
             onPress={() => setShowClientDropdown(true)}
-            className="border border-gray-300 rounded-lg p-3 mb-4 flex-row items-center justify-between"
+            className="border border-gray-200 rounded-xl p-3 mb-4 flex-row items-center justify-between bg-[#F7F8FC]"
           >
-            <Text className={selectedClient ? 'text-gray-900' : 'text-gray-500'}>
+            <Text className={selectedClient ? 'text-[#1A1D2E] font-medium' : 'text-gray-400'}>
               {selectedClient ? selectedClient.name : 'Choose a client...'}
             </Text>
-            <MaterialIcons name="arrow-drop-down" size={24} color="#6B7280" />
+            <ChevronDown size={18} color="#8890A8" />
           </TouchableOpacity>
 
           {/* Project Type Selection */}
-          <Text className="text-sm font-medium text-gray-700 mb-2">Project Type</Text>
+          <Text className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Project Type</Text>
           <TouchableOpacity
             onPress={() => setShowProjectTypeDropdown(true)}
-            className="border border-gray-300 rounded-lg p-3 mb-4 flex-row items-center justify-between"
+            className="border border-gray-200 rounded-xl p-3 mb-4 flex-row items-center justify-between bg-[#F7F8FC]"
             disabled={!selectedClient}
+            style={{ opacity: selectedClient ? 1 : 0.6 }}
           >
-            <Text className={selectedProjectType ? 'text-gray-900' : 'text-gray-500'}>
+            <Text className={selectedProjectType ? 'text-[#1A1D2E] font-medium' : 'text-gray-400'}>
               {selectedProjectType ? selectedProjectType.name : selectedClient ? 'Choose project type...' : 'Select client first'}
             </Text>
-            <MaterialIcons name="arrow-drop-down" size={24} color={selectedClient ? "#6B7280" : "#D1D5DB"} />
+            <ChevronDown size={18} color={selectedClient ? "#8890A8" : "#D1D5DB"} />
           </TouchableOpacity>
 
           {/* Task Type Selection */}
-          <Text className="text-sm font-medium text-gray-700 mb-2">Task Type</Text>
+          <Text className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Task Type</Text>
           <TouchableOpacity
             onPress={() => setShowTaskTypeDropdown(true)}
-            className="border border-gray-300 rounded-lg p-3 mb-4 flex-row items-center justify-between"
+            className="border border-gray-200 rounded-xl p-3 mb-4 flex-row items-center justify-between bg-[#F7F8FC]"
           >
-            <Text className={selectedTaskType ? 'text-gray-900' : 'text-gray-500'}>
+            <Text className={selectedTaskType ? 'text-[#1A1D2E] font-medium' : 'text-gray-400'}>
               {selectedTaskType ? selectedTaskType.name : 'Choose task type...'}
             </Text>
-            <MaterialIcons name="arrow-drop-down" size={24} color="#6B7280" />
+            <ChevronDown size={18} color="#8890A8" />
           </TouchableOpacity>
 
           {/* Activity Input */}
-          <Text className="text-sm font-medium text-gray-700 mb-2">Activity Details</Text>
+          <Text className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Activity Details</Text>
           <TextInput
-            className="border border-gray-300 rounded-lg p-3 mb-4 text-gray-900"
+            className="border border-gray-200 rounded-xl p-3 mb-4 text-[#1A1D2E] bg-[#F7F8FC]"
             placeholder="Describe your activity..."
+            placeholderTextColor="#8890A8"
             value={activityText}
             onChangeText={setActivityText}
             multiline
@@ -329,37 +338,39 @@ export default function DailyTracker() {
           <TouchableOpacity
             onPress={handleSubmitActivity}
             disabled={submitting || !selectedClient || !selectedProjectType || !selectedTaskType || !activityText.trim()}
-            className={`rounded-lg p-3 flex-row items-center justify-center ${submitting || !selectedClient || !selectedProjectType || !selectedTaskType || !activityText.trim()
-              ? 'bg-gray-300'
-              : 'bg-blue-500'
+            className={`rounded-xl p-3.5 flex-row items-center justify-center ${submitting || !selectedClient || !selectedProjectType || !selectedTaskType || !activityText.trim()
+              ? 'bg-gray-200'
+              : 'bg-[#7C3AED]'
               }`}
           >
             {submitting ? (
               <ActivityIndicator size="small" color="white" />
             ) : (
               <>
-                <MaterialIcons name="add" size={20} color="white" />
-                <Text className="text-white font-semibold ml-2">Add Activity</Text>
+                <Plus size={18} color="white" />
+                <Text className="text-white font-bold text-sm ml-2">Add Activity</Text>
               </>
             )}
           </TouchableOpacity>
         </View>
 
         {/* Activities for Selected Date */}
-        <View className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+        <View className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
           <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-lg font-semibold text-gray-900">
+            <Text className="text-base font-bold text-[#1A1D2E]">
               Activities for {formatDate(selectedDate)}
             </Text>
             {refreshing && (
-              <ActivityIndicator size="small" color="#3B82F6" />
+              <ActivityIndicator size="small" color="#7C3AED" />
             )}
           </View>
 
           {activities.length === 0 ? (
-            <View className="items-center py-8">
-              <MaterialIcons name="assignment" size={48} color="#D1D5DB" />
-              <Text className="text-gray-500 mt-2">No activities for {formatDate(selectedDate)}</Text>
+            <View className="items-center py-10">
+              <View className="bg-violet-50 p-4 rounded-full mb-3">
+                <Clock size={32} color="#7C3AED" />
+              </View>
+              <Text className="text-gray-400 text-xs text-center">No activities logged for {formatDate(selectedDate)}</Text>
             </View>
           ) : (
             activities.map((activity, index) => (
@@ -372,37 +383,41 @@ export default function DailyTracker() {
                 }}
               >
                 <View className="flex-row items-start">
-                  <View className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3" />
+                  <View className="w-2.5 h-2.5 bg-[#7C3AED] rounded-full mt-1.5 mr-3" />
                   <View className="flex-1">
-                    <View className="flex-row justify-between items-start mb-1">
-                      <Text className="font-semibold text-gray-900">
+                    <View className="flex-row justify-between items-start mb-1.5">
+                      <Text className="font-semibold text-[#1A1D2E] text-sm">
                         {activity.client?.name || 'Unknown Client'}
                       </Text>
-                      <Text className="text-xs text-gray-500">
+                      <Text className="text-xs text-[#8890A8]">
                         {formatTime(activity.createdAt)}
                       </Text>
                     </View>
                     {(activity.projectType || activity.taskType) && (
                       <View className="flex-row mb-2">
                         {activity.projectType && (
-                          <Text className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded mr-2">
-                            {activity.projectType.name}
-                          </Text>
+                          <View className="bg-violet-50 px-2 py-0.5 rounded-full mr-2">
+                            <Text className="text-[10px] font-semibold text-violet-700">
+                              {activity.projectType.name}
+                            </Text>
+                          </View>
                         )}
                         {activity.taskType && (
-                          <Text className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                            {activity.taskType.name}
-                          </Text>
+                          <View className="bg-emerald-50 px-2 py-0.5 rounded-full">
+                            <Text className="text-[10px] font-semibold text-emerald-700">
+                              {activity.taskType.name}
+                            </Text>
+                          </View>
                         )}
                       </View>
                     )}
-                    <Text className="text-gray-700 text-sm leading-5">
+                    <Text className="text-gray-700 text-xs leading-5">
                       {truncateText(activity.activity)}
                     </Text>
                   </View>
                 </View>
                 {index < activities.length - 1 && (
-                  <View className="ml-5 mt-4 border-b border-gray-100" />
+                  <View className="ml-5 mt-4 border-b border-gray-50" />
                 )}
               </TouchableOpacity>
             ))
@@ -418,21 +433,34 @@ export default function DailyTracker() {
         onRequestClose={() => setShowClientDropdown(false)}
       >
         <View className="flex-1 justify-end bg-black/50">
-          <View className="bg-white rounded-t-3xl max-h-96">
-            <View className="p-4 border-b border-gray-200">
+          <View className="bg-white rounded-t-[28px] max-h-[85%] pb-6">
+            <View className="w-12 h-1 bg-gray-200 rounded-full self-center mb-1 mt-3" />
+            
+            <View className="p-4 border-b border-gray-100">
               <View className="flex-row items-center justify-between mb-3">
-                <Text className="text-lg font-semibold">Select Client</Text>
-                <TouchableOpacity onPress={() => setShowClientDropdown(false)}>
-                  <MaterialIcons name="close" size={24} color="#6B7280" />
+                <Text className="text-lg font-bold text-[#1A1D2E]">Select Client</Text>
+                <TouchableOpacity onPress={() => setShowClientDropdown(false)} className="p-1">
+                  <X size={20} color="#8890A8" />
                 </TouchableOpacity>
               </View>
 
-              <TextInput
-                className="border border-gray-300 rounded-lg p-3"
-                placeholder="Search clients..."
-                value={clientSearch}
-                onChangeText={setClientSearch}
-              />
+              <View className="flex-row items-center bg-[#F7F8FC] border border-gray-100 rounded-xl px-3 py-2">
+                <View className="mr-2">
+                  <Search size={18} color="#8890A8" />
+                </View>
+                <TextInput
+                  className="flex-1 text-[#1A1D2E] text-sm p-0"
+                  placeholder="Search clients..."
+                  value={clientSearch}
+                  onChangeText={setClientSearch}
+                  placeholderTextColor="#8890A8"
+                />
+                {clientSearch ? (
+                  <TouchableOpacity onPress={() => setClientSearch('')}>
+                    <X size={18} color="#8890A8" />
+                  </TouchableOpacity>
+                ) : null}
+              </View>
             </View>
 
             <FlatList
@@ -441,39 +469,29 @@ export default function DailyTracker() {
               renderItem={({ item }) => (
                 <TouchableOpacity
                   onPress={async () => {
-                    // Fetch project types using the correct endpoint format
                     try {
-                      // console.log('DailyTracker: Fetching project types for client:', item._id);
                       const projectTypesResponse = await axiosInstance.get(`/populate/read/clients/${item._id}?populateFields={"projectTypes":"name"}`);
-                      // console.log('DailyTracker: Project types response status:', projectTypesResponse.status);
-                      // console.log('DailyTracker: Project types data structure:', JSON.stringify(projectTypesResponse.data, null, 2));
                       const projectTypesData = projectTypesResponse.data.data?.projectTypes || [];
-                      // console.log('DailyTracker: Project types extracted:', projectTypesData);
-
-                      // Update the selected client with the fetched project types
                       const updatedClient = {
                         ...item,
                         projectTypes: projectTypesData
                       };
                       setSelectedClient(updatedClient);
-                    } catch (error: any) {
-                      console.error('DailyTracker: Error fetching client project types:', error);
-                      console.error('DailyTracker: Error response:', error.response?.data);
+                    } catch (error) {
                       setSelectedClient(item);
                     }
-
-                    setSelectedProjectType(null); // Reset project type when client changes
+                    setSelectedProjectType(null);
                     setClientSearch('');
                     setShowClientDropdown(false);
                   }}
-                  className="p-4 border-b border-gray-100"
+                  className="p-4 border-b border-gray-50 flex-row items-center"
                 >
-                  <Text className="text-gray-900 font-medium">{item.name}</Text>
+                  <Text className="text-[#1A1D2E] font-semibold text-sm">{item.name}</Text>
                 </TouchableOpacity>
               )}
               ListEmptyComponent={
                 <View className="p-8 items-center">
-                  <Text className="text-gray-500">No clients found</Text>
+                  <Text className="text-gray-400 text-xs">No clients found</Text>
                 </View>
               }
             />
@@ -489,21 +507,34 @@ export default function DailyTracker() {
         onRequestClose={() => setShowProjectTypeDropdown(false)}
       >
         <View className="flex-1 justify-end bg-black/50">
-          <View className="bg-white rounded-t-3xl max-h-96">
-            <View className="p-4 border-b border-gray-200">
-              <View className="flex-row items-center justify-between mb-3">
-                <Text className="text-lg font-semibold">Select Project Type</Text>
-                <TouchableOpacity onPress={() => setShowProjectTypeDropdown(false)}>
-                  <MaterialIcons name="close" size={24} color="#6B7280" />
-                </TouchableOpacity>
-              </View>
+          <View className="bg-white rounded-t-[28px] max-h-[85%] pb-6">
+            <View className="w-12 h-1 bg-gray-200 rounded-full self-center mb-1 mt-3" />
+            
+            <View className="p-4 border-b border-gray-100">
+               <View className="flex-row items-center justify-between mb-3">
+                 <Text className="text-lg font-bold text-[#1A1D2E]">Select Project Type</Text>
+                 <TouchableOpacity onPress={() => setShowProjectTypeDropdown(false)} className="p-1">
+                   <X size={20} color="#8890A8" />
+                 </TouchableOpacity>
+               </View>
 
-              <TextInput
-                className="border border-gray-300 rounded-lg p-3"
-                placeholder="Search project types..."
-                value={projectTypeSearch}
-                onChangeText={setProjectTypeSearch}
-              />
+               <View className="flex-row items-center bg-[#F7F8FC] border border-gray-100 rounded-xl px-3 py-2">
+                 <View className="mr-2">
+                   <Search size={18} color="#8890A8" />
+                 </View>
+                 <TextInput
+                   className="flex-1 text-[#1A1D2E] text-sm p-0"
+                   placeholder="Search project types..."
+                   value={projectTypeSearch}
+                   onChangeText={setProjectTypeSearch}
+                   placeholderTextColor="#8890A8"
+                 />
+                 {projectTypeSearch ? (
+                   <TouchableOpacity onPress={() => setProjectTypeSearch('')}>
+                     <X size={18} color="#8890A8" />
+                   </TouchableOpacity>
+                 ) : null}
+               </View>
             </View>
 
             <FlatList
@@ -516,14 +547,14 @@ export default function DailyTracker() {
                     setProjectTypeSearch('');
                     setShowProjectTypeDropdown(false);
                   }}
-                  className="p-4 border-b border-gray-100"
+                  className="p-4 border-b border-gray-50 flex-row items-center"
                 >
-                  <Text className="text-gray-900 font-medium">{item.name}</Text>
+                  <Text className="text-[#1A1D2E] font-semibold text-sm">{item.name}</Text>
                 </TouchableOpacity>
               )}
               ListEmptyComponent={
                 <View className="p-8 items-center">
-                  <Text className="text-gray-500">No project types found</Text>
+                  <Text className="text-gray-400 text-xs">No project types found</Text>
                 </View>
               }
             />
@@ -539,21 +570,34 @@ export default function DailyTracker() {
         onRequestClose={() => setShowTaskTypeDropdown(false)}
       >
         <View className="flex-1 justify-end bg-black/50">
-          <View className="bg-white rounded-t-3xl max-h-96">
-            <View className="p-4 border-b border-gray-200">
-              <View className="flex-row items-center justify-between mb-3">
-                <Text className="text-lg font-semibold">Select Task Type</Text>
-                <TouchableOpacity onPress={() => setShowTaskTypeDropdown(false)}>
-                  <MaterialIcons name="close" size={24} color="#6B7280" />
-                </TouchableOpacity>
-              </View>
+          <View className="bg-white rounded-t-[28px] max-h-[85%] pb-6">
+            <View className="w-12 h-1 bg-gray-200 rounded-full self-center mb-1 mt-3" />
+            
+            <View className="p-4 border-b border-gray-100">
+               <View className="flex-row items-center justify-between mb-3">
+                 <Text className="text-lg font-bold text-[#1A1D2E]">Select Task Type</Text>
+                 <TouchableOpacity onPress={() => setShowTaskTypeDropdown(false)} className="p-1">
+                   <X size={20} color="#8890A8" />
+                 </TouchableOpacity>
+               </View>
 
-              <TextInput
-                className="border border-gray-300 rounded-lg p-3"
-                placeholder="Search task types..."
-                value={taskTypeSearch}
-                onChangeText={setTaskTypeSearch}
-              />
+               <View className="flex-row items-center bg-[#F7F8FC] border border-gray-100 rounded-xl px-3 py-2">
+                 <View className="mr-2">
+                   <Search size={18} color="#8890A8" />
+                 </View>
+                 <TextInput
+                   className="flex-1 text-[#1A1D2E] text-sm p-0"
+                   placeholder="Search task types..."
+                   value={taskTypeSearch}
+                   onChangeText={setTaskTypeSearch}
+                   placeholderTextColor="#8890A8"
+                 />
+                 {taskTypeSearch ? (
+                   <TouchableOpacity onPress={() => setTaskTypeSearch('')}>
+                     <X size={18} color="#8890A8" />
+                   </TouchableOpacity>
+                 ) : null}
+               </View>
             </View>
 
             <FlatList
@@ -566,14 +610,14 @@ export default function DailyTracker() {
                     setTaskTypeSearch('');
                     setShowTaskTypeDropdown(false);
                   }}
-                  className="p-4 border-b border-gray-100"
+                  className="p-4 border-b border-gray-50 flex-row items-center"
                 >
-                  <Text className="text-gray-900 font-medium">{item.name}</Text>
+                  <Text className="text-[#1A1D2E] font-semibold text-sm">{item.name}</Text>
                 </TouchableOpacity>
               )}
               ListEmptyComponent={
                 <View className="p-8 items-center">
-                  <Text className="text-gray-500">No task types found</Text>
+                  <Text className="text-gray-400 text-xs">No task types found</Text>
                 </View>
               }
             />
@@ -589,11 +633,11 @@ export default function DailyTracker() {
         onRequestClose={() => setShowActivityDetail(false)}
       >
         <View className="flex-1 justify-center items-center bg-black/50 p-4">
-          <View className="bg-white rounded-2xl p-6 w-full max-w-md">
-            <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-xl font-bold text-gray-900">Activity Details</Text>
-              <TouchableOpacity onPress={() => setShowActivityDetail(false)}>
-                <MaterialIcons name="close" size={24} color="#6B7280" />
+          <View className="bg-white rounded-2xl p-6 w-full max-w-md border border-gray-150 shadow-xl">
+            <View className="flex-row justify-between items-center mb-4 pb-2 border-b border-gray-100">
+              <Text className="text-base font-bold text-[#1A1D2E]">Activity Details</Text>
+              <TouchableOpacity onPress={() => setShowActivityDetail(false)} className="p-1">
+                <X size={20} color="#8890A8" />
               </TouchableOpacity>
             </View>
 

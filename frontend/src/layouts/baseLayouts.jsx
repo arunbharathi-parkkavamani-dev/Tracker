@@ -4,6 +4,8 @@ import routes from "~react-pages";
 import Sidebar from "./Sidebar";
 import TopNavBar from "./topNavBar.jsx";
 import Login from "../pages/login.jsx";
+import ForgotPassword from "../pages/forgot-password.jsx";
+import ResetPassword from "../pages/reset-password.jsx";
 import { useState, useEffect } from "react";
 
 const BaseLayout = () => {
@@ -26,6 +28,8 @@ const BaseLayout = () => {
     if (window.innerWidth < 1024) setSidebarOpen(false);
   }, [location.pathname]);
 
+  const publicPaths = ["/login", "/forgot-password", "/reset-password", "/academy"];
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-canvas">
@@ -37,17 +41,17 @@ const BaseLayout = () => {
     );
   }
 
-  if (!user && location.pathname !== "/login") {
+  if (!user && !publicPaths.includes(location.pathname)) {
     return <Navigate to="/login" replace />;
   }
 
-  if (user && location.pathname === "/login") {
+  if (user && publicPaths.includes(location.pathname)) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  if (location.pathname === "/login") {
-    return <Login />;
-  }
+  if (location.pathname === "/login") return <Login />;
+  if (location.pathname === "/forgot-password") return <ForgotPassword />;
+  if (location.pathname === "/reset-password") return <ResetPassword />;
 
   return (
     <div className="lmx-app-shell">
@@ -70,7 +74,7 @@ const BaseLayout = () => {
         style={{ marginLeft: 0 }}
       >
         <TopNavBar onToggleSidebar={() => setSidebarOpen((prev) => !prev)} sidebarOpen={sidebarOpen} />
-        <main className="flex-1 overflow-y-auto bg-canvas">
+        <main className="flex-1 overflow-y-auto bg-canvas relative">
           <div className="lmx-content">{element}</div>
         </main>
       </div>

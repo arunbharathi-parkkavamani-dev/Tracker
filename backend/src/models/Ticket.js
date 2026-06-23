@@ -15,7 +15,7 @@ const ticketSchema = new mongoose.Schema({
   impactAnalysis: { type: String },
   url: { type: String },
   acceptanceCriteria: { type: String },
-  clientId: { type: mongoose.Schema.Types.ObjectId, ref: 'Client' },
+  clientId: { type: mongoose.Schema.Types.ObjectId, ref: 'clients' },
   taskTypeId: { type: mongoose.Schema.Types.ObjectId, ref: 'TaskType' },
   priority: { 
     type: String, 
@@ -24,8 +24,13 @@ const ticketSchema = new mongoose.Schema({
   },
   status: { 
     type: String, 
-    enum: ['Open', 'In Progress', 'Review', 'Testing', 'Completed', 'Closed'], 
-    default: 'Open' 
+    default: 'Open',
+    index: true
+  },
+  metaStatus: {
+    type: String,
+    default: 'active',
+    index: true
   },
   createdBy: { type: mongoose.Schema.Types.ObjectId, refPath: 'createdByModel', required: true },
   createdByModel: { type: String, enum: ['employees', 'agents'], required: true },
@@ -68,6 +73,7 @@ const ticketSchema = new mongoose.Schema({
   comments: [{
     comment: String,
     commentedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'employees' },
+    isPublic: { type: Boolean, default: true }, // public (agent ↔ employee) or internal (employee only)
     commentedAt: { type: Date, default: Date.now }
   }],
   resolvedAt: { type: Date },
