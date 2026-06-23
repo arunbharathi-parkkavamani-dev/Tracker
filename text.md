@@ -445,3 +445,122 @@ These files (`eval.yaml`, `negative-trigger-1.yaml`, `positive-trigger-1.yaml`, 
 
 *   **`eval.yaml`:**
     *   Defines the evaluation parameters: `name`, `
+
+
+---
+### 🧠 AI Review (6/23/2026, 11:32:38 AM)
+
+
+### Part 1
+The provided code is a new commit that introduces several new files to the `.agent/` directory. This directory appears to be related to an AI-assisted development system for a Logimax ERP Tracker project.
+
+Here's a breakdown of the changes and a review of the code:
+
+**1. `.agent/.env.example` (New File)**
+
+*   **Purpose:** This file serves as a template for environment variables. It's good practice to provide an `.env.example` so developers know what variables are expected.
+*   **Content:**
+    *   `PROJECT_ROOT`: Seems to be a local path, which is fine for an example.
+    *   `PYTHON_PATH`, `NODE_PATH`, `NPM_PATH`: These are often auto-detected or set in the system's PATH, but including them here as placeholders is reasonable.
+    *   `LOCALHOST_FE`, `LOCALHOST_BE`: Standard local development URLs.
+    *   `ISSUE_PLATFORM`, `REPO_OWNER`, `REPO_NAME`: These are marked as "auto-detected from git remote," which implies a pre-flight script or workflow will populate them. This is a good design for automation.
+    *   `Tokens`: Specifically mentions GitHub tokens are "NOT needed — uses MCP server." This is an important detail for developers to understand the authentication mechanism.
+*   **Review:** This file is well-structured and provides clear guidance. The comments are helpful.
+
+**2. `.agent/Claude.md` (New File)**
+
+*   **Purpose:** This is a comprehensive `README`-like file that outlines project rules, framework details, coding standards, API/data flow, conventions, safety guardrails, documentation processes, environment details, and module definitions. It's explicitly stated as "Project Rules — Logimax ERP Tracker System" and "non-negotiable."
+*   **Content Breakdown & Review:**
+
+    *   **⛔ STEP ZERO — BEFORE ANY TASK (NON-NEGOTIABLE):**
+        *   **Crucial Section:** This is an excellent addition. Enforcing a pre-task sequence (loading "Knowledge Brain" and "Frontend UI Tokens" skills) ensures consistency and adherence to project standards from the outset. The emphasis on "Violation of this order is a rule failure" is strong and clear.
+        *   **Skills:** References `.agent/skills/knowledge-brain/SKILL.md` and `.agent/skills/frontend-ui-tokens/SKILL.md`. This indicates a modular approach to defining AI agent capabilities.
+
+    *   **1. Framework & Coding Standards:**
+        *   **Frontend (React + Vite + JavaScript):**
+            *   **Technologies:** Clearly lists React 19, Vite 7, JS, Tailwind CSS 4, MUI 7, `axiosInstance.js`, `react-router-dom`, `FormPageLayout.jsx`, `react-hot-toast`, `socket.io-client`, Firebase FCM, Context providers. This is a very detailed and helpful overview.
+            *   **Key Rules:**
+                *   `.jsx` for components, `.js` for utilities/hooks (explicitly no `.tsx`/`.ts`): Clear and consistent.
+                *   Functional components only with React hooks: Standard modern React.
+                *   `useGenericAPI.js` for all API calls: Enforces a single, consistent API layer. Good for maintainability and error handling.
+                *   Theme (light/dark): Specifies implementation details (`.dark` class, `ThemeToggler`).
+                *   Design tokens: References `styles/tokens.css` and `constants/uiTokens.js`.
+                *   `data-module` attribute: Good for module-specific styling.
+                *   No TypeScript, no React Query/TanStack: Explicitly states what *not* to use, which is as important as what *to* use.
+        *   **Backend (Express 5 + Mongoose 8 + MongoDB):**
+            *   **Technologies:** Node.js (ES Modules), Express 5, Mongoose 8, MongoDB, JWT, Socket.io 4, Bull + Redis, S3. Comprehensive.
+            *   **Key Rules:**
+                *   Standard directory structure (`models/`, `routes/`, `services/`, `middlewares/`).
+                *   Mongoose schemas with `isDeleted` soft-delete pattern: Good practice.
+                *   "Thick services, thin routes": Promotes business logic separation.
+                *   Generic CRUD: `populateRoutes.js` is mentioned, indicating a standardized approach to common CRUD operations.
+                *   Pagination: Specifies `page`/`limit` in request body.
+
+    *   **2. API & Data Flow:**
+        *   **Standard Trace:** Provides a clear, high-level overview of the request flow from browser to database and back. Very useful for understanding the system architecture.
+        *   **`populate` Endpoints:** Lists the standardized CRUD endpoints (`/populate/read/:model`, `/populate/create/:model`, etc.). This is a strong convention that simplifies API development and consumption.
+
+    *   **3. Frontend Conventions:**
+        *   State management hierarchy: Good guidance.
+        *   Custom hooks, pages, components, layouts, form constants, utilities: Standard and well-defined.
+        *   Error handling: Emphasizes `try/catch + toast` for every API call, which is critical for user experience.
+        *   Imports: Clear rules for relative vs. absolute imports.
+
+    *   **4. Backend Conventions:**
+        *   
+
+### Part 2
+The provided code snippet is a well-structured and comprehensive `README.md` style documentation, followed by a series of YAML files defining evaluation tasks for an AI agent.
+
+Here's a breakdown of the review for the second part (the YAML files):
+
+**Overall Impression:**
+
+The YAML files define a clear and standard structure for evaluating an AI agent's "frontend-ui-tokens" skill. They cover both positive and negative trigger scenarios, which is crucial for robust skill evaluation. The use of `copilot-sdk` and `claude-sonnet-4.6` indicates a modern AI development environment.
+
+**Detailed Review - `eval.yaml`:**
+
+1.  **`name`, `description`, `skill`, `version`**: These are well-defined and provide clear metadata for the evaluation.
+2.  **`config`**:
+    *   `trials_per_task: 1`: This is a reasonable starting point for initial evaluations. For more rigorous testing, this might be increased.
+    *   `timeout_seconds: 300`: 5 minutes is a decent timeout for a single task, allowing for complex operations without endless waiting.
+    *   `parallel: false`: This is fine for initial setup, but for faster evaluation of many tasks, `true` would be more efficient if the executor supports it.
+    *   `executor: copilot-sdk`: Clearly specifies the execution environment.
+    *   `model: claude-sonnet-4.6`: Specifies the AI model being evaluated. Good to have this explicit.
+3.  **`metrics`**:
+    *   `task_completion` (weight 0.7, threshold 0.8): This is a standard and important metric. The weighting suggests it's the primary success indicator.
+    *   `efficiency` (weight 0.3, threshold 0.7): This is a good addition, indicating that not just completion but also resource usage (implied by `token-budget` grader) is important.
+4.  **`graders`**:
+    *   `type: behavior`, `name: token-budget`, `config: max_tokens: 1200`: This is an excellent inclusion. It directly addresses the `efficiency` metric and sets a clear constraint on the agent's output length, which is vital for cost-effective and concise AI interactions.
+
+**Detailed Review - `negative-trigger-1.yaml`:**
+
+1.  **`id`, `name`, `description`, `tags`**: All well-defined. The `negative-trigger` tag is useful for categorization.
+2.  **`inputs.prompt`**: `"Tell me a short joke about coffee."` - This is a good example of a prompt that *should not* trigger the `frontend-ui-tokens` skill. It's completely unrelated.
+3.  **`expected.should_trigger: false`**: Correctly asserts that the skill should not be triggered.
+4.  **`graders`**:
+    *   `type: text`, `name: omits-skill-keywords`, `config: not_contains: ["frontend", "tokens", "ui"]`: This is a very effective way to verify a negative trigger. If the agent *does* mention these keywords, it suggests it might be misinterpreting the prompt or trying to apply the skill inappropriately.
+
+**Detailed Review - `positive-trigger-1.yaml`:**
+
+1.  **`id`, `name`, `description`, `tags`**: All well-defined. The `positive-trigger` tag is useful.
+2.  **`inputs.prompt`**: `"Use frontend-ui-tokens to help me complete this task"` - This is a direct and explicit trigger. It's a good starting point for testing if the agent *can* be explicitly invoked.
+3.  **`expected.should_trigger: true`**: Correctly asserts that the skill should be triggered.
+4.  **`graders`**:
+    *   `type: text`, `name: contains-keywords`, `config: contains: ["frontend", "tokens", "ui"]`: This verifies that the agent acknowledges or uses the skill's keywords in its response, indicating it has indeed recognized and potentially engaged the skill.
+
+**Detailed Review - `positive-trigger-2.yaml`:**
+
+1.  **`id`, `name`, `description`**: Follows the same good pattern as other tasks.
+
+**Suggestions for Improvement/Considerations:**
+
+1.  **More Diverse Negative Triggers**: While "Tell me a joke" is good, consider other types of negative triggers:
+    *   Prompts related to other domains (e.g., "Help me with a database query").
+    *   Prompts that are vaguely technical but not related to UI tokens (e.g., "How do I set up a React component?"). This helps ensure the skill doesn't over-generalize.
+2.  **More Diverse Positive Triggers**:
+    *   **Implicit Triggers**: The current positive trigger is very explicit. Add tasks where the skill should be triggered implicitly, based on context. For example:
+        *   "I need to define some color variables for my React app. Can you help?"
+        *   "How do I ensure consistent spacing across my UI elements?"
+        *   "I'm working on the `tokens.css` file. What's the best way to add a new font size?"
+    *   **Contextual Triggers**: If the agent has memory or context, provide a preceding conversation that leads
