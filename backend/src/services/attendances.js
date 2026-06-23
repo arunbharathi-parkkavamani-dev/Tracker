@@ -119,6 +119,18 @@ export default function attendances() {
       if (!attendanceDoc) return;
 
       const request = attendanceDoc.request || attendanceDoc.status;
+      
+      // Feature: Task Status Domain Service - Auto-Hold tasks on checkout
+      if (request === "Check-Out" || request === "Early check-out" || body.checkOut) {
+        try {
+          // Dynamic import or require to avoid circular dependencies if any
+          const { taskStatusService } = await import('./taskStatus/taskStatusService.js');
+          await taskStatusService.handleEmployeeCheckout(attendanceDoc.employee, userId);
+        } catch (err) {
+          console.error('[AttendanceService] Failed to trigger taskStatusService on checkout:', err);
+        }
+      }
+
       if (["Present", "Check-Out", "Check-In"].includes(request)) return;
 
       const message = generateNotification(
