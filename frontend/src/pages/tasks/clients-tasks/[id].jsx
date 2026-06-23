@@ -3,9 +3,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import axiosInstance from "../../../api/axiosInstance";
 import { useAuth } from "../../../context/authProvider";
 import KanbanBoard from "../../../components/Common/KambanBoard";
-import TaskModal from "../TaskModal";
+import GanttView from "../GanttView";
+import TaskSkeleton from "../../../components/Common/TaskSkeleton";
 import StatCard from "../../../components/Common/StatCard";
-import { ArrowLeft, Building2, LayoutGrid, Clock, CheckCircle2, Plus } from "lucide-react";
+import { ArrowLeft, Building2, LayoutGrid, Clock, CheckCircle2, Plus, CalendarDays } from "lucide-react";
 
 const STATUS_COLS = [
   { id: "Backlogs",    title: "Backlogs" },
@@ -39,6 +40,7 @@ const ClientKanbanPage = () => {
   const [taskTypes, setTaskTypes]       = useState([]);
   const [loading, setLoading]           = useState(true);
   const [groupBy, setGroupBy]           = useState("projectTypeId.name");
+  const [viewMode, setViewMode]         = useState("board");
   const [selectedTask, setSelectedTask] = useState(null);
 
   useEffect(() => { fetchData(); }, [id]);
@@ -105,12 +107,7 @@ const ClientKanbanPage = () => {
   const inProgress = tasks.filter((t) => t.status === "In Progress").length;
   const completed  = tasks.filter((t) => t.status === "Completed").length;
 
-  if (loading)
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 rounded-full border-2 border-[var(--module-accent)] border-t-transparent animate-spin" />
-      </div>
-    );
+  if (loading) return <TaskSkeleton />;
 
   return (
     <div className="flex flex-col h-full bg-canvas" data-module="project">
@@ -152,6 +149,18 @@ const ClientKanbanPage = () => {
               ))}
             </div>
 
+            {/* View mode toggle */}
+            <div className="flex items-center gap-1 p-1 rounded-tracker-lg bg-surface-2 ml-2">
+              <button onClick={() => setViewMode("board")}
+                className={`px-3 py-1.5 rounded-tracker-md text-[13px] font-medium transition-all ${viewMode === "board" ? "bg-[var(--module-accent)] text-white shadow-sm" : "text-ink-muted hover:text-ink"}`}>
+                <LayoutGrid size={14} className="mr-1 inline-block" /> Board
+              </button>
+              <button onClick={() => setViewMode("gantt")}
+                className={`px-3 py-1.5 rounded-tracker-md text-[13px] font-medium transition-all ${viewMode === "gantt" ? "bg-[var(--module-accent)] text-white shadow-sm" : "text-ink-muted hover:text-ink"}`}>
+                <CalendarDays size={14} className="mr-1 inline-block" /> Timeline
+              </button>
+            </div>
+
             <button onClick={() => navigate("/tasks/form", { state: { selectedClient: client } })}
               className="tracker-btn-accent flex items-center gap-2">
               <Plus size={15} /> New Task
@@ -167,21 +176,28 @@ const ClientKanbanPage = () => {
         </div>
       </div>
 
-      {/* ── Board ── */}
+      {/* ── Board / Timeline ── */}
       <div className="flex-1 overflow-hidden px-6 pb-6">
-        <KanbanBoard
-          data={tasks}
-          groupBy={groupBy}
-          columns={columnsMap[groupBy]}
-          currentUserId={user?.id}
-          onCardClick={handleTaskClick}
-          onCardMove={handleCardMove}
-          onCardUpdate={handleCardUpdate}
-          employees={employees}
-          taskTypes={taskTypes}
-          showFollowerFilter
-          onNewTask={() => navigate("/tasks/form", { state: { selectedClient: client } })}
-        />
+        {viewMode === "board" ? (
+          <KanbanBoard
+            data={tasks}
+            groupBy={groupBy}
+            columns={columnsMap[groupBy]}
+            currentUserId={user?.id}
+            onCardClick={handleTaskClick}
+            onCardMove={handleCardMove}
+            onCardUpdate={handleCardUpdate}
+            employees={employees}
+            taskTypes={taskTypes}
+            showFollowerFilter
+            onNewTask={() => navigate("/tasks/form", { state: { selectedClient: client } })}
+          />
+        ) : (
+          <GanttView 
+            data={tasks} 
+            onTaskClick={handleTaskClick} 
+          />
+        )}
       </div>
 
 

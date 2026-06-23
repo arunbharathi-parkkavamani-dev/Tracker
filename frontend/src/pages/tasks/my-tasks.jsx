@@ -3,8 +3,9 @@ import axiosInstance from "../../api/axiosInstance";
 import { useAuth } from "../../context/authProvider";
 import { useNavigate } from "react-router-dom";
 import KanbanBoard from "../../components/Common/KambanBoard";
-import TaskModal from "./TaskModal";
-import { User, Plus, Search, X, ChevronDown, SlidersHorizontal } from "lucide-react";
+import GanttView from "./GanttView";
+import TaskSkeleton from "../../components/Common/TaskSkeleton";
+import { User, Plus, Search, X, ChevronDown, SlidersHorizontal, LayoutGrid, CalendarDays } from "lucide-react";
 
 const STATUS_COLS = [
   { id: "Backlogs",    title: "Backlogs" },
@@ -51,6 +52,7 @@ const MyTasks = () => {
   const [selectedTask, setSelectedTask] = useState(null);
   const [loading, setLoading]           = useState(true);
   const [groupBy, setGroupBy]           = useState("status");
+  const [viewMode, setViewMode]         = useState("board");
   const [employees, setEmployees]       = useState([]);
   const [taskTypes, setTaskTypes]       = useState([]);
   const [showFilters, setShowFilters]   = useState(false);
@@ -147,12 +149,7 @@ const MyTasks = () => {
     label: `${e.basicInfo?.firstName || ""} ${e.basicInfo?.lastName || ""}`.trim(),
   }));
 
-  if (loading) return (
-    <div className="flex items-center justify-center h-64">
-      <div className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin"
-        style={{ borderColor: "var(--module-project)", borderTopColor: "transparent" }} />
-    </div>
-  );
+  if (loading) return <TaskSkeleton />;
 
   return (
     <div className="flex flex-col h-full bg-canvas" data-module="project">
@@ -176,6 +173,18 @@ const MyTasks = () => {
                 {g.label}
               </button>
             ))}
+          </div>
+
+          {/* View mode toggle */}
+          <div className="lmx-tab-bar !p-0.5 !gap-0.5">
+            <button onClick={() => setViewMode("board")}
+              className={`lmx-tab text-[11px] px-3 py-1.5 ${viewMode === "board" ? "lmx-tab-active" : ""}`}>
+              <LayoutGrid size={13} className="mr-1 inline-block" /> Board
+            </button>
+            <button onClick={() => setViewMode("gantt")}
+              className={`lmx-tab text-[11px] px-3 py-1.5 ${viewMode === "gantt" ? "lmx-tab-active" : ""}`}>
+              <CalendarDays size={13} className="mr-1 inline-block" /> Timeline
+            </button>
           </div>
 
           <button onClick={() => navigate("/tasks/form")}
@@ -265,22 +274,29 @@ const MyTasks = () => {
         )}
       </div>
 
-      {/* ── Board ── */}
+      {/* ── Board / Timeline ── */}
       <div className="flex-1 overflow-hidden">
-        <KanbanBoard
-          data={filteredTasks}
-          groupBy={groupBy}
-          columns={groupBy === "status" ? STATUS_COLS : PRIORITY_COLS}
-          currentUserId={user?.id}
-          onCardClick={handleTaskClick}
-          onCardMove={handleCardMove}
-          onCardUpdate={handleCardUpdate}
-          employees={employees}
-          taskTypes={taskTypes}
-          showClientFilter={false}
-          showFollowerFilter={false}
-          onNewTask={() => navigate("/tasks/form")}
-        />
+        {viewMode === "board" ? (
+          <KanbanBoard
+            data={filteredTasks}
+            groupBy={groupBy}
+            columns={groupBy === "status" ? STATUS_COLS : PRIORITY_COLS}
+            currentUserId={user?.id}
+            onCardClick={handleTaskClick}
+            onCardMove={handleCardMove}
+            onCardUpdate={handleCardUpdate}
+            employees={employees}
+            taskTypes={taskTypes}
+            showClientFilter={false}
+            showFollowerFilter={false}
+            onNewTask={() => navigate("/tasks/form")}
+          />
+        ) : (
+          <GanttView 
+            data={filteredTasks} 
+            onTaskClick={handleTaskClick} 
+          />
+        )}
       </div>
 
 
