@@ -1,8 +1,13 @@
 /**
  * seedAssetAccessPolicies.js
- * Seeds AccessPolicies for Asset Management Phase 1 models:
+ * Seeds AccessPolicies for Asset Management Phase 1 & 2 models:
  *   - assetcategories
  *   - assets
+ *   - assetvendors
+ *   - assetpurchases
+ *   - assetinvoices
+ *   - assetpayments
+ *   - assetstockledgers
  *
  * Detection: role.level ranges only — zero hardcoded role names.
  *   Level 1–3  → Employee tier
@@ -29,15 +34,16 @@ dotenv.config({ path: path.resolve(__dirname, '../Config/.env') });
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/tracker';
 
-// Models in scope for Phase 1
-const ASSET_MODELS = ['assetcategories', 'assets'];
+const ASSET_MODELS = [
+  'assetcategories', 
+  'assets', 
+  'assetvendors', 
+  'assetpurchases', 
+  'assetinvoices', 
+  'assetpayments', 
+  'assetstockledgers'
+];
 
-// ── Level fallback (by role name) ─────────────────────────────────────────────
-//
-// Used ONLY when role.level is 1 (default/unset).
-// Run seedRoleLevels.js first to populate levels properly.
-// After that this fallback is never hit.
-//
 const ROLE_LEVEL_FALLBACK = {
   // Employee tier
   'employee': 1, 'staff': 1, 'intern': 1, 'developer': 2, 'designer': 2,
@@ -54,15 +60,9 @@ const ROLE_LEVEL_FALLBACK = {
   'super admin': 10, 'superadmin': 10, 'md': 10, 'owner': 10, 'founder': 10,
 };
 
-/**
- * Resolve the effective level for a role.
- * Prefers role.level if already set (> 1).
- * Falls back to ROLE_LEVEL_FALLBACK by name.
- * Falls back to 1 (least privileged) if nothing matches.
- */
 function resolveLevel(role) {
   if (role.level && role.level > 1) {
-    return role.level;  // Already leveled by seedRoleLevels.js
+    return role.level;
   }
   const key = (role.name || '').toLowerCase().trim();
   const fallback = ROLE_LEVEL_FALLBACK[key];
@@ -70,12 +70,8 @@ function resolveLevel(role) {
     return fallback;
   }
   console.warn(`   ⚠️  Role "${role.name}" has no level set and no fallback mapping — defaulting to level 1.`);
-  console.warn(`       Run seedRoleLevels.js to fix this permanently.`);
   return 1;
 }
-
-
-// ── Policy matrix by level tier ───────────────────────────────────────────────
 
 function buildPolicy(roleId, modelName, level) {
   const base = {
@@ -89,23 +85,17 @@ function buildPolicy(roleId, modelName, level) {
   };
 
   // ── assetcategories ────────────────────────────────────────────────────────
-
   if (modelName === 'assetcategories') {
     if (level >= 1 && level <= 3) {
-      // Employee: No access — category is internal admin data
-      return base;
+      return base; // No access
     }
-
     if (level >= 4 && level <= 6) {
-      // Manager: Read only — needed for allocation dropdowns (Phase 2)
       base.permissions = { read: true, create: false, update: false, delete: false };
       base.allowAccess.read = ['*'];
       base.forbiddenAccess.delete = ['*'];
       return base;
     }
-
     if (level >= 7 && level <= 8) {
-      // Admin / IT: Full management — no hard delete (soft via isActive)
       base.permissions = { read: true, create: true, update: true, delete: false };
       base.allowAccess = {
         read: ['*'],
@@ -116,9 +106,7 @@ function buildPolicy(roleId, modelName, level) {
       base.forbiddenAccess.delete = ['*'];
       return base;
     }
-
     if (level >= 9) {
-      // Executive / MD: Read only
       base.permissions = { read: true, create: false, update: false, delete: false };
       base.allowAccess.read = ['*'];
       base.forbiddenAccess.delete = ['*'];
@@ -127,32 +115,16 @@ function buildPolicy(roleId, modelName, level) {
   }
 
   // ── assets ────────────────────────────────────────────────────────────────
-
   if (modelName === 'assets') {
     if (level >= 1 && level <= 3) {
-      // Employee: Read only.
-      // Phase 1: Open read (all assets visible). Phase 2 will add 'isAllocatedTo'
-      // registry to scope this down to only the employee's own allocated assets.
       base.permissions = { read: true, create: false, update: false, delete: false };
       base.allowAccess.read = ['*'];
-      base.forbiddenAccess = {
-        read: [],
-        create: ['*'],
-        update: ['*'],
-        delete: ['*']
-      };
+      base.forbiddenAccess = { read: [], create: ['*'], update: ['*'], delete: ['*'] };
       return base;
     }
-
     if (level >= 4 && level <= 6) {
-      // Manager: Read + limited update (notes and storageLocation only)
       base.permissions = { read: true, create: false, update: true, delete: false };
-      base.allowAccess = {
-        read: ['*'],
-        create: [],
-        update: ['notes', 'storageLocation'],
-        delete: []
-      };
+      base.allowAccess = { read: ['*'], create: [], update: ['notes', 'storageLocation'], delete: [] };
       base.forbiddenAccess = {
         read: [],
         create: ['*'],
@@ -161,56 +133,123 @@ function buildPolicy(roleId, modelName, level) {
       };
       return base;
     }
-
     if (level >= 7 && level <= 8) {
-      // Admin / IT: Full management — no hard delete
       base.permissions = { read: true, create: true, update: true, delete: false };
       base.allowAccess = {
         read: ['*'],
-        create: [
-          'categoryId', 'name', 'serialNumber', 'imei', 'make', 'model',
-          'purchaseDate', 'purchaseCost', 'vendorName', 'invoiceNumber', 'invoiceFile',
-          'warrantyExpiry', 'storageLocation', 'condition', 'conditionNotes', 'notes', 'createdBy'
-          // assetId excluded — always auto-generated by beforeCreate hook
-        ],
-        update: [
-          'categoryId', 'name', 'serialNumber', 'imei', 'make', 'model',
-          'purchaseDate', 'purchaseCost', 'vendorName', 'invoiceNumber', 'invoiceFile',
-          'warrantyExpiry', 'storageLocation', 'status', 'metaStatus',
-          'condition', 'conditionNotes', 'notes'
-          // assetId, createdBy excluded — stripped by beforeUpdate hook
-        ],
+        create: ['categoryId', 'name', 'serialNumber', 'imei', 'make', 'model', 'purchaseDate', 'purchaseCost', 'vendorName', 'invoiceNumber', 'invoiceFile', 'warrantyExpiry', 'storageLocation', 'condition', 'conditionNotes', 'notes', 'createdBy'],
+        update: ['categoryId', 'name', 'serialNumber', 'imei', 'make', 'model', 'purchaseDate', 'purchaseCost', 'vendorName', 'invoiceNumber', 'invoiceFile', 'warrantyExpiry', 'storageLocation', 'status', 'metaStatus', 'condition', 'conditionNotes', 'notes'],
         delete: []
       };
       base.forbiddenAccess.delete = ['*'];
       return base;
     }
-
     if (level >= 9) {
-      // Executive / MD: Read only for reporting
       base.permissions = { read: true, create: false, update: false, delete: false };
       base.allowAccess.read = ['*'];
-      base.forbiddenAccess = {
-        read: [],
-        create: ['*'],
-        update: ['*'],
-        delete: ['*']
-      };
+      base.forbiddenAccess = { read: [], create: ['*'], update: ['*'], delete: ['*'] };
       return base;
     }
   }
 
-  // Default: deny all
+  // ── assetvendors ───────────────────────────────────────────────────────────
+  if (modelName === 'assetvendors') {
+    if (level >= 1 && level <= 6) {
+      base.permissions = { read: true, create: false, update: false, delete: false };
+      base.allowAccess.read = ['*'];
+      return base;
+    }
+    if (level >= 7 && level <= 8) {
+      base.permissions = { read: true, create: true, update: true, delete: false };
+      base.allowAccess = { read: ['*'], create: ['*'], update: ['*'], delete: [] };
+      base.forbiddenAccess.delete = ['*'];
+      return base;
+    }
+    if (level >= 9) {
+      base.permissions = { read: true, create: false, update: false, delete: false };
+      base.allowAccess.read = ['*'];
+      return base;
+    }
+  }
+
+  // ── assetpurchases ─────────────────────────────────────────────────────────
+  if (modelName === 'assetpurchases') {
+    if (level >= 1 && level <= 3) {
+      return base; // No access
+    }
+    if (level >= 4 && level <= 6) {
+      base.permissions = { read: true, create: false, update: false, delete: false };
+      base.allowAccess.read = ['*'];
+      return base;
+    }
+    if (level >= 7 && level <= 8) {
+      base.permissions = { read: true, create: true, update: true, delete: false };
+      base.allowAccess = { read: ['*'], create: ['*'], update: ['*'], delete: [] };
+      base.forbiddenAccess.delete = ['*'];
+      return base;
+    }
+    if (level >= 9) {
+      base.permissions = { read: true, create: false, update: false, delete: false };
+      base.allowAccess.read = ['*'];
+      return base;
+    }
+  }
+
+  // ── assetinvoices ──────────────────────────────────────────────────────────
+  if (modelName === 'assetinvoices') {
+    if (level >= 1 && level <= 6) {
+      return base; // No access
+    }
+    if (level >= 7 && level <= 8) {
+      base.permissions = { read: true, create: true, update: true, delete: false };
+      base.allowAccess = { read: ['*'], create: ['*'], update: ['*'], delete: [] };
+      base.forbiddenAccess.delete = ['*'];
+      return base;
+    }
+    if (level >= 9) {
+      base.permissions = { read: true, create: false, update: false, delete: false };
+      base.allowAccess.read = ['*'];
+      return base;
+    }
+  }
+
+  // ── assetpayments ──────────────────────────────────────────────────────────
+  if (modelName === 'assetpayments') {
+    if (level >= 1 && level <= 6) {
+      return base; // No access
+    }
+    if (level >= 7 && level <= 8) {
+      base.permissions = { read: true, create: true, update: true, delete: false };
+      base.allowAccess = { read: ['*'], create: ['*'], update: ['*'], delete: [] };
+      base.forbiddenAccess.delete = ['*'];
+      return base;
+    }
+    if (level >= 9) {
+      base.permissions = { read: true, create: false, update: false, delete: false };
+      base.allowAccess.read = ['*'];
+      return base;
+    }
+  }
+
+  // ── assetstockledgers ──────────────────────────────────────────────────────
+  if (modelName === 'assetstockledgers') {
+    if (level >= 1 && level <= 6) {
+      return base; // No access
+    }
+    if (level >= 7) {
+      base.permissions = { read: true, create: false, update: false, delete: false };
+      base.allowAccess.read = ['*'];
+      return base;
+    }
+  }
+
   return base;
 }
-
-// ── Main ─────────────────────────────────────────────────────────────────────
 
 async function seed() {
   await mongoose.connect(MONGO_URI);
   console.log('✅  Connected to MongoDB');
 
-  // Load models into mongoose registry
   await import('../models/Collection.js');
 
   const Role = mongoose.model('roles');
@@ -222,7 +261,7 @@ async function seed() {
   let upsertedCount = 0;
 
   for (const role of roles) {
-    const level = resolveLevel(role);  // Uses role.level if set; falls back to name-based map
+    const level = resolveLevel(role);
 
     for (const modelName of ASSET_MODELS) {
       const policyDoc = buildPolicy(role._id, modelName, level);
@@ -236,7 +275,7 @@ async function seed() {
     }
 
     const levelSource = (role.level && role.level > 1) ? 'level field' : 'name fallback';
-    console.log(`   ✅  ${role.name} → level ${level} (via ${levelSource}) → assetcategories + assets`);
+    console.log(`   ✅  ${role.name} → level ${level} (via ${levelSource}) → policies seeded`);
   }
 
   console.log(`\n📊  Seeded ${upsertedCount} asset access policies across ${roles.length} roles.`);

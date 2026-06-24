@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "../../api/axiosInstance";
 import toast from "react-hot-toast";
+import SearchableDropdown from "../../components/Common/SearchableDropdown";
+
 
 const Register = () => {
   const [assets, setAssets] = useState([]);
@@ -318,47 +320,45 @@ const Register = () => {
         </div>
         <div>
           <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Category</label>
-          <select
+          <SearchableDropdown
+            placeholder="All Categories"
             value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="w-full text-xs p-2 rounded-lg border border-gray-200 dark:border-white/[0.08] bg-transparent text-gray-900 dark:text-white dark:bg-surface"
-          >
-            <option value="">All Categories</option>
-            {categories.map((c) => (
-              <option key={c._id} value={c._id}>{c.name}</option>
-            ))}
-          </select>
+            options={categories.map(c => ({ value: c._id, label: c.name }))}
+            onChange={(val) => setSelectedCategory(val)}
+          />
         </div>
         <div>
           <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Status</label>
-          <select
+          <SearchableDropdown
+            placeholder="All Statuses"
             value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value)}
-            className="w-full text-xs p-2 rounded-lg border border-gray-200 dark:border-white/[0.08] bg-transparent text-gray-900 dark:text-white dark:bg-surface"
-          >
-            <option value="">All Statuses</option>
-            <option value="Available">Available</option>
-            <option value="Allocated">Allocated</option>
-            <option value="Reserved">Reserved</option>
-            <option value="Under Repair">Under Repair</option>
-            <option value="Lost">Lost</option>
-            <option value="Disposed">Disposed</option>
-          </select>
+            options={[
+              { value: "", label: "All Statuses" },
+              { value: "Available", label: "Available" },
+              { value: "Allocated", label: "Allocated" },
+              { value: "Reserved", label: "Reserved" },
+              { value: "Under Repair", label: "Under Repair" },
+              { value: "Lost", label: "Lost" },
+              { value: "Disposed", label: "Disposed" }
+            ]}
+            onChange={(val) => setSelectedStatus(val)}
+          />
         </div>
         <div>
           <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Condition</label>
-          <select
+          <SearchableDropdown
+            placeholder="All Conditions"
             value={selectedCondition}
-            onChange={(e) => setSelectedCondition(e.target.value)}
-            className="w-full text-xs p-2 rounded-lg border border-gray-200 dark:border-white/[0.08] bg-transparent text-gray-900 dark:text-white dark:bg-surface"
-          >
-            <option value="">All Conditions</option>
-            <option value="Excellent">Excellent</option>
-            <option value="Good">Good</option>
-            <option value="Fair">Fair</option>
-            <option value="Poor">Poor</option>
-            <option value="Damaged">Damaged</option>
-          </select>
+            options={[
+              { value: "", label: "All Conditions" },
+              { value: "Excellent", label: "Excellent" },
+              { value: "Good", label: "Good" },
+              { value: "Fair", label: "Fair" },
+              { value: "Poor", label: "Poor" },
+              { value: "Damaged", label: "Damaged" }
+            ]}
+            onChange={(val) => setSelectedCondition(val)}
+          />
         </div>
       </div>
 
@@ -488,14 +488,12 @@ const Register = () => {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Category</label>
-                  <select
-                    value={catId} onChange={(e) => setCatId(e.target.value)}
-                    className="w-full text-xs p-2.5 rounded-lg border border-gray-200 dark:border-white/[0.08] bg-transparent text-gray-900 dark:text-white dark:bg-surface"
-                  >
-                    {categories.map((c) => (
-                      <option key={c._id} value={c._id}>{c.name}</option>
-                    ))}
-                  </select>
+                  <SearchableDropdown
+                    placeholder="Select Category"
+                    value={catId}
+                    options={categories.map(c => ({ value: c._id, label: c.name }))}
+                    onChange={(val) => setCatId(val)}
+                  />
                 </div>
               </div>
 
@@ -533,16 +531,11 @@ const Register = () => {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Condition</label>
-                  <select
-                    value={conditionVal} onChange={(e) => setConditionVal(e.target.value)}
-                    className="w-full text-xs p-2.5 rounded-lg border border-gray-200 dark:border-white/[0.08] bg-transparent text-gray-900 dark:text-white dark:bg-surface"
-                  >
-                    <option value="Excellent">Excellent</option>
-                    <option value="Good">Good</option>
-                    <option value="Fair">Fair</option>
-                    <option value="Poor">Poor</option>
-                    <option value="Damaged">Damaged</option>
-                  </select>
+                  <SearchableDropdown
+                    value={conditionVal}
+                    options={["Excellent", "Good", "Fair", "Poor", "Damaged"]}
+                    onChange={(val) => setConditionVal(val)}
+                  />
                 </div>
               </div>
 
@@ -616,27 +609,27 @@ const Register = () => {
             <form onSubmit={handleAllocateAsset} className="p-5 flex-1 space-y-4 overflow-y-auto">
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Select Employee</label>
-                <select
-                  required value={targetEmployeeId} onChange={(e) => setTargetEmployeeId(e.target.value)}
-                  className="w-full text-xs p-2.5 rounded-lg border border-gray-200 dark:border-white/[0.08] bg-transparent text-gray-900 dark:text-white dark:bg-surface"
-                >
-                  {employees.map((emp) => (
-                    <option key={emp._id} value={emp._id}>
-                      {emp.basicInfo?.firstName} {emp.basicInfo?.lastName} ({emp.professionalInfo?.empId || "N/A"})
-                    </option>
-                  ))}
-                </select>
+                <SearchableDropdown
+                  placeholder="Select Employee"
+                  value={targetEmployeeId}
+                  options={employees.map(emp => ({
+                    value: emp._id,
+                    label: `${emp.basicInfo?.firstName} ${emp.basicInfo?.lastName} (${emp.professionalInfo?.empId || "N/A"})`
+                  }))}
+                  onChange={(val) => setTargetEmployeeId(val)}
+                />
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Allocation Type</label>
-                <select
-                  value={allocationType} onChange={(e) => setAllocationType(e.target.value)}
-                  className="w-full text-xs p-2.5 rounded-lg border border-gray-200 dark:border-white/[0.08] bg-transparent text-gray-900 dark:text-white dark:bg-surface"
-                >
-                  <option value="Allocation">Standard Allocation</option>
-                  <option value="Temporary">Temporary Assignment</option>
-                </select>
+                <SearchableDropdown
+                  value={allocationType}
+                  options={[
+                    { value: "Allocation", label: "Standard Allocation" },
+                    { value: "Temporary", label: "Temporary Assignment" }
+                  ]}
+                  onChange={(val) => setAllocationType(val)}
+                />
               </div>
 
               <div>
@@ -692,15 +685,11 @@ const Register = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Incident Type</label>
-                  <select
-                    value={incidentType} onChange={(e) => setIncidentType(e.target.value)}
-                    className="w-full text-xs p-2.5 rounded-lg border border-gray-200 dark:border-white/[0.08] bg-transparent text-gray-900 dark:text-white dark:bg-surface"
-                  >
-                    <option value="Damage">Damage</option>
-                    <option value="Theft">Theft</option>
-                    <option value="Loss">Loss</option>
-                    <option value="Negligence">Negligence</option>
-                  </select>
+                  <SearchableDropdown
+                    value={incidentType}
+                    options={["Damage", "Theft", "Loss", "Negligence"]}
+                    onChange={(val) => setIncidentType(val)}
+                  />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Date of Incident</label>

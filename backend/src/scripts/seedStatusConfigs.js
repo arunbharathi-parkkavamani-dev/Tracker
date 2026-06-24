@@ -233,5 +233,28 @@ await StatusConfig.findOneAndUpdate(
 );
 console.log('✅ Asset statuses seeded');
 
+// ── Asset purchase statuses ──────────────────────────────────────────────────
+await StatusConfig.findOneAndUpdate(
+  { modelName: 'assetpurchases' },
+  {
+    modelName: 'assetpurchases',
+    label: 'Asset Purchase Statuses',
+    metaStatuses: [
+      { key: 'active',   label: 'Active',   color: '#10B981', order: 0, isDefault: true },
+      { key: 'inactive', label: 'Inactive', color: '#6B7280', order: 1 },
+      { key: 'archive',  label: 'Archive',  color: '#8B5CF6', order: 2 },
+    ],
+    workflowStatuses: [
+      { key: 'Draft',             label: 'Draft',             color: '#6B7280', order: 0, isDefault: true },
+      { key: 'Pending Approval',  label: 'Pending Approval',  color: '#F59E0B', order: 1 },
+      { key: 'Approved',          label: 'Approved',          color: '#3B82F6', order: 2 },
+      { key: 'Received',          label: 'Received',          color: '#10B981', order: 3, isTerminal: true },
+      { key: 'Cancelled',         label: 'Cancelled',         color: '#EF4444', order: 4, isTerminal: true },
+    ],
+  },
+  { upsert: true, new: true }
+);
+console.log('✅ Asset purchase statuses seeded');
+
 await mongoose.disconnect();
 console.log('Done.');

@@ -4,6 +4,7 @@
 
 import models from '../models/Collection.js';
 import approvalEngine from '../utils/approval/approvalEngine.js';
+import { writeLedgerEntry } from './assetHooksService.js';
 
 // ── Status transition rules ────────────────────────────────────────────────────
 const ALLOWED_TRANSITIONS = {
@@ -241,6 +242,19 @@ export default function () {
             prevAllocation.actualReturn = new Date();
             await prevAllocation.save();
           }
+
+          // Log the release from previous employee as IN
+          await writeLedgerEntry({
+            assetId: allocation.assetId,
+            transactionType: 'IN',
+            triggerType: 'Employee_Return',
+            previousState: 'Allocated',
+            newState: 'Available',
+            quantity: 1,
+            performedBy: userId || allocation.createdBy,
+            referenceModel: 'assetallocations',
+            referenceId: prevAllocation ? prevAllocation._id : docId
+          });
         }
 
         // Update the asset register to Allocated
@@ -248,6 +262,19 @@ export default function () {
           status: 'Allocated',
           currentAllocatedTo: allocation.employeeId,
           currentAllocationId: docId
+        });
+
+        // Log the checkout as OUT
+        await writeLedgerEntry({
+          assetId: allocation.assetId,
+          transactionType: 'OUT',
+          triggerType: 'Employee_Allocation',
+          previousState: 'Available',
+          newState: 'Allocated',
+          quantity: 1,
+          performedBy: userId || allocation.createdBy,
+          referenceModel: 'assetallocations',
+          referenceId: docId
         });
       }
 
@@ -289,6 +316,19 @@ export default function () {
         }
 
         await models.assets.findByIdAndUpdate(allocation.assetId, assetUpdate);
+
+        // Log return as IN
+        await writeLedgerEntry({
+          assetId: allocation.assetId,
+          transactionType: 'IN',
+          triggerType: 'Employee_Return',
+          previousState: 'Allocated',
+          newState: nextAssetStatus === 'Lost' ? 'Disposed' : nextAssetStatus,
+          quantity: 1,
+          performedBy: userId,
+          referenceModel: 'assetallocations',
+          referenceId: docId
+        });
       }
     }
 

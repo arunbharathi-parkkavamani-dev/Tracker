@@ -2,12 +2,32 @@ import { useState, useEffect, useRef } from "react";
 import axiosInstance from "../../api/axiosInstance";
 import toast from "react-hot-toast";
 import { ChevronDown, X, Search, Upload, FileText, Plus, Trash2, Check } from "lucide-react";
+import { Country, State, City } from "country-state-city";
 import {
   buildDirtyPatch,
   getNestedValue,
   setNestedValue,
   stripMetaFields,
 } from "../../utils/formPatch";
+
+// Resolve Country Name -> ISO Code
+const getCountryCode = (countryName) => {
+  if (!countryName) return "";
+  const country = Country.getAllCountries().find(
+    c => c.name.toLowerCase() === countryName.toLowerCase()
+  );
+  return country ? country.isoCode : "";
+};
+
+// Resolve State Name -> ISO Code within Country
+const getStateCode = (countryCode, stateName) => {
+  if (!countryCode || !stateName) return "";
+  const state = State.getStatesOfCountry(countryCode).find(
+    s => s.name.toLowerCase() === stateName.toLowerCase()
+  );
+  return state ? state.isoCode : "";
+};
+
 
 /* ════════════════════════════════════════════
    FLOATING LABEL INPUT WRAPPER
@@ -96,51 +116,51 @@ const SearchableSelect = ({ options = [], value, onChange, multiple, labelField,
       <FloatingField label={label} required={required} filled={isFilled} focused={open}>
         <button type="button" onClick={handleOpen}
           className={`
-            w-full min-h-[48px] pl-3.5 pr-9 py-2 rounded-[8px] text-left flex items-center gap-1.5 flex-wrap
-            bg-white cursor-pointer
+            w-full min-h-[48px] pl-3.5 pr-9 py-2 rounded-tracker-md text-left flex items-center gap-1.5 flex-wrap
+            bg-surface cursor-pointer
             border transition-all duration-200 outline-none
             ${open
-              ? 'border-[#111111] ring-1 ring-[#111111]'
-              : 'border-[#d3cec6] hover:border-[#a8a39d]'}
+              ? 'border-[var(--tracker-border-focus)] ring-2 ring-violet-500/15'
+              : 'border-hairline hover:border-ink-subtle'}
           `}
         >
           {multiple && (value || []).map((v, i) => (
-            <span key={i} className="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 rounded-[6px] bg-[#f5f1ec] text-[#111111] text-[12px] font-medium border border-[#ebe7e1]">
+            <span key={i} className="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 rounded-tracker-sm bg-surface-1 text-ink text-[12px] font-medium border border-hairline-soft">
               {getLabel(v)}
-              <span onClick={(e) => removeTag(v, e)} className="p-0.5 rounded-[4px] hover:bg-white transition-colors cursor-pointer text-[#7b7b78] hover:text-[#111111]">
+              <span onClick={(e) => removeTag(v, e)} className="p-0.5 rounded-[4px] hover:bg-surface-2 transition-colors cursor-pointer text-ink-subtle hover:text-ink">
                 <X className="h-3 w-3" />
               </span>
             </span>
           ))}
-          {!multiple && value && <span className="text-[13px] text-[#111111]">{getLabel(value)}</span>}
+          {!multiple && value && <span className="text-[13px] text-ink">{getLabel(value)}</span>}
         </button>
-        <ChevronDown className={`absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none transition-transform duration-200 ${open ? 'rotate-180 text-[#111111]' : 'text-[#7b7b78]'}`} />
+        <ChevronDown className={`absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none transition-transform duration-200 ${open ? 'rotate-180 text-ink' : 'text-ink-subtle'}`} />
       </FloatingField>
 
       {open && (
-        <div className="absolute z-50 mt-1 w-full bg-white border border-[#d3cec6] rounded-[8px] shadow-sm overflow-hidden">
+        <div className="absolute z-50 mt-1 w-full bg-surface border border-hairline rounded-tracker-md shadow-tracker-overlay overflow-hidden animate-fade-in animate-fade-in-up">
           {options.length > 4 && (
-            <div className="p-2 border-b border-[#ebe7e1]">
-              <div className="flex items-center gap-2 px-2.5 h-9 bg-[#f5f1ec] rounded-[6px]">
-                <Search className="h-3.5 w-3.5 text-[#7b7b78] flex-shrink-0" />
+            <div className="p-2 border-b border-hairline-soft bg-surface">
+              <div className="flex items-center gap-2 px-2.5 h-9 bg-surface-1 border border-hairline rounded-tracker-sm">
+                <Search className="h-3.5 w-3.5 text-ink-subtle flex-shrink-0" />
                 <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search..." autoFocus
-                  className="flex-1 bg-transparent text-[13px] text-[#111111] placeholder:text-[#7b7b78] focus:outline-none" />
-                {search && <X className="h-3 w-3 text-[#7b7b78] cursor-pointer hover:text-[#111111]" onClick={() => setSearch("")} />}
+                  className="flex-1 bg-transparent text-[13px] text-ink placeholder:text-ink-subtle focus:outline-none" />
+                {search && <X className="h-3 w-3 text-ink-subtle cursor-pointer hover:text-ink" onClick={() => setSearch("")} />}
               </div>
             </div>
           )}
           <div className="max-h-52 overflow-y-auto py-1">
             {filtered.length === 0 ? (
-              <div className="px-4 py-6 text-[13px] text-[#7b7b78] text-center">No results</div>
+              <div className="px-4 py-6 text-[13px] text-ink-subtle text-center">No results</div>
             ) : filtered.map((opt, idx) => {
               const sel = isSelected(opt);
               return (
                 <div key={opt?._id || opt?.value || idx} onClick={() => handleSelect(opt)}
-                  className={`flex items-center justify-between px-3.5 py-2.5 cursor-pointer transition-colors text-[13px] ${sel ? 'bg-[#f5f1ec] text-[#111111] font-medium' : 'text-[#626260] hover:bg-[#f5f1ec]/50 hover:text-[#111111]'}`}
+                  className={`flex items-center justify-between px-3.5 py-2.5 cursor-pointer transition-colors text-[13px] ${sel ? 'bg-[var(--module-accent-light)] text-[var(--module-accent)] font-semibold' : 'text-ink hover:bg-surface-1 hover:text-ink'}`}
                 >
                   <span>{getLabel(opt)}</span>
-                  {sel && <Check className="h-3.5 w-3.5 text-[#111111] flex-shrink-0" />}
+                  {sel && <Check className="h-3.5 w-3.5 text-[var(--module-accent)] flex-shrink-0" />}
                 </div>
               );
             })}
@@ -263,7 +283,7 @@ const FormRenderer = ({
   };
 
   /* ═════════════ FIELD RENDERER ═════════════ */
-  const renderField = (field, value, onFieldChange) => {
+  const renderField = (field, value, onFieldChange, parentContext = formData) => {
     const options = dynamicOptions[field.name] || field.options || [];
     const isFocused = focusedField === field.name;
     const filled = value !== undefined && value !== null && value !== "";
@@ -277,6 +297,82 @@ const FormRenderer = ({
         ? 'border-[#111111] ring-1 ring-[#111111]'
         : 'border-[#d3cec6] hover:border-[#a8a39d]'}
     `;
+
+    // ── Country Dropdown override ──
+    const isCountry = field.name.endsWith("country") || field.name === "country" || field.label === "Country";
+    if (isCountry) {
+      const countryList = Country.getAllCountries().map(c => ({ value: c.name, label: c.name }));
+      const selectedOpt = countryList.find(o => o.value === value) || null;
+      return (
+        <SearchableSelect
+          options={countryList}
+          value={selectedOpt}
+          onChange={(opt) => onFieldChange(opt?.value ?? opt)}
+          multiple={false}
+          labelField="label"
+          fieldName="value"
+          label={field.label}
+          required={field.required}
+        />
+      );
+    }
+
+    // ── State Dropdown override ──
+    const isState = field.name.endsWith("state") || field.name === "state" || field.label === "State";
+    if (isState) {
+      const countryPath = field.name.replace("state", "country");
+      const countryName = getNestedValue(parentContext, countryPath) || getNestedValue(parentContext, "country");
+      const countryCode = getCountryCode(countryName);
+
+      const stateList = countryCode 
+        ? State.getStatesOfCountry(countryCode).map(s => ({ value: s.name, label: s.name }))
+        : [];
+      const selectedOpt = stateList.find(o => o.value === value) || null;
+
+      return (
+        <SearchableSelect
+          options={stateList}
+          value={selectedOpt}
+          onChange={(opt) => onFieldChange(opt?.value ?? opt)}
+          multiple={false}
+          labelField="label"
+          fieldName="value"
+          label={field.label}
+          required={field.required}
+        />
+      );
+    }
+
+    // ── City Dropdown override ──
+    const isCity = field.name.endsWith("city") || field.name === "city" || field.label === "City";
+    if (isCity) {
+      const countryPath = field.name.replace("city", "country");
+      const statePath = field.name.replace("city", "state");
+      
+      const countryName = getNestedValue(parentContext, countryPath) || getNestedValue(parentContext, "country");
+      const stateName = getNestedValue(parentContext, statePath) || getNestedValue(parentContext, "state");
+
+      const countryCode = getCountryCode(countryName);
+      const stateCode = getStateCode(countryCode, stateName);
+
+      const cityList = (countryCode && stateCode)
+        ? City.getCitiesOfState(countryCode, stateCode).map(c => ({ value: c.name, label: c.name }))
+        : [];
+      const selectedOpt = cityList.find(o => o.value === value) || null;
+
+      return (
+        <SearchableSelect
+          options={cityList}
+          value={selectedOpt}
+          onChange={(opt) => onFieldChange(opt?.value ?? opt)}
+          multiple={false}
+          labelField="label"
+          fieldName="value"
+          label={field.label}
+          required={field.required}
+        />
+      );
+    }
 
     /* ── Label (read-only display) ── */
     if (field.type === "label") {
@@ -326,7 +422,7 @@ const FormRenderer = ({
                         const updated = [...subFormValue];
                         updated[index] = { ...updated[index], [subField.name]: val };
                         onFieldChange(updated);
-                      })}
+                      }, item)}
                     </div>
                   ))}
                 </div>
@@ -348,7 +444,7 @@ const FormRenderer = ({
             <div className="grid grid-cols-1 gap-4">
               {field.subFormFields?.map((subField) => (
                 <div key={subField.name}>
-                  {renderField(subField, subFormValue[subField.name], (val) => onFieldChange({ ...subFormValue, [subField.name]: val }))}
+                  {renderField(subField, subFormValue[subField.name], (val) => onFieldChange({ ...subFormValue, [subField.name]: val }), subFormValue)}
                 </div>
               ))}
             </div>
@@ -530,7 +626,8 @@ const FormRenderer = ({
               {renderField(
                 field,
                 field.external ? field.externalValue : getNestedValue(formData, field.name),
-                (val) => update(field.name, val)
+                (val) => update(field.name, val),
+                formData
               )}
             </div>
           ))}

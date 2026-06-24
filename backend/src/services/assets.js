@@ -3,6 +3,7 @@
 // Loaded automatically by servicesCache.js — filename must match collection key in Collection.js.
 
 import models from '../models/Collection.js';
+import { writeLedgerEntry } from './assetHooksService.js';
 
 // ── Status transition rules ────────────────────────────────────────────────────
 //
@@ -138,8 +139,23 @@ export default function () {
       return data;
     },
 
-    // afterUpdate intentionally not exported in Phase 1.
-    // Phase 2 will add afterUpdate to sync allocation status changes.
+    afterUpdate: async ({ docId, data, beforeDoc, userId }) => {
+      const statusChanged = data.status && data.status !== beforeDoc.status;
+      if (!statusChanged) return;
 
+      if (data.status === 'Disposed') {
+        await writeLedgerEntry({
+          assetId: docId,
+          transactionType: 'OUT',
+          triggerType: 'Write_Off_Disposal',
+          previousState: beforeDoc.status,
+          newState: 'Disposed',
+          quantity: 1,
+          performedBy: userId,
+          referenceModel: null,
+          referenceId: null
+        });
+      }
+    }
   };
 }

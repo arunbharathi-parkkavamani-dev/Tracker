@@ -3,6 +3,7 @@
 // Loaded automatically by servicesCache.js — filename must match collection key in Collection.js.
 
 import models from '../models/Collection.js';
+import { writeLedgerEntry } from './assetHooksService.js';
 
 const ALLOWED_TRANSITIONS = {
   'Sent for Repair':  ['In Repair', 'Repaired', 'Beyond Repair'],
@@ -48,13 +49,28 @@ export default function () {
      * ────────────
      * Ensure asset status is set to 'Under Repair'
      */
-    afterCreate: async ({ docId }) => {
+    afterCreate: async ({ docId, userId }) => {
       const repair = await models.assetrepairs.findById(docId).lean();
       if (!repair) return;
+
+      const beforeAsset = await models.assets.findById(repair.assetId).select('status').lean();
 
       // Update asset status to 'Under Repair' if it isn't already
       await models.assets.findByIdAndUpdate(repair.assetId, {
         status: 'Under Repair'
+      });
+
+      // Write OUT to stock ledger
+      await writeLedgerEntry({
+        assetId: repair.assetId,
+        transactionType: 'OUT',
+        triggerType: 'Send_To_Repair',
+        previousState: beforeAsset ? beforeAsset.status : 'Available',
+        newState: 'Under Repair',
+        quantity: 1,
+        performedBy: userId || repair.createdBy,
+        referenceModel: 'assetrepairs',
+        referenceId: docId
       });
     },
 
@@ -108,6 +124,19 @@ export default function () {
           assetUpdate.conditionLastAssessedBy = userId;
         }
         await models.assets.findByIdAndUpdate(repair.assetId, assetUpdate);
+
+        // Write IN to stock ledger
+        await writeLedgerEntry({
+          assetId: repair.assetId,
+          transactionType: 'IN',
+          triggerType: 'Repair_Return',
+          previousState: 'Under Repair',
+          newState: 'Available',
+          quantity: 1,
+          performedBy: userId,
+          referenceModel: 'assetrepairs',
+          referenceId: docId
+        });
       } else if (repair.status === 'Beyond Repair') {
         await models.assets.findByIdAndUpdate(repair.assetId, {
           status: 'Disposed',
@@ -115,6 +144,19 @@ export default function () {
           conditionLastAssessedAt: new Date(),
           currentAllocatedTo: null,
           currentAllocationId: null
+        });
+
+        // Write OUT to stock ledger
+        await writeLedgerEntry({
+          assetId: repair.assetId,
+          transactionType: 'OUT',
+          triggerType: 'Write_Off_Disposal',
+          previousState: 'Under Repair',
+          newState: 'Disposed',
+          quantity: 1,
+          performedBy: userId,
+          referenceModel: 'assetrepairs',
+          referenceId: docId
         });
       }
     }

@@ -25,12 +25,12 @@ dotenv.config({ path: path.resolve(__dirname, '../Config/.env') });
 
 // Map: role name (lowercase) → capabilities
 const ROLE_CAPABILITIES = {
-  'super admin': ['manage:salarystructures', 'manage:payroll', 'manage:employees', 'manage:expenses', 'manage:agents', 'manage:leaves', 'manage:attendance', 'view:reports'],
-  'superadmin':  ['manage:salarystructures', 'manage:payroll', 'manage:employees', 'manage:expenses', 'manage:agents', 'manage:leaves', 'manage:attendance', 'view:reports'],
-  'admin':       ['manage:salarystructures', 'manage:payroll', 'manage:employees', 'manage:expenses', 'manage:agents', 'manage:leaves', 'manage:attendance', 'view:reports'],
-  'hr admin':    ['manage:salarystructures', 'manage:payroll', 'manage:employees', 'manage:expenses', 'manage:agents', 'manage:leaves', 'manage:attendance', 'view:reports'],
-  'hr':          ['manage:salarystructures', 'manage:payroll', 'manage:employees', 'manage:expenses', 'manage:agents', 'manage:leaves', 'manage:attendance', 'view:reports'],
-  'manager':     ['manage:expenses', 'manage:leaves', 'manage:attendance', 'view:reports'],
+  'super admin': ['manage:salarystructures', 'manage:payroll', 'manage:employees', 'manage:expenses', 'manage:agents', 'manage:leaves', 'manage:attendance', 'view:reports', 'manage:assets', 'manage:assetvendors', 'manage:assetpurchases', 'manage:assetinvoices', 'manage:assetpayments', 'read:assetstockledgers'],
+  'superadmin':  ['manage:salarystructures', 'manage:payroll', 'manage:employees', 'manage:expenses', 'manage:agents', 'manage:leaves', 'manage:attendance', 'view:reports', 'manage:assets', 'manage:assetvendors', 'manage:assetpurchases', 'manage:assetinvoices', 'manage:assetpayments', 'read:assetstockledgers'],
+  'admin':       ['manage:salarystructures', 'manage:payroll', 'manage:employees', 'manage:expenses', 'manage:agents', 'manage:leaves', 'manage:attendance', 'view:reports', 'manage:assets', 'manage:assetvendors', 'manage:assetpurchases', 'manage:assetinvoices', 'manage:assetpayments', 'read:assetstockledgers'],
+  'hr admin':    ['manage:salarystructures', 'manage:payroll', 'manage:employees', 'manage:expenses', 'manage:agents', 'manage:leaves', 'manage:attendance', 'view:reports', 'manage:assets', 'manage:assetvendors', 'manage:assetpurchases', 'manage:assetinvoices', 'manage:assetpayments', 'read:assetstockledgers'],
+  'hr':          ['manage:salarystructures', 'manage:payroll', 'manage:employees', 'manage:expenses', 'manage:agents', 'manage:leaves', 'manage:attendance', 'view:reports', 'manage:assets', 'manage:assetvendors', 'manage:assetpurchases', 'manage:assetinvoices', 'manage:assetpayments', 'read:assetstockledgers'],
+  'manager':     ['manage:expenses', 'manage:leaves', 'manage:attendance', 'view:reports', 'read:assetstockledgers'],
   'employee':    [],
 };
 

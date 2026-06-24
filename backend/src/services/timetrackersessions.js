@@ -17,7 +17,7 @@ export default function timetrackersessions() {
         }
       }
       
-      body.startTime = new Date();
+      body.startTime = body.startTime ? new Date(body.startTime) : new Date();
       if (!body.userId) body.userId = userId;
       
       return body;

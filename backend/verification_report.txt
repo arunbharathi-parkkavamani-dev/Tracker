@@ -1,0 +1,782 @@
+
+==================================================
+🚀 LOGIMAX ERP: STARTING SYSTEM BUSINESS VERIFICATION
+==================================================
+
+🔌 Connecting to MongoDB for policy initialization...
+[ERROR] (node:15812) [MONGOOSE] Warning: Duplicate schema index on {"payrollRunId":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[ERROR] (node:15812) [MONGOOSE] Warning: Duplicate schema index on {"timestamp":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+[ERROR] (node:15812) [MONGOOSE] Warning: Duplicate schema index on {"userId":1,"status":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+[ERROR] (node:15812) [MONGOOSE] Warning: Duplicate schema index on {"name":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+[ERROR] (node:15812) [MONGOOSE] Warning: Duplicate schema index on {"ticketId":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+🛡️ Auto-configuring test access policies for roles: [
+  "ADMIN",
+  "HR",
+  "HR Admin"
+]
+✅ Temporary E2E test access policies configured and cached.
+
+🏃 Running Asset Lifecycle test...
+🔌 Connecting to MongoDB...
+✅ Connected to MongoDB
+📦 Registering Mongoose models...
+✅ Policy cache initialized
+👤 Actor employee: Arunbharathi (68d8b9daf397d1d97620ba9a)
+
+--- STEP 1: Creating Asset Vendor ---
+[buildCreateQuery] body: {
+  "name": "TEST_VENDOR_E2E_1782300166470",
+  "contactPerson": "E2E Vendor Contact",
+  "email": "e2e_vendor@test.com",
+  "phone": "9998887770",
+  "gstIN": "33TESTG1234F1Z1",
+  "address": "E2E Warehouse, Bangalore",
+  "status": "Active"
+}
+[buildCreateQuery] body after sanitizeWrite: {
+  "name": "TEST_VENDOR_E2E_1782300166470",
+  "contactPerson": "E2E Vendor Contact",
+  "email": "e2e_vendor@test.com",
+  "phone": "9998887770",
+  "gstIN": "33TESTG1234F1Z1",
+  "address": "E2E Warehouse, Bangalore",
+  "status": "Active"
+} policy: {
+  "_id": "6a3b909ff4ba465c2fdc6284",
+  "role": "69eca1044548ab4729b7511f",
+  "modelName": "assetvendors",
+  "__v": 0,
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "conditions": {},
+  "createdAt": "2026-06-24T08:09:02.541Z",
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "registry": [],
+  "updatedAt": "2026-06-24T11:22:45.786Z"
+}
+✅ Vendor created: TEST_VENDOR_E2E_1782300166470
+
+--- STEP 2: Creating PO in Draft status ---
+[buildCreateQuery] body: {
+  "vendorId": "6a3bbe0685c5b2a18722fdf4",
+  "poNumber": "TEST_PO_E2E_1782300166470",
+  "purchaseDate": "2026-06-24T11:22:46.793Z",
+  "status": "Draft",
+  "items": [
+    {
+      "categoryId": "6a3bbe0685c5b2a18722fdf2",
+      "name": "Dell Laptop E2E Test",
+      "model": "Dell-E2E-X",
+      "serialNumberPrefix": "SN-ASSET-E2E-",
+      "quantity": 2,
+      "unitPrice": 50000,
+      "taxRate": 18
+    }
+  ],
+  "totalAmount": 118000,
+  "paymentStatus": "Unpaid"
+}
+[buildCreateQuery] body after sanitizeWrite: {
+  "vendorId": "6a3bbe0685c5b2a18722fdf4",
+  "poNumber": "TEST_PO_E2E_1782300166470",
+  "purchaseDate": "2026-06-24T11:22:46.793Z",
+  "status": "Draft",
+  "items": [
+    {
+      "categoryId": "6a3bbe0685c5b2a18722fdf2",
+      "name": "Dell Laptop E2E Test",
+      "model": "Dell-E2E-X",
+      "serialNumberPrefix": "SN-ASSET-E2E-",
+      "quantity": 2,
+      "unitPrice": 50000,
+      "taxRate": 18
+    }
+  ],
+  "totalAmount": 118000,
+  "paymentStatus": "Unpaid"
+} policy: {
+  "_id": "6a3b909ff4ba465c2fdc6285",
+  "modelName": "assetpurchases",
+  "role": "69eca1044548ab4729b7511f",
+  "__v": 0,
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "conditions": {},
+  "createdAt": "2026-06-24T08:09:03.164Z",
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "registry": [],
+  "updatedAt": "2026-06-24T11:22:45.838Z"
+}
+✅ PO created: TEST_PO_E2E_1782300166470 (status: "Draft")
+
+--- STEP 3: Transitioning PO status sequentially ---
+Transition: Draft -> Pending Approval
+Transition: Pending Approval -> Approved
+Transition: Approved -> Received (GRN Hook - Auto assets & IN ledger)
+[GRN Receipt] Generating 2 assets for category 6a3bbe0685c5b2a18722fdf2
+[AssetStockLedger] Logged IN - Purchase_Receipt for Asset: 6a3bbe0785c5b2a18722fe10
+[AssetStockLedger] Logged IN - Purchase_Receipt for Asset: 6a3bbe0885c5b2a18722fe14
+[GRN Receipt] Successfully processed receipt for PO TEST_PO_E2E_1782300166470
+✅ PO status updated to: "Received"
+   Found 2 created assets:
+     - Asset ID: AST-000005, Name: Dell Laptop E2E Test, Status: Available
+     - Asset ID: AST-000006, Name: Dell Laptop E2E Test, Status: Available
+✅ Verified: Assets and IN Stock Ledger entries created successfully.
+
+--- STEP 4: Allocating Asset: AST-000005 ---
+[buildCreateQuery] body: {
+  "employeeId": "68d8b9daf397d1d97620ba9a",
+  "assetId": "6a3bbe0785c5b2a18722fe10",
+  "allocationType": "Temporary",
+  "allocationDate": "2026-06-24T11:22:48.324Z",
+  "reason": "E2E testing allocation"
+}
+[buildCreateQuery] body after sanitizeWrite: {
+  "employeeId": "68d8b9daf397d1d97620ba9a",
+  "assetId": "6a3bbe0785c5b2a18722fe10",
+  "allocationType": "Temporary",
+  "allocationDate": "2026-06-24T11:22:48.324Z",
+  "reason": "E2E testing allocation"
+} policy: {
+  "_id": "6a3b7d45f4ba465c2fdc61c6",
+  "modelName": "assetallocations",
+  "role": "69eca1044548ab4729b7511f",
+  "__v": 0,
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "conditions": {},
+  "createdAt": "2026-06-24T06:46:29.373Z",
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "registry": [],
+  "updatedAt": "2026-06-24T11:22:45.687Z"
+}
+◇ injected env (0) from src\Config\.env // tip: ◈ secrets for agents [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+✅ Allocation request created: 6a3bbe0b85c5b2a18722fe25 (status: "Pending Approval")
+   Asset status after create: "Reserved" (expected "Reserved")
+[AssetStockLedger] Logged OUT - Employee_Allocation for Asset: 6a3bbe0785c5b2a18722fe10
+✅ Allocation activated (Pending Approval → Active).
+   Asset status: "Allocated"
+✅ Verified: Allocation logged OUT ledger entry and asset status is "Allocated".
+Returning asset back to inventory (triggers IN ledger)...
+[AssetStockLedger] Logged IN - Employee_Return for Asset: 6a3bbe0785c5b2a18722fe10
+   Asset status (Returned): "Available"
+✅ Verified: Asset returned, status changed to "Available", and logged IN ledger.
+
+--- STEP 5: Repair Flow for AST-000005 ---
+[buildCreateQuery] body: {
+  "assetId": "6a3bbe0785c5b2a18722fe10",
+  "issueDescription": "E2E screen issue",
+  "status": "Sent for Repair",
+  "repairCost": 3000
+}
+[buildCreateQuery] body after sanitizeWrite: {
+  "assetId": "6a3bbe0785c5b2a18722fe10",
+  "issueDescription": "E2E screen issue",
+  "status": "Sent for Repair",
+  "repairCost": 3000
+} policy: {
+  "_id": "6a3b818cf4ba465c2fdc61d8",
+  "modelName": "assetrepairs",
+  "role": "69eca1044548ab4729b7511f",
+  "__v": 0,
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "conditions": {},
+  "createdAt": "2026-06-24T07:04:44.129Z",
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "registry": [],
+  "updatedAt": "2026-06-24T11:22:45.737Z"
+}
+[AssetStockLedger] Logged OUT - Send_To_Repair for Asset: 6a3bbe0785c5b2a18722fe10
+✅ Repair record created (status: "Sent for Repair")
+✅ Verified: Asset transitioned to "Under Repair" and logged OUT ledger.
+Completing repair as Repaired (triggers IN ledger)...
+[AssetStockLedger] Logged IN - Repair_Return for Asset: 6a3bbe0785c5b2a18722fe10
+✅ Verified: Repair completed, status changed to "Available", and logged IN ledger.
+
+--- STEP 6: Disposal Flow for AST-000005 ---
+[AssetStockLedger] Logged OUT - Write_Off_Disposal for Asset: 6a3bbe0785c5b2a18722fe10
+✅ Asset status updated to "Disposed".
+✅ Verified: Asset status set to "Disposed" and logged OUT ledger entry.
+
+🧹 Cleaning up asset E2E test data...
+🧹 Cleanup completed.
+🎉 Asset Lifecycle: PASS
+
+🏃 Running Project Lifecycle test...
+🔌 Connecting to MongoDB...
+✅ Connected to MongoDB
+📦 Registering Mongoose models...
+✅ Policy cache initialized
+👤 Actor employee: Arunbharathi (68d8b9daf397d1d97620ba9a)
+
+--- STEP 1: Creating Client ---
+[buildCreateQuery] body: {
+  "name": "Client E2E 1782300178390",
+  "email": "client_1782300178390@e2e.com",
+  "phone": "9888777666",
+  "Status": "Active",
+  "leadStatus": "Closed Won"
+}
+[buildCreateQuery] body after sanitizeWrite: {
+  "name": "Client E2E 1782300178390",
+  "email": "client_1782300178390@e2e.com",
+  "phone": "9888777666",
+  "Status": "Active",
+  "leadStatus": "Closed Won"
+} policy: {
+  "_id": "6a22fe73ce2ef51d714762a2",
+  "modelName": "clients",
+  "role": "69eca1044548ab4729b7511f",
+  "__v": 0,
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "conditions": {},
+  "createdAt": "2026-06-05T16:50:58.045Z",
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "registry": [],
+  "updatedAt": "2026-06-24T11:22:45.458Z"
+}
+✅ Client created: Client E2E 1782300178390 (6a3bbe1385c5b2a18722ff53)
+
+--- STEP 2: Creating Project ---
+[buildCreateQuery] body: {
+  "name": "Project E2E 1782300178390",
+  "description": "E2E project container",
+  "isActive": true,
+  "complexity": "Medium",
+  "estimatedHours": 100
+}
+[buildCreateQuery] body after sanitizeWrite: {
+  "name": "Project E2E 1782300178390",
+  "description": "E2E project container",
+  "isActive": true,
+  "complexity": "Medium",
+  "estimatedHours": 100
+} policy: {
+  "_id": "6a22fe73ce2ef51d714762a5",
+  "role": "69eca1044548ab4729b7511f",
+  "modelName": "projecttypes",
+  "__v": 0,
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "conditions": {},
+  "createdAt": "2026-06-05T16:50:58.488Z",
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "registry": [],
+  "updatedAt": "2026-06-24T11:22:45.503Z"
+}
+✅ Project created: Project E2E 1782300178390 (6a3bbe1385c5b2a18722ff73)
+✅ Project linked to Client.
+
+--- STEP 3: Creating Milestone ---
+[buildCreateQuery] body: {
+  "name": "Milestone E2E 1782300178390",
+  "description": "First milestone of E2E",
+  "Status": "Active"
+}
+[buildCreateQuery] body after sanitizeWrite: {
+  "name": "Milestone E2E 1782300178390",
+  "description": "First milestone of E2E",
+  "Status": "Active"
+} policy: {
+  "_id": "6a22fe74ce2ef51d714762b6",
+  "modelName": "milestones",
+  "role": "69eca1044548ab4729b7511f",
+  "__v": 0,
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "conditions": {},
+  "createdAt": "2026-06-05T16:50:59.632Z",
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "registry": [],
+  "updatedAt": "2026-06-24T11:22:45.548Z"
+}
+✅ Milestone created: Milestone E2E 1782300178390 (6a3bbe1485c5b2a18722ffb3)
+✅ Milestone added to Client milestones list.
+
+--- STEP 4: Creating Task under Project/Milestone ---
+[buildCreateQuery] body: {
+  "clientId": "6a3bbe1385c5b2a18722ff53",
+  "projectTypeId": "6a3bbe1385c5b2a18722ff73",
+  "taskTypeId": "6a315ecfcacaf66b50ecdea3",
+  "createdBy": "68d8b9daf397d1d97620ba9a",
+  "assignedTo": [
+    "68d8b9daf397d1d97620ba9a"
+  ],
+  "milestoneId": "6a3bbe1485c5b2a18722ffb3",
+  "milestoneStatus": "Pending",
+  "title": "E2E Milestone Verification Task",
+  "userStory": "Must verify E2E project integration",
+  "status": "Backlogs",
+  "estimatedHours": 8
+}
+[buildCreateQuery] body after sanitizeWrite: {
+  "clientId": "6a3bbe1385c5b2a18722ff53",
+  "projectTypeId": "6a3bbe1385c5b2a18722ff73",
+  "taskTypeId": "6a315ecfcacaf66b50ecdea3",
+  "createdBy": "68d8b9daf397d1d97620ba9a",
+  "assignedTo": [
+    "68d8b9daf397d1d97620ba9a"
+  ],
+  "milestoneId": "6a3bbe1485c5b2a18722ffb3",
+  "milestoneStatus": "Pending",
+  "title": "E2E Milestone Verification Task",
+  "userStory": "Must verify E2E project integration",
+  "status": "Backlogs",
+  "estimatedHours": 8
+} policy: {
+  "_id": "6a22fe74ce2ef51d714762a9",
+  "modelName": "tasks",
+  "role": "69eca1044548ab4729b7511f",
+  "__v": 0,
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "conditions": {},
+  "createdAt": "2026-06-05T16:50:58.755Z",
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "registry": [],
+  "updatedAt": "2026-06-24T11:22:45.299Z"
+}
+✅ Task created: "E2E Milestone Verification Task" (status: "Backlogs")
+
+--- STEP 5: Logging Hours via Time Tracker ---
+[buildCreateQuery] body: {
+  "taskId": "6a3bbe1585c5b2a18722ffe7",
+  "projectId": "6a3bbe1385c5b2a18722ff73",
+  "userId": "68d8b9daf397d1d97620ba9a",
+  "startTime": "2026-06-24T08:23:01.851Z",
+  "status": "active"
+}
+[buildCreateQuery] body after sanitizeWrite: {
+  "taskId": "6a3bbe1585c5b2a18722ffe7",
+  "projectId": "6a3bbe1385c5b2a18722ff73",
+  "userId": "68d8b9daf397d1d97620ba9a",
+  "startTime": "2026-06-24T08:23:01.851Z",
+  "status": "active"
+} policy: {
+  "_id": "6a3ad546acb4d18190355d36",
+  "role": "69eca1044548ab4729b7511f",
+  "modelName": "timetrackersessions",
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "registry": [],
+  "conditions": {},
+  "createdAt": "2026-06-23T18:49:42.973Z",
+  "updatedAt": "2026-06-24T11:22:45.250Z",
+  "__v": 0
+}
+✅ Time Tracker session started (active, startTime: 2026-06-24T08:23:01.851Z)
+✅ Time Tracker session completed (logged 3 hours).
+✅ Verified: Time entry logged and marked as completed (duration: 10800s).
+
+--- STEP 6: Completing Task and Syncing Milestone ---
+[DEBUG-SYNC] Available roles in DB: [
+  "\"HR Admin\" (69eca1044548ab4729b7511f)",
+  "\"ADMIN\" (69eef568dbc90e9e04b4959b)",
+  "\"Developer\" (68d8b98af397d1d97620ba97)",
+  "\"agent\" (6a25cbc1cd36294f5e578696)",
+  "\"HR\" (6a395c0c26c783b48296f1ce)",
+  "\"employee\" (6a396cdef65f84c72252245e)",
+  "\"Manager\" (6a3b7d6d78c49386b4574c69)"
+]
+[DEBUG-SYNC] Resolved admin roleId: 69eef568dbc90e9e04b4959b
+✅ Task status updated to "Completed".
+   Client Milestone status: "Completed"
+✅ Verified: Client milestone status automatically synced to "Completed".
+
+🧹 Cleaning up project E2E test data...
+🧹 Cleanup completed.
+🎉 Project Lifecycle: PASS
+
+🏃 Running Ticket Lifecycle test...
+🔌 Connecting to MongoDB...
+✅ Connected to MongoDB
+📦 Registering Mongoose models...
+✅ Policy cache initialized
+👤 Actor employee: Arunbharathi (68d8b9daf397d1d97620ba9a)
+
+--- STEP 1: Creating Client for Ticketing ---
+[buildCreateQuery] body: {
+  "name": "Client E2E Tickets 1782300186435",
+  "email": "ticket_client_1782300186435@e2e.com",
+  "phone": "9777666555",
+  "Status": "Active"
+}
+[buildCreateQuery] body after sanitizeWrite: {
+  "name": "Client E2E Tickets 1782300186435",
+  "email": "ticket_client_1782300186435@e2e.com",
+  "phone": "9777666555",
+  "Status": "Active"
+} policy: {
+  "_id": "6a22fe73ce2ef51d714762a2",
+  "modelName": "clients",
+  "role": "69eca1044548ab4729b7511f",
+  "__v": 0,
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "conditions": {},
+  "createdAt": "2026-06-05T16:50:58.045Z",
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "registry": [],
+  "updatedAt": "2026-06-24T11:22:45.458Z"
+}
+✅ Client created: Client E2E Tickets 1782300186435
+
+--- STEP 2: Creating Support Ticket ---
+[buildCreateQuery] body: {
+  "title": "Ticket E2E issue 1782300186435",
+  "description": "Screen is flickering after recent ERP v2 build deployment",
+  "clientId": "6a3bbe1b85c5b2a187230119",
+  "type": "6a315ecfcacaf66b50ecdea3",
+  "priority": "High",
+  "status": "Open"
+}
+[buildCreateQuery] body after sanitizeWrite: {
+  "title": "Ticket E2E issue 1782300186435",
+  "description": "Screen is flickering after recent ERP v2 build deployment",
+  "clientId": "6a3bbe1b85c5b2a187230119",
+  "type": "6a315ecfcacaf66b50ecdea3",
+  "priority": "High",
+  "status": "Open"
+} policy: {
+  "_id": "6a22fe74ce2ef51d714762b1",
+  "modelName": "tickets",
+  "role": "69eca1044548ab4729b7511f",
+  "__v": 0,
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "conditions": {},
+  "createdAt": "2026-06-05T16:50:59.291Z",
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "registry": [],
+  "updatedAt": "2026-06-24T11:22:45.347Z"
+}
+✅ Ticket created: TKT000007 - "Ticket E2E issue 1782300186435" (status: "Open")
+   Found 1 ticket participants.
+✅ Verified: Ticket creator successfully registered in ticket_participants.
+
+--- STEP 3: Assigning Agent to Ticket ---
+✅ Agent assigned to ticket. Total assignees: 1
+
+--- STEP 4: Adding Public Comment ---
+[buildCreateQuery] body: {
+  "ticketId": "6a3bbe1c85c5b2a187230159",
+  "message": "Hello, we are investigating the flickering issue. Please send console logs.",
+  "isPublic": true
+}
+[buildCreateQuery] body after sanitizeWrite: {
+  "ticketId": "6a3bbe1c85c5b2a187230159",
+  "message": "Hello, we are investigating the flickering issue. Please send console logs.",
+  "isPublic": true
+} policy: {
+  "_id": "6a396a64f4ba465c2fdc26f6",
+  "role": "69eca1044548ab4729b7511f",
+  "modelName": "ticket_comments",
+  "__v": 0,
+  "allowAccess": {
+    "read": [
+      "*"
+    ],
+    "create": [
+      "*"
+    ],
+    "update": [
+      "*"
+    ],
+    "delete": [
+      "*"
+    ]
+  },
+  "conditions": {},
+  "createdAt": "2026-06-22T17:01:23.570Z",
+  "forbiddenAccess": {
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  "permissions": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "registry": [],
+  "updatedAt": "2026-06-24T11:22:45.410Z"
+}
+✅ Comment added: "Hello, we are investigating the flickering issue. Please send console logs."
+   Ticket status after public comment: "Waiting For Client"
+✅ Verified: Ticket status transitioned to "Waiting For Client".
+✅ Verified: Status transition logged in history: "Open" ➔ "Waiting For Client"
+
+--- STEP 5: Resolving Ticket ---
+   Ticket status set to "In Progress"
+✅ Ticket status updated to: "Resolved"
+✅ Verified: SLA resolution timestamp logged: 2026-06-24T11:23:11.144Z
+
+--- STEP 6: Closing Ticket ---
+✅ Ticket status updated to: "Closed"
+✅ Verified: SLA closure timestamp logged: 2026-06-24T11:23:11.744Z
+
+🧹 Cleaning up ticket E2E test data...
+🧹 Cleanup completed.
+🎉 Ticket Lifecycle: PASS
+
+==================================================

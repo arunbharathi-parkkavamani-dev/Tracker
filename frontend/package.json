@@ -20,6 +20,7 @@
     "@tailwindcss/line-clamp": "^0.4.4",
     "@tailwindcss/vite": "^4.1.12",
     "axios": "^1.11.0",
+    "country-state-city": "^3.2.1",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.21",
     "file-saver": "^2.0.5",

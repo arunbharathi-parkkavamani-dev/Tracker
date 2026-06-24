@@ -270,6 +270,14 @@ export default function tickets() {
             changedByModel: commenterModel
           });
 
+          // Stamp SLA timestamps on resolution / closure
+          if (newStatus === 'Resolved' || newStatus === 'Closed') {
+            const tsUpdate = {};
+            if (newStatus === 'Resolved') tsUpdate.resolvedAt = new Date();
+            if (newStatus === 'Closed')   tsUpdate.closedAt   = new Date();
+            await models.tickets.findByIdAndUpdate(docId, tsUpdate);
+          }
+
           // Create activity log
           await models.ticket_activity_logs.create({
             ticketId: docId,

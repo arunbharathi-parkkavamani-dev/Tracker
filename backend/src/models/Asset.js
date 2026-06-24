@@ -68,6 +68,13 @@ const AssetSchema = new Schema({
 
   // ── Purchase / Procurement Info ──────────────────────────────────────────────
 
+  purchaseId: {
+    type: Schema.Types.ObjectId,
+    ref: 'assetpurchases',
+    default: null,
+    index: true
+  },
+
   purchaseDate: {
     type: Date
   },

@@ -15,7 +15,8 @@ const Menu = () => {
   const fetchSidebar = async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get("populate/read/sidebars?limit=100&sort=-order");
+      const filterObj = JSON.stringify({ isActive: { $in: [true, false] } });
+      const response = await axiosInstance.get(`populate/read/sidebars?limit=100&sort=-order&filter=${encodeURIComponent(filterObj)}`);
       setSidebarData(
         (response.data.data || []).map((item) => ({
           ...item,

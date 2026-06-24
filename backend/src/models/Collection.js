@@ -57,6 +57,11 @@ import assets from "./Asset.js";
 import assetallocations from "./AssetAllocation.js";
 import assetincidents from "./AssetIncident.js";
 import assetrepairs from "./AssetRepair.js";
+import assetvendors from "./AssetVendor.js";
+import assetpurchases from "./AssetPurchase.js";
+import assetinvoices from "./AssetInvoice.js";
+import assetpayments from "./AssetPayment.js";
+import assetstockledgers from "./AssetStockLedger.js";
 
 // Ticket Sub-entities
 import ticket_comments from "./TicketComment.js";
@@ -133,6 +138,11 @@ const models = {
   assetallocations,
   assetincidents,
   assetrepairs,
+  assetvendors,
+  assetpurchases,
+  assetinvoices,
+  assetpayments,
+  assetstockledgers,
 };
 
 export default models;
