@@ -7,6 +7,7 @@ import isRef from "./isRef.js";
 import isSender from "./isSender.js";
 import populateRef from "./populateRef.js";
 import isSameClient from "./isSameClient.js";
+import isAllocatedTo from "./isAllocatedTo.js";
 
 // Registry of reusable logic functions for policies
 // Each function behaves like a "Computed Filter" or "Runtime Check"
@@ -25,6 +26,7 @@ const registry = {
   isSender,
   populateRef,
   isSameClient,
+  isAllocatedTo,
   
   isManager: (user, record, context) => {
     // Check if user is a manager (logic depends on your hierarchy)

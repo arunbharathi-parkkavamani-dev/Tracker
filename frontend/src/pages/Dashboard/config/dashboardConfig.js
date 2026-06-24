@@ -102,10 +102,14 @@ export const WIDGET_GROUPS = {
   org:      { label: 'Organisation Stats', color: 'blue' },
   employee: { label: 'My Stats', color: 'green' },
   panels:   { label: 'Panels & Tables', color: 'purple' },
+  // V2 groups — new dashboard architecture
+  v2_core:  { label: 'V2 — Core Sections', color: 'blue' },
+  v2_stats: { label: 'V2 — Stat Cards', color: 'green' },
+  v2_panels:{ label: 'V2 — Action Panels', color: 'purple' },
 };
 
 export const WIDGET_REGISTRY = [
-  // — Org-level stats —
+  // — Org-level stats (V1) —
   {
     id: 'stat_total_employees',
     label: 'Total Employees',
@@ -135,7 +139,7 @@ export const WIDGET_REGISTRY = [
     needsData: ['leaves'],
   },
 
-  // — Personal stats —
+  // — Personal stats (V1) —
   {
     id: 'stat_attendance_status',
     label: 'Attendance Status',
@@ -158,7 +162,7 @@ export const WIDGET_REGISTRY = [
     needsData: ['tasks'],
   },
 
-  // — Panels & tables —
+  // — Panels & tables (V1) —
   {
     id: 'quick_actions',
     label: 'Quick Actions',
@@ -194,9 +198,127 @@ export const WIDGET_REGISTRY = [
     group: 'panels',
     needsData: [],
   },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // V2 Dashboard Widgets — New architecture (coexist with V1 until migration)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // — V2 Core Sections —
+  {
+    id: 'v2_alert_banner',
+    label: 'Alert Banner',
+    description: 'Shows critical alerts: overdue tasks, emergency leaves, unassigned tickets',
+    group: 'v2_core',
+    needsData: ['tasks', 'leaves', 'tickets'],
+  },
+  {
+    id: 'v2_workforce_pulse',
+    label: 'Workforce Pulse',
+    description: 'Real-time attendance pulse: present, leave, WFH, late, unchecked breakdown',
+    group: 'v2_core',
+    needsData: ['attendances', 'employees'],
+  },
+  {
+    id: 'v2_employee_header',
+    label: 'Employee Dashboard Header',
+    description: "Employee's own clock status, top tasks, and leave balance",
+    group: 'v2_core',
+    needsData: ['attendances', 'tasks', 'employees'],
+  },
+  {
+    id: 'v2_action_center',
+    label: 'Action Center',
+    description: 'Urgency-scored queue of items needing manager/admin attention',
+    group: 'v2_core',
+    needsData: ['leaves', 'regularizations', 'tasks', 'tickets'],
+  },
+  {
+    id: 'v2_team_attendance_grid',
+    label: 'Team Attendance Grid',
+    description: "Manager's at-a-glance team attendance status",
+    group: 'v2_core',
+    needsData: ['attendances', 'employees'],
+  },
+
+  // — V2 Stat Cards —
+  {
+    id: 'v2_stat_pending_approvals',
+    label: 'Pending Approvals',
+    description: 'Count of pending leave/regularization/WFH/comp-off requests',
+    group: 'v2_stats',
+    needsData: ['leaves', 'regularizations'],
+  },
+  {
+    id: 'v2_stat_overdue_tasks',
+    label: 'Overdue Tasks',
+    description: 'Tasks past deadline with department breakdown',
+    group: 'v2_stats',
+    needsData: ['tasks'],
+  },
+  {
+    id: 'v2_stat_open_tickets',
+    label: 'Open Tickets',
+    description: 'Count of unresolved tickets assigned to team/org',
+    group: 'v2_stats',
+    needsData: ['tickets'],
+  },
+  {
+    id: 'v2_stat_attendance_issues',
+    label: 'Attendance Issues',
+    description: 'Count of late entries, LOP, and unchecked employees today',
+    group: 'v2_stats',
+    needsData: ['attendances'],
+  },
+  {
+    id: 'v2_stat_payroll_status',
+    label: 'Payroll Status',
+    description: 'Current month payroll processing status',
+    group: 'v2_stats',
+    needsData: ['payrollruns'],
+  },
+  {
+    id: 'v2_stat_payroll_cost',
+    label: 'Payroll Cost',
+    description: 'Total payroll cost for current month',
+    group: 'v2_stats',
+    needsData: ['payrollruns'],
+  },
+
+  // — V2 MD/Executive Panels —
+  {
+    id: 'v2_stat_workforce_health',
+    label: 'Workforce Health Gauge',
+    description: 'MD-level workforce health percentage with status indicator',
+    group: 'v2_stats',
+    needsData: ['attendances', 'employees'],
+  },
+  {
+    id: 'v2_stat_financial_exposure',
+    label: 'Financial Exposure',
+    description: 'Total payroll exposure with LOP impact count',
+    group: 'v2_stats',
+    needsData: ['payrollruns', 'payrolls'],
+  },
+
+  // — V2 Employee Panels —
+  {
+    id: 'v2_employee_tasks',
+    label: 'My Top Tasks',
+    description: 'Top 3-5 tasks sorted by urgency (overdue → priority → deadline)',
+    group: 'v2_panels',
+    needsData: ['tasks'],
+  },
+  {
+    id: 'v2_employee_leave_balance',
+    label: 'Per-Type Leave Balance',
+    description: 'Leave balance broken down by leave type',
+    group: 'v2_panels',
+    needsData: ['employees'],
+  },
 ];
 
 /** Quick lookup: id → widget definition */
 export const WIDGET_MAP = Object.fromEntries(
   WIDGET_REGISTRY.map((w) => [w.id, w])
 );
+

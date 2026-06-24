@@ -40,10 +40,22 @@ export default function employeesService() {
     /**
      * beforeUpdate: If password is being updated, hash it before saving.
      */
-    async beforeUpdate({ body }) {
+    async beforeUpdate({ body, docId }) {
       if (body?.authInfo?.password) {
         const salt = await bcrypt.genSalt(12);
         body.authInfo.password = await bcrypt.hash(body.authInfo.password, salt);
+      }
+
+      // Exit clearance gate: Block term/inactivate if employee holds active asset allocations
+      if (body?.status && (body.status === 'Inactive' || body.status === 'Terminated')) {
+        const { default: models } = await import('../models/Collection.js');
+        const activeAllocCount = await models.assetallocations.countDocuments({
+          employeeId: docId,
+          status: 'Active'
+        });
+        if (activeAllocCount > 0) {
+          throw new Error(`Cannot update employee status to "${body.status}" because they still hold ${activeAllocCount} active asset allocation(s). Please process return or transfer before exit clearance.`);
+        }
       }
     }
   };

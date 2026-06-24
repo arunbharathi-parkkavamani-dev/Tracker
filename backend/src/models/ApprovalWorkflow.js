@@ -1,7 +1,7 @@
 import { Schema, model } from "mongoose";
 
 const ApprovalWorkflowSchema = new Schema({
-  modelName: { type: String, enum: ['leaves', 'regularizations'], required: true, index: true },
+  modelName: { type: String, enum: ['leaves', 'regularizations', 'assetallocations', 'assetincidents'], required: true, index: true },
   departmentId: { type: Schema.Types.ObjectId, ref: 'departments', index: true },
   steps: [{
     stepOrder: { type: Number, required: true },
