@@ -145,6 +145,18 @@ export default function leaves() {
           }
           await employee.save();
 
+          // Write to LeaveTransaction Audit Ledger
+          const { default: LeaveTransaction } = await import('../models/LeaveTransaction.js');
+          await LeaveTransaction.create({
+            employeeId: leaveDoc.employeeId,
+            leaveTypeId: leaveDoc.leaveTypeId,
+            type: 'LEAVE_DEBIT',
+            sourceId: leaveDoc._id,
+            sourceModel: 'leaves',
+            quantity: -totalDays, // Negative for debit
+            description: `Leave consumed for ${totalDays} days`
+          });
+
           // Add attendance for ALL leave days
           const attendance = [];
           let current = new Date(start);
@@ -183,6 +195,18 @@ export default function leaves() {
           bucket.available += totalDays; // restore leave balance
         }
         await employee.save();
+
+        // Write to LeaveTransaction Audit Ledger
+        const { default: LeaveTransaction } = await import('../models/LeaveTransaction.js');
+        await LeaveTransaction.create({
+          employeeId: leaveDoc.employeeId,
+          leaveTypeId: leaveDoc.leaveTypeId,
+          type: 'LEAVE_CREDIT_REVERSAL',
+          sourceId: leaveDoc._id,
+          sourceModel: 'leaves',
+          quantity: totalDays, // Positive for restoration
+          description: `Leave request rejected, restored ${totalDays} days`
+        });
 
         // Delete attendance records for that leave period
         await Attendance.deleteMany({

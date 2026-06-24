@@ -13,6 +13,7 @@ import bankRoutes from "./routes/bankRoutes.js";
 import configRoutes from "./routes/configRoutes.js";
 import adminSystemRoutes from "./routes/adminSystemRoutes.js";
 import exportRoutes from "./routes/exportRoutes.js";
+import dashboardRoutes from "./routes/dashboardRoutes.js";
 
 import { apiHitLogger } from "./middlewares/apiHitLogger.js";
 import { authMiddleware } from "./Controller/AuthController.js";
@@ -89,6 +90,7 @@ app.use("/api", bankRoutes);
 app.use("/api/config", configRoutes);
 app.use("/api/admin", adminSystemRoutes);
 app.use("/api/export", exportRoutes);
+app.use("/api/dashboard", authMiddleware, dashboardRoutes);
 
 app.use(errorHandler);
 

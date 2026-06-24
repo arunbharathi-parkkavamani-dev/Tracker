@@ -61,6 +61,12 @@ colors:
   payroll-accent-mid:       "#34D399"
   payroll-icon-bg:          "#D1FAE5"
 
+  # Asset Management  →  Amber / Orange
+  asset-accent:             "#D97706"   # Amber 600 — distinct from all other modules
+  asset-accent-light:       "#FEF3C7"   # Amber 100
+  asset-accent-mid:         "#F59E0B"   # Amber 500
+  asset-icon-bg:            "#FEF3C7"
+
   # ── SEMANTIC ──────────────────────────────────────────────────────────────
   semantic-success:         "#10B981"
   semantic-success-light:   "#D1FAE5"
@@ -758,6 +764,25 @@ modules:
       - Salary Structure (data rows with left-accent bar in payroll)
       - Tax & Deductions (doughnut chart in chart-green/chart-amber)
       - Payroll History (table, download icon in payroll-accent)
+
+  asset-management:
+    eyebrow:        "ASSETS"
+    accent:         "{colors.asset-accent}"       # #D97706  Amber 600
+    accent-light:   "{colors.asset-accent-light}" # #FEF3C7  Amber 100
+    icon:           "Package"
+    icon-color:     "{colors.asset-accent}"
+    icon-bg:        "{colors.asset-icon-bg}"
+    tab-active:
+      background:   "{colors.asset-accent-light}"
+      textColor:    "{colors.asset-accent}"
+    nav-active:     "background {colors.asset-accent-light}, text {colors.asset-accent}"
+    header-gradient: "linear-gradient(135deg, #92400E 0%, #D97706 100%)"
+    screens:
+      - Asset Register (table: assetId, name, category, status chip, condition chip, location)
+      - Asset Detail (section-card with purchase info, warranty, current holder)
+      - Asset Categories (simple table: name, code, warrantyMonths, isActive toggle)
+      - Add Asset Form (modal/drawer with purchase + condition fields)
+      - My Assets (employee self-view — Phase 2)
 
 
 # ─── LAYOUT ──────────────────────────────────────────────────────────────────
