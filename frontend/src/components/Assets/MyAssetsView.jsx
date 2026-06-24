@@ -19,13 +19,23 @@ const MyAssetsView = ({ employeeId }) => {
 
   const fetchMyAssets = async () => {
     try {
-      const res = await axiosInstance.post("/populate/read/assetallocations", {
-        filter: { employeeId, status: "Active", metaStatus: "active" },
+      const res = await axiosInstance.post("/populate/read/assets", {
+        filter: { currentAllocatedTo: employeeId, status: "Allocated", metaStatus: "active" },
         populateFields: {
-          assetId: "name,assetId,serialNumber,make,model,condition,storageLocation"
+          currentAllocationId: "status,allocationType,allocationDate,expectedReturn,notes"
         }
       });
-      setAllocations(res.data?.data || []);
+
+      const mapped = (res.data?.data || []).map(asset => ({
+        _id: asset.currentAllocationId?._id || asset.currentAllocationId,
+        allocationDate: asset.currentAllocationId?.allocationDate || asset.createdAt,
+        allocationType: asset.currentAllocationId?.allocationType || 'Allocation',
+        status: asset.currentAllocationId?.status || 'Active',
+        notes: asset.currentAllocationId?.notes || '',
+        assetId: asset
+      }));
+
+      setAllocations(mapped);
     } catch (error) {
       console.error("Error fetching allocated assets:", error);
       toast.error("Failed to load your assets.");

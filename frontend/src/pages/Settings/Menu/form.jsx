@@ -34,6 +34,9 @@ const MenuFormPage = () => {
       isActive: formData.isActive === undefined ? true : formData.isActive === "true" || formData.isActive === true,
       isParent: formData.isParent === "true" || formData.isParent === true,
       hasChildren: formData.hasChildren === "true" || formData.hasChildren === true,
+      parentId: formData.parentId?._id || formData.parentId || null,
+      allowedDepartments: (formData.allowedDepartments || []).map(d => d._id || d),
+      allowedDesignations: (formData.allowedDesignations || []).map(d => d._id || d),
     };
 
     try {

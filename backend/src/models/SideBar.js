@@ -40,6 +40,7 @@ const SideBarSchema = new mongoose.Schema({
 
   order: { type: Number, default: 0 },
   isActive: { type: Boolean, default: true },
+  isDeleted: { type: Boolean, default: false },
 
 }, { timestamps: true });
 

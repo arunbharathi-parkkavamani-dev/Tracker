@@ -123,11 +123,21 @@ export default async function buildReadQuery({
    * ----------------------------------------------- */
 
 
-  const mongoFilter = buildMongoFilter(filter);
+  const mongoFilter = buildMongoFilter(filter) || {};
+
+  const hasIsActive = !!Model.schema.path('isActive');
+  const hasIsDeleted = !!Model.schema.path('isDeleted');
+
+  if (hasIsDeleted && mongoFilter.isDeleted === undefined) {
+    mongoFilter.isDeleted = { $ne: true };
+  }
+  if (hasIsActive && mongoFilter.isActive === undefined) {
+    mongoFilter.isActive = { $ne: false };
+  }
 
   let query = docId && docId.trim() && docId !== "" && mongoose.Types.ObjectId.isValid(docId)
-    ? Model.findById(new mongoose.Types.ObjectId(docId))
-    : Model.find(mongoFilter || {});
+    ? Model.findOne({ _id: new mongoose.Types.ObjectId(docId), ...mongoFilter })
+    : Model.find(mongoFilter);
 
   if (fields && fields.length > 0) {
     query = query.select(fields.join(' '));
@@ -150,6 +160,9 @@ export default async function buildReadQuery({
         if (parentModelName && models[parentModelName]) {
           const ParentModel = models[parentModelName];
           actualSchemaPath = ParentModel.schema.path(childPath) || ParentModel.schema.path(`${childPath}.$`) || ParentModel.schema.virtualpath(childPath);
+        } else {
+          // Parent is a nested object/subdocument, not a referenced collection (e.g. professionalInfo.designation)
+          actualSchemaPath = Model.schema.path(path) || Model.schema.path(`${path}.$`) || Model.schema.virtualpath(path);
         }
       } else {
         // Direct field

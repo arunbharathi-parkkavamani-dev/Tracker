@@ -73,6 +73,10 @@ export default async function buildDeleteQuery({
     deletedBy: userId
   };
 
+  if (Model.schema.path('isDeleted')) {
+    updateQuery.isDeleted = true;
+  }
+
   let deletedDoc;
 
   if (docId) {
