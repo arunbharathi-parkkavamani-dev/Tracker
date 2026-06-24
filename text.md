@@ -670,3 +670,102 @@ Here's a breakdown of the review:
     *   **Good:** `AGENT-005` (never test against production URLs) is a crucial safety rule.
     *   **Good:** `AGENT-008` (explicit approval for core files) protects critical infrastructure.
     *   
+
+
+---
+### 🧠 AI Review (6/24/2026, 7:21:10 AM)
+
+
+### Part 1
+The provided code introduces new files for an AI agent system within a Logimax ERP Tracker project. Here's a review of this first part:
+
+**Overall Impression:**
+
+The commit introduces a comprehensive AI agent system designed to assist with development tasks for a React/Vite/Express/MongoDB application. This is a significant addition, and the structure seems well-thought-out, providing clear guidelines and workflows for the agent.
+
+**Specific File Reviews:**
+
+1.  **`.agent/.env.example`:**
+    *   **Purpose:** Provides a template for local environment configuration. This is standard practice and very helpful for onboarding.
+    *   **Content:** Includes placeholders for `PROJECT_ROOT`, `PYTHON_PATH`, `NODE_PATH`, `NPM_PATH`, `LOCALHOST_FE`, `LOCALHOST_BE`, `ISSUE_PLATFORM`, `REPO_OWNER`, `REPO_NAME`.
+    *   **Suggestion:** The comment `# GitHub: NOT needed — uses MCP server (configured in IDE settings)` is a bit cryptic. "MCP server" might not be immediately obvious to all developers. Perhaps clarify what MCP stands for or provide a link/reference to where this is configured in the IDE settings.
+    *   **Minor:** `PYTHON_PATH`, `NODE_PATH`, `NPM_PATH` are often automatically detected by modern build systems or IDEs if they are in the system's PATH. While good to have, they might not always need explicit setting.
+
+2.  **`.agent/Claude.md`:**
+    *   **Purpose:** This file serves as the core "Project Rules" and guidelines for the AI agent (presumably named Claude, given the filename). It's extremely detailed and crucial for ensuring the agent adheres to project standards.
+    *   **Structure:**
+        *   **`⛔ STEP ZERO — BEFORE ANY TASK (NON-NEGOTIABLE)`:** This is an excellent and strong directive. Emphasizing skill loading before any other action is a great way to enforce process.
+        *   **`Project Rules — Logimax ERP Tracker System`:** Clearly outlines framework, coding standards, API/data flow, frontend/backend conventions, safety, documentation, environment, and module definitions.
+    *   **Content - Framework & Coding Standards:**
+        *   **Frontend:**
+            *   Clearly defines React 19 + Vite 7, JS (`.jsx`/`.js`), Tailwind CSS 4 + `tokens.css` + MUI 7.
+            *   **Good:** Explicitly states "Functional components only with React hooks", "always use `useGenericAPI.js`", "No TypeScript, no React Query/TanStack". These are strong, clear architectural decisions.
+            *   **Minor:** "MUI 7" is mentioned. Given React 19 and Vite 7, it's good to ensure MUI v7 is indeed the target version, as MUI's major versions can have breaking changes.
+        *   **Backend:**
+            *   Defines Node.js (ES Modules), Express 5, Mongoose 8, MongoDB, JWT, Socket.io 4, Bull + Redis, S3.
+            *   **Good:** Clear separation of concerns (`models/`, `routes/`, `services/`, `middlewares/`). Explicitly mentions `isDeleted` for soft-delete.
+    *   **Content - API & Data Flow:**
+        *   Provides a standard trace and lists common `/populate` endpoints. This is very helpful for understanding the core API interaction pattern.
+    *   **Content - Frontend/Backend Conventions:**
+        *   Detailed conventions for state management, custom hooks, file organization, error handling, imports, Mongoose middleware, soft deletes, various middlewares (`agentAuthMiddleware`, `rateLimitMiddleware`, etc.).
+        *   **Good:** The level of detail here is excellent for maintaining consistency.
+    *   **Content - Safety & Guardrails:**
+        *   **Excellent:** Explicitly lists critical "Never run..." and "Never modify..." rules. This is crucial for preventing accidental damage or unauthorized changes, especially with an AI agent.
+        *   **Good:** Highlights the impact of changes to shared components and context providers.
+    *   **Content - Documentation & Process:**
+        *   Emphasizes updating `knowledge_brain/`, referencing module brain files, and specific commit/plan guidelines. This promotes good documentation habits.
+    *   **Content - Environment:**
+        *   Provides a clear table of environment variables and paths.
+    *   **Content - Modules:**
+        *   Lists all modules with their corresponding frontend pages and backend models. This provides a high-level overview of the application's structure.
+    *   **Overall for `Claude.md`:** This is an exceptionally well-written and comprehensive set of rules. It demonstrates a strong understanding of the project's architecture and the need for strict guidelines when working with an AI agent.
+
+3.  **`.agent/DEVELOPER_GUIDE.md`:**
+    *   **Purpose:** A guide for human developers on how to use the AI-assisted development system.
+    *   **Content:**
+        *   **Overview & Tech Stack:** Summarizes the project and its technologies.
+        *   **Quick Start:** Provides actionable steps for common tasks (`/validate-workflows`, `/build-module-brain`, `/module-bug-audit`, `/fix-single-bug`). This is very user-friendly.
+        *   **Directory Structure:** Clearly explains the purpose of each directory within `.agent/`.
+        *   **Key Workflows:** Lists important commands and their purposes in a table.
+
+
+### Part 2
+The provided code snippet is a well-structured and informative `README.md` section, followed by configuration files for an evaluation system (`.agent/evals`).
+
+Here's a review of the `README.md` section:
+
+**Overall Impression:**
+Excellent. This section provides a comprehensive and clear overview of the project's identity, tech stack, environment paths, directory structure, module registry, and agent behavioral rules. It's highly valuable for onboarding new developers, understanding the project's architecture, and setting expectations for automated agents.
+
+**Strengths:**
+
+1.  **Clarity and Readability:** The use of Markdown tables makes the information very easy to read and digest. The headings are clear and descriptive.
+2.  **Comprehensive Information:**
+    *   **Project Identity:** All essential project-level variables are defined.
+    *   **Tech Stack:** A detailed breakdown of technologies used across different layers is provided, including specific versions where relevant. This is crucial for understanding dependencies and compatibility.
+    *   **Environment Paths:** Clearly defines important environment variables and their usage. The "auto-detected" note is helpful.
+    *   **Directory Structure:** A very detailed and useful mapping of variables to actual directory paths and their purpose. This is invaluable for navigating the codebase.
+    *   **Module Registry:** This is a standout section. It clearly lists modules, their frontend/backend components, and associated backend models. The "Status" column is a good addition.
+    *   **Agent Behavioral Rules:** This is an excellent set of guidelines, especially for an AI agent. It establishes clear boundaries and best practices, preventing common pitfalls (e.g., modifying `node_modules`, deleting code, testing against production).
+3.  **Actionable Advice:** The "First time on a new machine?" note with the `/validate-workflows` command is a great touch for quick setup.
+4.  **Specifics:** Providing version numbers for frameworks (e.g., React 19, Vite 7, Express 5, Mongoose 8, MongoDB 6, Socket.io 4) is very helpful for maintaining consistency and debugging.
+5.  **No Redux/TanStack Query:** Explicitly stating "no Redux, no TanStack Query" for state management is a good decision, as it clarifies the architectural choice and avoids confusion.
+6.  **Custom UI Tokens:** Mentioning `custom tokens.css` highlights a specific UI customization approach.
+7.  **Agent Rules:** Rules like `AGENT-002` (Never delete code — comment with reason) and `AGENT-008` (Never modify `axiosInstance.js` or `authProvider.jsx` without explicit approval) are excellent for maintaining code quality and critical system integrity. `AGENT-009` (No TypeScript) is a clear architectural decision. `AGENT-010` (API calls must use `useGenericAPI.js`) enforces a consistent API interaction pattern.
+
+**Minor Suggestions/Considerations:**
+
+1.  **Consistency in Variable Naming:** While generally good, some variables like `{PROJECT_ROOT}` use `_` and others like `{LOCALHOST_FE}` use no separator. This is a minor stylistic point, but consistency can improve readability.
+2.  **`{BRAIN_DIR}` and `{WORKFLOW_DIR}`:** These paths (`knowledge_brain/` and `.agent/workflows/`) seem to relate to the agent itself rather than the core application. It's good they are documented, but their placement within "Directory Structure" might imply they are part of the main application codebase, which might not be the case. Perhaps a separate "Agent Specific Directories" section could be considered if they are truly distinct.
+3.  **Module Registry - "Core" and "Common" Modules:**
+    *   The "Core" module lists directories like `api/`, `context/`, `layouts/`, `hooks/`. While these are indeed core, they are also listed individually in the "Directory Structure" with `FE_` prefixes. It might be clearer to either link them explicitly or explain the relationship.
+    *   "Common" and "role" modules in the registry only list `components/Common/` and `components/role/` respectively. This is fine, but it might be useful to briefly explain what constitutes a "Common" component (e.g., highly reusable, generic UI elements) and "role" components (e.g., role-specific UI elements or logic).
+4.  **`[model]` in Module Registry:** The entry `| [model] | pages/[model]/ | — | — | Active |` is a bit abstract. If it refers to a dynamic pattern, it could be clarified (e.g., "Dynamic Model Pages: For any new model, a corresponding page `pages/[model]/` is expected.").
+5.  **`BE_CRUD` and `BE_HELPER`:** These are good, but a brief example or more specific description of what goes into `BE_CRUD` (e.g., "generic CRUD operations for models") and `BE_HELPER` (e.g., "miscellaneous utility functions not tied to a specific service") could add value.
+
+**Regarding the `.agent/evals` files:**
+
+These are standard evaluation configuration files for an AI agent, likely using a framework like Microsoft's Copilot SDK or similar.
+
+*   `eval.yaml`: Defines the overall evaluation for `frontend-ui-tokens` skill, including metrics (task completion, efficiency), graders (behavioral, token budget), and tasks.
+*   `negative-trigger-1.yaml`: A task
