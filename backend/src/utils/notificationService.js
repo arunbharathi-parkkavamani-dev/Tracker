@@ -32,10 +32,14 @@ export const sendNotification = async ({
       'task_mention': 'mention',
       'leave_request': 'leave',
       'leave_response': 'leave',
+      'assetallocations_request': 'asset',
+      'assetallocations_status': 'asset',
+      'assetincidents_request': 'asset',
+      'assetincidents_status': 'asset',
     };
 
     let resolvedType = TYPE_MAPPING[type] || type;
-    const ALLOWED_TYPES = ['post', 'mention', 'reaction', 'comment', 'ticket', 'task', 'leave', 'system'];
+    const ALLOWED_TYPES = ['post', 'mention', 'reaction', 'comment', 'ticket', 'task', 'leave', 'system', 'asset'];
     if (!ALLOWED_TYPES.includes(resolvedType)) {
       resolvedType = 'system';
     }

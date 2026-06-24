@@ -16,6 +16,7 @@ import { formDraftKey } from "../../utils/formDrafts";
 import { buildEmployeeUpdateFormData } from "../../utils/profileSubmit";
 import toast from "react-hot-toast";
 import { SECTION_GRADIENTS, PROFILE_PAGE } from "../../constants/uiTokens";
+import MyAssetsView from "../../components/Assets/MyAssetsView";
 
 // --- Compact Icons (w-4 h-4) ---
 const I = ({ d }) => <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d={d} /></svg>;
@@ -36,6 +37,7 @@ const icons = {
   bank: <I d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" />,
   edit: <I d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />,
   x: <I d="M6 18L18 6M6 6l12 12" />,
+  device: <I d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25" />
 };
 
 // --- Compact Field Row ---
@@ -243,6 +245,7 @@ const Profile = () => {
           <Tab active={tab === 'professional'} onClick={() => setTab('professional')} icon={icons.case} label="Professional" />
           <Tab active={tab === 'financial'} onClick={() => setTab('financial')} icon={icons.bank} label="Financial" />
           <Tab active={tab === 'documents'} onClick={() => setTab('documents')} icon={icons.doc} label="Documents" />
+          <Tab active={tab === 'assets'} onClick={() => setTab('assets')} icon={icons.device} label="My Assets" />
         </div>
 
         {editing && tab !== "professional" ? (
@@ -333,6 +336,10 @@ const Profile = () => {
                 <Row icon={icons.shield} label="PF" value={employee.personalDocuments?.pf} masked />
               </Card>
             </div>
+        )}
+
+        {tab === 'assets' && (
+          <MyAssetsView employeeId={user.id} />
         )}
           </>
         )}

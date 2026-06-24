@@ -47,7 +47,16 @@ import statusmappings from "./StatusMapping.js";
 import dashboardwidgets from "./DashboardWidget.js";
 import activitylogs from "./ActivityLog.js";
 import timetrackersessions from "./TimeTrackerSession.js";
-import approvalWorkflow from "./ApprovalWorkflow.js";
+import approvalworkflows from "./ApprovalWorkflow.js";
+import wfhrequests from "./WFHRequest.js";
+import compoffrequests from "./CompOffRequest.js";
+
+// Asset Management
+import assetcategories from "./AssetCategory.js";
+import assets from "./Asset.js";
+import assetallocations from "./AssetAllocation.js";
+import assetincidents from "./AssetIncident.js";
+import assetrepairs from "./AssetRepair.js";
 
 // Ticket Sub-entities
 import ticket_comments from "./TicketComment.js";
@@ -108,7 +117,7 @@ const models = {
   dashboardwidgets,
   activitylogs,
   timetrackersessions,
-  approvalWorkflow,
+  approvalworkflows,
   ticket_comments,
   ticket_comment_reads,
   ticket_attachments,
@@ -116,6 +125,14 @@ const models = {
   ticket_assignments,
   ticket_participants,
   ticket_status_history,
+  wfhrequests,
+  compoffrequests,
+  // Asset Management
+  assetcategories,
+  assets,
+  assetallocations,
+  assetincidents,
+  assetrepairs,
 };
 
 export default models;

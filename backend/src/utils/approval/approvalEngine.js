@@ -287,7 +287,22 @@ class ApprovalEngine {
    */
   async notifyApprover(modelName, document, approverId, isEscalation = false) {
     try {
-      const typeLabel = modelName === 'leaves' ? 'Leave' : 'Regularization';
+      let typeLabel = 'Request';
+      let relatedModel = 'System';
+      if (modelName === 'leaves') {
+        typeLabel = 'Leave';
+        relatedModel = 'Leave';
+      } else if (modelName === 'regularizations') {
+        typeLabel = 'Regularization';
+        relatedModel = 'Regularization';
+      } else if (modelName === 'assetallocations') {
+        typeLabel = 'Asset Allocation';
+        relatedModel = 'AssetAllocation';
+      } else if (modelName === 'assetincidents') {
+        typeLabel = 'Asset Incident';
+        relatedModel = 'AssetIncident';
+      }
+
       const title = isEscalation ? `Escalated: ${typeLabel} Request` : `New ${typeLabel} Request`;
       const message = isEscalation
         ? `Escalated: Review ${document.employeeName || 'employee'}'s pending ${typeLabel} request.`
@@ -310,7 +325,7 @@ class ApprovalEngine {
         type: `${modelName}_request`,
         title,
         message,
-        relatedModel: modelName === 'leaves' ? 'Leave' : 'Regularization',
+        relatedModel,
         relatedId: document._id,
       });
     } catch (e) {
@@ -323,7 +338,22 @@ class ApprovalEngine {
    */
   async notifyEmployee(modelName, document, status, actionerId) {
     try {
-      const typeLabel = modelName === 'leaves' ? 'Leave' : 'Regularization';
+      let typeLabel = 'Request';
+      let relatedModel = 'System';
+      if (modelName === 'leaves') {
+        typeLabel = 'Leave';
+        relatedModel = 'Leave';
+      } else if (modelName === 'regularizations') {
+        typeLabel = 'Regularization';
+        relatedModel = 'Regularization';
+      } else if (modelName === 'assetallocations') {
+        typeLabel = 'Asset Allocation';
+        relatedModel = 'AssetAllocation';
+      } else if (modelName === 'assetincidents') {
+        typeLabel = 'Asset Incident';
+        relatedModel = 'AssetIncident';
+      }
+
       const actionName = status === 'Approved' ? 'approved' : 'rejected';
       const title = `${typeLabel} Request ${status}`;
       const message = `Your ${typeLabel} request has been ${actionName}.`;
@@ -345,7 +375,7 @@ class ApprovalEngine {
         type: `${modelName}_status`,
         title,
         message,
-        relatedModel: modelName === 'leaves' ? 'Leave' : 'Regularization',
+        relatedModel,
         relatedId: document._id,
       });
     } catch (e) {
