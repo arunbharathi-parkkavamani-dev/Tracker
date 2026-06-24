@@ -1,156 +1,94 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axiosInstance from '../../../api/axiosInstance';
 
 /**
- * Fetches dashboard data based on which widgets are enabled for the user.
+ * Fetches dashboard data based on the single stats aggregation endpoint.
  *
- * Instead of fetching by "variant" (hardcoded role shape), this hook inspects
- * the `enabledWidgets` Set and fetches only the data those widgets need.
- *
- * Props:
- *   enabledWidgets — Set<string> from useWidgetPermissions
- *   userId         — current user's _id
+ * Exposes:
+ *   dashboardData — the raw hierarchical stats from the backend
+ *   stats         — V1-compatible flat stats object
+ *   pendingLeaves — V1-compatible pending leaves array
+ *   loading       — boolean loading state
+ *   error         — any error string
+ *   refresh       — function to trigger a manual reload of stats
  */
 export function useDashboardData({ enabledWidgets, userId }) {
   const [stats, setStats] = useState(null);
   const [pendingLeaves, setPendingLeaves] = useState([]);
+  const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Derived flags — what data do enabled widgets need?
-  const needsEmployeeAttendance =
-    enabledWidgets.has('stat_attendance_status') ||
-    enabledWidgets.has('stat_my_tasks') ||
-    enabledWidgets.has('stat_leave_balance') ||
-    enabledWidgets.has('priority_tasks') ||
-    enabledWidgets.has('recent_activity');
+  const fetchStats = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await axiosInstance.get('/dashboard/stats');
+      const data = res.data?.data;
+      setDashboardData(data);
 
-  const needsOrgStats =
-    enabledWidgets.has('stat_total_employees') ||
-    enabledWidgets.has('stat_present_today') ||
-    enabledWidgets.has('stat_on_leave');
+      // Build V1-compatible stats object to prevent crashing V1 widgets if active
+      if (data) {
+        const attendance = data.employee?.attendance;
+        const attendanceStatus =
+          attendance?.checkIn && !attendance?.checkOut
+            ? 'check-in'
+            : attendance?.checkOut
+              ? 'check-out'
+              : 'not-started';
 
-  const needsPendingLeaves =
-    enabledWidgets.has('stat_pending_leaves') ||
-    enabledWidgets.has('pending_leaves_list');
+        const myTasks = data.employee?.tasks?.length || 0;
+        const leaveBalance = data.employee?.leaveBalance?.[0]?.available || 0;
+
+        setStats({
+          attendanceStatus,
+          pendingLeaves: data.stats?.pendingApprovals?.value || 0,
+          leaveBalance,
+          myTasks,
+          totalEmployees: data.pulse?.total || 0,
+          presentToday: data.pulse?.present || 0,
+        });
+
+        // Map pending leaves from action center for V1 widget compatibility
+        if (data.actionCenter) {
+          const mappedLeaves = data.actionCenter
+            .filter((item) => item.sourceModel === 'leaves')
+            .map((item) => {
+              const parts = item.subtitle ? item.subtitle.split(' · ') : [];
+              return {
+                _id: item.sourceId,
+                status: 'Pending',
+                employeeId: {
+                  basicInfo: {
+                    firstName: parts[0] || 'Employee',
+                    lastName: '',
+                    profileImage: null,
+                  },
+                },
+                leaveType: {
+                  name: parts[1] || 'Leave',
+                },
+                fromDate: new Date().toISOString(), // fallback
+              };
+            });
+          setPendingLeaves(mappedLeaves);
+        }
+      }
+    } catch (err) {
+      console.error('Dashboard V2 fetch error:', err);
+      setError(err.message || 'Failed to fetch dashboard data');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    if (!userId || enabledWidgets.size === 0) {
+    if (!userId) {
       setLoading(false);
       return;
     }
-
-    const fetchStats = async () => {
-      setLoading(true);
-      try {
-        const requests = [];
-
-        // Personal attendance (employee widgets)
-        if (needsEmployeeAttendance) {
-          requests.push(
-            axiosInstance.post('/populate/read/attendances', {
-              filter: {
-                employee: userId,
-                date: { $gte: new Date().toISOString().split('T')[0] },
-              },
-            })
-          );
-        } else {
-          requests.push(Promise.resolve(null));
-        }
-
-        // Personal leaves
-        if (enabledWidgets.has('stat_leave_balance') || enabledWidgets.has('stat_attendance_status')) {
-          requests.push(
-            axiosInstance.post('/populate/read/leaves', { filter: { employeeId: userId } })
-          );
-        } else {
-          requests.push(Promise.resolve(null));
-        }
-
-        // Personal tasks count
-        if (enabledWidgets.has('stat_my_tasks')) {
-          requests.push(
-            axiosInstance.post('/populate/read/tasks', {
-              filter: { assignedTo: userId, status: { $ne: 'Completed' } },
-              limit: 0,
-            })
-          );
-        } else {
-          requests.push(Promise.resolve(null));
-        }
-
-        // Org-level employees
-        if (needsOrgStats) {
-          requests.push(axiosInstance.post('/populate/read/employees', { limit: 0 }));
-        } else {
-          requests.push(Promise.resolve(null));
-        }
-
-        // Org-level attendance (for present today / on leave)
-        if (needsOrgStats) {
-          requests.push(
-            axiosInstance.post('/populate/read/attendances', {
-              filter: {
-                date: {
-                  $gte: `${new Date().toISOString().split('T')[0]}T00:00:00.000Z`,
-                },
-              },
-            })
-          );
-        } else {
-          requests.push(Promise.resolve(null));
-        }
-
-        // Pending leaves list
-        if (needsPendingLeaves) {
-          requests.push(
-            axiosInstance.post('/populate/read/leaves', {
-              filter: { status: 'Pending' },
-              limit: 5,
-            })
-          );
-        } else {
-          requests.push(Promise.resolve(null));
-        }
-
-        const [attRes, leavesRes, tasksRes, empRes, orgAttRes, pendingLeavesRes] =
-          await Promise.all(requests);
-
-        // Build stats object from whatever was fetched
-        const attendance = attRes?.data?.data?.[0];
-        const myLeaves = leavesRes?.data?.data || [];
-        const allEmployees = empRes?.data?.data || [];
-        const todayAttendance = orgAttRes?.data?.data || [];
-        const pendingLeaveDocs = pendingLeavesRes?.data?.data || [];
-
-        setStats({
-          // Employee widgets
-          attendanceStatus:
-            attendance?.checkIn && !attendance?.checkOut
-              ? 'check-in'
-              : attendance?.checkOut
-              ? 'check-out'
-              : 'not-started',
-          pendingLeaves: myLeaves.filter((l) => l.status === 'Pending').length,
-          leaveBalance: 2,
-          myTasks: (tasksRes?.data?.data || []).length,
-
-          // Org widgets
-          totalEmployees: allEmployees.length,
-          presentToday: todayAttendance.filter((a) => a.status === 'Present').length,
-        });
-
-        setPendingLeaves(pendingLeaveDocs);
-      } catch (err) {
-        console.error('Dashboard fetch error:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchStats();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, JSON.stringify([...enabledWidgets].sort())]);
+  }, [userId, fetchStats]);
 
-  return { stats, pendingLeaves, loading };
+  return { stats, pendingLeaves, dashboardData, loading, error, refresh: fetchStats };
 }

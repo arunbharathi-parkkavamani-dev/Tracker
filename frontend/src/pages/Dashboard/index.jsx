@@ -8,38 +8,39 @@ import { getRoleConfig } from './config/dashboardConfig';
 import { useWidgetPermissions } from './hooks/useWidgetPermissions';
 import { useDashboardData } from './hooks/useDashboardData';
 
+// V1 components
 import DashboardLoader from './components/DashboardLoader';
 import DashboardHero from './components/DashboardHero';
 import QuickActions from './components/QuickActions';
 import PendingLeaves from './components/PendingLeaves';
-
 import StatCard from '../../components/Common/StatCard';
 import TableGenerator from '../../components/Common/TableGenerator';
 import PriorityTasks from '../../components/Common/PriorityTasks';
 import RecentActivity from '../../components/role/Employee/RecentActivity';
 
-/**
- * Dashboard — fully widget-driven.
- *
- * What renders is determined by the user's role widget config stored in the DB
- * (managed via Settings → Role Permissions → Dashboard Widgets tab).
- *
- * Adding a new role or changing what a role sees = zero JSX changes here.
- * Just update the DB via the Role Permissions page.
- */
+// V2 components
+import V2AlertBanner from './components/V2AlertBanner';
+import V2WorkforcePulse from './components/V2WorkforcePulse';
+import V2StatsRow from './components/V2StatsRow';
+import V2ActionCenter from './components/V2ActionCenter';
+import V2TeamAttendanceGrid from './components/V2TeamAttendanceGrid';
+import V2EmployeeHeader from './components/V2EmployeeHeader';
+import V2EmployeeTasks from './components/V2EmployeeTasks';
+import V2EmployeeLeaveBalance from './components/V2EmployeeLeaveBalance';
+
 export default function Dashboard() {
   const { user } = useAuth();
   const { userRole, loading: roleLoading } = useUserRole();
   const userId = user?.id || user?._id;
 
-  // 1. Resolve quick-actions / hero buttons from code config (still role-driven for nav links)
+  // 1. Resolve configuration actions
   const roleConfig = getRoleConfig(userRole);
 
-  // 2. Fetch which widgets this role is allowed to see from the DB
+  // 2. Fetch which widgets this role is allowed to see from DB
   const { can, widgets: enabledWidgets, loading: widgetsLoading, hasConfig } = useWidgetPermissions(user?.role);
 
-  // 3. Fetch only the data the enabled widgets actually need
-  const { stats, pendingLeaves, loading: dataLoading } = useDashboardData({
+  // 3. Fetch data via aggregation endpoint
+  const { stats, pendingLeaves, dashboardData, loading: dataLoading, refresh } = useDashboardData({
     enabledWidgets,
     userId,
   });
@@ -48,7 +49,7 @@ export default function Dashboard() {
 
   if (loading) return <DashboardLoader />;
 
-  // If role has no widget config yet — show a sensible empty state
+  // Empty state if role has no configuration saved yet
   if (!hasConfig && !roleLoading && !widgetsLoading) {
     return (
       <div className="space-y-6 animate-fade-in" data-module={MODULES.project.id}>
@@ -71,9 +72,103 @@ export default function Dashboard() {
     );
   }
 
+  // Determine if V2 dashboard is enabled (if any V2 widget is checked in the role settings)
+  const isV2 =
+    can('v2_alert_banner') ||
+    can('v2_workforce_pulse') ||
+    can('v2_employee_header') ||
+    can('v2_action_center') ||
+    can('v2_team_attendance_grid') ||
+    can('v2_stat_pending_approvals') ||
+    can('v2_stat_overdue_tasks') ||
+    can('v2_stat_open_tickets') ||
+    can('v2_stat_attendance_issues') ||
+    can('v2_stat_payroll_status') ||
+    can('v2_stat_payroll_cost') ||
+    can('v2_stat_workforce_health') ||
+    can('v2_stat_financial_exposure') ||
+    can('v2_employee_tasks') ||
+    can('v2_employee_leave_balance');
+
+  // --- RENDER V2 DASHBOARD LAYOUTS ---
+  if (isV2 && dashboardData) {
+    const { layoutVariant, pulse, stats: v2Stats, alerts, actionCenter, employee, teamGrid } = dashboardData;
+
+    // A) EMPLOYEE V2 LAYOUT (Compact, above-the-fold, 60/40 cols)
+    if (layoutVariant === 'employee') {
+      return (
+        <div className="space-y-4 animate-fade-in" data-module={MODULES.project.id}>
+          {can('v2_employee_header') && (
+            <V2EmployeeHeader attendance={employee?.attendance} refresh={refresh} />
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-2">
+              {can('v2_employee_tasks') && (
+                <V2EmployeeTasks tasks={employee?.tasks} />
+              )}
+            </div>
+            <div>
+              {can('v2_employee_leave_balance') && (
+                <V2EmployeeLeaveBalance leaveBalance={employee?.leaveBalance} />
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // B) MANAGER V2 LAYOUT (Pulse + 3 stats + Action Center & Team Grid)
+    if (layoutVariant === 'manager') {
+      return (
+        <div className="space-y-4 animate-fade-in" data-module={MODULES.project.id}>
+          {can('v2_alert_banner') && <V2AlertBanner alerts={alerts} />}
+
+          {can('v2_workforce_pulse') && (
+            <V2WorkforcePulse pulse={pulse} scope="team" />
+          )}
+
+          <V2StatsRow stats={v2Stats} layoutVariant={layoutVariant} />
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-2">
+              {can('v2_action_center') && (
+                <V2ActionCenter items={actionCenter} layoutVariant={layoutVariant} refresh={refresh} />
+              )}
+            </div>
+            <div>
+              {can('v2_team_attendance_grid') && (
+                <V2TeamAttendanceGrid teamGrid={teamGrid} />
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // C) ADMIN / EXECUTIVE / MD V2 LAYOUT (Pulse + stats + Action Center full-width)
+    return (
+      <div className="space-y-4 animate-fade-in" data-module={MODULES.project.id}>
+        {can('v2_alert_banner') && <V2AlertBanner alerts={alerts} />}
+
+        {can('v2_workforce_pulse') && layoutVariant !== 'md' && (
+          <V2WorkforcePulse pulse={pulse} scope="org" />
+        )}
+
+        <V2StatsRow stats={v2Stats} layoutVariant={layoutVariant} />
+
+        {can('v2_action_center') && (
+          <div className="w-full">
+            <V2ActionCenter items={actionCenter} layoutVariant={layoutVariant} refresh={refresh} />
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // --- RENDER V1 LEGACY FALLBACK ---
   const onLeave = (stats?.totalEmployees || 0) - (stats?.presentToday || 0);
 
-  // — Org stat cards —
   const orgStats = [
     can('stat_total_employees') && (
       <StatCard key="total_emp" title="Total Employees" value={stats?.totalEmployees || 0} icon={Users} color="blue" loading={dataLoading} />
@@ -89,7 +184,6 @@ export default function Dashboard() {
     ),
   ].filter(Boolean);
 
-  // — Employee stat cards —
   const employeeStats = [
     can('stat_attendance_status') && (
       <StatCard
@@ -124,31 +218,26 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6 animate-fade-in" data-module={MODULES.project.id}>
-      {/* Hero — always shown */}
       <DashboardHero
         userName={user?.name}
         heroActions={roleConfig.heroActions}
         stats={stats}
       />
 
-      {/* Org-level stat row */}
       {hasOrgStats && (
         <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-${Math.min(orgStats.length, 4)} gap-5`}>
           {orgStats}
         </div>
       )}
 
-      {/* Employee stat row */}
       {hasEmployeeStats && (
         <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-${Math.min(employeeStats.length, 3)} gap-5`}>
           {employeeStats}
         </div>
       )}
 
-      {/* Main panels grid */}
       {(hasLeftPanel || hasRightPanel) && (
         <div className={`grid grid-cols-1 ${hasRightPanel ? 'lg:grid-cols-3' : ''} gap-6`}>
-          {/* Left / main column */}
           {hasLeftPanel && (
             <div className={`${hasRightPanel ? 'lg:col-span-2' : ''} space-y-6`}>
               {can('quick_actions') && <QuickActions actions={roleConfig.quickActions} />}
@@ -168,7 +257,6 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Right sidebar column */}
           {hasRightPanel && (
             <div className="space-y-6">
               {can('pending_leaves_list') && <PendingLeaves leaves={pendingLeaves} />}
