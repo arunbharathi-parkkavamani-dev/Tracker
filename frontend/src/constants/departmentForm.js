@@ -3,6 +3,22 @@ export const departmentFormFields = [
   { name: "shortCode", label: "Short Code", type: "text", required: true },
   { name: "description", label: "Description", type: "textarea" },
   {
+    name: "attendancePolicy",
+    label: "Attendance Policy",
+    type: "AutoComplete",
+    source: "/populate/read/attendancepolicies",
+    labelField: "name",
+    fieldName: "name",
+  },
+  {
+    name: "leavePolicy",
+    label: "Leave Policy",
+    type: "AutoComplete",
+    source: "/populate/read/leavepolicies",
+    labelField: "name",
+    fieldName: "name",
+  },
+  {
     name: "Status",
     label: "Status",
     type: "select",

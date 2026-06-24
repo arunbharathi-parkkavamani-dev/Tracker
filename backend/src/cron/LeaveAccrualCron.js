@@ -1,5 +1,6 @@
 import cron from "node-cron";
 import models from "../models/Collection.js";
+import LeaveTransaction from "../models/LeaveTransaction.js";
 
 // Monthly Accrual: Runs on the 1st of every month at 12:00 AM (midnight)
 cron.schedule("0 0 1 * *", async () => {
@@ -21,9 +22,9 @@ cron.schedule("0 0 1 * *", async () => {
 
       let modified = false;
 
-      policy.leaves.forEach(policyLeaf => {
+      for (const policyLeaf of policy.leaves) {
         const leaveTypeId = policyLeaf.leaveType?._id || policyLeaf.leaveType;
-        if (!leaveTypeId) return;
+        if (!leaveTypeId) continue;
 
         let bucket = employee.leaveStatus.find(
           b => b.leaveType.toString() === leaveTypeId.toString()
@@ -36,8 +37,18 @@ cron.schedule("0 0 1 * *", async () => {
           // Increment balance, clamp at annual limit
           const newAvailable = Math.min(bucket.available + accrualAmount, cap);
           if (bucket.available !== newAvailable) {
+            const actualAccrued = newAvailable - bucket.available;
             bucket.available = newAvailable;
             modified = true;
+
+            await LeaveTransaction.create({
+              employeeId: employee._id,
+              leaveTypeId: leaveTypeId,
+              type: 'MONTHLY_CREDIT',
+              sourceModel: 'cron',
+              quantity: actualAccrued,
+              description: `Monthly leave accrual credit`
+            });
           }
           // Reset monthly usage tracking
           bucket.usedThisMonth = 0;
@@ -51,8 +62,17 @@ cron.schedule("0 0 1 * *", async () => {
             available: accrualAmount
           });
           modified = true;
+
+          await LeaveTransaction.create({
+            employeeId: employee._id,
+            leaveTypeId: leaveTypeId,
+            type: 'MONTHLY_CREDIT',
+            sourceModel: 'cron',
+            quantity: accrualAmount,
+            description: `Initial leave bucket creation`
+          });
         }
-      });
+      }
 
       if (modified) {
         await employee.save();
@@ -87,9 +107,9 @@ cron.schedule("0 0 1 1 *", async () => {
 
       let modified = false;
 
-      policy.leaves.forEach(policyLeaf => {
+      for (const policyLeaf of policy.leaves) {
         const leaveTypeId = policyLeaf.leaveType?._id || policyLeaf.leaveType;
-        if (!leaveTypeId) return;
+        if (!leaveTypeId) continue;
 
         let bucket = employee.leaveStatus.find(
           b => b.leaveType.toString() === leaveTypeId.toString()
@@ -108,10 +128,20 @@ cron.schedule("0 0 1 1 *", async () => {
           bucket.usedThisYear = 0;
           bucket.usedThisMonth = 0;
           // Refresh balance with carry forward + initial policy quota allocation
-          bucket.available = carryAmount + (policyLeaf.maxDaysPerYear || 0);
+          const newQuota = policyLeaf.maxDaysPerYear || 0;
+          bucket.available = carryAmount + newQuota;
           modified = true;
+
+          await LeaveTransaction.create({
+            employeeId: employee._id,
+            leaveTypeId: leaveTypeId,
+            type: 'YEARLY_ROLLOVER',
+            sourceModel: 'cron',
+            quantity: newQuota, // We document the new quota addition
+            description: `Yearly rollover. Carried forward: ${carryAmount}, Quota: ${newQuota}`
+          });
         }
-      });
+      }
 
       if (modified) {
         await employee.save();

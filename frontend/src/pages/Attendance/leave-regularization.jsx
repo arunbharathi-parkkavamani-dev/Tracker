@@ -5,9 +5,11 @@ import {
   regularizationFormFields,
   regularizationSubmitButton,
 } from "../../constants/regularizationForm";
+import { wfhFormFields, wfhSubmitButton } from "../../constants/wfhForm";
+import { compOffFormFields, compOffSubmitButton } from "../../constants/compOffForm";
 import useGenericAPI from "../../components/useGenericAPI";
 import { useAuth } from "../../context/authProvider";
-import { Calendar, Clock, ChevronLeft, ChevronRight, CheckCircle, AlertTriangle } from "lucide-react";
+import { Calendar, Clock, ChevronLeft, ChevronRight, CheckCircle, AlertTriangle, Home, Briefcase } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const getLocalDateString = (d = new Date()) => {
@@ -189,6 +191,24 @@ const LeaveAndRegularization = ({ onClose, onSuccess, onFailed, defaultType = ""
       }
       return;
     }
+
+    if (formType === "wfh") {
+      try {
+        await create('wfhrequests', { ...data, employeeId: userData._id }, "WFH requested successfully!");
+        onSuccess?.();
+        onClose ? onClose() : navigate(-1);
+      } catch (err) { onFailed?.(err); }
+      return;
+    }
+
+    if (formType === "compoff") {
+      try {
+        await create('compoffrequests', { ...data, employeeId: userData._id }, "Comp-Off requested successfully!");
+        onSuccess?.();
+        onClose ? onClose() : navigate(-1);
+      } catch (err) { onFailed?.(err); }
+      return;
+    }
   };
 
   const getIssueType = (record) => {
@@ -237,6 +257,32 @@ const LeaveAndRegularization = ({ onClose, onSuccess, onFailed, defaultType = ""
             <div>
               <span className="text-[14px] font-medium text-[#111111] block mb-1">Regularization</span>
               <span className="text-[12px] text-[#7b7b78] leading-snug block">Fix missed check-ins or check-outs</span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setFormType("wfh")}
+            className="group flex flex-col sm:flex-row items-start gap-3 p-4 rounded-[12px] border border-[#d3cec6] hover:bg-[#f5f1ec]/50 transition-all text-left cursor-pointer"
+          >
+            <div className="h-10 w-10 rounded-[8px] bg-[#f5f1ec] flex items-center justify-center flex-shrink-0 group-hover:bg-white transition-colors">
+              <Home className="h-5 w-5 text-[#111111]" />
+            </div>
+            <div>
+              <span className="text-[14px] font-medium text-[#111111] block mb-1">Work From Home</span>
+              <span className="text-[12px] text-[#7b7b78] leading-snug block">Request to work remotely</span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setFormType("compoff")}
+            className="group flex flex-col sm:flex-row items-start gap-3 p-4 rounded-[12px] border border-[#d3cec6] hover:bg-[#f5f1ec]/50 transition-all text-left cursor-pointer"
+          >
+            <div className="h-10 w-10 rounded-[8px] bg-[#f5f1ec] flex items-center justify-center flex-shrink-0 group-hover:bg-white transition-colors">
+              <Briefcase className="h-5 w-5 text-[#111111]" />
+            </div>
+            <div>
+              <span className="text-[14px] font-medium text-[#111111] block mb-1">Comp-Off</span>
+              <span className="text-[12px] text-[#7b7b78] leading-snug block">Request compensatory time off</span>
             </div>
           </button>
         </div>
@@ -332,7 +378,29 @@ const LeaveAndRegularization = ({ onClose, onSuccess, onFailed, defaultType = ""
             }`}
           >
             <Clock className="h-4 w-4" />
-            Regularization
+            Regularize
+          </button>
+          <button
+            onClick={() => { setFormType("wfh"); setShowDateSelection(false); setSelectedDate(null); }}
+            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-[6px] text-[13px] font-medium transition-all cursor-pointer ${
+              formType === "wfh" 
+                ? "bg-white text-[#111111] shadow-sm" 
+                : "text-[#626260] hover:text-[#111111]"
+            }`}
+          >
+            <Home className="h-4 w-4" />
+            WFH
+          </button>
+          <button
+            onClick={() => { setFormType("compoff"); setShowDateSelection(false); setSelectedDate(null); }}
+            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-[6px] text-[13px] font-medium transition-all cursor-pointer ${
+              formType === "compoff" 
+                ? "bg-white text-[#111111] shadow-sm" 
+                : "text-[#626260] hover:text-[#111111]"
+            }`}
+          >
+            <Briefcase className="h-4 w-4" />
+            Comp-Off
           </button>
         </div>
 
@@ -376,6 +444,42 @@ const LeaveAndRegularization = ({ onClose, onSuccess, onFailed, defaultType = ""
               submitButton={regularizationSubmitButton}
               onSubmit={handleSubmit}
             />
+          </div>
+        )}
+
+        {/* WFH form */}
+        {formType === "wfh" && (
+          <div>
+            {!userData ? (
+              <div className="flex items-center justify-center py-10">
+                <div className="h-6 w-6 border-2 border-[#111111] border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : (
+              <FormRenderer
+                fields={wfhFormFields(userData)}
+                submitButton={wfhSubmitButton}
+                onSubmit={handleSubmit}
+                onChange={handleFormChange}
+              />
+            )}
+          </div>
+        )}
+
+        {/* Comp-Off form */}
+        {formType === "compoff" && (
+          <div>
+            {!userData ? (
+              <div className="flex items-center justify-center py-10">
+                <div className="h-6 w-6 border-2 border-[#111111] border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : (
+              <FormRenderer
+                fields={compOffFormFields(userData)}
+                submitButton={compOffSubmitButton}
+                onSubmit={handleSubmit}
+                onChange={handleFormChange}
+              />
+            )}
           </div>
         )}
       </div>

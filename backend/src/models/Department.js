@@ -14,6 +14,7 @@ const DepartmentSchema = new Schema({
   },
   description: { type: String },
   leavePolicy : { type: Schema.Types.ObjectId, ref: 'leavepolicies'},
+  attendancePolicy: { type: Schema.Types.ObjectId, ref: 'attendancepolicies' },
   manager: { type: Schema.Types.ObjectId, ref: 'employees', index: true },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }

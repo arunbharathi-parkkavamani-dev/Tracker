@@ -20,6 +20,8 @@ const ROUTE_MODEL_MAP = {
     '/roles': 'roles',
     '/holidays': 'holidays',
     '/assets': 'assets',
+    '/assets/register': 'assets',           // Asset Register list — policy: assets read
+    '/assets/categories': 'assetcategories', // Category management — policy: assetcategories read
     '/master-data': null // Usually a parent menu, filtered by children
 };
 

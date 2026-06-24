@@ -206,5 +206,32 @@ await StatusConfig.findOneAndUpdate(
 );
 console.log('✅ HR Policy statuses seeded');
 
+// ── Asset statuses ────────────────────────────────────────────────────────────
+// condition (Excellent/Good/Fair/Poor/Damaged) is a plain enum field on Asset —
+// it is NOT a StatusConfig entry because it is not a workflow status.
+// Only the operational lifecycle status is registered here.
+await StatusConfig.findOneAndUpdate(
+  { modelName: 'assets' },
+  {
+    modelName: 'assets',
+    label: 'Asset Statuses',
+    metaStatuses: [
+      { key: 'active',   label: 'Active',   color: '#10B981', order: 0, isDefault: true },
+      { key: 'inactive', label: 'Inactive', color: '#6B7280', order: 1 },
+      { key: 'archive',  label: 'Archive',  color: '#8B5CF6', order: 2 },
+    ],
+    workflowStatuses: [
+      { key: 'Available',    label: 'Available',    color: '#10B981', order: 0, isDefault: true, isTerminal: false },
+      { key: 'Allocated',    label: 'Allocated',    color: '#3B82F6', order: 1, isDefault: false, isTerminal: false },
+      { key: 'Reserved',     label: 'Reserved',     color: '#F59E0B', order: 2, isDefault: false, isTerminal: false },
+      { key: 'Under Repair', label: 'Under Repair', color: '#8B5CF6', order: 3, isDefault: false, isTerminal: false },
+      { key: 'Lost',         label: 'Lost',         color: '#EF4444', order: 4, isDefault: false, isTerminal: false },
+      { key: 'Disposed',     label: 'Disposed',     color: '#6B7280', order: 5, isDefault: false, isTerminal: true  },
+    ],
+  },
+  { upsert: true, new: true }
+);
+console.log('✅ Asset statuses seeded');
+
 await mongoose.disconnect();
 console.log('Done.');

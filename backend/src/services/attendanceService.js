@@ -105,25 +105,62 @@ class AttendanceService {
   }
 
   async determineAttendanceStatus(employeeId, date, session) {
-    const dayOfWeek = dayjs(date).day(); // 0 = Sunday, 6 = Saturday
+    // 1. Check for Work From Home intent
+    const { default: WFHRequest } = await import("../models/WFHRequest.js");
+    const isWfh = await WFHRequest.findOne({
+      employeeId,
+      status: 'Approved',
+      startDate: { $lte: date },
+      endDate: { $gte: date }
+    }).session(session).lean();
 
-    // Sunday is always week off
-    if (dayOfWeek === 0) {
-      return "Week Off";
+    if (isWfh) {
+      return "Work From Home";
     }
 
-    // Saturday - check alternate week off pattern
-    if (dayOfWeek === 6) {
-      const lastSaturday = dayjs(date).subtract(7, "day").startOf("day").toDate();
+    const dayOfWeek = dayjs(date).day();
+    const dayOfWeekStr = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek];
 
-      const lastWeekRecord = await Attendance.findOne({
-        employee: employeeId,
-        date: lastSaturday,
-        status: "Week Off"
-      }).session(session).lean();
+    // 2. Fetch Employee to resolve AttendancePolicy via Department
+    const emp = await Employee.findById(employeeId).populate({
+      path: 'professionalInfo.department',
+      populate: { path: 'attendancePolicy' }
+    }).session(session).lean();
 
-      // Alternate Saturday logic
-      return lastWeekRecord ? "LOP" : "Week Off";
+    const policy = emp?.professionalInfo?.department?.attendancePolicy;
+
+    // 3. Fallback logic if no policy exists (Legacy behavior)
+    if (!policy) {
+      if (dayOfWeek === 0) return "Week Off";
+      if (dayOfWeek === 6) {
+        const lastSaturday = dayjs(date).subtract(7, "day").startOf("day").toDate();
+        const lastWeekRecord = await Attendance.findOne({
+          employee: employeeId,
+          date: lastSaturday,
+          status: "Week Off"
+        }).session(session).lean();
+        return lastWeekRecord ? "LOP" : "Week Off";
+      }
+      return "LOP";
+    }
+
+    // 4. Dynamic Policy Evaluation
+    const weekOffRules = policy.weeklyOffRules || { type: "static", days: ["Sunday"] };
+
+    if (weekOffRules.days.includes(dayOfWeekStr)) {
+      if (weekOffRules.type === "static") {
+        return "Week Off";
+      } else if (weekOffRules.type === "alternate") {
+        // Alternate rule: If last week was Week Off, this week is working (LOP if no punch)
+        const lastWeekDate = dayjs(date).subtract(7, "day").startOf("day").toDate();
+        const lastWeekRecord = await Attendance.findOne({
+          employee: employeeId,
+          date: lastWeekDate,
+          status: "Week Off"
+        }).session(session).lean();
+
+        return lastWeekRecord ? "LOP" : "Week Off";
+      }
     }
 
     // Regular working day - mark as LOP if no check-in

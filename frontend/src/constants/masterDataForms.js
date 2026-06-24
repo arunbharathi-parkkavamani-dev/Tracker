@@ -26,6 +26,21 @@ export const leavePolicyFormFields = [
   statusField,
 ];
 
+export const attendancePolicyFormFields = [
+  { name: "name", label: "Policy Name", type: "text", required: true },
+  { name: "description", label: "Description", type: "textarea" },
+  { name: "fullDayHours", label: "Full Day Minimum Hours", type: "number", required: true, default: 8 },
+  { name: "halfDayHours", label: "Half Day Minimum Hours", type: "number", required: true, default: 4 },
+  { name: "graceMinutes", label: "Grace Minutes", type: "number", default: 15 },
+  { name: "lateMarkThreshold", label: "Late Mark Threshold (Minutes)", type: "number", default: 15 },
+  { name: "lateMarksForHalfDay", label: "Late Marks resulting in Half Day", type: "number", default: 3 },
+  { name: "earlyExitThreshold", label: "Early Exit Threshold (Minutes)", type: "number", default: 15 },
+  { name: "weeklyOffRules", label: "Weekly Off Rules (JSON)", type: "textarea", default: '{"type":"static","days":["Sunday"]}' },
+  { name: "holidayRules", label: "Holiday Rules (JSON)", type: "textarea", default: '{"sandwich":false}' },
+  { name: "lopRules", label: "LOP Rules (JSON)", type: "textarea", default: '{"deductFromLeaveBalance":true}' },
+  statusField,
+];
+
 export const leaveTypeFormFields = [
   { name: "name", label: "Leave Type Name", type: "text", required: true },
   { name: "description", label: "Description", type: "textarea" },
@@ -75,6 +90,7 @@ const save = (text) => ({ text, color: "blue" });
 
 export const hrPolicySubmit = save("Save HR Policy");
 export const leavePolicySubmit = save("Save Leave Policy");
+export const attendancePolicySubmit = save("Save Attendance Policy");
 export const leaveTypeSubmit = save("Save Leave Type");
 export const shiftSubmit = save("Save Shift");
 export const taskTypeSubmit = save("Save Task Type");

@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 
 const cache = new Map();
 const roleCapabilityCache = new Map(); // roleId -> Set<capability>
+const roleLevelCache = new Map(); // roleId -> level (1-10)
 let cacheInitialized = false;
 
 
@@ -35,8 +36,10 @@ export async function setCache() {
         });
 
         roleCapabilityCache.clear();
+        roleLevelCache.clear();
         roles.forEach((r) => {
             roleCapabilityCache.set(r._id.toString(), new Set(r.capabilities || []));
+            roleLevelCache.set(r._id.toString(), r.level || 1);
         });
 
         cacheInitialized = true;
@@ -74,5 +77,15 @@ export function canDo(roleId, capability) {
     return roleCapabilityCache.get(roleStr)?.has(capability) ?? false;
 }
 
-export default cache;
+/**
+ * Get the level (1-10) for a role.
+ * Used by dashboard to determine layout variant without hardcoding role names.
+ * @param {string} roleId - role ObjectId as string
+ * @returns {number} level 1-10, defaults to 1
+ */
+export function getRoleLevel(roleId) {
+    if (!cacheInitialized || !roleId) return 1;
+    return roleLevelCache.get(roleId.toString()) || 1;
+}
 
+export default cache;
